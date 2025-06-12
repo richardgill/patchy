@@ -20,31 +20,26 @@ repo-dir/
 
 File layout must mirror the structure of `repo_dir`.
 
----
-
 ## Installation
 
 ```sh
 bunx patchy
 ```
 
----
-
 ## Shared Flags
 
 These flags are accepted by **all commands**:
 
-| Flag            | Description                                    |
-| --------------- | ---------------------------------------------- |
-| `--repo-dir`    | Path to the Git repo you're patching           |
-| `--patches-dir` | Path to your patch files (default: `patches/`) |
-| `--config`      | YAML config file (default: `patches.yaml`)     |
-| `--verbose`     | Enable verbose log output                      |
-| `--dry-run`     | Simulate the command without writing files     |
+| Flag              | Description                                      |
+| ----------------- | ------------------------------------------------ |
+| `--repo-dir`      | Path to the Git repo you're patching             |
+| `--repo-base-dir` | Parent directory where upstream repos are cloned |
+| `--patches-dir`   | Path to your patch files (default: `patches/`)   |
+| `--config`        | YAML config file (default: `patches.yaml`)       |
+| `--verbose`       | Enable verbose log output                        |
+| `--dry-run`       | Simulate the command without writing files       |
 
 > CLI flags override all values in `patches.yaml`.
-
----
 
 ## Commands
 
@@ -56,8 +51,6 @@ Apply patch files from `patches/` into `repo_dir`.
 bunx patchy apply [--repo-dir] [--patches-dir] [--dry-run]
 ```
 
----
-
 ### `patchy generate`
 
 Generate `.diff` files and new full files into `patches/` based on current dirty changes in `repo_dir`.
@@ -65,8 +58,6 @@ Generate `.diff` files and new full files into `patches/` based on current dirty
 ```sh
 bunx patchy generate [--repo-dir] [--patches-dir] [--dry-run]
 ```
-
----
 
 ### `patchy repo reset`
 
@@ -76,8 +67,6 @@ Hard reset the Git working tree of `repo_dir`. Discards local changes.
 bunx patchy repo reset [--repo-dir]
 ```
 
----
-
 ### `patchy repo checkout --ref <git-ref>`
 
 Check out a specific Git ref (branch, tag, or SHA) in `repo_dir`.
@@ -86,7 +75,13 @@ Check out a specific Git ref (branch, tag, or SHA) in `repo_dir`.
 bunx patchy repo checkout --ref main [--repo-dir]
 ```
 
----
+### `patchy repo clone --url <git-url>`
+
+Clone a repository into a subdirectory of `repo_base_dir`. The target directory is derived from the repo name.
+
+```sh
+bunx patchy repo clone --url https://example.com/repo.git [--repo-base-dir]
+```
 
 ## Configuration (`patchy.yaml`)
 
@@ -94,6 +89,7 @@ Optional file to set default values:
 
 ```yaml
 repo_dir: ../upstream-repo
+repo_base_dir: ../clones
 patches_dir: patches/
 default_ref: main
 ```
@@ -104,24 +100,23 @@ default_ref: main
 2. `--config` file
 3. Default `patches.yaml`
 
----
-
 ## Example Workflow
 
 ```sh
+# Clone the upstream repo
+bunx patchy repo clone --url https://example.com/upstream.git --repo-base-dir ../clones
+
 # Check out upstream repo at a specific version
-bunx patchy repo checkout --ref v1.2.3
+bunx patchy repo checkout --ref v1.2.3 --repo-dir ../clones/upstream
 
 # Generate patches from current state of repo_dir
-bunx patchy generate
+bunx patchy generate --repo-dir ../clones/upstream
 
 # Later, apply patches cleanly to fresh repo
-bunx patchy repo reset
-bunx patchy repo checkout --ref main
-bunx patchy apply
+bunx patchy repo reset --repo-dir ../clones/upstream
+bunx patchy repo checkout --ref main --repo-dir ../clones/upstream
+bunx patchy apply --repo-dir ../clones/upstream
 ```
-
----
 
 ## License
 
