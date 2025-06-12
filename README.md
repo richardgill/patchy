@@ -1,10 +1,10 @@
 # patchy
 
-> An opinionated command-line tool for managing Git patch workflows.
+An opinionated command-line tool for managing Git patch workflows.
 
 **patchy** helps you maintain a curated set of patches—both added files and diffs—against an upstream Git repository.
 
-## 📁 Directory Structure
+## Directory Structure
 
 ```
 my-patch-repo/
@@ -12,46 +12,48 @@ my-patch-repo/
 │   ├── path/in/repo/newFile.ts          # new file
 │   ├── path/in/repo/oldFile.ts.diff     # diff file
 ├── patchy.yaml                          # optional config
+
+repo-dir/
+├── path/in/repo/newFile.ts              # generated/copied
+├── path/in/repo/oldFile.ts              # original file, to be patched
 ```
 
 File layout must mirror the structure of `repo_dir`.
 
 ---
 
-## 📦 Installation
-
-Coming soon via npm, brew, or pipx. For now:
+## Installation
 
 ```sh
-bunx 
+bunx patchy
 ```
 
 ---
 
-## 🧠 Shared Flags
+## Shared Flags
 
 These flags are accepted by **all commands**:
 
-| Flag              | Description                                       |
-|-------------------|---------------------------------------------------|
-| `--repo-dir`      | Path to the Git repo you're patching              |
-| `--patches-dir`   | Path to your patch files (default: `patches/`)    |
-| `--config`        | YAML config file (default: `patches.yaml`)        |
-| `--verbose`       | Enable verbose log output                         |
-| `--dry-run`       | Simulate the command without writing files        |
+| Flag            | Description                                    |
+| --------------- | ---------------------------------------------- |
+| `--repo-dir`    | Path to the Git repo you're patching           |
+| `--patches-dir` | Path to your patch files (default: `patches/`) |
+| `--config`      | YAML config file (default: `patches.yaml`)     |
+| `--verbose`     | Enable verbose log output                      |
+| `--dry-run`     | Simulate the command without writing files     |
 
-> 🛈 CLI flags override all values in `patches.yaml`.
+> CLI flags override all values in `patches.yaml`.
 
 ---
 
-## 🛠 Commands
+## Commands
 
 ### `patchy apply`
 
 Apply patch files from `patches/` into `repo_dir`.
 
 ```sh
-patchy apply [--repo-dir] [--patches-dir] [--dry-run]
+bunx patchy apply [--repo-dir] [--patches-dir] [--dry-run]
 ```
 
 ---
@@ -61,7 +63,7 @@ patchy apply [--repo-dir] [--patches-dir] [--dry-run]
 Generate `.diff` files and new full files into `patches/` based on current dirty changes in `repo_dir`.
 
 ```sh
-patchy generate [--repo-dir] [--patches-dir] [--dry-run]
+bunx patchy generate [--repo-dir] [--patches-dir] [--dry-run]
 ```
 
 ---
@@ -71,7 +73,7 @@ patchy generate [--repo-dir] [--patches-dir] [--dry-run]
 Hard reset the Git working tree of `repo_dir`. Discards local changes.
 
 ```sh
-patchy repo reset [--repo-dir]
+bunx patchy repo reset [--repo-dir]
 ```
 
 ---
@@ -81,12 +83,12 @@ patchy repo reset [--repo-dir]
 Check out a specific Git ref (branch, tag, or SHA) in `repo_dir`.
 
 ```sh
-patchy repo checkout --ref main [--repo-dir]
+bunx patchy repo checkout --ref main [--repo-dir]
 ```
 
 ---
 
-## 🧾 Configuration (`patches.yaml`)
+## Configuration (`patchy.yaml`)
 
 Optional file to set default values:
 
@@ -98,29 +100,29 @@ default_ref: main
 
 ### Precedence Order
 
-1. **CLI flags**  
-2. **`--config` file**  
-3. **Default `patches.yaml`**
+1. CLI flags
+2. `--config` file
+3. Default `patches.yaml`
 
 ---
 
-## ✅ Example Workflow
+## Example Workflow
 
 ```sh
 # Check out upstream repo at a specific version
-patchy repo checkout --ref v1.2.3
+bunx patchy repo checkout --ref v1.2.3
 
 # Generate patches from current state of repo_dir
-patchy generate
+bunx patchy generate
 
 # Later, apply patches cleanly to fresh repo
-patchy repo reset
-patchy repo checkout --ref main
-patchy apply
+bunx patchy repo reset
+bunx patchy repo checkout --ref main
+bunx patchy apply
 ```
 
 ---
 
-## 📄 License
+## License
 
 MIT
