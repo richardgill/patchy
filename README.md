@@ -80,7 +80,7 @@ bunx patchy repo checkout --ref main [--repo-dir]
 Clone a repository into a subdirectory of `repo_base_dir`. The target directory is derived from the repo name.
 
 ```sh
-bunx patchy repo clone --url https://example.com/repo.git [--repo-base-dir]
+bunx patchy repo clone [--repo-base-dir] [--ref] [--repo-url] 
 ```
 
 ## Configuration (`patchy.yaml`)
@@ -88,23 +88,23 @@ bunx patchy repo clone --url https://example.com/repo.git [--repo-base-dir]
 Optional file to set default values:
 
 ```yaml
-repo_dir: ../upstream-repo
+repo_url: https://github.com/richardgill/upstream.git
+repo_dir: ../clones/upstream-repo
 repo_base_dir: ../clones
 patches_dir: patches/
-default_ref: main
+ref: main
 ```
 
 ### Precedence Order
 
 1. CLI flags
-2. `--config` file
-3. Default `patches.yaml`
+2. `--config` (defaults to `./patches.yaml`)
 
 ## Example Workflow
 
 ```sh
 # Clone the upstream repo
-bunx patchy repo clone --url https://example.com/upstream.git --repo-base-dir ../clones
+bunx patchy repo clone https://github.com/richardgill/upstream.git --repo-base-dir ../clones
 
 # Check out upstream repo at a specific version
 bunx patchy repo checkout --ref v1.2.3 --repo-dir ../clones/upstream
