@@ -14,7 +14,7 @@ my-patch-repo/
 ├── patchy.yaml                          # optional config
 
 repo-dir/
-├── path/in/repo/newFile.ts              # generated/copied
+├── path/in/repo/newFile.ts              # will be copied from patches/
 ├── path/in/repo/oldFile.ts              # original file, to be patched
 ```
 
@@ -34,7 +34,7 @@ These flags are accepted by **all commands**:
 | ----------------- | ------------------------------------------------ |
 | `--repo-dir`      | Path to the Git repo you're patching             |
 | `--repo-base-dir` | Parent directory where upstream repos are cloned |
-| `--patches-dir`   | Path to your patch files (default: `patches/`)   |
+| `--patches-dir`   | Path to your patch files (default: `./patches/`)   |
 | `--config`        | YAML config file (default: `patches.yaml`)       |
 | `--verbose`       | Enable verbose log output                        |
 | `--dry-run`       | Simulate the command without writing files       |
@@ -53,7 +53,7 @@ bunx patchy apply [--repo-dir] [--patches-dir] [--dry-run]
 
 ### `patchy generate`
 
-Generate `.diff` files and new full files into `patches/` based on current dirty changes in `repo_dir`.
+Generate `.diff` files and new full files into `./patches/` based on current dirty changes in `repo_dir`.
 
 ```sh
 bunx patchy generate [--repo-dir] [--patches-dir] [--dry-run]
@@ -104,7 +104,7 @@ ref: main
 
 ```sh
 # Clone the upstream repo
-bunx patchy repo clone https://github.com/richardgill/upstream.git --repo-base-dir ../clones
+bunx patchy repo clone --repo-url https://github.com/richardgill/upstream.git --repo-base-dir ../clones
 
 # Check out upstream repo at a specific version
 bunx patchy repo checkout --ref v1.2.3 --repo-dir ../clones/upstream
