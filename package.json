@@ -1,45 +1,37 @@
 {
   "name": "patchy",
   "version": "0.0.0",
-  "description": "A starter template for TypeScript libraries ready to be published to npm.",
-  "main": "dist/index.js",
-  "module": "dist/index.js",
-  "exports": {
-    ".": {
-      "import": "./dist/index.js",
-      "types": "./dist/index.d.ts"
-    }
+  "description": "A CLI tool for managing Git patch workflows.",
+  "bin": {
+    "patchy": "./dist/cli.js"
   },
-  "types": "dist/index.d.ts",
   "type": "module",
   "files": [
     "dist"
   ],
   "scripts": {
-    "build": "pnpm clean && tsc",
+    "build": "pnpm clean && tsgo",
     "clean": "rimraf dist",
     "format": "biome format --write",
     "lint": "biome check --fix",
-    "lint:staged": "lint-staged",
     "changeset": "changeset",
-    "changeset:version": "changeset version",
-    "changeset:publish": "pnpm build && changeset publish",
-    "prepare": "npx simple-git-hooks",
-    "typecheck": "tsc --noEmit",
+    "changeset-version": "changeset version",
+    "changeset-publish": "pnpm build && changeset publish",
+    "prepare": "lefthook install",
+    "typecheck": "tsgo --noEmit",
     "test": "vitest",
-    "test:watch": "vitest --watch",
-    "test:coverage": "vitest run --coverage"
+    "test-watch": "vitest --watch",
+    "test-coverage": "vitest run --coverage"
   },
   "devDependencies": {
     "@biomejs/biome": "2.1.1",
     "@changesets/changelog-github": "^0.5.1",
     "@changesets/cli": "^2.29.5",
     "@types/node": "^24.0.13",
+    "@typescript/native-preview": "7.0.0-dev.20250712.1",
     "@vitest/coverage-v8": "3.2.4",
-    "lint-staged": "^16.1.2",
+    "lefthook": "^1.12.2",
     "rimraf": "^6.0.1",
-    "simple-git-hooks": "^2.13.0",
-    "ts-node": "^10.9.2",
     "tslib": "^2.8.1",
     "typescript": "^5.8.3",
     "vitest": "^3.2.4"
@@ -61,23 +53,14 @@
   "author": "Richard Gill",
   "license": "MIT",
   "repository": {
-    "url": "https://github.com/ITZSHOAIB/typescript-library-starter"
+    "url": "https://github.com/richardgill/patchy"
   },
   "publishConfig": {
     "access": "public"
   },
-  "lint-staged": {
-    "*": [
-      "pnpm lint",
-      "git add"
-    ]
-  },
-  "simple-git-hooks": {
-    "pre-commit": "pnpm typecheck && pnpm test:coverage && pnpm lint:staged"
-  },
-  "packageManager": "pnpm@9.12.0",
+  "packageManager": "pnpm@10.13.1",
   "engines": {
-    "node": ">=20.0.0"
+    "node": ">=22.0.0"
   },
   "sideEffects": false
 }
