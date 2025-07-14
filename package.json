@@ -1,0 +1,73 @@
+{
+  "name": "patchy",
+  "version": "0.0.0",
+  "description": "A starter template for TypeScript libraries ready to be published to npm.",
+  "main": "dist/index.js",
+  "module": "dist/index.js",
+  "exports": {
+    ".": {
+      "import": "./dist/index.js",
+      "types": "./dist/index.d.ts"
+    }
+  },
+  "types": "dist/index.d.ts",
+  "type": "module",
+  "files": ["dist"],
+  "scripts": {
+    "build": "pnpm clean && tsc",
+    "clean": "rimraf dist",
+    "format": "biome format --write",
+    "lint": "biome check --fix",
+    "lint:staged": "lint-staged",
+    "changeset": "changeset",
+    "changeset:version": "changeset version",
+    "changeset:publish": "pnpm build && changeset publish",
+    "prepare": "npx simple-git-hooks",
+    "typecheck": "tsc --noEmit",
+    "test": "vitest",
+    "test:watch": "vitest --watch",
+    "test:coverage": "vitest run --coverage"
+  },
+  "devDependencies": {
+    "@biomejs/biome": "1.9.4",
+    "@changesets/changelog-github": "^0.5.0",
+    "@changesets/cli": "^2.27.10",
+    "@types/node": "^22.10.1",
+    "@vitest/coverage-v8": "2.1.5",
+    "lint-staged": "^15.2.10",
+    "rimraf": "^6.0.1",
+    "simple-git-hooks": "^2.11.1",
+    "ts-node": "^10.9.2",
+    "tslib": "^2.8.1",
+    "typescript": "^5.7.2",
+    "vitest": "^2.1.5"
+  },
+  "peerDependencies": {
+    "typescript": ">=5.0.4"
+  },
+  "peerDependenciesMeta": {
+    "typescript": {
+      "optional": true
+    }
+  },
+  "keywords": ["git", "patches", "patch", "fork"],
+  "author": "Richard Gill",
+  "license": "MIT",
+  "repository": {
+    "url": "https://github.com/ITZSHOAIB/typescript-library-starter"
+  },
+  "publishConfig": {
+    "access": "public"
+  },
+  "lint-staged": {
+    "*": ["pnpm lint", "git add"]
+  },
+  "simple-git-hooks": {
+    "pre-commit": "pnpm typecheck && pnpm test:coverage && pnpm lint:staged"
+  },
+  "packageManager": "pnpm@9.12.0",
+  "engines": {
+    "node": ">=20.0.0"
+  },
+  "sideEffects": false
+}
