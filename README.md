@@ -23,7 +23,7 @@ File layout must mirror the structure of `repo_dir`.
 ## Installation
 
 ```sh
-bunx patchy
+npm install -g @richardgill/patchy
 ```
 
 ## Shared Flags
@@ -48,7 +48,7 @@ These flags are accepted by **all commands**:
 Apply patch files from `patches/` into `repo_dir`.
 
 ```sh
-bunx patchy apply [--repo-dir] [--patches-dir] [--dry-run]
+patchy apply [--repo-dir] [--patches-dir] [--dry-run]
 ```
 
 ### `patchy generate`
@@ -56,7 +56,7 @@ bunx patchy apply [--repo-dir] [--patches-dir] [--dry-run]
 Generate `.diff` files and new full files into `./patches/` based on current dirty changes in `repo_dir`.
 
 ```sh
-bunx patchy generate [--repo-dir] [--patches-dir] [--dry-run]
+patchy generate [--repo-dir] [--patches-dir] [--dry-run]
 ```
 
 ### `patchy repo reset`
@@ -64,7 +64,7 @@ bunx patchy generate [--repo-dir] [--patches-dir] [--dry-run]
 Hard reset the Git working tree of `repo_dir`. Discards local changes.
 
 ```sh
-bunx patchy repo reset [--repo-dir]
+patchy repo reset [--repo-dir]
 ```
 
 ### `patchy repo checkout --ref <git-ref>`
@@ -72,7 +72,7 @@ bunx patchy repo reset [--repo-dir]
 Check out a specific Git ref (branch, tag, or SHA) in `repo_dir`.
 
 ```sh
-bunx patchy repo checkout --ref main [--repo-dir]
+patchy repo checkout --ref main [--repo-dir]
 ```
 
 ### `patchy repo clone --url <git-url>`
@@ -80,7 +80,7 @@ bunx patchy repo checkout --ref main [--repo-dir]
 Clone a repository into a subdirectory of `repo_base_dir`. The target directory is derived from the repo name.
 
 ```sh
-bunx patchy repo clone [--repo-base-dir] [--ref] [--repo-url] 
+patchy repo clone [--repo-base-dir] [--ref] [--repo-url] 
 ```
 
 ## Configuration (`patchy.yaml`)
@@ -104,18 +104,18 @@ ref: main
 
 ```sh
 # Clone the upstream repo
-bunx patchy repo clone --repo-url https://github.com/richardgill/upstream.git --repo-base-dir ../clones
+patchy repo clone --repo-url https://github.com/richardgill/upstream.git --repo-base-dir ../clones
 
 # Check out upstream repo at a specific version
-bunx patchy repo checkout --ref v1.2.3 --repo-dir ../clones/upstream
+patchy repo checkout --ref v1.2.3 --repo-dir ../clones/upstream
 
 # Generate patches from current state of repo_dir
-bunx patchy generate --repo-dir ../clones/upstream
+patchy generate --repo-dir ../clones/upstream
 
 # Later, apply patches cleanly to fresh repo
-bunx patchy repo reset --repo-dir ../clones/upstream
-bunx patchy repo checkout --ref main --repo-dir ../clones/upstream
-bunx patchy apply --repo-dir ../clones/upstream
+patchy repo reset --repo-dir ../clones/upstream
+patchy repo checkout --ref main --repo-dir ../clones/upstream
+patchy apply --repo-dir ../clones/upstream
 ```
 
 ## License

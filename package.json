@@ -1,5 +1,5 @@
 {
-  "name": "patchy",
+  "name": "@richardgill/patchy",
   "version": "0.0.0",
   "description": "A CLI tool for managing Git patch workflows.",
   "bin": {
