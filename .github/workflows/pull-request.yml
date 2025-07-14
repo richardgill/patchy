@@ -9,8 +9,6 @@ concurrency:
 
 jobs:
   checks:
-    # Remove this line to enable the job
-    if: ${{ false }}
     name: Checks
     uses: ./.github/workflows/pre-checks.yml
     secrets: inherit
