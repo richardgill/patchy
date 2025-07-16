@@ -21,7 +21,8 @@
     "typecheck": "tsgo --noEmit",
     "test": "vitest",
     "test-watch": "vitest --watch",
-    "test-coverage": "vitest run --coverage"
+    "test-coverage": "vitest run --coverage",
+    "dev": "pnpm build && node dist/cli.js"
   },
   "devDependencies": {
     "@biomejs/biome": "2.1.1",
@@ -33,6 +34,9 @@
     "lefthook": "^1.12.2",
     "rimraf": "^6.0.1",
     "vitest": "^3.2.4"
+  },
+  "dependencies": {
+    "@stricli/core": "^1.2.0"
   },
   "peerDependencies": {
     "typescript": ">=5.0.4"

@@ -7,6 +7,10 @@ settings:
 importers:
 
   .:
+    dependencies:
+      '@stricli/core':
+        specifier: ^1.2.0
+        version: 1.2.0
     devDependencies:
       '@biomejs/biome':
         specifier: 2.1.1
@@ -456,6 +460,9 @@ packages:
     resolution: {integrity: sha512-vliZLrDmYKyaUoMzEbMTg2JkerfBjn03KmAw9CykO0Zzkzoyd7o3iZNam/TpyWNjNT+Cz2iO3P9Smv2wgrR+Eg==}
     cpu: [x64]
     os: [win32]
+
+  '@stricli/core@1.2.0':
+    resolution: {integrity: sha512-5b+npntDY0TAB7wAw0daGlh3/R2sf0TDLyrB1By2jCNH+C+lmcSqMtJXOMLVtEGSkIOvqAgIWpLMSs1PXqzt3w==}
 
   '@types/chai@5.2.2':
     resolution: {integrity: sha512-8kB30R7Hwqf40JPiKhVzodJs2Qc1ZJ5zuT3uzw5Hq/dhNCl3G3l83jfpdI1e20BP348+fV7VIL/+FxaXkqBmWg==}
@@ -1687,6 +1694,8 @@ snapshots:
 
   '@rollup/rollup-win32-x64-msvc@4.27.3':
     optional: true
+
+  '@stricli/core@1.2.0': {}
 
   '@types/chai@5.2.2':
     dependencies:

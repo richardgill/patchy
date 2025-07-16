@@ -4,6 +4,16 @@ An opinionated command-line tool for managing Git patch workflows.
 
 **patchy** helps you maintain a curated set of patches—both added files and diffs—against an upstream Git repository.
 
+## Quick Start
+
+Run this command to initialize a new patch project:
+
+```sh
+patchy init
+```
+
+This will set up the necessary directory structure and configuration file for your patch workflow.
+
 ## Directory Structure
 
 ```
