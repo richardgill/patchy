@@ -1,0 +1,36 @@
+// amends: https://pkl-lang.org/main/current/language-reference/index.html#module-amend
+// creates, effectively, a child of the referenced module (which in this case is Pipeline.pkl)
+// All fields, defaults, and types are inherited. No additional fields may be added.
+amends "https://joist.fsn1.your-objectstorage.com/pkl/Pipeline.pkl"
+
+// Define a new local variable: https://pkl-lang.org/main/current/language-reference/index.html#local-properties
+// A local variable can be used even when amending a parent module. They can be created to help with code reuse.
+// Local variables are not rendered in the pipeline output.
+//
+// LocalSystem is defined in `Pipeline.pkl` (referenced above)
+local main = new LocalSystem {
+    // Here, we override allowed_bins: allowing only `go`. To add additional binaries, we would do something like:
+    //      `allowed_bins = new Listing { "go"; "ls" }` (note the ; separator)
+    // A listing (https://pkl-lang.org/main/current/language-reference/index.html#listings) is an array-like type.
+    // A listing in Pkl is used for for defining lists with literal values.
+	allowed_bins = new Listing { "pnpm"; "npm"; "node"; "mise" }
+	use_default_bins = true
+}
+
+// stages must be present in all pipelines - it's a Listing (literal array) of `Stage` types (see Pipeline.pkl)
+// for the definition of Stage.
+stages = new Listing<Stage> {
+    // `new` is syntactic sugar for `new Stage` (which Pkl infers from `Listing<Stage>`)
+    new {
+        // each Stage has a name
+        name = "Check"
+        // copy the system config from `local main = new LocalSystem { .. }` above.
+        system = main
+        // actions defines the steps - executed by bash - you'd like to perform
+        actions = new Listing {
+			"[[ $(go version | awk '{print substr($3,3)}') = '1.24.0' ]]"
+			"pnpm install"
+			"pnpm run lint"
+        }
+    }
+}
