@@ -10,4 +10,11 @@ stages = new Listing<Stage> {
       "pnpm run lint"
     }
   }
+  new {
+    name = "Test"
+    system = shared.main
+    actions = new Listing {
+      "pnpm run test"
+    }
+  }
 }
