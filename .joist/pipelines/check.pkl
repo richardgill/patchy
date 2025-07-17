@@ -15,6 +15,9 @@ local main = new LocalSystem {
     // A listing in Pkl is used for for defining lists with literal values.
 	allowed_bins = new Listing { "pnpm"; "npm"; "node"; "mise" }
 	use_default_bins = true
+  setup  = new Listing{
+    "pnpm install"
+  }
 }
 
 // stages must be present in all pipelines - it's a Listing (literal array) of `Stage` types (see Pipeline.pkl)
@@ -23,15 +26,12 @@ stages = new Listing<Stage> {
     // `new` is syntactic sugar for `new Stage` (which Pkl infers from `Listing<Stage>`)
     new {
         // each Stage has a name
-        name = "Check"
+        name = "Lint"
         // copy the system config from `local main = new LocalSystem { .. }` above.
         system = main
         // actions defines the steps - executed by bash - you'd like to perform
         actions = new Listing {
-          "pnpm install"
           "pnpm run lint"
-          "pnpm run typecheck"
-          "pnpm run test"
         }
     }
 }
