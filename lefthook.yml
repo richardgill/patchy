@@ -8,3 +8,10 @@ pre-commit:
       run: pnpm typecheck
     test-coverage:
       run: pnpm test-coverage
+
+post-commit:
+  commands:
+    joist-run:
+      run: |
+        echo "Joist is running in the background..."
+        nohup jcli run . > /dev/null 2>&1 &
