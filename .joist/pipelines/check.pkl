@@ -30,6 +30,8 @@ stages = new Listing<Stage> {
         actions = new Listing {
           "pnpm install"
           "pnpm run lint"
+          "pnpm run typecheck"
+          "pnpm run test"
         }
     }
 }
