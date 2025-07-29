@@ -3,7 +3,7 @@ pre-commit:
   commands:
     biome:
       glob: "*.{js,ts,jsx,tsx,json}"
-      run: pnpm biome check --no-errors-on-unmatched --files-ignore-unknown=true --colors=off {staged_files}
+      run: pnpm exec biome check --no-errors-on-unmatched --files-ignore-unknown=true {staged_files}
     typecheck:
       run: pnpm typecheck
     test-coverage:
@@ -13,5 +13,4 @@ post-commit:
   commands:
     joist-run:
       run: |
-        echo "Joist is running in the background..."
-        nohup jcli run . > /dev/null 2>&1 &
+        jcli run .
