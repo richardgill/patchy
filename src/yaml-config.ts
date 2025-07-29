@@ -1,6 +1,6 @@
 import { z } from "zod";
 
-export const ConfigSchema = z.object({
+export const configSchema = z.object({
   repoUrl: z.string().min(1, "Repository URL is required"),
   repoDir: z.string().min(1, "Repository directory is required"),
   repoBaseDir: z.string().min(1, "Repository base directory is required"),
@@ -8,4 +8,4 @@ export const ConfigSchema = z.object({
   ref: z.string().min(1, "Git ref is required"),
 });
 
-export type ConfigData = z.infer<typeof ConfigSchema>;
+export type ConfigData = z.infer<typeof configSchema>;

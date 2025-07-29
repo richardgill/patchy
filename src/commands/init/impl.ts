@@ -5,7 +5,7 @@ import enquirer from "enquirer";
 import { compact } from "es-toolkit";
 import { stringify } from "yaml";
 import type { LocalContext } from "../../context.js";
-import { type ConfigData, ConfigSchema } from "../../yaml-config.js";
+import { type ConfigData, configSchema } from "../../yaml-config.js";
 
 const { prompt } = enquirer;
 
@@ -134,7 +134,7 @@ export default async function (
 }
 
 const generateYamlConfig = (config: ConfigData): string => {
-  const validatedConfig = ConfigSchema.parse(config);
+  const validatedConfig = configSchema.parse(config);
 
   const yamlData = {
     repo_url: validatedConfig.repoUrl,
