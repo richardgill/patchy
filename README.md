@@ -99,7 +99,7 @@ Optional file to set default values:
 
 ```yaml
 repo_url: https://github.com/richardgill/upstream.git
-repo_dir: ../clones/upstream-repo
+repo_dir: upstream-repo
 repo_base_dir: ../clones
 patches_dir: patches/
 ref: main
@@ -124,7 +124,7 @@ patchy generate --repo-dir ../clones/upstream
 
 # Later, apply patches cleanly to fresh repo
 patchy repo reset --repo-dir ../clones/upstream
-patchy repo checkout --ref main --repo-dir ../clones/upstream
+patchy repo checkout --ref main --repo-dir upstream
 patchy apply --repo-dir ../clones/upstream
 ```
 
