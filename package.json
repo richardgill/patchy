@@ -12,31 +12,37 @@
   "scripts": {
     "build": "pnpm clean && tsgo",
     "clean": "rimraf dist",
-    "format": "biome format --write",
-    "lint": "biome check --fix",
+    "check-fix": "biome check --write",
+    "check": "biome check",
     "changeset": "changeset",
     "changeset-version": "changeset version",
     "changeset-publish": "pnpm build && changeset publish",
+    "dev": "tsx src/cli.ts",
     "prepare": "lefthook install",
     "typecheck": "tsgo --noEmit",
     "test": "vitest",
     "test-watch": "vitest --watch",
-    "test-coverage": "vitest run --coverage",
-    "dev": "pnpm build && node dist/cli.js"
+    "test-coverage": "vitest run --coverage"
   },
   "devDependencies": {
     "@biomejs/biome": "2.1.1",
     "@changesets/changelog-github": "^0.5.1",
     "@changesets/cli": "^2.29.5",
+    "@types/js-yaml": "^4.0.9",
     "@types/node": "^24.0.13",
     "@typescript/native-preview": "7.0.0-dev.20250712.1",
     "@vitest/coverage-v8": "3.2.4",
     "lefthook": "^1.12.2",
     "rimraf": "^6.0.1",
+    "tsx": "^4.20.3",
     "vitest": "^3.2.4"
   },
   "dependencies": {
-    "@stricli/core": "^1.2.0"
+    "@stricli/core": "^1.2.0",
+    "enquirer": "^2.4.1",
+    "es-toolkit": "^1.39.8",
+    "yaml": "^2.8.0",
+    "zod": "^4.0.13"
   },
   "peerDependencies": {
     "typescript": ">=5.0.4"

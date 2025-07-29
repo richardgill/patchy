@@ -7,7 +7,7 @@ stages = new Listing<Stage> {
     name = "Lint"
     system = shared.main
     actions = new Listing {
-      "pnpm run lint"
+      "pnpm run check"
     }
   }
   new {
