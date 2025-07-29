@@ -17,12 +17,12 @@
     "changeset": "changeset",
     "changeset-version": "changeset version",
     "changeset-publish": "pnpm build && changeset publish",
+    "dev": "tsx src/cli.ts",
     "prepare": "lefthook install",
     "typecheck": "tsgo --noEmit",
     "test": "vitest",
     "test-watch": "vitest --watch",
-    "test-coverage": "vitest run --coverage",
-    "dev": "tsx src/cli.ts"
+    "test-coverage": "vitest run --coverage"
   },
   "devDependencies": {
     "@biomejs/biome": "2.1.1",
