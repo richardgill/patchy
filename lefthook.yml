@@ -13,4 +13,4 @@ post-commit:
   commands:
     joist-run:
       run: |
-        jcli run .
+        tmux new-session -d -s jcli 'jcli run . > jcli.log 2>&1 && tmux kill-session -t jcli'
