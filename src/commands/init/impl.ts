@@ -6,7 +6,10 @@ import enquirer from "enquirer";
 import { compact, omitBy } from "es-toolkit";
 import { stringify } from "yaml";
 import type { LocalContext } from "../../context.js";
-import { type ConfigData, configSchema } from "../../yaml-config.js";
+import {
+  type RequiredConfigData,
+  requiredConfigSchema,
+} from "../../yaml-config.js";
 
 const { prompt } = enquirer;
 
@@ -15,8 +18,8 @@ const DEFAULT_CONFIG_PATH = "./patchy.yaml";
 const DEFAULT_REF = "main";
 
 const isValidGitUrl = (url: string): boolean => {
-  const httpsPattern = /^https?:\/\/[\w\.-]+\/[\w\.-]+(\/[\w\.-]+)+(\.git)?$/;
-  const sshPattern = /^git@[\w\.-]+:[\w\.-]+(\/[\w\.-]+)+(\.git)?$/;
+  const httpsPattern = /^https?:\/\/[\w.-]+\/[\w.-]+(\/[\w.-]+)+(\.git)?$/;
+  const sshPattern = /^git@[\w.-]+:[\w.-]+(\/[\w.-]+)+(\.git)?$/;
   const trimmed = url.trim();
   return httpsPattern.test(trimmed) || sshPattern.test(trimmed);
 };
@@ -44,7 +47,6 @@ export default async function (
   flags: InitCommandFlags,
 ): Promise<void> {
   const configPath = resolve(flags.config ?? DEFAULT_CONFIG_PATH);
-  const patchesDir = resolve(flags.patchesDir ?? DEFAULT_PATCHES_DIR);
 
   if (!flags.force && existsSync(configPath)) {
     this.process.stderr.write(
@@ -95,17 +97,19 @@ export default async function (
         })
       : {};
 
-  const finalConfig: ConfigData = {
-    repoUrl: flags.repoUrl ?? answers.repoUrl ?? "",
-    repoDir: flags.repoDir,
-    repoBaseDir: flags.repoBaseDir ?? resolve(homedir(), ".patchy/repos"),
-    patchesDir: flags.patchesDir ?? answers.patchesDir ?? DEFAULT_PATCHES_DIR,
+  const finalConfig: RequiredConfigData = {
+    repo_url: flags.repoUrl ?? answers.repoUrl ?? "",
+    repo_dir: flags.repoDir ?? "",
+    repo_base_dir: flags.repoBaseDir ?? resolve(homedir(), ".patchy/repos"),
+    patches_dir: flags.patchesDir ?? answers.patchesDir ?? DEFAULT_PATCHES_DIR,
     ref: flags.ref ?? answers.ref ?? DEFAULT_REF,
   };
 
   try {
-    await mkdir(patchesDir, { recursive: true });
-    this.process.stdout.write(`Created patches directory: ${patchesDir}\n`);
+    await mkdir(finalConfig.patches_dir, { recursive: true });
+    this.process.stdout.write(
+      `Created patches directory: ${finalConfig.patches_dir}\n`,
+    );
   } catch (error) {
     this.process.stderr.write(`Failed to create patches directory: ${error}\n`);
     this.process.exit?.(1);
@@ -128,24 +132,18 @@ export default async function (
   this.process.stdout.write("\n✅ Patchy project initialized successfully!\n");
   this.process.stdout.write("\nNext steps:\n");
   this.process.stdout.write(
-    `1. Clone your upstream repository: patchy repo clone --repo-url ${finalConfig.repoUrl}\n`,
+    `1. Clone your upstream repository: patchy repo clone --repo-url ${finalConfig.repo_url}\n`,
   );
   this.process.stdout.write(`2. Make changes to your repository\n`);
   this.process.stdout.write(`3. Generate patches: patchy generate\n`);
 }
 
-const generateYamlConfig = (config: ConfigData): string => {
-  const validatedConfig = configSchema.parse(config);
+const generateYamlConfig = (config: RequiredConfigData): string => {
+  const validatedConfig = requiredConfigSchema.parse(config);
 
   const yamlData = omitBy(
-    {
-      repo_url: validatedConfig.repoUrl,
-      repo_dir: validatedConfig.repoDir,
-      repo_base_dir: validatedConfig.repoBaseDir,
-      patches_dir: validatedConfig.patchesDir,
-      ref: validatedConfig.ref,
-    },
-    (value) => value == null,
+    validatedConfig,
+    (value) => value === "" || value == null,
   );
 
   return stringify(yamlData);
