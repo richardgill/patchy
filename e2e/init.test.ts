@@ -1,45 +1,34 @@
-import { afterEach, beforeEach, describe, expect, it } from "vitest";
-import { $ } from "zx";
 import { existsSync, readFileSync } from "node:fs";
-import { mkdir, rm } from "node:fs/promises";
 import { join } from "node:path";
-import { randomUUID } from "node:crypto";
+import { afterEach, beforeEach, describe, expect, it } from "vitest";
 import yaml from "yaml";
-
-// Configure zx for better performance
-$.verbose = false; // Reduce output noise
-$.shell = "/bin/bash"; // Use bash directly
+import {
+  cleanupTestDir,
+  createTestDir,
+  runPatchy,
+  type TestContext,
+} from "./test-utils";
 
 describe("patchy init", () => {
-  let testDir: string;
-  const originalCwd = process.cwd();
+  let ctx: TestContext;
 
   beforeEach(async () => {
-    // Use unique directory per test to support concurrency
-    const testId = randomUUID();
-    testDir = join(originalCwd, "e2e/tmp", `init-test-${testId}`);
-    await mkdir(testDir, { recursive: true });
+    ctx = await createTestDir();
   });
 
   afterEach(async () => {
-    process.chdir(originalCwd);
-    await rm(testDir, { recursive: true, force: true });
+    await cleanupTestDir(ctx);
   });
 
   it("should initialize patchy with all flags", async () => {
-    const configPath = join(testDir, "patchy.yaml");
-    const patchesDir = join(testDir, "patches");
-    const reposDir = join(testDir, "repos");
+    const configPath = join(ctx.testDir, "patchy.yaml");
+    const patchesDir = join(ctx.testDir, "patches");
+    const reposDir = join(ctx.testDir, "repos");
     const repoDir = join(reposDir, "upstream");
 
-    const result = await $`pnpm run dev init \
-      --repoUrl https://github.com/example/upstream.git \
-      --repoDir ${repoDir} \
-      --repoBaseDir ${reposDir} \
-      --patchesDir ${patchesDir} \
-      --ref main \
-      --config ${configPath} \
-      --force`;
+    const result = await runPatchy(
+      `init --repoUrl https://github.com/example/upstream.git --repoDir ${repoDir} --repoBaseDir ${reposDir} --patchesDir ${patchesDir} --ref main --config ${configPath} --force`,
+    );
 
     expect(result.exitCode).toBe(0);
 
@@ -57,4 +46,3 @@ describe("patchy init", () => {
     expect(existsSync(patchesDir)).toBe(true);
   });
 });
-
