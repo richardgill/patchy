@@ -7,7 +7,7 @@ pre-commit:
     typecheck:
       run: pnpm typecheck
     test-coverage:
-      run: pnpm test
+      run: pnpm test run
 
 post-commit:
   commands:
