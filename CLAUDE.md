@@ -1,0 +1,1 @@
+Use dashes in package.json scripts: `test-watch`, `test-unit`, `test-e2e`

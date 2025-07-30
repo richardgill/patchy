@@ -2,3 +2,4 @@ node_modules
 dist
 coverage
 *.log
+e2e/tmp/

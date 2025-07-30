@@ -57,6 +57,9 @@ importers:
       vitest:
         specifier: ^3.2.4
         version: 3.2.4(@types/node@24.0.13)
+      zx:
+        specifier: ^8.7.2
+        version: 8.7.2
 
 packages:
 
@@ -1499,6 +1502,11 @@ packages:
   zod@4.0.13:
     resolution: {integrity: sha512-jv+zRxuZQxTrFHzxZ46ezL2FtnE+M4HIJHJEwLsZ7UjrXHltdG6HrxvqM0twoVCWxJiYf8WqKjAcjztegpkB+Q==}
 
+  zx@8.7.2:
+    resolution: {integrity: sha512-4Wtl46msLFx6QW6GjLu1aRnFhavukT4VSp4tdXvfRIBRNW3RP7Si3RlRFD7YeQeecQBacVFRQQgm5LTvE/YEGQ==}
+    engines: {node: '>= 12.17.0'}
+    hasBin: true
+
 snapshots:
 
   '@ampproject/remapping@2.3.0':
@@ -2818,3 +2826,5 @@ snapshots:
   yaml@2.8.0: {}
 
   zod@4.0.13: {}
+
+  zx@8.7.2: {}

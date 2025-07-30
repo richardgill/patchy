@@ -21,6 +21,8 @@
     "prepare": "lefthook install",
     "typecheck": "tsgo --noEmit",
     "test": "vitest",
+    "test-unit": "vitest run --project unit",
+    "test-e2e": "vitest run --project e2e",
     "test-watch": "vitest --watch",
     "test-coverage": "vitest run --coverage"
   },
@@ -35,7 +37,8 @@
     "lefthook": "^1.12.2",
     "rimraf": "^6.0.1",
     "tsx": "^4.20.3",
-    "vitest": "^3.2.4"
+    "vitest": "^3.2.4",
+    "zx": "^8.7.2"
   },
   "dependencies": {
     "@stricli/core": "^1.2.0",
