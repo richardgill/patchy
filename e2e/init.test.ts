@@ -1,7 +1,6 @@
 import { existsSync, readFileSync } from "node:fs";
 import { join } from "node:path";
-import { afterEach, beforeEach, describe, expect, it, test } from "vitest";
-import yaml from "yaml";
+import { afterEach, beforeEach, describe, expect, it } from "vitest";
 import {
   cleanupTestDir,
   createTestDir,
@@ -21,29 +20,25 @@ describe("patchy init", () => {
   });
 
   it("should initialize patchy with all flags", async () => {
-    const testRepoUrl = "https://github.com/example/test-repo.git";
-    const configPath = "patchy.yaml";
-    const patchesDir = "patches";
-    const reposDir = join(ctx.testDir, "repos");
-    const repoDir = "main";
-
     const result = await runPatchy(
-      `init --repoUrl ${testRepoUrl} --repoDir ${repoDir} --repoBaseDir ${reposDir} --patchesDir ${patchesDir} --ref main --config ${configPath} --force`,
+      `init --repoUrl https://github.com/example/test-repo.git --repoDir main --repoBaseDir ${join(ctx.testDir, "repos")} --patchesDir patches --ref main --config patchy.yaml --force`,
+      ctx.testDir
     );
 
     expect(result.exitCode).toBe(0);
-
+    
+    const configPath = join(ctx.testDir, "patchy.yaml");
     expect(existsSync(configPath)).toBe(true);
-
-    const configContent = readFileSync(configPath, "utf-8");
-    const config = yaml.parse(configContent);
-
-    expect(config.repo_url).toBe(testRepoUrl);
-    expect(config.repo_dir).toBe(repoDir);
-    expect(config.repo_base_dir).toBe(reposDir);
-    expect(config.patches_dir).toBe(patchesDir);
-    expect(config.ref).toBe("main");
-
-    expect(existsSync(patchesDir)).toBe(true);
+    
+    const yamlContent = readFileSync(configPath, "utf-8");
+    const expectedYaml = `repo_url: https://github.com/example/test-repo.git
+repo_dir: main
+repo_base_dir: ${join(ctx.testDir, "repos")}
+patches_dir: patches
+ref: main
+`;
+    expect(yamlContent).toBe(expectedYaml);
+    
+    expect(existsSync(join(ctx.testDir, "patches"))).toBe(true);
   });
 });

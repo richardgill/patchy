@@ -25,7 +25,9 @@ export const cleanupTestDir = async (ctx: TestContext) => {
   await rm(ctx.testDir, { recursive: true, force: true });
 };
 
-export const runPatchy = async (command: string) => {
+export const runPatchy = async (command: string, cwd: string) => {
   // Split command string into array so zx passes each argument separately
-  return await $`pnpm run dev ${command.split(" ")}`;
+  // Run tsx directly from the test directory to ensure correct working directory
+  const cliPath = join(process.cwd(), "src/cli.ts");
+  return await $({ cwd })`pnpm exec tsx ${cliPath} ${command.split(" ")}`;
 };
