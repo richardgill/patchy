@@ -1,5 +1,5 @@
 import { buildApplication, buildRouteMap } from "@stricli/core";
-import { initCommand } from "./commands/init/command.js";
+import { initCommand } from "./commands/init/command";
 
 const routes = buildRouteMap({
   routes: {

@@ -5,11 +5,11 @@ import { resolve } from "node:path";
 import enquirer from "enquirer";
 import { compact, omitBy } from "es-toolkit";
 import { stringify } from "yaml";
-import type { LocalContext } from "../../context.js";
+import type { LocalContext } from "../../context";
 import {
   type RequiredConfigData,
   requiredConfigSchema,
-} from "../../yaml-config.js";
+} from "../../yaml-config";
 
 const { prompt } = enquirer;
 

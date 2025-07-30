@@ -7,7 +7,7 @@ import {
   optionalConfigSchema,
   type RequiredConfigData,
   requiredConfigSchema,
-} from "./yaml-config.js";
+} from "./yaml-config";
 
 type BaseCommandFlags = {
   repoUrl?: string;
