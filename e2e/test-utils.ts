@@ -26,5 +26,6 @@ export const cleanupTestDir = async (ctx: TestContext) => {
 };
 
 export const runPatchy = async (command: string) => {
+  // Split command string into array so zx passes each argument separately
   return await $`pnpm run dev ${command.split(" ")}`;
 };

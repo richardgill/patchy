@@ -20,7 +20,7 @@
     "dev": "tsx src/cli.ts",
     "prepare": "lefthook install",
     "typecheck": "tsgo --noEmit",
-    "test": "vitest",
+    "test": "vitest run",
     "test-unit": "vitest run --project unit",
     "test-e2e": "vitest run --project e2e",
     "test-watch": "vitest --watch",
