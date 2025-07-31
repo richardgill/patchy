@@ -25,4 +25,4 @@ When you're finished making your code changes run `pnpm typecheck`  `pnpm check`
 
 ## Testing Preferences
 
-- Use array-based test cases for parameterized tests to keep tests DRY and maintainable
+- Use parameterized tests, each one has an it(...) with shared functions, keep tests DRY and maintainable

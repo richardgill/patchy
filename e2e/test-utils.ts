@@ -39,10 +39,24 @@ export const runPatchy = async (command: string, cwd: string) => {
   // Parse command into arguments array
   const args = command.match(/(?:[^\s"]+|"[^"]*")+/g) || [];
 
+  console.log(`\n🔧 Running: patchy ${command}`);
+  console.log(`   CWD: ${cwd}`);
+  console.log(`   Full command: ${tsxPath} ${cliPath} ${args.join(' ')}`);
+  console.log(`   Or run directly: cd "${cwd}" && ${tsxPath} ${cliPath} ${args.join(' ')}`);
+
   const result = await execa(tsxPath, [cliPath, ...args], {
     cwd,
     reject: false,
   });
+
+  if (result.exitCode !== 0) {
+    console.log(`   ❌ Exit code: ${result.exitCode}`);
+    if (result.stderr) {
+      console.log(`   stderr: ${result.stderr}`);
+    }
+  } else {
+    console.log(`   ✅ Success`);
+  }
 
   return result;
 };

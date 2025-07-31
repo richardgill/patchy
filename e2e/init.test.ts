@@ -73,21 +73,21 @@ describe("patchy init", () => {
   describe("error cases", () => {
     it("should fail with malformed repo url - missing protocol", async () => {
       await assertFailedInit({
-        command: `init --repoUrl github.com/example/repo --force`,
+        command: `init --repoUrl github.com/example/repo --repoDir main --repoBaseDir ${ctx.repoBaseDir} --patchesDir patches --ref main --config patchy.yaml --force`,
         expectedErrors: "valid Git URL",
       });
     });
 
     it("should fail with malformed repo url - invalid domain", async () => {
       await assertFailedInit({
-        command: `init --repoUrl https://invalid_domain/repo --force`,
+        command: `init --repoUrl https://invalid_domain/repo --repoDir main --repoBaseDir ${ctx.repoBaseDir} --patchesDir patches --ref main --config patchy.yaml --force`,
         expectedErrors: "valid Git URL",
       });
     });
 
     it("should fail with malformed repo url - incomplete path", async () => {
       await assertFailedInit({
-        command: `init --repoUrl https://github.com/ --force`,
+        command: `init --repoUrl https://github.com/ --repoDir main --repoBaseDir ${ctx.repoBaseDir} --patchesDir patches --ref main --config patchy.yaml --force`,
         expectedErrors: "valid Git URL",
       });
     });
@@ -95,12 +95,12 @@ describe("patchy init", () => {
     it("should fail when config file exists without force flag", async () => {
       // First create a config file
       await runPatchy(
-        `init --repoUrl https://github.com/example/repo.git --force`,
+        `init --repoUrl https://github.com/example/repo.git --repoDir main --repoBaseDir ${ctx.repoBaseDir} --patchesDir patches --ref main --config patchy.yaml --force`,
         ctx.patchesDir,
       );
 
       await assertFailedInit({
-        command: `init --repoUrl https://github.com/example/another-repo.git`,
+        command: `init --repoUrl https://github.com/example/another-repo.git --repoDir main --repoBaseDir ${ctx.repoBaseDir} --patchesDir patches --ref main --config patchy.yaml`,
         expectedErrors: [
           "Configuration file already exists",
           "Use --force to overwrite",
@@ -110,7 +110,7 @@ describe("patchy init", () => {
 
     it("should fail with validation error for empty repo_url", async () => {
       await assertFailedInit({
-        command: `init --repoUrl "" --force`,
+        command: `init --repoUrl "" --repoDir main --repoBaseDir ${ctx.repoBaseDir} --patchesDir patches --ref main --config patchy.yaml --force`,
         expectedErrors: "Repository URL is required",
       });
     });
