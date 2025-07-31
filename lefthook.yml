@@ -3,11 +3,12 @@ pre-commit:
   commands:
     biome:
       glob: "*.{js,ts,jsx,tsx,json}"
-      run: pnpm exec biome check --no-errors-on-unmatched --files-ignore-unknown=true {staged_files}
+      run: pnpm exec biome check --fix --no-errors-on-unmatched --files-ignore-unknown=true {staged_files}
+      stage_fixed: true
     typecheck:
       run: pnpm typecheck
-    test-coverage:
-      run: pnpm test-coverage
+    test:
+      run: pnpm test
 
 post-commit:
   commands:
