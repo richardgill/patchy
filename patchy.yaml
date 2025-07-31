@@ -1,5 +1,5 @@
 repo_url: https://github.com/example/test-repo.git
 repo_dir: main
-repo_base_dir: /Users/rich/code/patchy-test/e2e/tmp/test-47d23994-140f-4832-9f20-d233277c43c8/repos
+repo_base_dir: /Users/rich/code/patchy-test/e2e/tmp/test-ca1ce3a5-7e4b-4367-9ba3-e9f6c46997ce/repos
 patches_dir: patches
 ref: main

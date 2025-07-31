@@ -1,23 +1,30 @@
 import { randomUUID } from "node:crypto";
 import { mkdir, rm } from "node:fs/promises";
 import { join } from "node:path";
-import { $ } from "zx";
-
-$.verbose = false;
-$.shell = "/bin/bash";
+import { execa } from "execa";
 
 export type TestContext = {
   testDir: string;
   originalCwd: string;
+  patchesDir: string;
+  repoBaseDir: string;
 };
 
-export const createTestDir = async (): Promise<TestContext> => {
+export const createTestDir = async (
+  patchesSubdir = "patches",
+  repoSubdir = "repos",
+): Promise<TestContext> => {
   const originalCwd = process.cwd();
   const testId = randomUUID();
   const testDir = join(originalCwd, "e2e/tmp", `test-${testId}`);
-  await mkdir(testDir, { recursive: true });
+  const patchesDir = join(testDir, patchesSubdir);
+  const repoBaseDir = join(testDir, repoSubdir);
 
-  return { testDir, originalCwd };
+  await mkdir(testDir, { recursive: true });
+  await mkdir(patchesDir, { recursive: true });
+  await mkdir(repoBaseDir, { recursive: true });
+
+  return { testDir, originalCwd, patchesDir, repoBaseDir };
 };
 
 export const cleanupTestDir = async (ctx: TestContext) => {
@@ -26,8 +33,16 @@ export const cleanupTestDir = async (ctx: TestContext) => {
 };
 
 export const runPatchy = async (command: string, cwd: string) => {
-  // Split command string into array so zx passes each argument separately
-  // Run tsx directly from the test directory to ensure correct working directory
   const cliPath = join(process.cwd(), "src/cli.ts");
-  return await $({ cwd })`pnpm exec tsx ${cliPath} ${command.split(" ")}`;
+  const tsxPath = join(process.cwd(), "node_modules/.bin/tsx");
+
+  // Parse command into arguments array
+  const args = command.match(/(?:[^\s"]+|"[^"]*")+/g) || [];
+
+  const result = await execa(tsxPath, [cliPath, ...args], {
+    cwd,
+    reject: false,
+  });
+
+  return result;
 };

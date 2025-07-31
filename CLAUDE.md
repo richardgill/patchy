@@ -22,3 +22,7 @@ When you're finished making your code changes run `pnpm typecheck`  `pnpm check`
 - `yaml` - YAML parsing
 - `zod` - Runtime validation
 - `zx` - Shell scripting utilities (dev dependency)
+
+## Testing Preferences
+
+- Use array-based test cases for parameterized tests to keep tests DRY and maintainable
