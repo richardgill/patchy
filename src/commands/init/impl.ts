@@ -59,9 +59,7 @@ export default async function (
 
   // Validate repo URL if provided via flag (including empty string)
   if (flags.repoUrl !== undefined) {
-    const trimmedUrl = flags.repoUrl.trim();
-    // Handle the case where the CLI passes '""' as a literal string
-    if (!trimmedUrl || trimmedUrl === '""') {
+    if (!flags.repoUrl.trim()) {
       this.process.stderr.write("Repository URL is required\n");
       this.process.exit?.(1);
       return;

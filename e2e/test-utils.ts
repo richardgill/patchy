@@ -2,6 +2,7 @@ import { randomUUID } from "node:crypto";
 import { mkdir, rm } from "node:fs/promises";
 import { join } from "node:path";
 import { execa } from "execa";
+import { parse as parseShell } from "shell-quote";
 
 export type TestContext = {
   testDir: string;
@@ -36,8 +37,8 @@ export const runPatchy = async (command: string, cwd: string) => {
   const cliPath = join(process.cwd(), "src/cli.ts");
   const tsxPath = join(process.cwd(), "node_modules/.bin/tsx");
 
-  // Parse command into arguments array
-  const args = command.match(/(?:[^\s"]+|"[^"]*")+/g) || [];
+  // Parse command into arguments array using shell-quote
+  const args = parseShell(command) as string[];
 
   console.log(`\n🔧 Running: patchy ${command}`);
   console.log(`   CWD: ${cwd}`);

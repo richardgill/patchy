@@ -14,11 +14,12 @@ export default defineConfig({
           name: "e2e",
           include: ["e2e/**/*.test.ts"],
           testTimeout: 30000,
-          fileParallelism: true, // E2E tests should run sequentially to avoid conflicts
-          pool: "forks", // Use forks for better isolation between e2e tests
+          fileParallelism: true,
+          pool: "forks",
           poolOptions: {
             forks: {
-              singleFork: true, // Run all tests in a single fork to avoid overhead
+              singleFork: false,
+              maxForks: 4,
             },
           },
         },
