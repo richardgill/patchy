@@ -37,29 +37,12 @@ export const runPatchy = async (command: string, cwd: string) => {
   const cliPath = join(process.cwd(), "src/cli.ts");
   const tsxPath = join(process.cwd(), "node_modules/.bin/tsx");
 
-  // Parse command into arguments array using shell-quote
   const args = parseShell(command) as string[];
-
-  console.log(`\n🔧 Running: patchy ${command}`);
-  console.log(`   CWD: ${cwd}`);
-  console.log(`   Full command: ${tsxPath} ${cliPath} ${args.join(" ")}`);
-  console.log(
-    `   Or run directly: cd "${cwd}" && ${tsxPath} ${cliPath} ${args.join(" ")}`,
-  );
 
   const result = await execa(tsxPath, [cliPath, ...args], {
     cwd,
     reject: false,
   });
-
-  if (result.exitCode !== 0) {
-    console.log(`   ❌ Exit code: ${result.exitCode}`);
-    if (result.stderr) {
-      console.log(`   stderr: ${result.stderr}`);
-    }
-  } else {
-    console.log(`   ✅ Success`);
-  }
 
   return result;
 };

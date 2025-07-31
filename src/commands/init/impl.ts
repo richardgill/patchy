@@ -57,7 +57,6 @@ export default async function (
     return;
   }
 
-  // Validate repo URL if provided via flag (including empty string)
   if (flags.repoUrl !== undefined) {
     if (!flags.repoUrl.trim()) {
       this.process.stderr.write("Repository URL is required\n");

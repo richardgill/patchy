@@ -93,7 +93,6 @@ describe("patchy init", () => {
     });
 
     it("should fail when config file exists without force flag", async () => {
-      // First create a config file
       await runPatchy(
         `init --repoUrl https://github.com/example/repo.git --repoDir main --repoBaseDir ${ctx.repoBaseDir} --patchesDir patches --ref main --config patchy.yaml --force`,
         ctx.patchesDir,
