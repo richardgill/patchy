@@ -57,10 +57,28 @@ export default async function (
     return;
   }
 
+  // Validate repo URL if provided via flag (including empty string)
+  if (flags.repoUrl !== undefined) {
+    const trimmedUrl = flags.repoUrl.trim();
+    // Handle the case where the CLI passes '""' as a literal string
+    if (!trimmedUrl || trimmedUrl === '""') {
+      this.process.stderr.write("Repository URL is required\n");
+      this.process.exit?.(1);
+      return;
+    }
+    if (!isValidGitUrl(flags.repoUrl)) {
+      this.process.stderr.write(
+        "Please enter a valid Git URL (https://github.com/owner/repo or git@github.com:owner/repo.git)\n",
+      );
+      this.process.exit?.(1);
+      return;
+    }
+  }
+
   this.process.stdout.write("\n🔧 Let's set up your Patchy project\n\n");
 
   const questions = compact([
-    !flags.repoUrl && {
+    flags.repoUrl === undefined && {
       type: "input",
       name: "repoUrl",
       message: "Upstream repository URL:",
@@ -72,14 +90,14 @@ export default async function (
         return true;
       },
     },
-    !flags.ref && {
+    flags.ref === undefined && {
       type: "input",
       name: "ref",
       message: "Git ref to track:",
       hint: "Branch, tag, or commit to compare against",
       initial: DEFAULT_REF,
     },
-    !flags.patchesDir && {
+    flags.patchesDir === undefined && {
       type: "input",
       name: "patchesDir",
       message: "Path for patch files:",
@@ -97,8 +115,10 @@ export default async function (
         })
       : {};
 
+  const repoUrl = flags.repoUrl ?? answers.repoUrl ?? "";
+
   const finalConfig: RequiredConfigData = {
-    repo_url: flags.repoUrl ?? answers.repoUrl ?? "",
+    repo_url: repoUrl,
     repo_dir: flags.repoDir ?? "",
     repo_base_dir: flags.repoBaseDir ?? resolve(homedir(), ".patchy/repos"),
     patches_dir: flags.patchesDir ?? answers.patchesDir ?? DEFAULT_PATCHES_DIR,

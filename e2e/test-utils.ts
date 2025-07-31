@@ -41,8 +41,10 @@ export const runPatchy = async (command: string, cwd: string) => {
 
   console.log(`\n🔧 Running: patchy ${command}`);
   console.log(`   CWD: ${cwd}`);
-  console.log(`   Full command: ${tsxPath} ${cliPath} ${args.join(' ')}`);
-  console.log(`   Or run directly: cd "${cwd}" && ${tsxPath} ${cliPath} ${args.join(' ')}`);
+  console.log(`   Full command: ${tsxPath} ${cliPath} ${args.join(" ")}`);
+  console.log(
+    `   Or run directly: cd "${cwd}" && ${tsxPath} ${cliPath} ${args.join(" ")}`,
+  );
 
   const result = await execa(tsxPath, [cliPath, ...args], {
     cwd,
