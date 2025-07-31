@@ -21,7 +21,6 @@ When you're finished making your code changes run `pnpm typecheck`  `pnpm check`
 - `enquirer` - Interactive prompts
 - `yaml` - YAML parsing
 - `zod` - Runtime validation
-- `zx` - Shell scripting utilities (dev dependency)
 
 ## Testing Preferences
 

@@ -39,8 +39,7 @@
     "rimraf": "^6.0.1",
     "shell-quote": "^1.8.3",
     "tsx": "^4.20.3",
-    "vitest": "^3.2.4",
-    "zx": "^8.7.2"
+    "vitest": "^3.2.4"
   },
   "dependencies": {
     "@stricli/core": "^1.2.0",
