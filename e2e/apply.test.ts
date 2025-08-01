@@ -118,10 +118,11 @@ describe("patchy apply", () => {
         patches_dir: "patches",
       });
 
-      await assertFailedCommand(`apply`, ctx.patchesDir, [
-        "repo-url",
-        "repo-dir",
-      ]);
+      await assertFailedCommand(
+        `apply`,
+        ctx.patchesDir,
+        "Missing required configuration: repo-url, repo-dir",
+      );
     });
 
     it("should fail when explicitly specified config file doesn't exist", async () => {
@@ -139,10 +140,11 @@ describe("patchy apply", () => {
         await rm(defaultConfigPath);
       }
 
-      await assertFailedCommand(`apply`, ctx.patchesDir, [
-        "repo-url",
-        "repo-dir",
-      ]);
+      await assertFailedCommand(
+        `apply`,
+        ctx.patchesDir,
+        "Missing required configuration: repo-url, repo-dir",
+      );
     });
   });
 
