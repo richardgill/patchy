@@ -1,20 +1,16 @@
 import { resolveConfig } from "../../config/resolver";
-import type { ApplyCommandFlags } from "../../config/types";
+import type { ApplyCommandFlags, ResolvedConfig } from "../../config/types";
 import type { LocalContext } from "../../context";
+import { logConfiguration } from "../shared-impl";
 
 export default async function (
   this: LocalContext,
   flags: ApplyCommandFlags,
 ): Promise<void> {
   try {
-    const config = await resolveConfig(flags);
+    const config = (await resolveConfig(flags)) as ResolvedConfig;
 
-    if (config.verbose) {
-      this.process.stdout.write("Configuration resolved:\n");
-      this.process.stdout.write(`  Repo directory: ${config.repoDir}\n`);
-      this.process.stdout.write(`  Patches directory: ${config.patchesDir}\n`);
-      this.process.stdout.write(`  Dry run: ${config.dryRun}\n`);
-    }
+    logConfiguration(this, config);
 
     if (config.dryRun) {
       this.process.stdout.write(

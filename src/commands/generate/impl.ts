@@ -1,9 +1,27 @@
-import type { ApplyCommandFlags } from "../../config/types";
+import { resolveConfig } from "../../config/resolver";
+import type { GenerateCommandFlags, ResolvedConfig } from "../../config/types";
 import type { LocalContext } from "../../context";
+import { logConfiguration } from "../shared-impl";
 
 export default async function (
   this: LocalContext,
-  _flags: ApplyCommandFlags,
+  flags: GenerateCommandFlags,
 ): Promise<void> {
-  console.log("generate");
+  try {
+    const config = (await resolveConfig(flags)) as ResolvedConfig;
+
+    logConfiguration(this, config);
+
+    if (config.dryRun) {
+      this.process.stdout.write(
+        "[DRY RUN] Would generate patches from " +
+          `${config.repoDir} to ${config.patchesDir}\n`,
+      );
+    } else {
+      this.process.stdout.write("Generating patches...\n");
+    }
+  } catch (error) {
+    this.process.stderr.write(`Error: ${error}\n`);
+    this.process.exit?.(1);
+  }
 }
