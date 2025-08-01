@@ -1,5 +1,6 @@
 import { existsSync } from "node:fs";
 import { resolve } from "node:path";
+import type { LocalContext } from "../context";
 import type { OptionalConfigData } from "../yaml-config";
 import { parseOptionalYamlConfig } from "../yaml-config";
 import {
@@ -14,7 +15,24 @@ import type {
   SharedFlags,
 } from "./types";
 
+const logConfiguration = (
+  context: LocalContext,
+  config: ResolvedConfig | PartialResolvedConfig,
+): void => {
+  if (config.verbose) {
+    context.process.stdout.write("Configuration resolved:\n");
+    context.process.stdout.write(`  repo_url: ${config.repoUrl}\n`);
+    context.process.stdout.write(`  repo_dir: ${config.repoDir}\n`);
+    context.process.stdout.write(`  repo_base_dir: ${config.repoBaseDir}\n`);
+    context.process.stdout.write(`  patches_dir: ${config.patchesDir}\n`);
+    context.process.stdout.write(`  ref: ${config.ref}\n`);
+    context.process.stdout.write(`  verbose: ${config.verbose}\n`);
+    context.process.stdout.write(`  dry_run: ${config.dryRun}\n`);
+  }
+};
+
 export const resolveConfig = async (
+  context: LocalContext,
   flags: SharedFlags & { repoUrl?: string; ref?: string },
   requireAll: boolean = true,
 ): Promise<PartialResolvedConfig | ResolvedConfig> => {
@@ -56,9 +74,12 @@ export const resolveConfig = async (
       );
     }
 
-    return merged as ResolvedConfig;
+    const resolved = merged as ResolvedConfig;
+    logConfiguration(context, resolved);
+    return resolved;
   }
 
+  logConfiguration(context, merged);
   return merged;
 };
 
