@@ -8,7 +8,7 @@ export type SharedFlags = {
 };
 
 export type InitCommandFlags = SharedFlags & {
-  repoUrl?: string;
+  "repo-url"?: string;
   ref?: string;
   force?: boolean;
 };
@@ -27,7 +27,7 @@ export type RepoCloneCommandFlags = Pick<
   SharedFlags,
   "repo-base-dir" | "config"
 > & {
-  repoUrl?: string;
+  "repo-url"?: string;
   ref?: string;
 };
 

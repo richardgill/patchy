@@ -10,7 +10,7 @@ import {
 } from "./yaml-config";
 
 type BaseCommandFlags = {
-  repoUrl?: string;
+  "repo-url"?: string;
   "repo-dir"?: string;
   "repo-base-dir"?: string;
   "patches-dir"?: string;
@@ -52,7 +52,7 @@ export const mergeConfigWithFlags = (
   flags: BaseCommandFlags,
 ): OptionalConfigData => {
   return {
-    repo_url: flags.repoUrl ?? yamlConfig?.repo_url,
+    repo_url: flags["repo-url"] ?? yamlConfig?.repo_url,
     repo_dir: flags["repo-dir"] ?? yamlConfig?.repo_dir,
     repo_base_dir: flags["repo-base-dir"] ?? yamlConfig?.repo_base_dir,
     patches_dir: flags["patches-dir"] ?? yamlConfig?.patches_dir,

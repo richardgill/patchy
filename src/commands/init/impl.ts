@@ -19,7 +19,7 @@ import {
 const { prompt } = enquirer;
 
 type InitCommandFlags = {
-  repoUrl?: string;
+  "repo-url"?: string;
   "repo-dir"?: string;
   "repo-base-dir"?: string;
   "patches-dir"?: string;
@@ -51,13 +51,13 @@ export default async function (
     return;
   }
 
-  if (flags.repoUrl !== undefined) {
-    if (!flags.repoUrl.trim()) {
+  if (flags["repo-url"] !== undefined) {
+    if (!flags["repo-url"].trim()) {
       this.process.stderr.write("Repository URL is required\n");
       this.process.exit?.(1);
       return;
     }
-    if (!isValidGitUrl(flags.repoUrl)) {
+    if (!isValidGitUrl(flags["repo-url"])) {
       this.process.stderr.write(
         "Please enter a valid Git URL (https://github.com/owner/repo or git@github.com:owner/repo.git)\n",
       );
@@ -69,7 +69,7 @@ export default async function (
   this.process.stdout.write("\n🔧 Let's set up your Patchy project\n\n");
 
   const questions = compact([
-    flags.repoUrl === undefined && {
+    flags["repo-url"] === undefined && {
       type: "input",
       name: "repoUrl",
       message: "Upstream repository URL:",
@@ -101,7 +101,7 @@ export default async function (
         })
       : {};
 
-  const repoUrl = flags.repoUrl ?? answers.repoUrl ?? "";
+  const repoUrl = flags["repo-url"] ?? answers.repoUrl ?? "";
 
   const finalConfig: RequiredConfigData = {
     repo_url: repoUrl,

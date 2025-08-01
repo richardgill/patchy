@@ -32,7 +32,7 @@ const logConfiguration = (
 
 export const resolveConfig = async (
   context: LocalContext,
-  flags: SharedFlags & { repoUrl?: string; ref?: string },
+  flags: SharedFlags & { "repo-url"?: string; ref?: string },
   requireAll: boolean = true,
 ): Promise<PartialResolvedConfig | ResolvedConfig> => {
   const configPath = resolve(flags.config ?? DEFAULT_CONFIG_PATH);
@@ -50,7 +50,7 @@ export const resolveConfig = async (
   }
 
   const merged: PartialResolvedConfig = {
-    repoUrl: flags.repoUrl ?? yamlConfig.repo_url,
+    repoUrl: flags["repo-url"] ?? yamlConfig.repo_url,
     repoDir: flags["repo-dir"] ?? yamlConfig.repo_dir,
     repoBaseDir: flags["repo-base-dir"] ?? yamlConfig.repo_base_dir,
     patchesDir:
@@ -82,7 +82,7 @@ export const resolveConfig = async (
 };
 
 export const loadConfigWithDefaults = (
-  flags: SharedFlags & { repoUrl?: string; ref?: string },
+  flags: SharedFlags & { "repo-url"?: string; ref?: string },
 ): PartialResolvedConfig => {
   const configPath = resolve(flags.config ?? DEFAULT_CONFIG_PATH);
 
@@ -96,7 +96,7 @@ export const loadConfigWithDefaults = (
   }
 
   return {
-    repoUrl: flags.repoUrl ?? yamlConfig.repo_url,
+    repoUrl: flags["repo-url"] ?? yamlConfig.repo_url,
     repoDir: flags["repo-dir"] ?? yamlConfig.repo_dir,
     repoBaseDir: flags["repo-base-dir"] ?? yamlConfig.repo_base_dir,
     patchesDir:

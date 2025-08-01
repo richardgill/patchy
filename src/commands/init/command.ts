@@ -4,7 +4,7 @@ export const initCommand = buildCommand({
   loader: async () => import("./impl"),
   parameters: {
     flags: {
-      repoUrl: {
+      "repo-url": {
         kind: "parsed",
         parse: String,
         brief: "The upstream repository URL",
