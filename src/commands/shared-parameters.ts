@@ -1,17 +1,17 @@
 export const sharedFlags = {
-  repoDir: {
+  "repo-dir": {
     kind: "parsed",
     parse: String,
     brief: "Path to the Git repo being patched",
     optional: true,
   },
-  repoBaseDir: {
+  "repo-base-dir": {
     kind: "parsed",
     parse: String,
     brief: "Parent directory where upstream repos are cloned",
     optional: true,
   },
-  patchesDir: {
+  "patches-dir": {
     kind: "parsed",
     parse: String,
     brief: "Path to patch files",
@@ -28,7 +28,7 @@ export const sharedFlags = {
     brief: "Enable verbose log output",
     optional: true,
   },
-  dryRun: {
+  "dry-run": {
     kind: "boolean",
     brief: "Simulate the command without writing files",
     optional: true,

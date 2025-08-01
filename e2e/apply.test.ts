@@ -37,7 +37,7 @@ describe("patchy apply", () => {
     });
 
     const result = await assertSuccessfulCommand(
-      `apply --repoDir main --repoBaseDir ${ctx.repoBaseDir} --patchesDir patches --config patchy.yaml --verbose --dryRun`,
+      `apply --repo-dir main --repo-base-dir ${ctx.repoBaseDir} --patches-dir patches --config patchy.yaml --verbose --dry-run`,
       ctx.patchesDir,
     );
 
@@ -64,7 +64,7 @@ describe("patchy apply", () => {
     });
 
     const result = await assertSuccessfulCommand(
-      `apply --dryRun`,
+      `apply --dry-run`,
       ctx.patchesDir,
     );
 
@@ -83,7 +83,7 @@ describe("patchy apply", () => {
     });
 
     const result = await assertSuccessfulCommand(
-      `apply --repoDir cli-repo --patchesDir cli-patches --dryRun`,
+      `apply --repo-dir cli-repo --patches-dir cli-patches --dry-run`,
       ctx.patchesDir,
     );
 
@@ -166,7 +166,7 @@ describe("patchy apply", () => {
       });
 
       const result = await assertSuccessfulCommand(
-        `apply --dryRun --verbose`,
+        `apply --dry-run --verbose`,
         ctx.patchesDir,
       );
 
@@ -192,7 +192,7 @@ describe("patchy apply", () => {
       });
 
       const result = await assertSuccessfulCommand(
-        `apply --dryRun --verbose`,
+        `apply --dry-run --verbose`,
         ctx.patchesDir,
       );
 
@@ -222,7 +222,7 @@ describe("patchy apply", () => {
       });
 
       const result = await assertSuccessfulCommand(
-        `apply --repoDir flag-dir --repoBaseDir /flag/base --patchesDir flag-patches --verbose --dryRun`,
+        `apply --repo-dir flag-dir --repo-base-dir /flag/base --patches-dir flag-patches --verbose --dry-run`,
         ctx.patchesDir,
       );
 
@@ -250,7 +250,7 @@ describe("patchy apply", () => {
       });
 
       const result = await assertSuccessfulCommand(
-        `apply --dryRun`,
+        `apply --dry-run`,
         ctx.patchesDir,
       );
 
@@ -274,7 +274,7 @@ describe("patchy apply", () => {
       });
 
       const result = await assertSuccessfulCommand(
-        `apply --verbose --dryRun --repoBaseDir /home/word`,
+        `apply --verbose --dry-run --repo-base-dir /home/word`,
         ctx.patchesDir,
       );
 
@@ -301,7 +301,7 @@ describe("patchy apply", () => {
       });
 
       const result = await assertSuccessfulCommand(
-        `apply --repoDir flag-override-dir --patchesDir flag-override-patches --verbose --dryRun`,
+        `apply --repo-dir flag-override-dir --patches-dir flag-override-patches --verbose --dry-run`,
         ctx.patchesDir,
       );
 
@@ -430,7 +430,7 @@ describe("patchy apply", () => {
       });
 
       const result = await assertSuccessfulCommand(
-        `apply --config custom-config.yaml --dryRun`,
+        `apply --config custom-config.yaml --dry-run`,
         ctx.patchesDir,
       );
 

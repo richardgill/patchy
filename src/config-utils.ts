@@ -11,9 +11,9 @@ import {
 
 type BaseCommandFlags = {
   repoUrl?: string;
-  repoDir?: string;
-  repoBaseDir?: string;
-  patchesDir?: string;
+  "repo-dir"?: string;
+  "repo-base-dir"?: string;
+  "patches-dir"?: string;
   ref?: string;
   config?: string;
 };
@@ -53,9 +53,9 @@ export const mergeConfigWithFlags = (
 ): OptionalConfigData => {
   return {
     repo_url: flags.repoUrl ?? yamlConfig?.repo_url,
-    repo_dir: flags.repoDir ?? yamlConfig?.repo_dir,
-    repo_base_dir: flags.repoBaseDir ?? yamlConfig?.repo_base_dir,
-    patches_dir: flags.patchesDir ?? yamlConfig?.patches_dir,
+    repo_dir: flags["repo-dir"] ?? yamlConfig?.repo_dir,
+    repo_base_dir: flags["repo-base-dir"] ?? yamlConfig?.repo_base_dir,
+    patches_dir: flags["patches-dir"] ?? yamlConfig?.patches_dir,
     ref: flags.ref ?? yamlConfig?.ref,
   };
 };

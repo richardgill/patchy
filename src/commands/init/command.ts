@@ -10,19 +10,19 @@ export const initCommand = buildCommand({
         brief: "The upstream repository URL",
         optional: true,
       },
-      repoDir: {
+      "repo-dir": {
         kind: "parsed",
         parse: String,
         brief: "Path to the Git repo being patched",
         optional: true,
       },
-      repoBaseDir: {
+      "repo-base-dir": {
         kind: "parsed",
         parse: String,
         brief: "Parent directory where upstream repos are cloned",
         optional: true,
       },
-      patchesDir: {
+      "patches-dir": {
         kind: "parsed",
         parse: String,
         brief: "Path to patch files",

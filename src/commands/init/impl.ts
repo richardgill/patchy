@@ -20,9 +20,9 @@ const { prompt } = enquirer;
 
 type InitCommandFlags = {
   repoUrl?: string;
-  repoDir?: string;
-  repoBaseDir?: string;
-  patchesDir?: string;
+  "repo-dir"?: string;
+  "repo-base-dir"?: string;
+  "patches-dir"?: string;
   ref?: string;
   config?: string;
   force?: boolean;
@@ -83,7 +83,7 @@ export default async function (
       hint: "Branch, tag, or commit to compare against",
       initial: DEFAULT_REF,
     },
-    flags.patchesDir === undefined && {
+    flags["patches-dir"] === undefined && {
       type: "input",
       name: "patchesDir",
       message: "Path for patch files:",
@@ -105,9 +105,10 @@ export default async function (
 
   const finalConfig: RequiredConfigData = {
     repo_url: repoUrl,
-    repo_dir: flags.repoDir ?? "",
-    repo_base_dir: flags.repoBaseDir ?? "",
-    patches_dir: flags.patchesDir ?? answers.patchesDir ?? DEFAULT_PATCHES_DIR,
+    repo_dir: flags["repo-dir"] ?? "",
+    repo_base_dir: flags["repo-base-dir"] ?? "",
+    patches_dir:
+      flags["patches-dir"] ?? answers.patchesDir ?? DEFAULT_PATCHES_DIR,
     ref: flags.ref ?? answers.ref ?? DEFAULT_REF,
     verbose: false,
   };

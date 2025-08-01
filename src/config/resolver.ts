@@ -51,13 +51,13 @@ export const resolveConfig = async (
 
   const merged: PartialResolvedConfig = {
     repoUrl: flags.repoUrl ?? yamlConfig.repo_url,
-    repoDir: flags.repoDir ?? yamlConfig.repo_dir,
-    repoBaseDir: flags.repoBaseDir ?? yamlConfig.repo_base_dir,
+    repoDir: flags["repo-dir"] ?? yamlConfig.repo_dir,
+    repoBaseDir: flags["repo-base-dir"] ?? yamlConfig.repo_base_dir,
     patchesDir:
-      flags.patchesDir ?? yamlConfig.patches_dir ?? DEFAULT_PATCHES_DIR,
+      flags["patches-dir"] ?? yamlConfig.patches_dir ?? DEFAULT_PATCHES_DIR,
     ref: flags.ref ?? yamlConfig.ref ?? DEFAULT_REF,
     verbose: flags.verbose ?? yamlConfig.verbose ?? false,
-    dryRun: flags.dryRun ?? false,
+    dryRun: flags["dry-run"] ?? false,
   };
 
   if (requireAll) {
@@ -97,12 +97,12 @@ export const loadConfigWithDefaults = (
 
   return {
     repoUrl: flags.repoUrl ?? yamlConfig.repo_url,
-    repoDir: flags.repoDir ?? yamlConfig.repo_dir,
-    repoBaseDir: flags.repoBaseDir ?? yamlConfig.repo_base_dir,
+    repoDir: flags["repo-dir"] ?? yamlConfig.repo_dir,
+    repoBaseDir: flags["repo-base-dir"] ?? yamlConfig.repo_base_dir,
     patchesDir:
-      flags.patchesDir ?? yamlConfig.patches_dir ?? DEFAULT_PATCHES_DIR,
+      flags["patches-dir"] ?? yamlConfig.patches_dir ?? DEFAULT_PATCHES_DIR,
     ref: flags.ref ?? yamlConfig.ref ?? DEFAULT_REF,
     verbose: flags.verbose ?? yamlConfig.verbose ?? false,
-    dryRun: flags.dryRun ?? false,
+    dryRun: flags["dry-run"] ?? false,
   };
 };
