@@ -110,7 +110,6 @@ export default async function (
     patches_dir: flags.patchesDir ?? answers.patchesDir ?? DEFAULT_PATCHES_DIR,
     ref: flags.ref ?? answers.ref ?? DEFAULT_REF,
     verbose: false,
-    dry_run: false,
   };
 
   try {
@@ -152,10 +151,7 @@ const generateYamlConfig = (config: RequiredConfigData): string => {
   const yamlData = omitBy(
     validatedConfig,
     (value, key) =>
-      value === "" ||
-      value == null ||
-      (key === "verbose" && value === false) ||
-      (key === "dry_run" && value === false),
+      value === "" || value == null || (key === "verbose" && value === false),
   );
 
   return stringify(yamlData);

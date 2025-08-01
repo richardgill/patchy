@@ -9,7 +9,6 @@ const baseConfigFields = {
   patches_dir: z.string().min(1, "Patches directory is required"),
   ref: z.string().min(1, "Git ref is required"),
   verbose: z.boolean().default(false),
-  dry_run: z.boolean().default(false),
 };
 
 export const requiredConfigSchema = z.object(baseConfigFields).strict();
@@ -22,7 +21,6 @@ export const optionalConfigSchema = z
     patches_dir: baseConfigFields.patches_dir.optional(),
     ref: baseConfigFields.ref.optional(),
     verbose: baseConfigFields.verbose.optional(),
-    dry_run: baseConfigFields.dry_run.optional(),
   })
   .strict();
 

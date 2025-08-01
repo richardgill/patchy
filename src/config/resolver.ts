@@ -39,7 +39,7 @@ export const resolveConfig = async (
       flags.patchesDir ?? yamlConfig.patches_dir ?? DEFAULT_PATCHES_DIR,
     ref: flags.ref ?? yamlConfig.ref ?? DEFAULT_REF,
     verbose: flags.verbose ?? yamlConfig.verbose ?? false,
-    dryRun: flags.dryRun ?? yamlConfig.dry_run ?? false,
+    dryRun: flags.dryRun ?? false,
   };
 
   if (requireAll) {
@@ -85,6 +85,6 @@ export const loadConfigWithDefaults = (
       flags.patchesDir ?? yamlConfig.patches_dir ?? DEFAULT_PATCHES_DIR,
     ref: flags.ref ?? yamlConfig.ref ?? DEFAULT_REF,
     verbose: flags.verbose ?? yamlConfig.verbose ?? false,
-    dryRun: flags.dryRun ?? yamlConfig.dry_run ?? false,
+    dryRun: flags.dryRun ?? false,
   };
 };
