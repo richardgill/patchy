@@ -5,6 +5,7 @@ import { resolve } from "node:path";
 import enquirer from "enquirer";
 import { compact, omitBy } from "es-toolkit";
 import { stringify } from "yaml";
+import { isValidGitUrl, validateGitUrl } from "../../config/validation";
 import type { LocalContext } from "../../context";
 import {
   type RequiredConfigData,
@@ -16,13 +17,6 @@ const { prompt } = enquirer;
 const DEFAULT_PATCHES_DIR = "./patches/";
 const DEFAULT_CONFIG_PATH = "./patchy.yaml";
 const DEFAULT_REF = "main";
-
-const isValidGitUrl = (url: string): boolean => {
-  const httpsPattern = /^https?:\/\/[\w.-]+\/[\w.-]+(\/[\w.-]+)+(\.git)?$/;
-  const sshPattern = /^git@[\w.-]+:[\w.-]+(\/[\w.-]+)+(\.git)?$/;
-  const trimmed = url.trim();
-  return httpsPattern.test(trimmed) || sshPattern.test(trimmed);
-};
 
 type InitCommandFlags = {
   repoUrl?: string;
@@ -80,12 +74,7 @@ export default async function (
       name: "repoUrl",
       message: "Upstream repository URL:",
       hint: "e.g. https://github.com/owner/repo",
-      validate: (input: string) => {
-        if (!input.trim()) return "Repository URL is required";
-        if (!isValidGitUrl(input))
-          return "Please enter a valid Git URL (https://github.com/owner/repo or git@github.com:owner/repo.git)";
-        return true;
-      },
+      validate: validateGitUrl,
     },
     flags.ref === undefined && {
       type: "input",
@@ -120,6 +109,8 @@ export default async function (
     repo_base_dir: flags.repoBaseDir ?? resolve(homedir(), ".patchy/repos"),
     patches_dir: flags.patchesDir ?? answers.patchesDir ?? DEFAULT_PATCHES_DIR,
     ref: flags.ref ?? answers.ref ?? DEFAULT_REF,
+    verbose: false,
+    dry_run: false,
   };
 
   try {
@@ -160,7 +151,11 @@ const generateYamlConfig = (config: RequiredConfigData): string => {
 
   const yamlData = omitBy(
     validatedConfig,
-    (value) => value === "" || value == null,
+    (value, key) =>
+      value === "" ||
+      value == null ||
+      (key === "verbose" && value === false) ||
+      (key === "dry_run" && value === false),
   );
 
   return stringify(yamlData);

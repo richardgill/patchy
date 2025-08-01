@@ -8,6 +8,8 @@ const baseConfigFields = {
   repo_base_dir: z.string().min(1, "Repository base directory is required"),
   patches_dir: z.string().min(1, "Patches directory is required"),
   ref: z.string().min(1, "Git ref is required"),
+  verbose: z.boolean().default(false),
+  dry_run: z.boolean().default(false),
 };
 
 export const requiredConfigSchema = z.object(baseConfigFields).strict();
@@ -19,6 +21,8 @@ export const optionalConfigSchema = z
     repo_base_dir: baseConfigFields.repo_base_dir.optional(),
     patches_dir: baseConfigFields.patches_dir.optional(),
     ref: baseConfigFields.ref.optional(),
+    verbose: baseConfigFields.verbose.optional(),
+    dry_run: baseConfigFields.dry_run.optional(),
   })
   .strict();
 
@@ -29,4 +33,12 @@ export const parseYamlConfig = (filePath: string): RequiredConfigData => {
   const fileContent = readFileSync(filePath, "utf8");
   const parsedData = YAML.parse(fileContent);
   return requiredConfigSchema.parse(parsedData);
+};
+
+export const parseOptionalYamlConfig = (
+  filePath: string,
+): OptionalConfigData => {
+  const fileContent = readFileSync(filePath, "utf8");
+  const parsedData = YAML.parse(fileContent);
+  return optionalConfigSchema.parse(parsedData);
 };
