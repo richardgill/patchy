@@ -1,8 +1,11 @@
-import { existsSync, readFileSync } from "node:fs";
 import { join } from "node:path";
 import dedent from "dedent";
-import { afterEach, beforeEach, describe, expect, it } from "vitest";
+import { afterEach, beforeEach, describe, it } from "vitest";
 import {
+  assertConfigContent,
+  assertConfigFileExists,
+  assertFailedCommand,
+  assertSuccessfulCommand,
   cleanupTestDir,
   createTestDir,
   runPatchy,
@@ -27,15 +30,11 @@ describe("patchy init", () => {
     command: string;
     expectedYaml: string;
   }) => {
-    const result = await runPatchy(command, ctx.patchesDir);
-
-    expect(result.exitCode).toBe(0);
+    await assertSuccessfulCommand(command, ctx.patchesDir);
 
     const configPath = join(ctx.patchesDir, "patchy.yaml");
-    expect(existsSync(configPath)).toBe(true);
-
-    const yamlContent = readFileSync(configPath, "utf-8");
-    expect(yamlContent.trim()).toBe(expectedYaml.trim());
+    assertConfigFileExists(configPath);
+    assertConfigContent(configPath, expectedYaml);
   };
 
   const assertFailedInit = async ({
@@ -45,16 +44,7 @@ describe("patchy init", () => {
     command: string;
     expectedErrors: string | string[];
   }) => {
-    const result = await runPatchy(command, ctx.patchesDir);
-
-    expect(result.exitCode).toBe(1);
-
-    const errors = Array.isArray(expectedErrors)
-      ? expectedErrors
-      : [expectedErrors];
-    for (const error of errors) {
-      expect(result.stderr).toContain(error);
-    }
+    await assertFailedCommand(command, ctx.patchesDir, expectedErrors);
   };
 
   it("should initialize patchy with all flags", async () => {

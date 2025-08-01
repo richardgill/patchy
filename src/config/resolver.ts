@@ -19,6 +19,7 @@ export const resolveConfig = async (
   requireAll: boolean = true,
 ): Promise<PartialResolvedConfig | ResolvedConfig> => {
   const configPath = resolve(flags.config ?? DEFAULT_CONFIG_PATH);
+  const isExplicitConfig = flags.config !== undefined;
 
   let yamlConfig: OptionalConfigData = {};
   if (existsSync(configPath)) {
@@ -27,6 +28,8 @@ export const resolveConfig = async (
     } catch (error) {
       throw new Error(`Failed to parse config file at ${configPath}: ${error}`);
     }
+  } else if (isExplicitConfig) {
+    throw new Error(`Configuration file not found: ${configPath}`);
   }
 
   const merged: PartialResolvedConfig = {
