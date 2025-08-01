@@ -21,3 +21,4 @@ This is a CLI tool for managing Git patch workflows. It helps maintain curated p
 ## Testing Preferences
 
 - Use parameterized tests, each one has an it(...) with shared functions, keep tests DRY and maintainable
+- `pnpm run test -- -u` to update inline snapshots

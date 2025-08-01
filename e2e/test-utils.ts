@@ -55,6 +55,12 @@ export const assertSuccessfulCommand = async (
   validateFn?: (result: ExecaReturnValue) => void,
 ) => {
   const result = await runPatchy(command, cwd);
+  if (result.exitCode !== 0) {
+    console.error(`Command failed: ${command}`);
+    console.error(`Exit code: ${result.exitCode}`);
+    console.error(`stderr: ${result.stderr}`);
+    console.error(`stdout: ${result.stdout}`);
+  }
   expect(result.exitCode).toBe(0);
   if (validateFn) validateFn(result);
   return result;

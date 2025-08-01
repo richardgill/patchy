@@ -274,7 +274,7 @@ describe("patchy apply", () => {
       });
 
       const result = await assertSuccessfulCommand(
-        `apply --verbose --dryRun --repo-base-dir /home/word`,
+        `apply --verbose --dryRun --repoBaseDir /home/word`,
         ctx.patchesDir,
       );
 
@@ -282,7 +282,7 @@ describe("patchy apply", () => {
         "Configuration resolved:
           repo_url: https://github.com/test/repo.git
           repo_dir: test-dir
-          repo_base_dir: undefined
+          repo_base_dir: /home/word
           patches_dir: ./patches/
           ref: main
           verbose: true
