@@ -45,11 +45,11 @@ These flags are accepted by **all commands**:
 | `--repo-dir`      | Path to the Git repo you're patching             |
 | `--repo-base-dir` | Parent directory where upstream repos are cloned |
 | `--patches-dir`   | Path to your patch files (default: `./patches/`)   |
-| `--config`        | YAML config file (default: `patches.yaml`)       |
+| `--config`        | YAML config file (default: `patchy.yaml`)        |
 | `--verbose`       | Enable verbose log output                        |
 | `--dry-run`       | Simulate the command without writing files       |
 
-> CLI flags override all values in `patches.yaml`.
+> CLI flags override all values in `patchy.yaml`.
 
 ## Commands
 
@@ -108,7 +108,7 @@ ref: main
 ### Precedence Order
 
 1. CLI flags
-2. `--config` (defaults to `./patches.yaml`)
+2. `--config` (defaults to `./patchy.yaml`)
 
 ## Example Workflow
 

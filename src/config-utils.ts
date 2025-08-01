@@ -1,7 +1,7 @@
 import { existsSync, readFileSync } from "node:fs";
 import yaml from "yaml";
 import { ZodError } from "zod";
-
+import { DEFAULT_CONFIG_PATH } from "./config/defaults";
 import {
   type OptionalConfigData,
   optionalConfigSchema,
@@ -89,7 +89,7 @@ export const validateConfig = (
 export const getValidatedConfig = (
   flags: BaseCommandFlags,
 ): RequiredConfigData => {
-  const configPath = flags.config ?? "./patchy.yaml";
+  const configPath = flags.config ?? DEFAULT_CONFIG_PATH;
   const yamlConfig = loadYamlConfig(configPath);
   const mergedConfig = mergeConfigWithFlags(yamlConfig, flags);
   return validateConfig(mergedConfig, configPath);

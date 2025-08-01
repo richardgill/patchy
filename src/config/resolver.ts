@@ -1,17 +1,18 @@
 import { existsSync } from "node:fs";
-import { homedir } from "node:os";
 import { resolve } from "node:path";
 import type { OptionalConfigData } from "../yaml-config";
 import { parseOptionalYamlConfig } from "../yaml-config";
+import {
+  DEFAULT_CONFIG_PATH,
+  DEFAULT_PATCHES_DIR,
+  DEFAULT_REF,
+  DEFAULT_REPO_BASE_DIR,
+} from "./defaults";
 import type {
   PartialResolvedConfig,
   ResolvedConfig,
   SharedFlags,
 } from "./types";
-
-const DEFAULT_PATCHES_DIR = "./patches/";
-const DEFAULT_CONFIG_PATH = "./patchy.yaml";
-const DEFAULT_REF = "main";
 
 export const resolveConfig = async (
   flags: SharedFlags & { repoUrl?: string; ref?: string },
@@ -32,9 +33,7 @@ export const resolveConfig = async (
     repoUrl: flags.repoUrl ?? yamlConfig.repo_url,
     repoDir: flags.repoDir ?? yamlConfig.repo_dir,
     repoBaseDir:
-      flags.repoBaseDir ??
-      yamlConfig.repo_base_dir ??
-      resolve(homedir(), ".patchy/repos"),
+      flags.repoBaseDir ?? yamlConfig.repo_base_dir ?? DEFAULT_REPO_BASE_DIR,
     patchesDir:
       flags.patchesDir ?? yamlConfig.patches_dir ?? DEFAULT_PATCHES_DIR,
     ref: flags.ref ?? yamlConfig.ref ?? DEFAULT_REF,
@@ -78,9 +77,7 @@ export const loadConfigWithDefaults = (
     repoUrl: flags.repoUrl ?? yamlConfig.repo_url,
     repoDir: flags.repoDir ?? yamlConfig.repo_dir,
     repoBaseDir:
-      flags.repoBaseDir ??
-      yamlConfig.repo_base_dir ??
-      resolve(homedir(), ".patchy/repos"),
+      flags.repoBaseDir ?? yamlConfig.repo_base_dir ?? DEFAULT_REPO_BASE_DIR,
     patchesDir:
       flags.patchesDir ?? yamlConfig.patches_dir ?? DEFAULT_PATCHES_DIR,
     ref: flags.ref ?? yamlConfig.ref ?? DEFAULT_REF,
