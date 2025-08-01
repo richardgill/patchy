@@ -8,7 +8,6 @@ import {
   DEFAULT_CONFIG_PATH,
   DEFAULT_PATCHES_DIR,
   DEFAULT_REF,
-  DEFAULT_REPO_BASE_DIR,
 } from "../../config/defaults";
 import { isValidGitUrl, validateGitUrl } from "../../config/validation";
 import type { LocalContext } from "../../context";
@@ -107,7 +106,7 @@ export default async function (
   const finalConfig: RequiredConfigData = {
     repo_url: repoUrl,
     repo_dir: flags.repoDir ?? "",
-    repo_base_dir: flags.repoBaseDir ?? DEFAULT_REPO_BASE_DIR,
+    repo_base_dir: flags.repoBaseDir ?? "",
     patches_dir: flags.patchesDir ?? answers.patchesDir ?? DEFAULT_PATCHES_DIR,
     ref: flags.ref ?? answers.ref ?? DEFAULT_REF,
     verbose: false,

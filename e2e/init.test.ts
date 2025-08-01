@@ -1,14 +1,14 @@
+import { readFileSync } from "node:fs";
 import { join } from "node:path";
-import dedent from "dedent";
-import { afterEach, beforeEach, describe, it } from "vitest";
+import { afterEach, beforeEach, describe, expect, it } from "vitest";
 import {
-  assertConfigContent,
   assertConfigFileExists,
   assertFailedCommand,
   assertSuccessfulCommand,
   cleanupTestDir,
   createTestDir,
   runPatchy,
+  stabilizeTempDir,
   type TestContext,
 } from "./test-utils";
 
@@ -23,18 +23,14 @@ describe("patchy init", () => {
     await cleanupTestDir(ctx);
   });
 
-  const assertSuccessfulInit = async ({
-    command,
-    expectedYaml,
-  }: {
-    command: string;
-    expectedYaml: string;
-  }) => {
+  const assertSuccessfulInit = async (command: string) => {
     await assertSuccessfulCommand(command, ctx.patchesDir);
 
     const configPath = join(ctx.patchesDir, "patchy.yaml");
     assertConfigFileExists(configPath);
-    assertConfigContent(configPath, expectedYaml);
+
+    const yamlContent = readFileSync(configPath, "utf-8");
+    return yamlContent.trim();
   };
 
   const assertFailedInit = async ({
@@ -48,16 +44,17 @@ describe("patchy init", () => {
   };
 
   it("should initialize patchy with all flags", async () => {
-    await assertSuccessfulInit({
-      command: `init --repoUrl https://github.com/example/test-repo.git --repoDir main --repoBaseDir ${ctx.repoBaseDir} --patchesDir patches --ref main --config patchy.yaml --force`,
-      expectedYaml: dedent`
-        repo_url: https://github.com/example/test-repo.git
-        repo_dir: main
-        repo_base_dir: ${ctx.repoBaseDir}
-        patches_dir: patches
-        ref: main
-      `,
-    });
+    const yamlContent = await assertSuccessfulInit(
+      `init --repoUrl https://github.com/example/test-repo.git --repoDir main --repoBaseDir ${ctx.repoBaseDir} --patchesDir patches --ref main --config patchy.yaml --force`,
+    );
+
+    expect(stabilizeTempDir(yamlContent)).toMatchInlineSnapshot(`
+      "repo_url: https://github.com/example/test-repo.git
+      repo_dir: main
+      repo_base_dir: <TEST_DIR>/repos
+      patches_dir: patches
+      ref: main"
+    `);
   });
 
   describe("error cases", () => {

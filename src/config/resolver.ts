@@ -7,7 +7,6 @@ import {
   DEFAULT_CONFIG_PATH,
   DEFAULT_PATCHES_DIR,
   DEFAULT_REF,
-  DEFAULT_REPO_BASE_DIR,
 } from "./defaults";
 import type {
   PartialResolvedConfig,
@@ -53,8 +52,7 @@ export const resolveConfig = async (
   const merged: PartialResolvedConfig = {
     repoUrl: flags.repoUrl ?? yamlConfig.repo_url,
     repoDir: flags.repoDir ?? yamlConfig.repo_dir,
-    repoBaseDir:
-      flags.repoBaseDir ?? yamlConfig.repo_base_dir ?? DEFAULT_REPO_BASE_DIR,
+    repoBaseDir: flags.repoBaseDir ?? yamlConfig.repo_base_dir,
     patchesDir:
       flags.patchesDir ?? yamlConfig.patches_dir ?? DEFAULT_PATCHES_DIR,
     ref: flags.ref ?? yamlConfig.ref ?? DEFAULT_REF,
@@ -100,8 +98,7 @@ export const loadConfigWithDefaults = (
   return {
     repoUrl: flags.repoUrl ?? yamlConfig.repo_url,
     repoDir: flags.repoDir ?? yamlConfig.repo_dir,
-    repoBaseDir:
-      flags.repoBaseDir ?? yamlConfig.repo_base_dir ?? DEFAULT_REPO_BASE_DIR,
+    repoBaseDir: flags.repoBaseDir ?? yamlConfig.repo_base_dir,
     patchesDir:
       flags.patchesDir ?? yamlConfig.patches_dir ?? DEFAULT_PATCHES_DIR,
     ref: flags.ref ?? yamlConfig.ref ?? DEFAULT_REF,

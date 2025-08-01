@@ -7,6 +7,7 @@ import {
   assertSuccessfulCommand,
   cleanupTestDir,
   createTestDir,
+  stabilizeTempDir,
   type TestContext,
   writeTestConfig,
 } from "./test-utils";
@@ -35,14 +36,22 @@ describe("patchy apply", () => {
       repo_dir: "config-repo",
     });
 
-    await assertSuccessfulCommand(
+    const result = await assertSuccessfulCommand(
       `apply --repoDir main --repoBaseDir ${ctx.repoBaseDir} --patchesDir patches --config patchy.yaml --verbose --dryRun`,
       ctx.patchesDir,
-      (result) => {
-        expect(result.stdout).toContain("[DRY RUN]");
-        expect(result.stdout).toContain("patches to main");
-      },
     );
+
+    expect(stabilizeTempDir(result.stdout)).toMatchInlineSnapshot(`
+      "Configuration resolved:
+        repo_url: https://github.com/example/test-repo.git
+        repo_dir: main
+        repo_base_dir: <TEST_DIR>/repos
+        patches_dir: patches
+        ref: main
+        verbose: true
+        dry_run: true
+      [DRY RUN] Would apply patches from patches to main"
+    `);
   });
 
   it("should apply patches using config file values", async () => {
@@ -54,13 +63,13 @@ describe("patchy apply", () => {
       ref: "main",
     });
 
-    await assertSuccessfulCommand(
+    const result = await assertSuccessfulCommand(
       `apply --dryRun`,
       ctx.patchesDir,
-      (result) => {
-        expect(result.stdout).toContain("[DRY RUN]");
-        expect(result.stdout).toContain("my-patches to upstream");
-      },
+    );
+
+    expect(result.stdout).toMatchInlineSnapshot(
+      `"[DRY RUN] Would apply patches from my-patches to upstream"`,
     );
   });
 
@@ -73,13 +82,13 @@ describe("patchy apply", () => {
       ref: "main",
     });
 
-    await assertSuccessfulCommand(
+    const result = await assertSuccessfulCommand(
       `apply --repoDir cli-repo --patchesDir cli-patches --dryRun`,
       ctx.patchesDir,
-      (result) => {
-        expect(result.stdout).toContain("[DRY RUN]");
-        expect(result.stdout).toContain("cli-patches to cli-repo");
-      },
+    );
+
+    expect(result.stdout).toMatchInlineSnapshot(
+      `"[DRY RUN] Would apply patches from cli-patches to cli-repo"`,
     );
   });
 
@@ -149,22 +158,6 @@ describe("patchy apply", () => {
   });
 
   describe("default values", () => {
-    it("should use default repo_base_dir when not specified", async () => {
-      await setupConfigFile({
-        repo_url: "https://github.com/example/test-repo.git",
-        repo_dir: "main",
-        patches_dir: "patches",
-      });
-
-      await assertSuccessfulCommand(
-        `apply --dryRun --verbose`,
-        ctx.patchesDir,
-        (result) => {
-          expect(result.stdout).toMatch(/repo_base_dir: .*\/\.patchy\/repos/);
-        },
-      );
-    });
-
     it("should use default patches_dir when not specified", async () => {
       await setupConfigFile({
         repo_url: "https://github.com/example/test-repo.git",
@@ -172,13 +165,22 @@ describe("patchy apply", () => {
         repo_base_dir: ctx.repoBaseDir,
       });
 
-      await assertSuccessfulCommand(
+      const result = await assertSuccessfulCommand(
         `apply --dryRun --verbose`,
         ctx.patchesDir,
-        (result) => {
-          expect(result.stdout).toMatch(/patches_dir: \.?\/?patches/);
-        },
       );
+
+      expect(stabilizeTempDir(result.stdout)).toMatchInlineSnapshot(`
+        "Configuration resolved:
+          repo_url: https://github.com/example/test-repo.git
+          repo_dir: main
+          repo_base_dir: <TEST_DIR>/repos
+          patches_dir: ./patches/
+          ref: main
+          verbose: true
+          dry_run: true
+        [DRY RUN] Would apply patches from ./patches/ to main"
+      `);
     });
 
     it("should use default ref when not specified", async () => {
@@ -189,13 +191,22 @@ describe("patchy apply", () => {
         patches_dir: "patches",
       });
 
-      await assertSuccessfulCommand(
+      const result = await assertSuccessfulCommand(
         `apply --dryRun --verbose`,
         ctx.patchesDir,
-        (result) => {
-          expect(result.stdout).toContain("ref: main");
-        },
       );
+
+      expect(stabilizeTempDir(result.stdout)).toMatchInlineSnapshot(`
+        "Configuration resolved:
+          repo_url: https://github.com/example/test-repo.git
+          repo_dir: main
+          repo_base_dir: <TEST_DIR>/repos
+          patches_dir: patches
+          ref: main
+          verbose: true
+          dry_run: true
+        [DRY RUN] Would apply patches from patches to main"
+      `);
     });
   });
 
@@ -210,21 +221,22 @@ describe("patchy apply", () => {
         verbose: false,
       });
 
-      await assertSuccessfulCommand(
+      const result = await assertSuccessfulCommand(
         `apply --repoDir flag-dir --repoBaseDir /flag/base --patchesDir flag-patches --verbose --dryRun`,
         ctx.patchesDir,
-        (result) => {
-          expect(result.stdout).toContain(
-            "repo_url: https://github.com/yaml/repo.git",
-          );
-          expect(result.stdout).toContain("repo_dir: flag-dir");
-          expect(result.stdout).toContain("repo_base_dir: /flag/base");
-          expect(result.stdout).toContain("patches_dir: flag-patches");
-          expect(result.stdout).toContain("ref: yaml-ref");
-          expect(result.stdout).toContain("verbose: true");
-          expect(result.stdout).toContain("dry_run: true");
-        },
       );
+
+      expect(stabilizeTempDir(result.stdout)).toMatchInlineSnapshot(`
+        "Configuration resolved:
+          repo_url: https://github.com/yaml/repo.git
+          repo_dir: flag-dir
+          repo_base_dir: /flag/base
+          patches_dir: flag-patches
+          ref: yaml-ref
+          verbose: true
+          dry_run: true
+        [DRY RUN] Would apply patches from flag-patches to flag-dir"
+      `);
     });
 
     it("should use yaml values when flags are not provided", async () => {
@@ -237,21 +249,22 @@ describe("patchy apply", () => {
         verbose: true,
       });
 
-      await assertSuccessfulCommand(
+      const result = await assertSuccessfulCommand(
         `apply --dryRun`,
         ctx.patchesDir,
-        (result) => {
-          expect(result.stdout).toContain(
-            "repo_url: https://github.com/yaml/repo.git",
-          );
-          expect(result.stdout).toContain("repo_dir: yaml-dir");
-          expect(result.stdout).toContain("repo_base_dir: /yaml/base");
-          expect(result.stdout).toContain("patches_dir: yaml-patches");
-          expect(result.stdout).toContain("ref: yaml-ref");
-          expect(result.stdout).toContain("verbose: true");
-          expect(result.stdout).toContain("dry_run: true");
-        },
       );
+
+      expect(stabilizeTempDir(result.stdout)).toMatchInlineSnapshot(`
+        "Configuration resolved:
+          repo_url: https://github.com/yaml/repo.git
+          repo_dir: yaml-dir
+          repo_base_dir: /yaml/base
+          patches_dir: yaml-patches
+          ref: yaml-ref
+          verbose: true
+          dry_run: true
+        [DRY RUN] Would apply patches from yaml-patches to yaml-dir"
+      `);
     });
 
     it("should use defaults when neither flags nor yaml provide values", async () => {
@@ -260,15 +273,22 @@ describe("patchy apply", () => {
         repo_dir: "test-dir",
       });
 
-      await assertSuccessfulCommand(
-        `apply --verbose --dryRun`,
+      const result = await assertSuccessfulCommand(
+        `apply --verbose --dryRun --repo-base-dir /home/word`,
         ctx.patchesDir,
-        (result) => {
-          expect(result.stdout).toMatch(/repo_base_dir: .*\/\.patchy\/repos/);
-          expect(result.stdout).toMatch(/patches_dir: \.?\/?patches/);
-          expect(result.stdout).toContain("ref: main");
-        },
       );
+
+      expect(stabilizeTempDir(result.stdout)).toMatchInlineSnapshot(`
+        "Configuration resolved:
+          repo_url: https://github.com/test/repo.git
+          repo_dir: test-dir
+          repo_base_dir: undefined
+          patches_dir: ./patches/
+          ref: main
+          verbose: true
+          dry_run: true
+        [DRY RUN] Would apply patches from ./patches/ to test-dir"
+      `);
     });
 
     it("should handle partial flag overrides", async () => {
@@ -280,19 +300,22 @@ describe("patchy apply", () => {
         ref: "yaml-ref",
       });
 
-      await assertSuccessfulCommand(
+      const result = await assertSuccessfulCommand(
         `apply --repoDir flag-override-dir --patchesDir flag-override-patches --verbose --dryRun`,
         ctx.patchesDir,
-        (result) => {
-          expect(result.stdout).toContain(
-            "repo_url: https://github.com/yaml/repo.git",
-          );
-          expect(result.stdout).toContain("repo_dir: flag-override-dir");
-          expect(result.stdout).toContain("repo_base_dir: /yaml/base");
-          expect(result.stdout).toContain("patches_dir: flag-override-patches");
-          expect(result.stdout).toContain("ref: yaml-ref");
-        },
       );
+
+      expect(stabilizeTempDir(result.stdout)).toMatchInlineSnapshot(`
+        "Configuration resolved:
+          repo_url: https://github.com/yaml/repo.git
+          repo_dir: flag-override-dir
+          repo_base_dir: /yaml/base
+          patches_dir: flag-override-patches
+          ref: yaml-ref
+          verbose: true
+          dry_run: true
+        [DRY RUN] Would apply patches from flag-override-patches to flag-override-dir"
+      `);
     });
 
     it("should handle verbose flag from yaml", async () => {
@@ -302,11 +325,19 @@ describe("patchy apply", () => {
         verbose: true,
       });
 
-      await assertSuccessfulCommand(`apply`, ctx.patchesDir, (result) => {
-        expect(result.stdout).toContain("Configuration resolved:");
-        expect(result.stdout).toContain("verbose: true");
-        expect(result.stdout).toContain("dry_run: false");
-      });
+      const result = await assertSuccessfulCommand(`apply`, ctx.patchesDir);
+
+      expect(stabilizeTempDir(result.stdout)).toMatchInlineSnapshot(`
+        "Configuration resolved:
+          repo_url: https://github.com/test/repo.git
+          repo_dir: test-dir
+          repo_base_dir: undefined
+          patches_dir: ./patches/
+          ref: main
+          verbose: true
+          dry_run: false
+        applying.."
+      `);
     });
 
     it("should override yaml verbose with flag", async () => {
@@ -316,14 +347,22 @@ describe("patchy apply", () => {
         verbose: false,
       });
 
-      await assertSuccessfulCommand(
+      const result = await assertSuccessfulCommand(
         `apply --verbose`,
         ctx.patchesDir,
-        (result) => {
-          expect(result.stdout).toContain("Configuration resolved:");
-          expect(result.stdout).toContain("verbose: true");
-        },
       );
+
+      expect(stabilizeTempDir(result.stdout)).toMatchInlineSnapshot(`
+        "Configuration resolved:
+          repo_url: https://github.com/test/repo.git
+          repo_dir: test-dir
+          repo_base_dir: undefined
+          patches_dir: ./patches/
+          ref: main
+          verbose: true
+          dry_run: false
+        applying.."
+      `);
     });
   });
 
@@ -337,22 +376,22 @@ describe("patchy apply", () => {
         ref: "develop",
       });
 
-      await assertSuccessfulCommand(
+      const result = await assertSuccessfulCommand(
         `apply --verbose`,
         ctx.patchesDir,
-        (result) => {
-          expect(result.stdout).toContain("Configuration resolved:");
-          expect(result.stdout).toContain(
-            "repo_url: https://github.com/example/test-repo.git",
-          );
-          expect(result.stdout).toContain("repo_dir: main");
-          expect(result.stdout).toContain(`repo_base_dir: ${ctx.repoBaseDir}`);
-          expect(result.stdout).toMatch(/patches_dir: \.?\/?patches/);
-          expect(result.stdout).toContain("ref: develop");
-          expect(result.stdout).toContain("verbose: true");
-          expect(result.stdout).toContain("dry_run: false");
-        },
       );
+
+      expect(stabilizeTempDir(result.stdout)).toMatchInlineSnapshot(`
+        "Configuration resolved:
+          repo_url: https://github.com/example/test-repo.git
+          repo_dir: main
+          repo_base_dir: <TEST_DIR>/repos
+          patches_dir: patches
+          ref: develop
+          verbose: true
+          dry_run: false
+        applying.."
+      `);
     });
 
     it("should respect verbose setting from config file", async () => {
@@ -364,13 +403,19 @@ describe("patchy apply", () => {
         verbose: true,
       });
 
-      await assertSuccessfulCommand(`apply`, ctx.patchesDir, (result) => {
-        expect(result.stdout).toContain("Configuration resolved:");
-        expect(result.stdout).toContain(
-          "repo_url: https://github.com/example/test-repo.git",
-        );
-        expect(result.stdout).toContain("repo_dir: main");
-      });
+      const result = await assertSuccessfulCommand(`apply`, ctx.patchesDir);
+
+      expect(stabilizeTempDir(result.stdout)).toMatchInlineSnapshot(`
+        "Configuration resolved:
+          repo_url: https://github.com/example/test-repo.git
+          repo_dir: main
+          repo_base_dir: <TEST_DIR>/repos
+          patches_dir: patches
+          ref: main
+          verbose: true
+          dry_run: false
+        applying.."
+      `);
     });
   });
 
@@ -384,12 +429,13 @@ describe("patchy apply", () => {
         patches_dir: "custom-patches",
       });
 
-      await assertSuccessfulCommand(
+      const result = await assertSuccessfulCommand(
         `apply --config custom-config.yaml --dryRun`,
         ctx.patchesDir,
-        (result) => {
-          expect(result.stdout).toContain("custom-patches to custom-dir");
-        },
+      );
+
+      expect(result.stdout).toMatchInlineSnapshot(
+        `"[DRY RUN] Would apply patches from custom-patches to custom-dir"`,
       );
     });
   });

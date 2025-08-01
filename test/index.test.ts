@@ -3,18 +3,20 @@ import { capitalizeFirstLetter } from "../src/index";
 
 describe("capitalizeFirstLetter", () => {
   it("should capitalize the first letter of a string", () => {
-    expect(capitalizeFirstLetter("hello")).toBe("Hello");
+    expect(capitalizeFirstLetter("hello")).toMatchInlineSnapshot(`"Hello"`);
   });
 
   it("should return an empty string if input is empty", () => {
-    expect(capitalizeFirstLetter("")).toBe("");
+    expect(capitalizeFirstLetter("")).toMatchInlineSnapshot(`""`);
   });
 
   it("should handle single character strings", () => {
-    expect(capitalizeFirstLetter("a")).toBe("A");
+    expect(capitalizeFirstLetter("a")).toMatchInlineSnapshot(`"A"`);
   });
 
   it("should not change the rest of the string", () => {
-    expect(capitalizeFirstLetter("hello world")).toBe("Hello world");
+    expect(capitalizeFirstLetter("hello world")).toMatchInlineSnapshot(
+      `"Hello world"`,
+    );
   });
 });

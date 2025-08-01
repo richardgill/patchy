@@ -18,7 +18,7 @@
     "changeset-version": "changeset version",
     "changeset-publish": "pnpm build && changeset publish",
     "dev": "tsx src/cli.ts",
-    "local-ci": "concurrently --group -p none --no-color -n 'check,typecheck,test' 'pnpm run check-fix' 'pnpm run typecheck' 'pnpm run test'",
+    "local-ci": "concurrently --group -p none -n 'check,typecheck,test' 'pnpm run check-fix' 'pnpm run typecheck' 'pnpm run test'",
     "prepare": "lefthook install",
     "typecheck": "tsgo --noEmit",
     "test": "vitest run",
