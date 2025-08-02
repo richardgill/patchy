@@ -1,10 +1,15 @@
 import { existsSync } from "node:fs";
 import { mkdir, writeFile } from "node:fs/promises";
-import { homedir } from "node:os";
 import { resolve } from "node:path";
 import enquirer from "enquirer";
 import { compact, omitBy } from "es-toolkit";
 import { stringify } from "yaml";
+import {
+  DEFAULT_CONFIG_PATH,
+  DEFAULT_PATCHES_DIR,
+  DEFAULT_REF,
+} from "../../config/defaults";
+import { isValidGitUrl, validateGitUrl } from "../../config/validation";
 import type { LocalContext } from "../../context";
 import {
   type RequiredConfigData,
@@ -13,22 +18,11 @@ import {
 
 const { prompt } = enquirer;
 
-const DEFAULT_PATCHES_DIR = "./patches/";
-const DEFAULT_CONFIG_PATH = "./patchy.yaml";
-const DEFAULT_REF = "main";
-
-const isValidGitUrl = (url: string): boolean => {
-  const httpsPattern = /^https?:\/\/[\w.-]+\/[\w.-]+(\/[\w.-]+)+(\.git)?$/;
-  const sshPattern = /^git@[\w.-]+:[\w.-]+(\/[\w.-]+)+(\.git)?$/;
-  const trimmed = url.trim();
-  return httpsPattern.test(trimmed) || sshPattern.test(trimmed);
-};
-
 type InitCommandFlags = {
-  repoUrl?: string;
-  repoDir?: string;
-  repoBaseDir?: string;
-  patchesDir?: string;
+  "repo-url"?: string;
+  "repo-dir"?: string;
+  "repo-base-dir"?: string;
+  "patches-dir"?: string;
   ref?: string;
   config?: string;
   force?: boolean;
@@ -57,13 +51,13 @@ export default async function (
     return;
   }
 
-  if (flags.repoUrl !== undefined) {
-    if (!flags.repoUrl.trim()) {
+  if (flags["repo-url"] !== undefined) {
+    if (!flags["repo-url"].trim()) {
       this.process.stderr.write("Repository URL is required\n");
       this.process.exit?.(1);
       return;
     }
-    if (!isValidGitUrl(flags.repoUrl)) {
+    if (!isValidGitUrl(flags["repo-url"])) {
       this.process.stderr.write(
         "Please enter a valid Git URL (https://github.com/owner/repo or git@github.com:owner/repo.git)\n",
       );
@@ -75,17 +69,12 @@ export default async function (
   this.process.stdout.write("\n🔧 Let's set up your Patchy project\n\n");
 
   const questions = compact([
-    flags.repoUrl === undefined && {
+    flags["repo-url"] === undefined && {
       type: "input",
       name: "repoUrl",
       message: "Upstream repository URL:",
       hint: "e.g. https://github.com/owner/repo",
-      validate: (input: string) => {
-        if (!input.trim()) return "Repository URL is required";
-        if (!isValidGitUrl(input))
-          return "Please enter a valid Git URL (https://github.com/owner/repo or git@github.com:owner/repo.git)";
-        return true;
-      },
+      validate: validateGitUrl,
     },
     flags.ref === undefined && {
       type: "input",
@@ -94,7 +83,7 @@ export default async function (
       hint: "Branch, tag, or commit to compare against",
       initial: DEFAULT_REF,
     },
-    flags.patchesDir === undefined && {
+    flags["patches-dir"] === undefined && {
       type: "input",
       name: "patchesDir",
       message: "Path for patch files:",
@@ -112,14 +101,16 @@ export default async function (
         })
       : {};
 
-  const repoUrl = flags.repoUrl ?? answers.repoUrl ?? "";
+  const repoUrl = flags["repo-url"] ?? answers.repoUrl ?? "";
 
   const finalConfig: RequiredConfigData = {
     repo_url: repoUrl,
-    repo_dir: flags.repoDir ?? "",
-    repo_base_dir: flags.repoBaseDir ?? resolve(homedir(), ".patchy/repos"),
-    patches_dir: flags.patchesDir ?? answers.patchesDir ?? DEFAULT_PATCHES_DIR,
+    repo_dir: flags["repo-dir"] ?? "",
+    repo_base_dir: flags["repo-base-dir"] ?? "",
+    patches_dir:
+      flags["patches-dir"] ?? answers.patchesDir ?? DEFAULT_PATCHES_DIR,
     ref: flags.ref ?? answers.ref ?? DEFAULT_REF,
+    verbose: false,
   };
 
   try {
@@ -160,7 +151,8 @@ const generateYamlConfig = (config: RequiredConfigData): string => {
 
   const yamlData = omitBy(
     validatedConfig,
-    (value) => value === "" || value == null,
+    (value, key) =>
+      value === "" || value == null || (key === "verbose" && value === false),
   );
 
   return stringify(yamlData);

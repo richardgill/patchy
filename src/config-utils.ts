@@ -1,7 +1,7 @@
 import { existsSync, readFileSync } from "node:fs";
 import yaml from "yaml";
 import { ZodError } from "zod";
-
+import { DEFAULT_CONFIG_PATH } from "./config/defaults";
 import {
   type OptionalConfigData,
   optionalConfigSchema,
@@ -10,10 +10,10 @@ import {
 } from "./yaml-config";
 
 type BaseCommandFlags = {
-  repoUrl?: string;
-  repoDir?: string;
-  repoBaseDir?: string;
-  patchesDir?: string;
+  "repo-url"?: string;
+  "repo-dir"?: string;
+  "repo-base-dir"?: string;
+  "patches-dir"?: string;
   ref?: string;
   config?: string;
 };
@@ -52,10 +52,10 @@ export const mergeConfigWithFlags = (
   flags: BaseCommandFlags,
 ): OptionalConfigData => {
   return {
-    repo_url: flags.repoUrl ?? yamlConfig?.repo_url,
-    repo_dir: flags.repoDir ?? yamlConfig?.repo_dir,
-    repo_base_dir: flags.repoBaseDir ?? yamlConfig?.repo_base_dir,
-    patches_dir: flags.patchesDir ?? yamlConfig?.patches_dir,
+    repo_url: flags["repo-url"] ?? yamlConfig?.repo_url,
+    repo_dir: flags["repo-dir"] ?? yamlConfig?.repo_dir,
+    repo_base_dir: flags["repo-base-dir"] ?? yamlConfig?.repo_base_dir,
+    patches_dir: flags["patches-dir"] ?? yamlConfig?.patches_dir,
     ref: flags.ref ?? yamlConfig?.ref,
   };
 };
@@ -89,7 +89,7 @@ export const validateConfig = (
 export const getValidatedConfig = (
   flags: BaseCommandFlags,
 ): RequiredConfigData => {
-  const configPath = flags.config ?? "./patchy.yaml";
+  const configPath = flags.config ?? DEFAULT_CONFIG_PATH;
   const yamlConfig = loadYamlConfig(configPath);
   const mergedConfig = mergeConfigWithFlags(yamlConfig, flags);
   return validateConfig(mergedConfig, configPath);

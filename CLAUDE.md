@@ -6,13 +6,9 @@ This is a CLI tool for managing Git patch workflows. It helps maintain curated p
 
 ## Development Commands
 
-- `pnpm check` - Run Biome linting/formatting checks
-- `pnpm typecheck` - Type checking with tsgo
-- `pnpm check` - Run checks 
-- `pnpm test` - Run all tests
-- `pnpm dev` - Run CLI in development with tsx
 
-When you're finished making your code changes run `pnpm typecheck`  `pnpm check` `pnpm test` in subagents
+- When you're finished making your code changes run `pnpm run local-ci` 
+- `pnpm dev` - Run CLI in development with tsx
 
 ## Key Dependencies
 
@@ -25,3 +21,4 @@ When you're finished making your code changes run `pnpm typecheck`  `pnpm check`
 ## Testing Preferences
 
 - Use parameterized tests, each one has an it(...) with shared functions, keep tests DRY and maintainable
+- `pnpm run test -- -u` to update inline snapshots
