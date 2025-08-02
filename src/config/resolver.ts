@@ -70,7 +70,7 @@ export const resolveConfig = async (
       verbose: z.boolean(),
       dry_run: z.boolean(),
     })
-    .superRefine(({ repo_url, dry_run, verbose }, ctx) => {
+    .superRefine(({ repo_url }, ctx) => {
       if (requiredFields.includes("repo_url") && isNil(repo_url)) {
         ctx.addIssue({
           code: "custom",

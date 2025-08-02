@@ -17,6 +17,7 @@ export type ApplyCommandFlags = SharedFlags;
 
 export type GenerateCommandFlags = SharedFlags;
 
+// Note: underscore_case property names match YAML config keys
 export type ResolvedConfig = {
   repo_url: string;
   repo_dir: string;

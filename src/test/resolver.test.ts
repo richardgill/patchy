@@ -1,18 +1,18 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
-import { resolveConfig } from "../src/config/resolver";
-import type { PartialResolvedConfig } from "../src/config/types";
-import type { LocalContext } from "../src/context";
+import { resolveConfig } from "../config/resolver";
+import type { PartialResolvedConfig, ResolvedConfig } from "../config/types";
+import type { LocalContext } from "../context";
 
 vi.mock("node:fs", () => ({
   existsSync: vi.fn(),
 }));
 
-vi.mock("../src/config/yaml-config", () => ({
+vi.mock("../config/yaml-config", () => ({
   parseOptionalYamlConfig: vi.fn(),
 }));
 
 const { existsSync } = await import("node:fs");
-const { parseOptionalYamlConfig } = await import("../src/config/yaml-config");
+const { parseOptionalYamlConfig } = await import("../config/yaml-config");
 
 const createMockContext = (): LocalContext =>
   ({
@@ -116,8 +116,8 @@ describe("resolveConfig", () => {
       setupConfigMock(yamlConfig);
 
       const result = await resolveConfig(mockContext, {}, [
-        "repoUrl",
-        "repoDir",
+        "repo_url",
+        "repo_dir",
       ]);
 
       expect(result).toEqual({
@@ -137,7 +137,7 @@ describe("resolveConfig", () => {
       });
 
       await expect(
-        resolveConfig(mockContext, {}, ["repoUrl", "repoDir"]),
+        resolveConfig(mockContext, {}, ["repo_url", "repo_dir"]),
       ).rejects.toThrow("Missing required configuration: repo-url");
     });
 
@@ -147,7 +147,7 @@ describe("resolveConfig", () => {
       });
 
       await expect(
-        resolveConfig(mockContext, {}, ["repoUrl", "repoDir"]),
+        resolveConfig(mockContext, {}, ["repo_url", "repo_dir"]),
       ).rejects.toThrow("Missing required configuration: repo-dir");
     });
 
@@ -155,7 +155,7 @@ describe("resolveConfig", () => {
       setupConfigMock({});
 
       await expect(
-        resolveConfig(mockContext, {}, ["repoUrl", "repoDir"]),
+        resolveConfig(mockContext, {}, ["repo_url", "repo_dir"]),
       ).rejects.toThrow("Missing required configuration: repo-url, repo-dir");
     });
 
@@ -172,7 +172,7 @@ describe("resolveConfig", () => {
           "repo-url": "https://github.com/flag/repo.git",
           "repo-dir": "flag-dir",
         },
-        ["repoUrl", "repoDir"],
+        ["repo_url", "repo_dir"],
       );
 
       expect(result).toEqual({
@@ -193,7 +193,11 @@ describe("resolveConfig", () => {
       });
 
       await expect(
-        resolveConfig(mockContext, {}, ["repoUrl", "repoDir", "repoBaseDir"]),
+        resolveConfig(mockContext, {}, [
+          "repo_url",
+          "repo_dir",
+          "repo_base_dir",
+        ]),
       ).rejects.toThrow("Missing required configuration: repo-base-dir");
     });
   });
@@ -260,8 +264,8 @@ describe("resolveConfig", () => {
       });
 
       await resolveConfig(mockContext, { verbose: true }, [
-        "repoUrl",
-        "repoDir",
+        "repo_url",
+        "repo_dir",
       ]);
 
       const writeCalls = vi.mocked(mockContext.process.stdout.write).mock.calls;
@@ -279,7 +283,7 @@ describe("resolveConfig", () => {
         verbose: true,
       });
 
-      await resolveConfig(mockContext, {}, ["repoUrl", "repoDir"]);
+      await resolveConfig(mockContext, {}, ["repo_url", "repo_dir"]);
 
       const writeCalls = vi.mocked(mockContext.process.stdout.write).mock.calls;
       expect(writeCalls).toContainEqual(["Configuration resolved:\n"]);
@@ -291,7 +295,7 @@ describe("resolveConfig", () => {
         repo_dir: "test-dir",
       });
 
-      await resolveConfig(mockContext, {}, ["repoUrl", "repoDir"]);
+      await resolveConfig(mockContext, {}, ["repo_url", "repo_dir"]);
 
       expect(mockContext.process.stdout.write).not.toHaveBeenCalled();
     });
@@ -304,8 +308,8 @@ describe("resolveConfig", () => {
       });
 
       await resolveConfig(mockContext, { verbose: true }, [
-        "repoUrl",
-        "repoDir",
+        "repo_url",
+        "repo_dir",
       ]);
 
       const writeCalls = vi.mocked(mockContext.process.stdout.write).mock.calls;
@@ -340,10 +344,10 @@ describe("resolveConfig", () => {
 
     it("should validate all required fields when specified", async () => {
       const requiredFieldsWithoutDefaults = [
-        "repoUrl",
-        "repoDir",
-        "repoBaseDir",
-      ] as const;
+        "repo_url",
+        "repo_dir",
+        "repo_base_dir",
+      ] as (keyof ResolvedConfig)[];
 
       setupConfigMock({});
 
@@ -362,10 +366,10 @@ describe("resolveConfig", () => {
       });
 
       const result = await resolveConfig(mockContext, { "dry-run": false }, [
-        "repoUrl",
-        "repoDir",
+        "repo_url",
+        "repo_dir",
         "verbose",
-        "dryRun",
+        "dry_run",
       ]);
 
       expect(result.verbose).toBe(false);

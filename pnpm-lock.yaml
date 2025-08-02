@@ -42,6 +42,9 @@ importers:
       '@types/node':
         specifier: ^24.0.13
         version: 24.0.13
+      '@types/shell-quote':
+        specifier: ^1.7.5
+        version: 1.7.5
       '@typescript/native-preview':
         specifier: 7.0.0-dev.20250712.1
         version: 7.0.0-dev.20250712.1
@@ -674,6 +677,9 @@ packages:
 
   '@types/node@24.0.13':
     resolution: {integrity: sha512-Qm9OYVOFHFYg3wJoTSrz80hoec5Lia/dPp84do3X7dZvLikQvM1YpmvTBEdIr/e+U8HTkFjLHLnl78K/qjf+jQ==}
+
+  '@types/shell-quote@1.7.5':
+    resolution: {integrity: sha512-+UE8GAGRPbJVQDdxi16dgadcBfQ+KG2vgZhV1+3A1XmHbmwcdwhCUwIdy+d3pAGrbvgRoVSjeI9vOWyq376Yzw==}
 
   '@typescript/native-preview-darwin-arm64@7.0.0-dev.20250712.1':
     resolution: {integrity: sha512-h5MlpLXr6I6zrKZKZOjyKdUhzUuO2+kKLEYmrR0HWS/U6dlcwvNuS2wUo1lRNgUTCblHJuOKmyWx3Sz+JG8Oxw==}
@@ -2139,6 +2145,8 @@ snapshots:
   '@types/node@24.0.13':
     dependencies:
       undici-types: 7.8.0
+
+  '@types/shell-quote@1.7.5': {}
 
   '@typescript/native-preview-darwin-arm64@7.0.0-dev.20250712.1':
     optional: true

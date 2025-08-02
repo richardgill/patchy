@@ -2,7 +2,8 @@ import { randomUUID } from "node:crypto";
 import { existsSync, readFileSync } from "node:fs";
 import { mkdir, rm, writeFile } from "node:fs/promises";
 import { join } from "node:path";
-import { type ExecaReturnValue, execa } from "execa";
+import { execa, type Result } from "execa";
+
 import { parse as parseShell } from "shell-quote";
 import { expect } from "vitest";
 
@@ -35,7 +36,12 @@ export const cleanupTestDir = async (ctx: TestContext) => {
   await rm(ctx.testDir, { recursive: true, force: true });
 };
 
-export const runPatchy = async (command: string, cwd: string) => {
+type PatchyResult = Result<{ cwd: string; reject: false }>;
+
+export const runPatchy = async (
+  command: string,
+  cwd: string,
+): Promise<PatchyResult> => {
   const cliPath = join(process.cwd(), "src/cli.ts");
   const tsxPath = join(process.cwd(), "node_modules/.bin/tsx");
 
@@ -45,14 +51,13 @@ export const runPatchy = async (command: string, cwd: string) => {
     cwd,
     reject: false,
   });
-
   return result;
 };
 
 export const assertSuccessfulCommand = async (
   command: string,
   cwd: string,
-  validateFn?: (result: ExecaReturnValue) => void,
+  validateFn?: (result: PatchyResult) => void,
 ) => {
   const result = await runPatchy(command, cwd);
   if (result.exitCode !== 0) {
