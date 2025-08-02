@@ -47,9 +47,14 @@ const formatFlagOrYamlSource = <K extends YamlKey>(
   const flagValue = flags[metadata.flag as keyof typeof flags];
   const yamlValue = yamlConfig[yamlKey];
 
-  return flagValue !== undefined
-    ? `--${metadata.flag} ${flagValue}`
-    : `${yamlKey}: ${yamlValue} in ${configPath}`;
+  if (flagValue) {
+    return `--${metadata.flag} ${flagValue}`;
+  }
+  if (yamlValue) {
+    return `${yamlKey}: ${yamlValue} in ${configPath}`;
+  }
+  // defaulted
+  return metadata.name;
 };
 
 type ConfigError = { field: keyof ResolvedConfig } & (
@@ -168,12 +173,9 @@ const calcError = ({
   yamlConfig: YamlConfig;
   flags: SharedFlags;
 }): { success: boolean; error?: string } => {
-  console.log("zzz ", { mergedConfig, requiredFields, configPathFlag });
-
   const missingFields = requiredFields.filter((field) => {
     return isNil(mergedConfig[field]);
   });
-  console.log("zzz missingFields", missingFields);
   if (missingFields.length > 0) {
     const missingFieldLines = missingFields.map((fieldKey) => {
       const field = CONFIG_FIELD_METADATA[fieldKey];
@@ -211,6 +213,15 @@ const calcError = ({
   ) {
     validationErrors.push(
       `${formatFlagOrYamlSource("repo_dir", flags, yamlConfig, configPath)} does not exist: ${chalk.blue(mergedConfig.absoluteRepoDir)}`,
+    );
+  }
+  if (
+    requiredFields.includes("patches_dir") &&
+    mergedConfig.patches_dir &&
+    !existsSync(mergedConfig.patches_dir)
+  ) {
+    validationErrors.push(
+      `${formatFlagOrYamlSource("patches_dir", flags, yamlConfig, configPath)} does not exist: ${chalk.blue(mergedConfig.patches_dir)}`,
     );
   }
 

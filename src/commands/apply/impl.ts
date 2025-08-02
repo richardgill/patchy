@@ -10,6 +10,7 @@ export default async function (
     const config = (await resolveConfig(this, flags, [
       "repo_base_dir",
       "repo_dir",
+      "patches_dir",
     ])) as ResolvedConfig;
 
     if (config.dry_run) {
