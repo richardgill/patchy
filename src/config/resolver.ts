@@ -149,11 +149,11 @@ export const resolveConfig = async (
   const configPath = flags.config ?? DEFAULT_CONFIG_PATH;
   const absoluteConfigPath = resolve(configPath);
   let yamlString: string | undefined;
-  if (!existsSync(configPath) && flags.config !== undefined) {
-    throw new Error(`Configuration file not found: ${configPath}`);
+  if (!existsSync(absoluteConfigPath) && flags.config !== undefined) {
+    throw new Error(`Configuration file not found: ${absoluteConfigPath}`);
   }
-  if (existsSync(configPath)) {
-    yamlString = readFileSync(configPath, "utf8");
+  if (existsSync(absoluteConfigPath)) {
+    yamlString = readFileSync(absoluteConfigPath, "utf8");
   }
 
   const { mergedConfig, success, error } = createMergedConfig({
