@@ -66,13 +66,13 @@ const createMergedConfig = ({
   flags,
   requiredFields,
   configPath,
-  context,
+  onConfigMerged = () => null,
 }: {
   yamlString: string | undefined;
   flags: SharedFlags & { "repo-url"?: string; ref?: string };
   requiredFields: (keyof ResolvedConfig)[];
   configPath: string;
-  context: LocalContext;
+  onConfigMerged?: (config: MergedConfig) => void;
 }) => {
   const yamlConfig = parseOptionalYamlConfig(yamlString);
   console.log("zzz yamlConfig", yamlConfig);
@@ -88,7 +88,7 @@ const createMergedConfig = ({
   };
   console.log("zzz mergedConfig", mergedConfig);
 
-  logConfiguration(context, mergedConfig);
+  onConfigMerged(mergedConfig);
   const errors = calcErrors({ mergedConfig, requiredFields, configPath });
 
   return { mergedConfig, ...errors };
@@ -114,7 +114,7 @@ export const resolveConfig = async (
     flags,
     requiredFields,
     configPath,
-    context,
+    onConfigMerged: (config) => logConfiguration(context, config),
   });
 
   if (!success) {
