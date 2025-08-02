@@ -12,20 +12,20 @@ export default defineConfig({
       {
         test: {
           name: "unit",
-          include: ["test/**/*.test.ts"],
+          include: ["src/test/**/*.test.ts"],
         },
       },
       {
         test: {
           name: "e2e",
-          include: ["e2e/**/*.test.ts"],
+          include: ["src/e2e/**/*.test.ts"],
           testTimeout: 30000,
           fileParallelism: true,
           pool: "forks",
           poolOptions: {
             forks: {
               singleFork: false,
-              maxForks: 4,
+              maxForks: 10,
             },
           },
         },
