@@ -15,7 +15,7 @@ This is a CLI tool for managing Git patch workflows. It helps maintain curated p
 - `@stricli/core` - CLI framework
 - `es-toolkit` - Utility functions (lodash alternative)
 - `enquirer` - Interactive prompts
-- `yaml` - YAML parsing
+- `jsonc-parser` - JSON with comments parsing
 - `zod` - Runtime validation
 
 ## Testing Preferences

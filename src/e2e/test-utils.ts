@@ -70,10 +70,8 @@ export const writeTestConfig = async (
   configPath: string,
   config: Record<string, string | boolean | number>,
 ) => {
-  const yamlContent = Object.entries(config)
-    .map(([key, value]) => `${key}: ${value}`)
-    .join("\n");
-  await writeFile(configPath, yamlContent);
+  const jsonContent = JSON.stringify(config, null, 2);
+  await writeFile(configPath, jsonContent);
 };
 
 export const assertConfigFileExists = (configPath: string) => {
@@ -140,7 +138,7 @@ const createTestDirStructure = async (
 export const setupTestWithConfig = async ({
   tmpDir,
   createDirectories = {},
-  yamlConfig = {},
+  jsonConfig = {},
 }: {
   tmpDir: string;
   createDirectories?: {
@@ -148,12 +146,12 @@ export const setupTestWithConfig = async ({
     repoBaseDir?: string | undefined;
     repoDir?: string | undefined;
   };
-  yamlConfig?: Record<string, string | boolean | number>;
+  jsonConfig?: Record<string, string | boolean | number>;
 }): Promise<TestContext> => {
   const ctx = await createTestDirStructure(tmpDir, createDirectories);
 
-  const configPath = resolve(tmpDir, "patchy.yaml");
-  await writeTestConfig(configPath, yamlConfig);
+  const configPath = resolve(tmpDir, "patchy.json");
+  await writeTestConfig(configPath, jsonConfig);
 
   return ctx;
 };

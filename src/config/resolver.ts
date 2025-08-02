@@ -2,59 +2,59 @@ import { existsSync, readFileSync } from "node:fs";
 import path, { resolve } from "node:path";
 import chalk from "chalk";
 import { isNil } from "es-toolkit";
+import * as JSONC from "jsonc-parser";
 import type { MarkOptional } from "ts-essentials";
-import YAML from "yaml";
 import type { LocalContext } from "~/context";
 import {
   DEFAULT_CONFIG_PATH,
   DEFAULT_PATCHES_DIR,
   DEFAULT_REF,
 } from "./defaults";
-import type { YamlConfig } from "./schemas";
-import { yamlConfigSchema } from "./schemas";
+import type { JsonConfig } from "./schemas";
+import { jsonConfigSchema } from "./schemas";
 import {
   CONFIG_FIELD_METADATA,
+  type JsonKey,
   type PartialResolvedConfig,
   type ResolvedConfig,
   type SharedFlags,
-  type YamlKey,
 } from "./types";
 import { isValidGitUrl } from "./validation";
 
-const getFlagOrYamlValue = <T>(
+const getFlagOrJsonValue = <T>(
   flagValue: T | undefined,
-  yamlValue: T | undefined,
+  jsonValue: T | undefined,
 ): T | undefined => {
-  return flagValue ?? yamlValue;
+  return flagValue ?? jsonValue;
 };
 
-const getFlagOrYamlValueByKey = <K extends YamlKey>(
-  yamlKey: K,
+const getFlagOrJsonValueByKey = <K extends JsonKey>(
+  jsonKey: K,
   flags: SharedFlags,
-  yamlConfig: YamlConfig,
-): YamlConfig[K] | undefined => {
-  const metadata = CONFIG_FIELD_METADATA[yamlKey];
+  jsonConfig: JsonConfig,
+): JsonConfig[K] | undefined => {
+  const metadata = CONFIG_FIELD_METADATA[jsonKey];
   const flagValue = flags[metadata.flag as keyof typeof flags] as
-    | YamlConfig[K]
+    | JsonConfig[K]
     | undefined;
-  return getFlagOrYamlValue(flagValue, yamlConfig[yamlKey]);
+  return getFlagOrJsonValue(flagValue, jsonConfig[jsonKey]);
 };
 
-const formatFlagOrYamlSource = <K extends YamlKey>(
-  yamlKey: K,
+const formatFlagOrJsonSource = <K extends JsonKey>(
+  jsonKey: K,
   flags: SharedFlags,
-  yamlConfig: YamlConfig,
+  jsonConfig: JsonConfig,
   configPath: string,
 ): string => {
-  const metadata = CONFIG_FIELD_METADATA[yamlKey];
+  const metadata = CONFIG_FIELD_METADATA[jsonKey];
   const flagValue = flags[metadata.flag as keyof typeof flags];
-  const yamlValue = yamlConfig[yamlKey];
+  const jsonValue = jsonConfig[jsonKey];
 
   if (flagValue) {
     return `--${metadata.flag} ${flagValue}`;
   }
-  if (yamlValue) {
-    return `${yamlKey}: ${yamlValue} in ${configPath}`;
+  if (jsonValue) {
+    return `${jsonKey}: ${jsonValue} in ${configPath}`;
   }
   // default value
   return metadata.name;
@@ -70,14 +70,30 @@ type MergedConfig = MarkOptional<
   | "absolutePatchesDir"
 >;
 
-export const parseOptionalYamlConfig = (
-  yamlString: string | undefined,
-): YamlConfig => {
-  if (isNil(yamlString)) {
+export const parseOptionalJsonConfig = (
+  jsonString: string | undefined,
+): JsonConfig => {
+  if (isNil(jsonString)) {
     return {};
   }
-  const parsedData = YAML.parse(yamlString);
-  const { data, success, error } = yamlConfigSchema.safeParse(parsedData);
+  const errors: JSONC.ParseError[] = [];
+  const parsedData = JSONC.parseTree(jsonString, errors, {
+    disallowComments: false,
+    allowTrailingComma: true,
+  });
+
+  if (errors.length > 0) {
+    throw new Error(
+      `JSON parse error: ${JSONC.printParseErrorCode(errors[0].error)} at offset ${errors[0].offset}`,
+    );
+  }
+
+  if (!parsedData) {
+    throw new Error("Failed to parse JSON");
+  }
+
+  const jsonData = JSONC.getNodeValue(parsedData);
+  const { data, success, error } = jsonConfigSchema.safeParse(jsonData);
   if (success) {
     return data;
   }
@@ -108,7 +124,7 @@ export const createMergedConfig = ({
   cwd = process.cwd(),
 }: {
   flags: SharedFlags;
-  requiredFields: YamlKey[];
+  requiredFields: JsonKey[];
   onConfigMerged?: (config: MergedConfig) => void;
   cwd?: string;
 }) => {
@@ -118,27 +134,27 @@ export const createMergedConfig = ({
   }
   const configPath = flags.config ?? DEFAULT_CONFIG_PATH;
   const absoluteConfigPath = resolve(configPath);
-  let yamlString: string | undefined;
+  let jsonString: string | undefined;
   if (!existsSync(absoluteConfigPath) && flags.config !== undefined) {
     throw new Error(`Configuration file not found: ${absoluteConfigPath}`);
   }
   if (existsSync(absoluteConfigPath)) {
-    yamlString = readFileSync(absoluteConfigPath, "utf8");
+    jsonString = readFileSync(absoluteConfigPath, "utf8");
   }
 
-  const yamlConfig = parseOptionalYamlConfig(yamlString);
-  const repoBaseDir = getFlagOrYamlValueByKey(
+  const jsonConfig = parseOptionalJsonConfig(jsonString);
+  const repoBaseDir = getFlagOrJsonValueByKey(
     "repo_base_dir",
     flags,
-    yamlConfig,
+    jsonConfig,
   );
-  const repoDir = getFlagOrYamlValueByKey("repo_dir", flags, yamlConfig);
+  const repoDir = getFlagOrJsonValueByKey("repo_dir", flags, jsonConfig);
   const patchesDir =
-    getFlagOrYamlValueByKey("patches_dir", flags, yamlConfig) ??
+    getFlagOrJsonValueByKey("patches_dir", flags, jsonConfig) ??
     DEFAULT_PATCHES_DIR;
   const mergedConfig: MergedConfig = {
-    repo_url: getFlagOrYamlValueByKey("repo_url", flags, yamlConfig),
-    ref: getFlagOrYamlValueByKey("ref", flags, yamlConfig) ?? DEFAULT_REF,
+    repo_url: getFlagOrJsonValueByKey("repo_url", flags, jsonConfig),
+    ref: getFlagOrJsonValueByKey("ref", flags, jsonConfig) ?? DEFAULT_REF,
     repo_base_dir: repoBaseDir,
     absoluteRepoBaseDir: repoBaseDir ? resolve(repoBaseDir) : undefined,
     repo_dir: repoDir,
@@ -148,7 +164,7 @@ export const createMergedConfig = ({
         : undefined,
     patches_dir: patchesDir,
     absolutePatchesDir: patchesDir ? resolve(patchesDir) : undefined,
-    verbose: getFlagOrYamlValueByKey("verbose", flags, yamlConfig) ?? false,
+    verbose: getFlagOrJsonValueByKey("verbose", flags, jsonConfig) ?? false,
     dry_run: flags["dry-run"] ?? false,
   };
 
@@ -157,7 +173,7 @@ export const createMergedConfig = ({
     mergedConfig,
     requiredFields,
     configPath,
-    yamlConfig,
+    jsonConfig,
     flags,
   });
   if (cwd) {
@@ -170,13 +186,13 @@ const calcError = ({
   mergedConfig,
   requiredFields,
   configPath,
-  yamlConfig,
+  jsonConfig,
   flags,
 }: {
   mergedConfig: MergedConfig;
-  requiredFields: YamlKey[];
+  requiredFields: JsonKey[];
   configPath: string;
-  yamlConfig: YamlConfig;
+  jsonConfig: JsonConfig;
   flags: SharedFlags;
 }): { success: boolean; error?: string } => {
   const missingFields = requiredFields.filter((field) => {
@@ -207,7 +223,7 @@ const calcError = ({
     existsSync(mergedConfig.absoluteRepoBaseDir);
   if (!isRepoBaseDirValid) {
     validationErrors.push(
-      `${formatFlagOrYamlSource("repo_base_dir", flags, yamlConfig, configPath)} does not exist: ${chalk.blue(mergedConfig.absoluteRepoBaseDir)}`,
+      `${formatFlagOrJsonSource("repo_base_dir", flags, jsonConfig, configPath)} does not exist: ${chalk.blue(mergedConfig.absoluteRepoBaseDir)}`,
     );
   }
   if (
@@ -217,7 +233,7 @@ const calcError = ({
     !existsSync(mergedConfig.absoluteRepoDir)
   ) {
     validationErrors.push(
-      `${formatFlagOrYamlSource("repo_dir", flags, yamlConfig, configPath)} does not exist: ${chalk.blue(mergedConfig.absoluteRepoDir)}`,
+      `${formatFlagOrJsonSource("repo_dir", flags, jsonConfig, configPath)} does not exist: ${chalk.blue(mergedConfig.absoluteRepoDir)}`,
     );
   }
 
@@ -227,7 +243,7 @@ const calcError = ({
     !existsSync(mergedConfig.absolutePatchesDir)
   ) {
     validationErrors.push(
-      `${formatFlagOrYamlSource("patches_dir", flags, yamlConfig, configPath)} does not exist: ${chalk.blue(mergedConfig.absolutePatchesDir)}`,
+      `${formatFlagOrJsonSource("patches_dir", flags, jsonConfig, configPath)} does not exist: ${chalk.blue(mergedConfig.absolutePatchesDir)}`,
     );
   }
 
@@ -237,7 +253,7 @@ const calcError = ({
     !isValidGitUrl(mergedConfig.repo_url)
   ) {
     validationErrors.push(
-      `${formatFlagOrYamlSource("repo_url", flags, yamlConfig, configPath)} is invalid.  Example repo: ${CONFIG_FIELD_METADATA.repo_url.example}`,
+      `${formatFlagOrJsonSource("repo_url", flags, jsonConfig, configPath)} is invalid.  Example repo: ${CONFIG_FIELD_METADATA.repo_url.example}`,
     );
   }
 
@@ -257,7 +273,7 @@ const calcError = ({
 export const resolveConfig = async (
   context: LocalContext,
   flags: SharedFlags,
-  requiredFields: YamlKey[],
+  requiredFields: JsonKey[],
 ): Promise<PartialResolvedConfig | ResolvedConfig> => {
   const { mergedConfig, success, error } = createMergedConfig({
     flags,

@@ -21,11 +21,11 @@ describe("patchy init", () => {
   const assertSuccessfulInit = async (command: string) => {
     await assertSuccessfulCommand(command, tmpDir);
 
-    const configPath = join(tmpDir, "patchy.yaml");
+    const configPath = join(tmpDir, "patchy.json");
     assertConfigFileExists(configPath);
 
-    const yamlContent = readFileSync(configPath, "utf-8");
-    return yamlContent.trim();
+    const jsonContent = readFileSync(configPath, "utf-8");
+    return jsonContent.trim();
   };
 
   const assertFailedInit = async ({
@@ -43,16 +43,18 @@ describe("patchy init", () => {
       tmpDir,
       createDirectories: { repoBaseDir: "repoBaseDir1", repoDir: "main" },
     });
-    const yamlContent = await assertSuccessfulInit(
-      `init --repo-url https://github.com/example/test-repo.git --repo-dir main --repo-base-dir repoBaseDir1 --patches-dir patches --ref main --config patchy.yaml --force`,
+    const jsonContent = await assertSuccessfulInit(
+      `init --repo-url https://github.com/example/test-repo.git --repo-dir main --repo-base-dir repoBaseDir1 --patches-dir patches --ref main --config patchy.json --force`,
     );
 
-    expect(stabilizeTempDir(yamlContent)).toMatchInlineSnapshot(`
-      "repo_url: https://github.com/example/test-repo.git
-      ref: main
-      repo_base_dir: repoBaseDir1
-      repo_dir: main
-      patches_dir: patches"
+    expect(stabilizeTempDir(jsonContent)).toMatchInlineSnapshot(`
+      "{
+        \"repo_url\": \"https://github.com/example/test-repo.git\",
+        \"ref\": \"main\",
+        \"repo_base_dir\": \"repoBaseDir1\",
+        \"repo_dir\": \"main\",
+        \"patches_dir\": \"patches\"
+      }"
     `);
   });
 
@@ -63,7 +65,7 @@ describe("patchy init", () => {
         createDirectories: { repoBaseDir: "repoBaseDir1", repoDir: "main" },
       });
       await assertFailedInit({
-        command: `init --repo-url github.com/example/repo --repo-dir main --repo-base-dir repoBaseDir1 --patches-dir patches --ref main --config patchy.yaml --force`,
+        command: `init --repo-url github.com/example/repo --repo-dir main --repo-base-dir repoBaseDir1 --patches-dir patches --ref main --config patchy.json --force`,
         expectedErrors: "valid Git URL",
       });
     });
@@ -75,7 +77,7 @@ describe("patchy init", () => {
       });
 
       await assertFailedInit({
-        command: `init --repo-url https://invalid_domain/repo --repo-dir main --repo-base-dir repoBaseDir1 --patches-dir patches --ref main --config patchy.yaml --force`,
+        command: `init --repo-url https://invalid_domain/repo --repo-dir main --repo-base-dir repoBaseDir1 --patches-dir patches --ref main --config patchy.json --force`,
         expectedErrors: "valid Git URL",
       });
     });
@@ -87,7 +89,7 @@ describe("patchy init", () => {
       });
 
       await assertFailedInit({
-        command: `init --repo-url https://github.com/ --repo-dir main --repo-base-dir repoBaseDir1 --patches-dir patches --ref main --config patchy.yaml --force`,
+        command: `init --repo-url https://github.com/ --repo-dir main --repo-base-dir repoBaseDir1 --patches-dir patches --ref main --config patchy.json --force`,
         expectedErrors: "valid Git URL",
       });
     });
@@ -96,16 +98,16 @@ describe("patchy init", () => {
       setupTestWithConfig({
         tmpDir,
         createDirectories: { repoBaseDir: "repoBaseDir1", repoDir: "main" },
-        yamlConfig: { hello: "world" },
+        jsonConfig: { hello: "world" },
       });
 
       await runPatchy(
-        `init --repo-url https://github.com/example/repo.git --repo-dir main --repo-base-dir repoBaseDir1 --patches-dir patches --ref main --config patchy.yaml --force`,
+        `init --repo-url https://github.com/example/repo.git --repo-dir main --repo-base-dir repoBaseDir1 --patches-dir patches --ref main --config patchy.json --force`,
         tmpDir,
       );
 
       await assertFailedInit({
-        command: `init --repo-url https://github.com/example/another-repo.git --repo-dir main --repo-base-dir repoBaseDir1 --patches-dir patches --ref main --config patchy.yaml`,
+        command: `init --repo-url https://github.com/example/another-repo.git --repo-dir main --repo-base-dir repoBaseDir1 --patches-dir patches --ref main --config patchy.json`,
         expectedErrors: [
           "Configuration file already exists",
           "Use --force to overwrite",
@@ -119,7 +121,7 @@ describe("patchy init", () => {
         createDirectories: { repoBaseDir: "repoBaseDir1", repoDir: "main" },
       });
       await assertFailedInit({
-        command: `init --repo-url "" --repo-dir main --repo-base-dir repoBaseDir1 --patches-dir patches --ref main --config patchy.yaml --force`,
+        command: `init --repo-url "" --repo-dir main --repo-base-dir repoBaseDir1 --patches-dir patches --ref main --config patchy.json --force`,
         expectedErrors: "Repository URL is required",
       });
     });

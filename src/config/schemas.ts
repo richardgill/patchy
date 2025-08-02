@@ -13,7 +13,7 @@ export const requiredConfigSchema = z.object(baseConfigFields).strict();
 
 export type RequiredConfigData = z.infer<typeof requiredConfigSchema>;
 
-export const yamlConfigSchema = z
+export const jsonConfigSchema = z
   .object({
     repo_url: baseConfigFields.repo_url.optional(),
     ref: baseConfigFields.ref.optional(),
@@ -24,4 +24,4 @@ export const yamlConfigSchema = z
     dry_run: z.boolean().optional(),
   })
   .strict();
-export type YamlConfig = z.infer<typeof yamlConfigSchema>;
+export type JsonConfig = z.infer<typeof jsonConfigSchema>;
