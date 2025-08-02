@@ -2,6 +2,9 @@ import { existsSync } from "node:fs";
 import { resolve } from "node:path";
 import type { MarkOptional } from "ts-essentials";
 import type { LocalContext } from "../context";
+import { readFileSync } from "node:fs";
+import YAML from "yaml";
+import { yamlConfigSchema } from "./schemas";
 import {
   DEFAULT_CONFIG_PATH,
   DEFAULT_PATCHES_DIR,
@@ -13,7 +16,7 @@ import type {
   ResolvedConfig,
   SharedFlags,
 } from "./types";
-import { parseOptionalYamlConfig } from "./yaml-config";
+import { isNil } from "es-toolkit";
 
 type ConfigError = { field: keyof ResolvedConfig } & (
   | {
@@ -26,6 +29,21 @@ type MergedConfig = MarkOptional<
   ResolvedConfig,
   "repo_url" | "repo_dir" | "repo_base_dir"
 >;
+
+export const parseOptionalYamlConfig = (
+  yamlString: string | undefined,
+): YamlConfig => {
+  if (isNil(yamlString)) {
+    return {};
+  }
+  const parsedData = YAML.parse(yamlString);
+  const { data, success, error } = yamlConfigSchema.safeParse(parsedData);
+  if (success) {
+    return data;
+  }
+  // todo human format
+  throw error;
+};
 
 const logConfiguration = (
   context: LocalContext,
@@ -50,19 +68,15 @@ export const resolveConfig = async (
 ): Promise<PartialResolvedConfig | ResolvedConfig> => {
   const configPath = resolve(flags.config ?? DEFAULT_CONFIG_PATH);
 
-  let yamlConfig: YamlConfig = {};
+  let yamlString: string | undefined;
   if (!existsSync(configPath) && flags.config !== undefined) {
     throw new Error(`Configuration file not found: ${configPath}`);
   }
-  console.log("zzz yamlConfig", yamlConfig);
   if (existsSync(configPath)) {
-    try {
-      yamlConfig = parseOptionalYamlConfig(configPath);
-    } catch (error) {
-      throw new Error(`Failed to parse config file at ${configPath}: ${error}`);
-    }
+    yamlString = readFileSync(configPath, "utf8");
   }
 
+  const yamlConfig = parseOptionalYamlConfig(yamlString);
   console.log("zzz yamlConfig", yamlConfig);
   const mergedConfig: MergedConfig = {
     repo_url: flags["repo-url"] ?? yamlConfig.repo_url,
@@ -76,14 +90,14 @@ export const resolveConfig = async (
   };
   console.log("zzz mergedConfig", mergedConfig);
 
+  logConfiguration(context, mergedConfig);
   const result = calcErrors({ mergedConfig, requiredFields, configPath });
 
   if (!result.success) {
-    console.log("zzz error", result.errors);
+    console.log("zzz error", result.error);
     throw new Error(`Configuration errors`);
   }
 
-  logConfiguration(context, mergedConfig);
   return mergedConfig;
 };
 
@@ -96,7 +110,7 @@ const calcErrors = ({
   // todo extract this to a type
   requiredFields: (keyof ResolvedConfig)[];
   configPath: string;
-}): { success: boolean; errors: ConfigError[] } => {
+}): { success: boolean; error: string } => {
   console.log("zzz ", { mergedConfig, requiredFields, configPath });
-  return { success: true, errors: [] };
+  return { success: true, error: "whoop" };
 };
