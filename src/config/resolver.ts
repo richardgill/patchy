@@ -19,7 +19,7 @@ import {
   type YamlKey,
 } from "./types";
 import { isNil } from "es-toolkit";
-import dedent from "dedent";
+import chalk from "chalk";
 
 type ConfigError = { field: keyof ResolvedConfig } & (
   | {
@@ -130,19 +130,20 @@ const calcError = ({
   });
 
   if (missingFields) {
-    const missingFieldsError = dedent(`
-    Missing required parameters:
+    const missingFieldLines = missingFields.map((fieldKey) => {
+      const field = CONFIG_FIELD_METADATA[fieldKey];
+      return `  Missing ${chalk.bold(field.name)}: set ${chalk.cyan(fieldKey)} in ${chalk.blue(configPath)} or use ${chalk.cyan(`--${field.flag}`)} flag`;
+    });
 
-    ${missingFields
-      .map((fieldKey) => {
-        const field = CONFIG_FIELD_METADATA[fieldKey];
-        return `  ${field.name}: please set ${fieldKey} in ${configPath} or use --${field.flag} flag`;
-      })
-      .join("\n\n")}
-
-    You can set up ${configPath} by running: 
-    patchy init${configPathFlag ? ` --config ${configPathFlag}` : ""}
-  `);
+    const missingFieldsError =
+      [
+        chalk.red.bold("Missing required parameters:"),
+        "",
+        ...missingFieldLines,
+        "",
+        `${chalk.yellow("You can set up")} ${chalk.blue(configPath)} ${chalk.yellow("by running:")}`,
+        `  ${chalk.bold(`patchy init${configPathFlag ? ` --config ${configPathFlag}` : ""}`)}`,
+      ].join("\n") + "\n\n";
 
     return { success: false, error: missingFieldsError };
   }
