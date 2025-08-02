@@ -1,20 +1,32 @@
 export const sharedFlags = {
-  "repo-dir": {
-    kind: "parsed",
-    parse: String,
-    brief: "Path to the Git repo being patched",
-    optional: true,
-  },
   "repo-base-dir": {
     kind: "parsed",
     parse: String,
     brief: "Parent directory where upstream repos are cloned",
     optional: true,
   },
+  "repo-dir": {
+    kind: "parsed",
+    parse: String,
+    brief: "Path to the Git repo being patched",
+    optional: true,
+  },
   "patches-dir": {
     kind: "parsed",
     parse: String,
     brief: "Path to patch files",
+    optional: true,
+  },
+  "repo-url": {
+    kind: "parsed",
+    parse: String,
+    brief: "The upstream repository URL",
+    optional: true,
+  },
+  ref: {
+    kind: "parsed",
+    parse: String,
+    brief: "Git ref to use",
     optional: true,
   },
   config: {

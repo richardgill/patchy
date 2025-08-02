@@ -1,51 +1,19 @@
 import { buildCommand } from "@stricli/core";
+import { sharedFlags } from "../shared-parameters";
+
+const initFlags = {
+  ...sharedFlags,
+  force: {
+    kind: "boolean",
+    brief: "Overwrite existing configuration",
+    optional: true,
+  },
+} as const;
 
 export const initCommand = buildCommand({
   loader: async () => import("./impl"),
   parameters: {
-    flags: {
-      "repo-url": {
-        kind: "parsed",
-        parse: String,
-        brief: "The upstream repository URL",
-        optional: true,
-      },
-      "repo-dir": {
-        kind: "parsed",
-        parse: String,
-        brief: "Path to the Git repo being patched",
-        optional: true,
-      },
-      "repo-base-dir": {
-        kind: "parsed",
-        parse: String,
-        brief: "Parent directory where upstream repos are cloned",
-        optional: true,
-      },
-      "patches-dir": {
-        kind: "parsed",
-        parse: String,
-        brief: "Path to patch files",
-        optional: true,
-      },
-      ref: {
-        kind: "parsed",
-        parse: String,
-        brief: "Git ref to use",
-        optional: true,
-      },
-      config: {
-        kind: "parsed",
-        parse: String,
-        brief: "Path for the config file",
-        optional: true,
-      },
-      force: {
-        kind: "boolean",
-        brief: "Overwrite existing configuration",
-        optional: true,
-      },
-    },
+    flags: initFlags,
     positional: {
       kind: "tuple",
       parameters: [],
