@@ -1,29 +1,18 @@
 import { randomUUID } from "node:crypto";
-import { existsSync, readFileSync } from "node:fs";
-import { mkdir, rm, writeFile } from "node:fs/promises";
+import { existsSync } from "node:fs";
+import { mkdir, writeFile } from "node:fs/promises";
 import { join, resolve } from "node:path";
 import { execa, type Result } from "execa";
 
 import { parse as parseShell } from "shell-quote";
 import { expect } from "vitest";
 
-export type TestContext = {
+type TestContext = {
   testDir: string;
   originalCwd: string;
   absolutePatchesDir: string | undefined;
   absoluteRepoBaseDir: string | undefined;
   absoluteRepoDir: string | undefined;
-};
-
-export const createTestDir = async (
-  directories: {
-    patchesDir?: string | undefined;
-    repoBaseDir?: string | undefined;
-    repoDir?: string | undefined;
-  } = {},
-): Promise<TestContext> => {
-  const tmpDir = generateTmpDir();
-  return createTestDirStructure(tmpDir, directories);
 };
 
 type PatchyResult = Result<{ cwd: string; reject: false }>;
@@ -91,14 +80,6 @@ export const assertConfigFileExists = (configPath: string) => {
   expect(existsSync(configPath)).toBe(true);
 };
 
-export const assertConfigContent = (
-  configPath: string,
-  expectedYaml: string,
-) => {
-  const yamlContent = readFileSync(configPath, "utf-8");
-  expect(yamlContent.trim()).toBe(expectedYaml.trim());
-};
-
 export const stableizeTempDir = (
   output: string | undefined,
 ): string | undefined => {
@@ -154,10 +135,6 @@ const createTestDirStructure = async (
     absoluteRepoBaseDir,
     absoluteRepoDir,
   };
-};
-
-export const cleanupTmpDir = async (tmpDir: string): Promise<void> => {
-  await rm(tmpDir, { recursive: true, force: true });
 };
 
 export const setupTestWithConfig = async ({
