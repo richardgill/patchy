@@ -33,6 +33,7 @@ export type YamlKey = keyof CompleteYamlConfig;
 export type ResolvedConfig = CompleteYamlConfig & {
   absoluteRepoBaseDir: string;
   absoluteRepoDir: string;
+  absolutePatchesDir: string;
 };
 
 export type CamelCaseResolvedConfig = {

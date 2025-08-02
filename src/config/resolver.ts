@@ -71,6 +71,7 @@ type MergedConfig = MarkOptional<
   | "repo_base_dir"
   | "absoluteRepoBaseDir"
   | "absoluteRepoDir"
+  | "absolutePatchesDir"
 >;
 
 export const parseOptionalYamlConfig = (
@@ -127,6 +128,9 @@ export const createMergedConfig = ({
     yamlConfig,
   );
   const repoDir = getFlagOrYamlValueByKey("repo_dir", flags, yamlConfig);
+  const patchesDir =
+    getFlagOrYamlValueByKey("patches_dir", flags, yamlConfig) ??
+    DEFAULT_PATCHES_DIR;
   const mergedConfig: MergedConfig = {
     repo_url: getFlagOrYamlValueByKey("repo_url", flags, yamlConfig),
     ref: getFlagOrYamlValueByKey("ref", flags, yamlConfig) ?? DEFAULT_REF,
@@ -137,9 +141,8 @@ export const createMergedConfig = ({
       repoBaseDir && repoDir
         ? resolve(path.join(repoBaseDir, repoDir))
         : undefined,
-    patches_dir:
-      getFlagOrYamlValueByKey("patches_dir", flags, yamlConfig) ??
-      DEFAULT_PATCHES_DIR,
+    patches_dir: patchesDir,
+    absolutePatchesDir: patchesDir ? resolve(patchesDir) : undefined,
     verbose: getFlagOrYamlValueByKey("verbose", flags, yamlConfig) ?? false,
     dry_run: flags["dry-run"] ?? false,
   };
@@ -217,11 +220,11 @@ const calcError = ({
   }
   if (
     requiredFields.includes("patches_dir") &&
-    mergedConfig.patches_dir &&
-    !existsSync(mergedConfig.patches_dir)
+    mergedConfig.absolutePatchesDir &&
+    !existsSync(mergedConfig.absolutePatchesDir)
   ) {
     validationErrors.push(
-      `${formatFlagOrYamlSource("patches_dir", flags, yamlConfig, configPath)} does not exist: ${chalk.blue(mergedConfig.patches_dir)}`,
+      `${formatFlagOrYamlSource("patches_dir", flags, yamlConfig, configPath)} does not exist: ${chalk.blue(mergedConfig.absolutePatchesDir)}`,
     );
   }
 
