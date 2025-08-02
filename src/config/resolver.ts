@@ -53,16 +53,9 @@ const formatFlagOrYamlSource = <K extends YamlKey>(
   if (yamlValue) {
     return `${yamlKey}: ${yamlValue} in ${configPath}`;
   }
-  // defaulted
+  // default value
   return metadata.name;
 };
-
-type ConfigError = { field: keyof ResolvedConfig } & (
-  | {
-      type: "nil";
-    }
-  | { type: "validation-error"; error: string }
-);
 
 type MergedConfig = MarkOptional<
   ResolvedConfig,
