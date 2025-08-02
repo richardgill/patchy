@@ -18,14 +18,21 @@ export type ApplyCommandFlags = SharedFlags;
 export type GenerateCommandFlags = SharedFlags;
 
 // Note: underscore_case property names match YAML config keys
-export type ResolvedConfig = {
+export type CompleteYamlConfig = {
   repo_url: string;
-  repo_dir: string;
-  repo_base_dir: string;
-  patches_dir: string;
   ref: string;
+  repo_base_dir: string;
+  repo_dir: string;
+  patches_dir: string;
   verbose: boolean;
   dry_run: boolean;
+};
+
+export type YamlKey = keyof CompleteYamlConfig;
+
+export type ResolvedConfig = CompleteYamlConfig & {
+  absoluteRepoBaseDir: string;
+  absoluteRepoDir: string;
 };
 
 export type CamelCaseResolvedConfig = {
@@ -78,7 +85,7 @@ export const CONFIG_FIELD_METADATA = {
     example: "true",
   },
 } as const satisfies Record<
-  keyof ResolvedConfig,
+  YamlKey,
   {
     flag: keyof SharedFlags;
     name: string;

@@ -11,15 +11,15 @@ import {
   DEFAULT_REF,
 } from "./defaults";
 import type { YamlConfig } from "./schemas";
-import type {
-  PartialResolvedConfig,
-  ResolvedConfig,
-  SharedFlags,
+import {
+  CONFIG_FIELD_METADATA,
+  type PartialResolvedConfig,
+  type ResolvedConfig,
+  type SharedFlags,
+  type YamlKey,
 } from "./types";
 import { isNil } from "es-toolkit";
-import { success } from "zod/mini";
 import dedent from "dedent";
-import { config } from "node:process";
 
 type ConfigError = { field: keyof ResolvedConfig } & (
   | {
@@ -30,7 +30,11 @@ type ConfigError = { field: keyof ResolvedConfig } & (
 
 type MergedConfig = MarkOptional<
   ResolvedConfig,
-  "repo_url" | "repo_dir" | "repo_base_dir"
+  | "repo_url"
+  | "repo_dir"
+  | "repo_base_dir"
+  | "absoluteRepoBaseDir"
+  | "absoluteRepoDir"
 >;
 
 export const parseOptionalYamlConfig = (
@@ -74,20 +78,24 @@ export const createMergedConfig = ({
 }: {
   yamlString: string | undefined;
   flags: SharedFlags & { "repo-url"?: string; ref?: string };
-  requiredFields: (keyof ResolvedConfig)[];
+  requiredFields: YamlKey[];
   configPath: string;
   configPathFlag: string | undefined;
   onConfigMerged?: (config: MergedConfig) => void;
 }) => {
   const yamlConfig = parseOptionalYamlConfig(yamlString);
   console.log("zzz yamlConfig", yamlConfig);
+  const repoBaseDir = flags["repo-base-dir"] ?? yamlConfig.repo_base_dir;
+  const repoDir = flags["repo-dir"] ?? yamlConfig.repo_dir;
   const mergedConfig: MergedConfig = {
     repo_url: flags["repo-url"] ?? yamlConfig.repo_url,
-    repo_dir: flags["repo-dir"] ?? yamlConfig.repo_dir,
-    repo_base_dir: flags["repo-base-dir"] ?? yamlConfig.repo_base_dir,
+    ref: flags.ref ?? yamlConfig.ref ?? DEFAULT_REF,
+    repo_base_dir: repoBaseDir,
+    absoluteRepoBaseDir: repoBaseDir ? resolve(repoBaseDir) : undefined,
+    repo_dir: repoDir,
+    absoluteRepoDir: repoDir ? resolve(repoDir) : undefined,
     patches_dir:
       flags["patches-dir"] ?? yamlConfig.patches_dir ?? DEFAULT_PATCHES_DIR,
-    ref: flags.ref ?? yamlConfig.ref ?? DEFAULT_REF,
     verbose: flags.verbose ?? yamlConfig.verbose ?? false,
     dry_run: flags["dry-run"] ?? false,
   };
@@ -111,8 +119,7 @@ const calcError = ({
   configPathFlag,
 }: {
   mergedConfig: MergedConfig;
-  // todo extract this to a type
-  requiredFields: (keyof ResolvedConfig)[];
+  requiredFields: YamlKey[];
   configPath: string;
   configPathFlag: string | undefined;
 }): { success: boolean; error?: string } => {
@@ -127,8 +134,9 @@ const calcError = ({
     Missing required parameters:
 
     ${missingFields
-      .map((field) => {
-        return `  ${field} please set ${field} in ${configPath} or use --${field} flag`;
+      .map((fieldKey) => {
+        const field = CONFIG_FIELD_METADATA[fieldKey];
+        return `  ${field.name}: please set ${fieldKey} in ${configPath} or use --${field.flag} flag`;
       })
       .join("\n\n")}
 
@@ -138,13 +146,38 @@ const calcError = ({
 
     return { success: false, error: missingFieldsError };
   }
+
+  const validationErrors = [];
+  if (
+    requiredFields.includes("repo_base_dir") &&
+    mergedConfig.absoluteRepoBaseDir &&
+    !existsSync(mergedConfig.absoluteRepoBaseDir)
+  ) {
+    validationErrors.push(
+      `${CONFIG_FIELD_METADATA.repo_base_dir.name} does not exist: ${mergedConfig.repo_base_dir}`,
+    );
+  }
+  if (
+    requiredFields.includes("repo_dir") &&
+    mergedConfig.absoluteRepoDir &&
+    !existsSync(mergedConfig.absoluteRepoDir)
+  ) {
+    validationErrors.push(
+      `${CONFIG_FIELD_METADATA.repo_dir.name} does not exist: ${mergedConfig.repo_dir}`,
+    );
+  }
+
+  if (validationErrors.length > 0) {
+    return { success: false, error: validationErrors.join("\n") };
+  }
+
   return { success: true };
 };
 
 export const resolveConfig = async (
   context: LocalContext,
   flags: SharedFlags & { "repo-url"?: string; ref?: string },
-  requiredFields: (keyof ResolvedConfig)[],
+  requiredFields: YamlKey[],
 ): Promise<PartialResolvedConfig | ResolvedConfig> => {
   const configPath = flags.config ?? DEFAULT_CONFIG_PATH;
   const absoluteConfigPath = resolve(configPath);
@@ -166,8 +199,10 @@ export const resolveConfig = async (
   });
 
   if (!success) {
-    console.log("zzz error", error);
-    throw new Error(`Configuration errors`);
+    if (error) {
+      context.process.stderr.write(error);
+    }
+    context.process.exit(1);
   }
 
   return mergedConfig;
