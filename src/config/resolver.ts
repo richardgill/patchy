@@ -33,7 +33,9 @@ const getFlagOrYamlValueByKey = <K extends YamlKey>(
   yamlConfig: YamlConfig,
 ): YamlConfig[K] | undefined => {
   const metadata = CONFIG_FIELD_METADATA[yamlKey];
-  const flagValue = flags[metadata.flag as keyof typeof flags] as YamlConfig[K] | undefined;
+  const flagValue = flags[metadata.flag as keyof typeof flags] as
+    | YamlConfig[K]
+    | undefined;
   return getFlagOrYamlValue(flagValue, yamlConfig[yamlKey]);
 };
 
