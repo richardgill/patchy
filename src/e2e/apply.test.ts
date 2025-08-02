@@ -15,7 +15,7 @@ describe("patchy apply", () => {
   });
 
   afterEach(async () => {
-    // await cleanupTmpDir(tmpDir);
+    await cleanupTmpDir(tmpDir);
   });
 
   it("should apply patches with all flags specified", async () => {
