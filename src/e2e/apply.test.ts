@@ -1,5 +1,5 @@
 import { existsSync } from "node:fs";
-import { rm } from "node:fs/promises";
+import { mkdir, rm } from "node:fs/promises";
 import { join } from "node:path";
 import { afterEach, beforeEach, describe, expect, it } from "vitest";
 import {
@@ -16,7 +16,11 @@ describe("patchy apply", () => {
   let ctx: TestContext;
 
   beforeEach(async () => {
-    ctx = await createTestDir();
+    ctx = await createTestDir({
+      patchesDir: "./patches",
+      repoBaseDir: "repo_base_dir_1",
+      repoDir: "repo",
+    });
   });
 
   afterEach(async () => {
@@ -26,8 +30,10 @@ describe("patchy apply", () => {
   const setupConfigFile = async (
     config: Record<string, string | boolean | number>,
   ) => {
-    const configPath = join(ctx.patchesDir, "patchy.yaml");
-    await writeTestConfig(configPath, config);
+    if (ctx.patchesDir) {
+      const configPath = join(ctx.patchesDir, "patchy.yaml");
+      await writeTestConfig(configPath, config);
+    }
   };
 
   it("should apply patches with all flags specified", async () => {
@@ -38,7 +44,7 @@ describe("patchy apply", () => {
 
     const result = await assertSuccessfulCommand(
       `apply --repo-dir main --repo-base-dir ${ctx.repoBaseDir} --patches-dir patches --config patchy.yaml --verbose --dry-run`,
-      ctx.patchesDir,
+      ctx.testDir,
     );
 
     expect(stabilizeTempDir(result.stdout)).toMatchInlineSnapshot(`

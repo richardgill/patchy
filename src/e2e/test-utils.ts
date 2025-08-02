@@ -10,25 +10,48 @@ import { expect } from "vitest";
 export type TestContext = {
   testDir: string;
   originalCwd: string;
-  patchesDir: string;
-  repoBaseDir: string;
+  patchesDir: string | undefined;
+  repoBaseDir: string | undefined;
+  repoDir: string | undefined;
 };
 
-export const createTestDir = async (
-  patchesSubdir = "patches",
-  repoSubdir = "repos",
-): Promise<TestContext> => {
+export const createTestDir = async ({
+  patchesDir = "patches",
+  repoBaseDir = "repos",
+  repoDir = "repo",
+}: {
+  patchesDir?: string | undefined;
+  repoBaseDir?: string | undefined;
+  repoDir?: string | undefined;
+}): Promise<TestContext> => {
   const originalCwd = process.cwd();
   const testId = randomUUID();
   const testDir = join(originalCwd, "e2e/tmp", `test-${testId}`);
-  const patchesDir = join(testDir, patchesSubdir);
-  const repoBaseDir = join(testDir, repoSubdir);
-
   await mkdir(testDir, { recursive: true });
-  await mkdir(patchesDir, { recursive: true });
-  await mkdir(repoBaseDir, { recursive: true });
 
-  return { testDir, originalCwd, patchesDir, repoBaseDir };
+  let absolutePatchesDir: string | undefined;
+  if (patchesDir) {
+    absolutePatchesDir = join(testDir, patchesDir);
+    await mkdir(absolutePatchesDir, { recursive: true });
+  }
+  let absoluteRepoBaseDir: string | undefined;
+  if (repoBaseDir) {
+    absolutePatchesDir = join(testDir, patchesDir);
+    await mkdir(absolutePatchesDir, { recursive: true });
+  }
+  let absoluteRepoDir: string | undefined;
+  if (repoDir) {
+    absolutePatchesDir = join(testDir, patchesDir);
+    await mkdir(absolutePatchesDir, { recursive: true });
+  }
+
+  return {
+    testDir,
+    originalCwd,
+    patchesDir: absolutePatchesDir,
+    repoBaseDir: absoluteRepoBaseDir,
+    repoDir: absoluteRepoDir,
+  };
 };
 
 export const cleanupTestDir = async (ctx: TestContext) => {
