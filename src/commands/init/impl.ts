@@ -9,12 +9,12 @@ import {
   DEFAULT_PATCHES_DIR,
   DEFAULT_REF,
 } from "../../config/defaults";
-import { isValidGitUrl, validateGitUrl } from "../../config/validation";
-import type { LocalContext } from "../../context";
 import {
   type RequiredConfigData,
   requiredConfigSchema,
-} from "../../yaml-config";
+} from "../../config/schemas";
+import { isValidGitUrl, validateGitUrl } from "../../config/validation";
+import type { LocalContext } from "../../context";
 
 const { prompt } = enquirer;
 

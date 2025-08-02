@@ -1,13 +1,13 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { resolveConfig } from "../src/config/resolver";
+import type { PartialResolvedConfig } from "../src/config/types";
 import type { LocalContext } from "../src/context";
-import type { OptionalConfigData } from "../src/config/yaml-config";
 
 vi.mock("node:fs", () => ({
   existsSync: vi.fn(),
 }));
 
-vi.mock("../src/yaml-config", () => ({
+vi.mock("../src/config/yaml-config", () => ({
   parseOptionalYamlConfig: vi.fn(),
 }));
 
@@ -31,7 +31,10 @@ describe("resolveConfig", () => {
     vi.clearAllMocks();
   });
 
-  const setupConfigMock = (config: OptionalConfigData, fileExists = true) => {
+  const setupConfigMock = (
+    config: PartialResolvedConfig,
+    fileExists = true,
+  ) => {
     vi.mocked(existsSync).mockReturnValue(fileExists);
     vi.mocked(parseOptionalYamlConfig).mockReturnValue(config);
   };

@@ -8,8 +8,8 @@ export default async function (
 ): Promise<void> {
   try {
     const config = (await resolveConfig(this, flags, [
-      "repoUrl",
-      "repoDir",
+      "repo_url",
+      "repo_dir",
     ])) as ResolvedConfig;
 
     if (config.dry_run) {

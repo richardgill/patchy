@@ -1,20 +1,21 @@
 import { existsSync } from "node:fs";
 import { resolve } from "node:path";
+import { isNil } from "es-toolkit";
 import { z } from "zod";
 import type { LocalContext } from "../context";
-import { parseOptionalYamlConfig } from "./yaml-config";
 import {
   DEFAULT_CONFIG_PATH,
   DEFAULT_PATCHES_DIR,
   DEFAULT_REF,
 } from "./defaults";
+import type { YamlConfig } from "./schemas";
 import type {
   PartialResolvedConfig,
   ResolvedConfig,
   SharedFlags,
 } from "./types";
-import type { YamlConfig } from "./schemas";
-import { validateGitUrl, validatePath, validateRef } from "./validation";
+import { isValidGitUrl } from "./validation";
+import { parseOptionalYamlConfig } from "./yaml-config";
 
 const logConfiguration = (
   context: LocalContext,
@@ -63,34 +64,31 @@ export const resolveConfig = async (
     dry_run: flags["dry-run"] ?? false,
   };
 
-  if (requiredFields.length > 0) {
-    const missing: string[] = [];
-
-    for (const field of requiredFields) {
-      const configKey =
-        field === "repo_url"
-          ? "repo-url"
-          : field === "repo_dir"
-            ? "repo-dir"
-            : field === "repo_base_dir"
-              ? "repo-base-dir"
-              : field === "patches_dir"
-                ? "patches-dir"
-                : field === "dry_run"
-                  ? "dry-run"
-                  : field;
-
-      if (!mergedConfig[field] && mergedConfig[field] !== false) {
-        missing.push(configKey);
+  const requiredFieldsSchema = z
+    .object({
+      repo_url: z.string().nullable(),
+      verbose: z.boolean(),
+      dry_run: z.boolean(),
+    })
+    .superRefine(({ repo_url, dry_run, verbose }, ctx) => {
+      if (requiredFields.includes("repo_url") && isNil(repo_url)) {
+        ctx.addIssue({
+          code: "custom",
+          message: "Repository URL is required",
+        });
       }
-    }
+      if (repo_url && !isValidGitUrl(repo_url)) {
+        ctx.addIssue({
+          code: "custom",
+          message: "Please enter a valid Git URL (",
+        });
+      }
+    });
 
-    if (missing.length > 0) {
-      throw new Error(
-        `Missing required configuration: ${missing.join(", ")}. ` +
-          `Provide via CLI flags or in ${configPath}`,
-      );
-    }
+  const result = requiredFieldsSchema.safeParse(mergedConfig);
+
+  if (!result.success) {
+    throw new Error("problem!!");
   }
 
   logConfiguration(context, mergedConfig);

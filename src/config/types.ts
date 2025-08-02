@@ -27,4 +27,15 @@ export type ResolvedConfig = {
   dry_run: boolean;
 };
 
+export type CamelCaseResolvedConfig = {
+  repoUrl: string;
+  repoDir: string;
+  repoBaseDir: string;
+  patchesDir: string;
+  ref: string;
+  verbose: boolean;
+  dryRun: boolean;
+};
+
 export type PartialResolvedConfig = Partial<ResolvedConfig>;
+export type PartialCamelCaseResolvedConfig = Partial<CamelCaseResolvedConfig>;

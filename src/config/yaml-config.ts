@@ -1,10 +1,10 @@
 import { readFileSync } from "node:fs";
 import YAML from "yaml";
 import {
-  type YamlConfig,
-  yamlConfigSchema,
   type RequiredConfigData,
   requiredConfigSchema,
+  type YamlConfig,
+  yamlConfigSchema,
 } from "./schemas";
 
 export const parseYamlConfig = (filePath: string): RequiredConfigData => {
@@ -13,9 +13,7 @@ export const parseYamlConfig = (filePath: string): RequiredConfigData => {
   return requiredConfigSchema.parse(parsedData);
 };
 
-export const parseOptionalYamlConfig = (
-  filePath: string,
-): YamlConfig => {
+export const parseOptionalYamlConfig = (filePath: string): YamlConfig => {
   const fileContent = readFileSync(filePath, "utf8");
   const parsedData = YAML.parse(fileContent);
   const { data, success, error } = yamlConfigSchema.safeParse(parsedData);
