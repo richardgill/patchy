@@ -99,7 +99,10 @@ export const assertConfigContent = (
   expect(yamlContent.trim()).toBe(expectedYaml.trim());
 };
 
-export const stableizeTempDir = (output: string): string => {
+export const stableizeTempDir = (
+  output: string | undefined,
+): string | undefined => {
+  if (!output) return output;
   // Replace paths up to and including tmp/test-UUID directory with <TEST_DIR>
   return output.replace(
     /\/[^\s]*\/(?:e2e\/)?tmp\/test-[a-f0-9-]+/g,
@@ -108,7 +111,7 @@ export const stableizeTempDir = (output: string): string => {
 };
 
 // biome-ignore lint/suspicious/noExplicitAny: Generic utility function needs to accept any JSON-serializable value
-export const getStabilizedJson = (value: any): string => {
+export const getStabilizedJson = (value: any): string | undefined => {
   return stableizeTempDir(JSON.stringify(value, null, 2));
 };
 

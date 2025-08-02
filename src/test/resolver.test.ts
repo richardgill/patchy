@@ -5,14 +5,19 @@ import {
   generateTmpDir,
   getStabilizedJson,
   setupTestWithConfig,
+  stableizeTempDir,
 } from "../e2e/test-utils";
 
-const expectSuccessfulMerge = (result: {
-  success: boolean;
-  error?: string;
-}) => {
+const expectSuccessfulMerge = (
+  result: ReturnType<typeof createMergedConfig>,
+) => {
   expect(result.error).toBeUndefined();
   expect(result.success).toBe(true);
+};
+
+const expectFailedMerge = (result: ReturnType<typeof createMergedConfig>) => {
+  expect(result.error).toBeDefined();
+  expect(result.success).toBe(false);
 };
 
 describe("createMergedConfig", () => {
@@ -73,5 +78,43 @@ describe("createMergedConfig", () => {
       }"
     `,
     );
+  });
+
+  it("should fail when required fields are missing", async () => {
+    await setupTestWithConfig({
+      tmpDir,
+      createDirectories: {
+        patchesDir: "patches",
+      },
+      yamlConfig: {
+        verbose: true,
+      },
+    });
+
+    const flags: SharedFlags = {
+      "dry-run": true,
+    };
+
+    const requiredFields: YamlKey[] = ["repo_url", "repo_base_dir", "repo_dir"];
+
+    const result = createMergedConfig({
+      flags,
+      requiredFields,
+      cwd: tmpDir,
+    });
+
+    expectFailedMerge(result);
+    expect(stableizeTempDir(result.error)).toMatchInlineSnapshot(`
+      "Missing required parameters:
+
+        Missing Repository URL: set repo_url in ./patchy.yaml or use --repo-url flag
+        Missing Repository base directory: set repo_base_dir in ./patchy.yaml or use --repo-base-dir flag
+        Missing Repository directory: set repo_dir in ./patchy.yaml or use --repo-dir flag
+
+      You can set up ./patchy.yaml by running:
+        patchy init
+
+      "
+    `);
   });
 });
