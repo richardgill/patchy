@@ -1,5 +1,3 @@
-import { readFileSync } from "node:fs";
-import YAML from "yaml";
 import { z } from "zod";
 
 const baseConfigFields = {
@@ -13,7 +11,9 @@ const baseConfigFields = {
 
 export const requiredConfigSchema = z.object(baseConfigFields).strict();
 
-export const optionalConfigSchema = z
+export type RequiredConfigData = z.infer<typeof requiredConfigSchema>;
+
+export const yamlConfigSchema = z
   .object({
     repo_url: baseConfigFields.repo_url.optional(),
     repo_dir: baseConfigFields.repo_dir.optional(),
@@ -23,20 +23,4 @@ export const optionalConfigSchema = z
     verbose: baseConfigFields.verbose.optional(),
   })
   .strict();
-
-export type RequiredConfigData = z.infer<typeof requiredConfigSchema>;
-export type OptionalConfigData = z.infer<typeof optionalConfigSchema>;
-
-export const parseYamlConfig = (filePath: string): RequiredConfigData => {
-  const fileContent = readFileSync(filePath, "utf8");
-  const parsedData = YAML.parse(fileContent);
-  return requiredConfigSchema.parse(parsedData);
-};
-
-export const parseOptionalYamlConfig = (
-  filePath: string,
-): OptionalConfigData => {
-  const fileContent = readFileSync(filePath, "utf8");
-  const parsedData = YAML.parse(fileContent);
-  return optionalConfigSchema.parse(parsedData);
-};
+export type YamlConfig = z.infer<typeof yamlConfigSchema>;

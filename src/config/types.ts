@@ -17,28 +17,14 @@ export type ApplyCommandFlags = SharedFlags;
 
 export type GenerateCommandFlags = SharedFlags;
 
-export type RepoResetCommandFlags = Pick<SharedFlags, "repo-dir">;
-
-export type RepoCheckoutCommandFlags = Pick<SharedFlags, "repo-dir"> & {
-  ref: string;
-};
-
-export type RepoCloneCommandFlags = Pick<
-  SharedFlags,
-  "repo-base-dir" | "config"
-> & {
-  "repo-url"?: string;
-  ref?: string;
-};
-
 export type ResolvedConfig = {
-  repoUrl: string;
-  repoDir: string;
-  repoBaseDir: string;
-  patchesDir: string;
+  repo_url: string;
+  repo_dir: string;
+  repo_base_dir: string;
+  patches_dir: string;
   ref: string;
   verbose: boolean;
-  dryRun: boolean;
+  dry_run: boolean;
 };
 
 export type PartialResolvedConfig = Partial<ResolvedConfig>;
