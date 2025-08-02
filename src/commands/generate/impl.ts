@@ -7,12 +7,15 @@ export default async function (
   flags: GenerateCommandFlags,
 ): Promise<void> {
   try {
-    const config = (await resolveConfig(this, flags)) as ResolvedConfig;
+    const config = (await resolveConfig(this, flags, [
+      "repo_url",
+      "repo_dir",
+    ])) as ResolvedConfig;
 
-    if (config.dryRun) {
+    if (config.dry_run) {
       this.process.stdout.write(
         "[DRY RUN] Would generate patches from " +
-          `${config.repoDir} to ${config.patchesDir}\n`,
+          `${config.repo_dir} to ${config.patches_dir}\n`,
       );
     } else {
       this.process.stdout.write("Generating patches...\n");
