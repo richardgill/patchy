@@ -5,28 +5,28 @@ import {
   assertConfigFileExists,
   assertFailedCommand,
   assertSuccessfulCommand,
-  cleanupTestDir,
-  createTestDir,
+  cleanupTmpDir,
+  createTmpDir,
   runPatchy,
+  setupTestWithConfig,
   stabilizeTempDir,
-  type TestContext,
 } from "./test-utils";
 
 describe("patchy init", () => {
-  let ctx: TestContext;
+  let tmpDir: string;
 
-  beforeEach(async () => {
-    ctx = await createTestDir();
+  beforeEach(() => {
+    tmpDir = createTmpDir();
   });
 
   afterEach(async () => {
-    await cleanupTestDir(ctx);
+    await cleanupTmpDir(tmpDir);
   });
 
   const assertSuccessfulInit = async (command: string) => {
-    await assertSuccessfulCommand(command, ctx.patchesDir);
+    await assertSuccessfulCommand(command, tmpDir);
 
-    const configPath = join(ctx.patchesDir, "patchy.yaml");
+    const configPath = join(tmpDir, "patchy.yaml");
     assertConfigFileExists(configPath);
 
     const yamlContent = readFileSync(configPath, "utf-8");
@@ -40,18 +40,22 @@ describe("patchy init", () => {
     command: string;
     expectedErrors: string | string[];
   }) => {
-    await assertFailedCommand(command, ctx.patchesDir, expectedErrors);
+    await assertFailedCommand(command, tmpDir, expectedErrors);
   };
 
   it("should initialize patchy with all flags", async () => {
+    setupTestWithConfig({
+      tmpDir,
+      createDirectories: { repoBaseDir: "repoBaseDir1", repoDir: "main" },
+    });
     const yamlContent = await assertSuccessfulInit(
-      `init --repo-url https://github.com/example/test-repo.git --repo-dir main --repo-base-dir ${ctx.repoBaseDir} --patches-dir patches --ref main --config patchy.yaml --force`,
+      `init --repo-url https://github.com/example/test-repo.git --repo-dir main --repo-base-dir repoBaseDir1 --patches-dir patches --ref main --config patchy.yaml --force`,
     );
 
     expect(stabilizeTempDir(yamlContent)).toMatchInlineSnapshot(`
       "repo_url: https://github.com/example/test-repo.git
       ref: main
-      repo_base_dir: <TEST_DIR>/repos
+      repo_base_dir: repoBaseDir1
       repo_dir: main
       patches_dir: patches"
     `);
@@ -59,34 +63,54 @@ describe("patchy init", () => {
 
   describe("error cases", () => {
     it("should fail with malformed repo url - missing protocol", async () => {
+      setupTestWithConfig({
+        tmpDir,
+        createDirectories: { repoBaseDir: "repoBaseDir1", repoDir: "main" },
+      });
       await assertFailedInit({
-        command: `init --repo-url github.com/example/repo --repo-dir main --repo-base-dir ${ctx.repoBaseDir} --patches-dir patches --ref main --config patchy.yaml --force`,
+        command: `init --repo-url github.com/example/repo --repo-dir main --repo-base-dir repoBaseDir1 --patches-dir patches --ref main --config patchy.yaml --force`,
         expectedErrors: "valid Git URL",
       });
     });
 
     it("should fail with malformed repo url - invalid domain", async () => {
+      setupTestWithConfig({
+        tmpDir,
+        createDirectories: { repoBaseDir: "repoBaseDir1", repoDir: "main" },
+      });
+
       await assertFailedInit({
-        command: `init --repo-url https://invalid_domain/repo --repo-dir main --repo-base-dir ${ctx.repoBaseDir} --patches-dir patches --ref main --config patchy.yaml --force`,
+        command: `init --repo-url https://invalid_domain/repo --repo-dir main --repo-base-dir repoBaseDir1 --patches-dir patches --ref main --config patchy.yaml --force`,
         expectedErrors: "valid Git URL",
       });
     });
 
     it("should fail with malformed repo url - incomplete path", async () => {
+      setupTestWithConfig({
+        tmpDir,
+        createDirectories: { repoBaseDir: "repoBaseDir1", repoDir: "main" },
+      });
+
       await assertFailedInit({
-        command: `init --repo-url https://github.com/ --repo-dir main --repo-base-dir ${ctx.repoBaseDir} --patches-dir patches --ref main --config patchy.yaml --force`,
+        command: `init --repo-url https://github.com/ --repo-dir main --repo-base-dir repoBaseDir1 --patches-dir patches --ref main --config patchy.yaml --force`,
         expectedErrors: "valid Git URL",
       });
     });
 
     it("should fail when config file exists without force flag", async () => {
+      setupTestWithConfig({
+        tmpDir,
+        createDirectories: { repoBaseDir: "repoBaseDir1", repoDir: "main" },
+        yamlConfig: { hello: "world" },
+      });
+
       await runPatchy(
-        `init --repo-url https://github.com/example/repo.git --repo-dir main --repo-base-dir ${ctx.repoBaseDir} --patches-dir patches --ref main --config patchy.yaml --force`,
-        ctx.patchesDir,
+        `init --repo-url https://github.com/example/repo.git --repo-dir main --repo-base-dir repoBaseDir1 --patches-dir patches --ref main --config patchy.yaml --force`,
+        tmpDir,
       );
 
       await assertFailedInit({
-        command: `init --repo-url https://github.com/example/another-repo.git --repo-dir main --repo-base-dir ${ctx.repoBaseDir} --patches-dir patches --ref main --config patchy.yaml`,
+        command: `init --repo-url https://github.com/example/another-repo.git --repo-dir main --repo-base-dir repoBaseDir1 --patches-dir patches --ref main --config patchy.yaml`,
         expectedErrors: [
           "Configuration file already exists",
           "Use --force to overwrite",
@@ -95,8 +119,12 @@ describe("patchy init", () => {
     });
 
     it("should fail with validation error for empty repo_url", async () => {
+      setupTestWithConfig({
+        tmpDir,
+        createDirectories: { repoBaseDir: "repoBaseDir1", repoDir: "main" },
+      });
       await assertFailedInit({
-        command: `init --repo-url "" --repo-dir main --repo-base-dir ${ctx.repoBaseDir} --patches-dir patches --ref main --config patchy.yaml --force`,
+        command: `init --repo-url "" --repo-dir main --repo-base-dir repoBaseDir1 --patches-dir patches --ref main --config patchy.yaml --force`,
         expectedErrors: "Repository URL is required",
       });
     });
