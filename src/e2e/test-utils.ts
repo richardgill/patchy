@@ -15,43 +15,15 @@ export type TestContext = {
   repoDir: string | undefined;
 };
 
-export const createTestDir = async ({
-  patchesDir = "patches",
-  repoBaseDir = "repos",
-  repoDir = "repo",
-}: {
-  patchesDir?: string | undefined;
-  repoBaseDir?: string | undefined;
-  repoDir?: string | undefined;
-}): Promise<TestContext> => {
-  const originalCwd = process.cwd();
-  const testId = randomUUID();
-  const testDir = join(originalCwd, "e2e/tmp", `test-${testId}`);
-  await mkdir(testDir, { recursive: true });
-
-  let absolutePatchesDir: string | undefined;
-  if (patchesDir) {
-    absolutePatchesDir = join(testDir, patchesDir);
-    await mkdir(absolutePatchesDir, { recursive: true });
-  }
-  let absoluteRepoBaseDir: string | undefined;
-  if (repoBaseDir) {
-    absoluteRepoBaseDir = join(testDir, repoBaseDir);
-    await mkdir(absoluteRepoBaseDir, { recursive: true });
-  }
-  let absoluteRepoDir: string | undefined;
-  if (repoDir && repoBaseDir) {
-    absoluteRepoDir = join(testDir, repoBaseDir, repoDir);
-    await mkdir(absoluteRepoDir, { recursive: true });
-  }
-
-  return {
-    testDir,
-    originalCwd,
-    patchesDir: absolutePatchesDir,
-    repoBaseDir: absoluteRepoBaseDir,
-    repoDir: absoluteRepoDir,
-  };
+export const createTestDir = async (
+  directories: {
+    patchesDir?: string | undefined;
+    repoBaseDir?: string | undefined;
+    repoDir?: string | undefined;
+  } = {},
+): Promise<TestContext> => {
+  const tmpDir = createTmpDir();
+  return createTestDirStructure(tmpDir, directories);
 };
 
 type PatchyResult = Result<{ cwd: string; reject: false }>;
@@ -137,23 +109,14 @@ export const createTmpDir = (): string => {
   return join(process.cwd(), "e2e/tmp", `test-${testId}`);
 };
 
-export const cleanupTmpDir = async (tmpDir: string): Promise<void> => {
-  await rm(tmpDir, { recursive: true, force: true });
-};
-
-export const setupTestWithConfig = async ({
-  tmpDir,
-  directories = {},
-  yamlConfig = {},
-}: {
-  tmpDir: string;
-  directories?: {
+const createTestDirStructure = async (
+  tmpDir: string,
+  directories: {
     patchesDir?: string | undefined;
     repoBaseDir?: string | undefined;
     repoDir?: string | undefined;
-  };
-  yamlConfig?: Record<string, string | boolean | number>;
-}): Promise<TestContext> => {
+  },
+): Promise<TestContext> => {
   const originalCwd = process.cwd();
   await mkdir(tmpDir, { recursive: true });
 
@@ -173,13 +136,33 @@ export const setupTestWithConfig = async ({
     await mkdir(absoluteRepoDir, { recursive: true });
   }
 
-  const ctx: TestContext = {
+  return {
     testDir: tmpDir,
     originalCwd,
     patchesDir: absolutePatchesDir,
     repoBaseDir: absoluteRepoBaseDir,
     repoDir: absoluteRepoDir,
   };
+};
+
+export const cleanupTmpDir = async (tmpDir: string): Promise<void> => {
+  await rm(tmpDir, { recursive: true, force: true });
+};
+
+export const setupTestWithConfig = async ({
+  tmpDir,
+  directories = {},
+  yamlConfig = {},
+}: {
+  tmpDir: string;
+  directories?: {
+    patchesDir?: string | undefined;
+    repoBaseDir?: string | undefined;
+    repoDir?: string | undefined;
+  };
+  yamlConfig?: Record<string, string | boolean | number>;
+}): Promise<TestContext> => {
+  const ctx = await createTestDirStructure(tmpDir, directories);
 
   const configPath = resolve(tmpDir, "patchy.yaml");
   await writeTestConfig(configPath, yamlConfig);
