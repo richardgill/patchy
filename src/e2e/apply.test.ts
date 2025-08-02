@@ -1,7 +1,6 @@
-import { afterEach, beforeEach, describe, expect, it } from "vitest";
+import { beforeEach, describe, expect, it } from "vitest";
 import {
   assertSuccessfulCommand,
-  cleanupTmpDir,
   generateTmpDir,
   setupTestWithConfig,
   stableizeTempDir,
@@ -12,10 +11,6 @@ describe("patchy apply", () => {
 
   beforeEach(async () => {
     tmpDir = generateTmpDir();
-  });
-
-  afterEach(async () => {
-    await cleanupTmpDir(tmpDir);
   });
 
   it("should apply patches with all flags specified", async () => {

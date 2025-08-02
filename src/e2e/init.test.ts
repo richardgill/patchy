@@ -1,11 +1,10 @@
 import { readFileSync } from "node:fs";
 import { join } from "node:path";
-import { afterEach, beforeEach, describe, expect, it } from "vitest";
+import { beforeEach, describe, expect, it } from "vitest";
 import {
   assertConfigFileExists,
   assertFailedCommand,
   assertSuccessfulCommand,
-  cleanupTmpDir,
   generateTmpDir,
   runPatchy,
   setupTestWithConfig,
@@ -17,10 +16,6 @@ describe("patchy init", () => {
 
   beforeEach(() => {
     tmpDir = generateTmpDir();
-  });
-
-  afterEach(async () => {
-    await cleanupTmpDir(tmpDir);
   });
 
   const assertSuccessfulInit = async (command: string) => {

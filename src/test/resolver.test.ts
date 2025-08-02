@@ -1,8 +1,12 @@
 import { mkdirSync, writeFileSync } from "node:fs";
 import path from "node:path";
-import { afterEach, beforeEach, describe, expect, it } from "vitest";
+import { beforeEach, describe, expect, it } from "vitest";
 import { createMergedConfig } from "../config/resolver";
-import type { SharedFlags, YamlKey } from "../config/types";
+import type {
+  PartialResolvedConfig,
+  SharedFlags,
+  YamlKey,
+} from "../config/types";
 import {
   generateTmpDir,
   getStabilizedJson,
@@ -27,10 +31,6 @@ describe("createMergedConfig", () => {
 
   beforeEach(() => {
     tmpDir = generateTmpDir();
-  });
-
-  afterEach(async () => {
-    // await cleanupTmpDir(tmpDir);
   });
 
   it("should merge YAML config with CLI flags successfully", async () => {
@@ -648,7 +648,7 @@ describe("createMergedConfig", () => {
 
     const flags: SharedFlags = {};
     const requiredFields: YamlKey[] = ["repo_url", "repo_base_dir", "repo_dir"];
-    let callbackConfig: any = null;
+    let callbackConfig: PartialResolvedConfig | null = null;
 
     const result = createMergedConfig({
       flags,
