@@ -59,11 +59,11 @@ describe("createMergedConfig", () => {
         "repo_url": "https://github.com/example/flag-repo.git",
         "ref": "main",
         "repo_base_dir": "repoBaseDir1",
-        "absoluteRepoBaseDir": "/Users/rich/code/patchy-test<TEST_DIR>/repoBaseDir1",
+        "absoluteRepoBaseDir": "<TEST_DIR>/repoBaseDir1",
         "repo_dir": "repoDir1",
-        "absoluteRepoDir": "/Users/rich/code/patchy-test<TEST_DIR>/repoBaseDir1/repoDir1",
+        "absoluteRepoDir": "<TEST_DIR>/repoBaseDir1/repoDir1",
         "patches_dir": "./patches/",
-        "absolutePatchesDir": "/Users/rich/code/patchy-test<TEST_DIR>/patches",
+        "absolutePatchesDir": "<TEST_DIR>/patches",
         "verbose": true,
         "dry_run": true
       }"

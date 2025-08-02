@@ -101,7 +101,7 @@ export const assertConfigContent = (
 
 export const stableizeTempDir = (output: string): string => {
   // Replace paths up to and including tmp/test-UUID directory with <TEST_DIR>
-  return output.replace(/\/[^\/\s]*\/tmp\/test-[a-f0-9-]+/g, "<TEST_DIR>");
+  return output.replace(/\/[^\s]*\/(?:e2e\/)?tmp\/test-[a-f0-9-]+/g, "<TEST_DIR>");
 };
 
 export const generateTmpDir = (): string => {
