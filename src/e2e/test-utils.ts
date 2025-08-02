@@ -36,13 +36,13 @@ export const createTestDir = async ({
   }
   let absoluteRepoBaseDir: string | undefined;
   if (repoBaseDir) {
-    absolutePatchesDir = join(testDir, patchesDir);
-    await mkdir(absolutePatchesDir, { recursive: true });
+    absoluteRepoBaseDir = join(testDir, repoBaseDir);
+    await mkdir(absoluteRepoBaseDir, { recursive: true });
   }
   let absoluteRepoDir: string | undefined;
-  if (repoDir) {
-    absolutePatchesDir = join(testDir, patchesDir);
-    await mkdir(absolutePatchesDir, { recursive: true });
+  if (repoDir && repoBaseDir) {
+    absoluteRepoDir = join(testDir, repoBaseDir, repoDir);
+    await mkdir(absoluteRepoDir, { recursive: true });
   }
 
   return {
@@ -52,11 +52,6 @@ export const createTestDir = async ({
     repoBaseDir: absoluteRepoBaseDir,
     repoDir: absoluteRepoDir,
   };
-};
-
-export const cleanupTestDir = async (ctx: TestContext) => {
-  process.chdir(ctx.originalCwd);
-  await rm(ctx.testDir, { recursive: true, force: true });
 };
 
 type PatchyResult = Result<{ cwd: string; reject: false }>;
@@ -135,4 +130,66 @@ export const assertConfigContent = (
 export const stabilizeTempDir = (output: string): string => {
   // Replace paths up to and including tmp/test-UUID directory with <TEST_DIR>
   return output.replace(/[^\s]*\/tmp\/test-[a-f0-9-]+/g, "<TEST_DIR>");
+};
+
+export const createTmpDir = (): string => {
+  const testId = randomUUID();
+  return join(process.cwd(), "e2e/tmp", `test-${testId}`);
+};
+
+export const cleanupTmpDir = async (tmpDir: string): Promise<void> => {
+  await rm(tmpDir, { recursive: true, force: true });
+};
+
+export const setupTestWithConfig = async ({
+  tmpDir,
+  directories = {},
+  yamlConfig = {},
+}: {
+  tmpDir: string;
+  directories?: {
+    patchesDir?: string | undefined;
+    repoBaseDir?: string | undefined;
+    repoDir?: string | undefined;
+  };
+  yamlConfig?: Record<string, string | boolean | number>;
+}): Promise<TestContext> => {
+  const originalCwd = process.cwd();
+
+  await mkdir(tmpDir, { recursive: true });
+
+  let absolutePatchesDir: string | undefined;
+  if (directories.patchesDir) {
+    absolutePatchesDir = join(tmpDir, directories.patchesDir);
+    await mkdir(absolutePatchesDir, { recursive: true });
+  }
+  let absoluteRepoBaseDir: string | undefined;
+  if (directories.repoBaseDir) {
+    absoluteRepoBaseDir = join(tmpDir, directories.repoBaseDir);
+    await mkdir(absoluteRepoBaseDir, { recursive: true });
+  }
+  let absoluteRepoDir: string | undefined;
+  if (directories.repoDir && directories.repoBaseDir) {
+    absoluteRepoDir = join(
+      tmpDir,
+      directories.repoBaseDir,
+      directories.repoDir,
+    );
+    await mkdir(absoluteRepoDir, { recursive: true });
+  }
+
+  const ctx: TestContext = {
+    testDir: tmpDir,
+    originalCwd,
+    patchesDir: absolutePatchesDir,
+    repoBaseDir: absoluteRepoBaseDir,
+    repoDir: absoluteRepoDir,
+  };
+
+  if (ctx.patchesDir) {
+    const configPath = join(ctx.patchesDir, "patchy.yaml");
+    await writeTestConfig(configPath, yamlConfig);
+  }
+
+  return ctx;
 };
