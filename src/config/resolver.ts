@@ -61,21 +61,19 @@ const logConfiguration = (
   }
 };
 
-export const resolveConfig = async (
-  context: LocalContext,
-  flags: SharedFlags & { "repo-url"?: string; ref?: string },
-  requiredFields: (keyof ResolvedConfig)[],
-): Promise<PartialResolvedConfig | ResolvedConfig> => {
-  const configPath = resolve(flags.config ?? DEFAULT_CONFIG_PATH);
-
-  let yamlString: string | undefined;
-  if (!existsSync(configPath) && flags.config !== undefined) {
-    throw new Error(`Configuration file not found: ${configPath}`);
-  }
-  if (existsSync(configPath)) {
-    yamlString = readFileSync(configPath, "utf8");
-  }
-
+const createMergedConfig = ({
+  yamlString,
+  flags,
+  requiredFields,
+  configPath,
+  context,
+}: {
+  yamlString: string | undefined;
+  flags: SharedFlags & { "repo-url"?: string; ref?: string };
+  requiredFields: (keyof ResolvedConfig)[];
+  configPath: string;
+  context: LocalContext;
+}) => {
   const yamlConfig = parseOptionalYamlConfig(yamlString);
   console.log("zzz yamlConfig", yamlConfig);
   const mergedConfig: MergedConfig = {
@@ -91,10 +89,36 @@ export const resolveConfig = async (
   console.log("zzz mergedConfig", mergedConfig);
 
   logConfiguration(context, mergedConfig);
-  const result = calcErrors({ mergedConfig, requiredFields, configPath });
+  const errors = calcErrors({ mergedConfig, requiredFields, configPath });
 
-  if (!result.success) {
-    console.log("zzz error", result.error);
+  return { mergedConfig, ...errors };
+};
+
+export const resolveConfig = async (
+  context: LocalContext,
+  flags: SharedFlags & { "repo-url"?: string; ref?: string },
+  requiredFields: (keyof ResolvedConfig)[],
+): Promise<PartialResolvedConfig | ResolvedConfig> => {
+  const configPath = resolve(flags.config ?? DEFAULT_CONFIG_PATH);
+
+  let yamlString: string | undefined;
+  if (!existsSync(configPath) && flags.config !== undefined) {
+    throw new Error(`Configuration file not found: ${configPath}`);
+  }
+  if (existsSync(configPath)) {
+    yamlString = readFileSync(configPath, "utf8");
+  }
+
+  const { mergedConfig, success, error } = createMergedConfig({
+    yamlString,
+    flags,
+    requiredFields,
+    configPath,
+    context,
+  });
+
+  if (!success) {
+    console.log("zzz error", error);
     throw new Error(`Configuration errors`);
   }
 
