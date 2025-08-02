@@ -110,6 +110,8 @@ export const createMergedConfig = ({
     requiredFields,
     configPath,
     configPathFlag,
+    yamlConfig,
+    flags,
   });
 
   return { mergedConfig, ...errors };
@@ -120,11 +122,15 @@ const calcError = ({
   requiredFields,
   configPath,
   configPathFlag,
+  yamlConfig,
+  flags,
 }: {
   mergedConfig: MergedConfig;
   requiredFields: YamlKey[];
   configPath: string;
   configPathFlag: string | undefined;
+  yamlConfig: YamlConfig;
+  flags: SharedFlags & { "repo-url"?: string; ref?: string };
 }): { success: boolean; error?: string } => {
   console.log("zzz ", { mergedConfig, requiredFields, configPathFlag });
 
@@ -168,7 +174,7 @@ const calcError = ({
     !existsSync(mergedConfig.absoluteRepoDir)
   ) {
     validationErrors.push(
-      `Resolved ${chalk.bold(CONFIG_FIELD_METADATA.repo_dir.name)} does not exist: ${chalk.blue(mergedConfig.absoluteRepoDir)}`,
+      `${flags["repo-dir"] ? `--repo-dir ${flags["repo-dir"]}` : `repo_dir: ${yamlConfig.repo_dir} in ${configPath}`} does not exist: ${chalk.blue(mergedConfig.absoluteRepoDir)}`,
     );
   }
 
