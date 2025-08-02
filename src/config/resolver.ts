@@ -61,7 +61,7 @@ const logConfiguration = (
   }
 };
 
-const createMergedConfig = ({
+export const createMergedConfig = ({
   yamlString,
   flags,
   requiredFields,
@@ -89,9 +89,23 @@ const createMergedConfig = ({
   console.log("zzz mergedConfig", mergedConfig);
 
   onConfigMerged(mergedConfig);
-  const errors = calcErrors({ mergedConfig, requiredFields, configPath });
+  const errors = calcError({ mergedConfig, requiredFields, configPath });
 
   return { mergedConfig, ...errors };
+};
+
+const calcError = ({
+  mergedConfig,
+  requiredFields,
+  configPath,
+}: {
+  mergedConfig: MergedConfig;
+  // todo extract this to a type
+  requiredFields: (keyof ResolvedConfig)[];
+  configPath: string;
+}): { success: boolean; error: string } => {
+  console.log("zzz ", { mergedConfig, requiredFields, configPath });
+  return { success: true, error: "whoop" };
 };
 
 export const resolveConfig = async (
@@ -123,18 +137,4 @@ export const resolveConfig = async (
   }
 
   return mergedConfig;
-};
-
-const calcErrors = ({
-  mergedConfig,
-  requiredFields,
-  configPath,
-}: {
-  mergedConfig: MergedConfig;
-  // todo extract this to a type
-  requiredFields: (keyof ResolvedConfig)[];
-  configPath: string;
-}): { success: boolean; error: string } => {
-  console.log("zzz ", { mergedConfig, requiredFields, configPath });
-  return { success: true, error: "whoop" };
 };
