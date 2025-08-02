@@ -22,7 +22,7 @@ export const createTestDir = async (
     repoDir?: string | undefined;
   } = {},
 ): Promise<TestContext> => {
-  const tmpDir = createTmpDir();
+  const tmpDir = generateTmpDir();
   return createTestDirStructure(tmpDir, directories);
 };
 
@@ -99,12 +99,12 @@ export const assertConfigContent = (
   expect(yamlContent.trim()).toBe(expectedYaml.trim());
 };
 
-export const stabilizeTempDir = (output: string): string => {
+export const stableizeTempDir = (output: string): string => {
   // Replace paths up to and including tmp/test-UUID directory with <TEST_DIR>
-  return output.replace(/[^\s]*\/tmp\/test-[a-f0-9-]+/g, "<TEST_DIR>");
+  return output.replace(/\/[^\/\s]*\/tmp\/test-[a-f0-9-]+/g, "<TEST_DIR>");
 };
 
-export const createTmpDir = (): string => {
+export const generateTmpDir = (): string => {
   const testId = randomUUID();
   return join(process.cwd(), "e2e/tmp", `test-${testId}`);
 };

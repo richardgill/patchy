@@ -111,6 +111,10 @@ export const createMergedConfig = ({
   onConfigMerged?: (config: MergedConfig) => void;
   cwd?: string;
 }) => {
+  const originalCwd = process.cwd();
+  if (cwd) {
+    process.chdir(cwd);
+  }
   const configPath = flags.config ?? DEFAULT_CONFIG_PATH;
   const absoluteConfigPath = resolve(configPath);
   let yamlString: string | undefined;
@@ -155,7 +159,9 @@ export const createMergedConfig = ({
     yamlConfig,
     flags,
   });
-
+  if (cwd) {
+    process.chdir(originalCwd);
+  }
   return { mergedConfig, ...errors };
 };
 

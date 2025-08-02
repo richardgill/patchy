@@ -2,7 +2,7 @@ import { mkdtempSync, readFileSync, rmSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { describe, expect, it } from "vitest";
-import { stabilizeTempDir, writeTestConfig } from "./test-utils";
+import { stableizeTempDir, writeTestConfig } from "./test-utils";
 
 describe("test-utils", () => {
   describe("writeTestConfig", () => {
@@ -39,7 +39,7 @@ describe("test-utils", () => {
   describe("stabilizeTempDir", () => {
     it("should replace temp directory paths", () => {
       const input = "/any/path/to/tmp/test-abc123-def456/repos";
-      expect(stabilizeTempDir(input)).toBe("<TEST_DIR>/repos");
+      expect(stableizeTempDir(input)).toBe("<TEST_DIR>/repos");
     });
 
     it("should handle multiple temp paths in text", () => {
@@ -51,7 +51,7 @@ describe("test-utils", () => {
         path1: <TEST_DIR>/repos
         path2: <TEST_DIR>/data`;
 
-      expect(stabilizeTempDir(input)).toBe(expected);
+      expect(stableizeTempDir(input)).toBe(expected);
     });
   });
 });

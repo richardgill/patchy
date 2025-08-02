@@ -2,16 +2,16 @@ import { afterEach, beforeEach, describe, expect, it } from "vitest";
 import {
   assertSuccessfulCommand,
   cleanupTmpDir,
-  createTmpDir,
+  generateTmpDir,
   setupTestWithConfig,
-  stabilizeTempDir,
+  stableizeTempDir,
 } from "./test-utils";
 
 describe("patchy apply", () => {
   let tmpDir: string;
 
   beforeEach(async () => {
-    tmpDir = createTmpDir();
+    tmpDir = generateTmpDir();
   });
 
   afterEach(async () => {
@@ -37,7 +37,7 @@ describe("patchy apply", () => {
       tmpDir,
     );
 
-    expect(stabilizeTempDir(result.stdout)).toMatchInlineSnapshot(`
+    expect(stableizeTempDir(result.stdout)).toMatchInlineSnapshot(`
       "Configuration resolved:
         repo_url: https://github.com/example/test-repo.git
         repo_dir: main
@@ -72,7 +72,7 @@ describe("patchy apply", () => {
       tmpDir,
     );
 
-    expect(stabilizeTempDir(result.stdout)).toMatchInlineSnapshot(`
+    expect(stableizeTempDir(result.stdout)).toMatchInlineSnapshot(`
       "Configuration resolved:
         repo_url: https://github.com/example/test-repo.git
         repo_dir: upstream
@@ -107,7 +107,7 @@ describe("patchy apply", () => {
       tmpDir,
     );
 
-    expect(stabilizeTempDir(result.stdout)).toMatchInlineSnapshot(`
+    expect(stableizeTempDir(result.stdout)).toMatchInlineSnapshot(`
       "Configuration resolved:
         repo_url: https://github.com/example/test-repo.git
         repo_dir: cli-repo

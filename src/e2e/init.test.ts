@@ -6,17 +6,17 @@ import {
   assertFailedCommand,
   assertSuccessfulCommand,
   cleanupTmpDir,
-  createTmpDir,
+  generateTmpDir,
   runPatchy,
   setupTestWithConfig,
-  stabilizeTempDir,
+  stableizeTempDir,
 } from "./test-utils";
 
 describe("patchy init", () => {
   let tmpDir: string;
 
   beforeEach(() => {
-    tmpDir = createTmpDir();
+    tmpDir = generateTmpDir();
   });
 
   afterEach(async () => {
@@ -52,7 +52,7 @@ describe("patchy init", () => {
       `init --repo-url https://github.com/example/test-repo.git --repo-dir main --repo-base-dir repoBaseDir1 --patches-dir patches --ref main --config patchy.yaml --force`,
     );
 
-    expect(stabilizeTempDir(yamlContent)).toMatchInlineSnapshot(`
+    expect(stableizeTempDir(yamlContent)).toMatchInlineSnapshot(`
       "repo_url: https://github.com/example/test-repo.git
       ref: main
       repo_base_dir: repoBaseDir1
