@@ -6,9 +6,9 @@ import { stabilizeTempDir, writeTestConfig } from "./test-utils";
 
 describe("test-utils", () => {
   describe("writeTestConfig", () => {
-    it("should generate YAML content correctly", async () => {
+    it("should generate JSON content correctly", async () => {
       const tempDir = mkdtempSync(join(tmpdir(), "test-utils-"));
-      const configPath = join(tempDir, "test-config.yaml");
+      const configPath = join(tempDir, "test-config.json");
 
       await writeTestConfig(configPath, {
         repo_url: "https://github.com/example/repo.git",
@@ -20,16 +20,18 @@ describe("test-utils", () => {
         dry_run: false,
       });
 
-      const yamlContent = readFileSync(configPath, "utf-8");
+      const jsonContent = readFileSync(configPath, "utf-8");
 
-      expect(yamlContent).toMatchInlineSnapshot(`
-        "repo_url: https://github.com/example/repo.git
-        repo_dir: main
-        repo_base_dir: /tmp/repos
-        patches_dir: patches
-        ref: main
-        verbose: true
-        dry_run: false"
+      expect(jsonContent).toMatchInlineSnapshot(`
+        "{
+          \"repo_url\": \"https://github.com/example/repo.git\",
+          \"repo_dir\": \"main\",
+          \"repo_base_dir\": \"/tmp/repos\",
+          \"patches_dir\": \"patches\",
+          \"ref\": \"main\",
+          \"verbose\": true,
+          \"dry_run\": false
+        }"
       `);
 
       rmSync(tempDir, { recursive: true });

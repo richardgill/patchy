@@ -17,8 +17,8 @@ export type ApplyCommandFlags = SharedFlags;
 
 export type GenerateCommandFlags = SharedFlags;
 
-// Note: underscore_case property names match YAML config keys
-export type CompleteYamlConfig = {
+// Note: underscore_case property names match JSON config keys
+export type CompleteJsonConfig = {
   repo_url: string;
   ref: string;
   repo_base_dir: string;
@@ -28,9 +28,9 @@ export type CompleteYamlConfig = {
   dry_run: boolean;
 };
 
-export type YamlKey = keyof CompleteYamlConfig;
+export type JsonKey = keyof CompleteJsonConfig;
 
-export type ResolvedConfig = CompleteYamlConfig & {
+export type ResolvedConfig = CompleteJsonConfig & {
   absoluteRepoBaseDir: string;
   absoluteRepoDir: string;
   absolutePatchesDir: string;
@@ -86,7 +86,7 @@ export const CONFIG_FIELD_METADATA = {
     example: "true",
   },
 } as const satisfies Record<
-  YamlKey,
+  JsonKey,
   {
     flag: keyof SharedFlags;
     name: string;

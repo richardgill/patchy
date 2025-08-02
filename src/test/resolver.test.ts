@@ -2,7 +2,7 @@ import { mkdirSync, writeFileSync } from "node:fs";
 import path from "node:path";
 import { beforeEach, describe, expect, it } from "vitest";
 import { createMergedConfig } from "../config/resolver";
-import type { SharedFlags, YamlKey } from "../config/types";
+import type { JsonKey, SharedFlags } from "../config/types";
 import {
   generateTmpDir,
   getStabilizedJson,
@@ -29,7 +29,7 @@ describe("createMergedConfig", () => {
     tmpDir = generateTmpDir();
   });
 
-  it("should merge YAML config with CLI flags successfully", async () => {
+  it("should merge JSON config with CLI flags successfully", async () => {
     await setupTestWithConfig({
       tmpDir,
       createDirectories: {
@@ -37,8 +37,8 @@ describe("createMergedConfig", () => {
         repoDir: "repoDir1",
         patchesDir: "patches",
       },
-      yamlConfig: {
-        repo_url: "https://github.com/example/yaml-repo.git",
+      jsonConfig: {
+        repo_url: "https://github.com/example/test-repo.git",
         repo_base_dir: "repoBaseDir1",
         repo_dir: "repoDir1",
         ref: "main",
@@ -51,7 +51,7 @@ describe("createMergedConfig", () => {
       "dry-run": true,
     };
 
-    const requiredFields: YamlKey[] = ["repo_url", "repo_base_dir", "repo_dir"];
+    const requiredFields: JsonKey[] = ["repo_url", "repo_base_dir", "repo_dir"];
 
     const result = createMergedConfig({
       flags,
@@ -84,7 +84,7 @@ describe("createMergedConfig", () => {
       createDirectories: {
         patchesDir: "patches",
       },
-      yamlConfig: {
+      jsonConfig: {
         verbose: true,
       },
     });
@@ -93,7 +93,7 @@ describe("createMergedConfig", () => {
       "dry-run": true,
     };
 
-    const requiredFields: YamlKey[] = ["repo_url", "repo_base_dir", "repo_dir"];
+    const requiredFields: JsonKey[] = ["repo_url", "repo_base_dir", "repo_dir"];
 
     const result = createMergedConfig({
       flags,
@@ -105,11 +105,11 @@ describe("createMergedConfig", () => {
     expect(stabilizeTempDir(result.error)).toMatchInlineSnapshot(`
       "Missing required parameters:
 
-        Missing Repository URL: set repo_url in ./patchy.yaml or use --repo-url flag
-        Missing Repository base directory: set repo_base_dir in ./patchy.yaml or use --repo-base-dir flag
-        Missing Repository directory: set repo_dir in ./patchy.yaml or use --repo-dir flag
+        Missing Repository URL: set repo_url in ./patchy.json or use --repo-url flag
+        Missing Repository base directory: set repo_base_dir in ./patchy.json or use --repo-base-dir flag
+        Missing Repository directory: set repo_dir in ./patchy.json or use --repo-dir flag
 
-      You can set up ./patchy.yaml by running:
+      You can set up ./patchy.json by running:
         patchy init
 
       "
@@ -123,7 +123,7 @@ describe("createMergedConfig", () => {
         repoBaseDir: "repoBaseDir1",
         repoDir: "repoDir1",
       },
-      yamlConfig: {
+      jsonConfig: {
         repo_url: "https://github.com/example/repo.git",
         repo_base_dir: "repoBaseDir1",
         repo_dir: "repoDir1",
@@ -131,7 +131,7 @@ describe("createMergedConfig", () => {
     });
 
     const flags: SharedFlags = {};
-    const requiredFields: YamlKey[] = ["repo_url", "repo_base_dir", "repo_dir"];
+    const requiredFields: JsonKey[] = ["repo_url", "repo_base_dir", "repo_dir"];
 
     const result = createMergedConfig({
       flags,
@@ -161,9 +161,9 @@ describe("createMergedConfig", () => {
   it("should throw error when config file doesn't exist with explicit path", async () => {
     mkdirSync(tmpDir, { recursive: true });
     const flags: SharedFlags = {
-      config: "./non-existent-config.yaml",
+      config: "./non-existent-config.json",
     };
-    const requiredFields: YamlKey[] = ["repo_url"];
+    const requiredFields: JsonKey[] = ["repo_url"];
 
     let errorMessage = "";
     try {
@@ -177,19 +177,19 @@ describe("createMergedConfig", () => {
     }
 
     expect(stabilizeTempDir(errorMessage)).toMatchInlineSnapshot(
-      `"Configuration file not found: <TEST_DIR>/non-existent-config.yaml"`,
+      `"Configuration file not found: <TEST_DIR>/non-existent-config.json"`,
     );
   });
 
-  it("should throw error on invalid YAML", async () => {
+  it("should throw error on invalid JSON", async () => {
     mkdirSync(tmpDir, { recursive: true });
-    const invalidYamlPath = path.join(tmpDir, "invalid.yaml");
-    writeFileSync(invalidYamlPath, "invalid: yaml: content: [\n");
+    const invalidJsonPath = path.join(tmpDir, "invalid.json");
+    writeFileSync(invalidJsonPath, "{ invalid json: content }");
 
     const flags: SharedFlags = {
-      config: invalidYamlPath,
+      config: invalidJsonPath,
     };
-    const requiredFields: YamlKey[] = ["repo_url"];
+    const requiredFields: JsonKey[] = ["repo_url"];
 
     let errorMessage = "";
     try {
@@ -203,7 +203,7 @@ describe("createMergedConfig", () => {
     }
 
     expect(errorMessage).toMatchInlineSnapshot(
-      `"Nested mappings are not allowed in compact mappings at line 1, column 10:\n\ninvalid: yaml: content: [\n         ^\n"`,
+      `"JSON parse error: InvalidSymbol at offset 2"`,
     );
   });
 
@@ -211,7 +211,7 @@ describe("createMergedConfig", () => {
     await setupTestWithConfig({
       tmpDir,
       createDirectories: {},
-      yamlConfig: {
+      jsonConfig: {
         repo_url: "https://github.com/example/repo.git",
         repo_base_dir: "non-existent-base",
         repo_dir: "non-existent-repo",
@@ -220,7 +220,7 @@ describe("createMergedConfig", () => {
     });
 
     const flags: SharedFlags = {};
-    const requiredFields: YamlKey[] = [
+    const requiredFields: JsonKey[] = [
       "repo_url",
       "repo_base_dir",
       "repo_dir",
@@ -237,14 +237,14 @@ describe("createMergedConfig", () => {
     expect(stabilizeTempDir(result.error)).toMatchInlineSnapshot(`
       "Validation errors:
 
-      repo_base_dir: non-existent-base in ./patchy.yaml does not exist: <TEST_DIR>/non-existent-base
-      patches_dir: non-existent-patches in ./patchy.yaml does not exist: <TEST_DIR>/non-existent-patches
+      repo_base_dir: non-existent-base in ./patchy.json does not exist: <TEST_DIR>/non-existent-base
+      patches_dir: non-existent-patches in ./patchy.json does not exist: <TEST_DIR>/non-existent-patches
 
       "
     `);
   });
 
-  it("should prioritize CLI flags over YAML values", async () => {
+  it("should prioritize CLI flags over JSON values", async () => {
     await setupTestWithConfig({
       tmpDir,
       createDirectories: {
@@ -252,12 +252,12 @@ describe("createMergedConfig", () => {
         repoDir: "flag-repo",
         patchesDir: "flag-patches",
       },
-      yamlConfig: {
-        repo_url: "https://github.com/example/yaml-repo.git",
-        repo_base_dir: "yaml-base",
-        repo_dir: "yaml-repo",
-        patches_dir: "yaml-patches",
-        ref: "yaml-ref",
+      jsonConfig: {
+        repo_url: "https://github.com/example/test-repo.git",
+        repo_base_dir: "json-base",
+        repo_dir: "json-repo",
+        patches_dir: "json-patches",
+        ref: "json-ref",
         verbose: false,
       },
     });
@@ -270,7 +270,7 @@ describe("createMergedConfig", () => {
       ref: "flag-ref",
       verbose: true,
     };
-    const requiredFields: YamlKey[] = [
+    const requiredFields: JsonKey[] = [
       "repo_url",
       "repo_base_dir",
       "repo_dir",
@@ -310,7 +310,7 @@ describe("createMergedConfig", () => {
         repoDir: "repo",
         patchesDir: "patches",
       },
-      yamlConfig: {
+      jsonConfig: {
         repo_url: "https://github.com/example/repo.git",
         repo_base_dir: "base",
         repo_dir: "repo",
@@ -319,7 +319,7 @@ describe("createMergedConfig", () => {
     });
 
     const flags: SharedFlags = {};
-    const requiredFields: YamlKey[] = [
+    const requiredFields: JsonKey[] = [
       "repo_url",
       "repo_base_dir",
       "repo_dir",
@@ -351,16 +351,16 @@ describe("createMergedConfig", () => {
     );
   });
 
-  it("should handle empty YAML config file", async () => {
+  it("should handle empty JSON config file", async () => {
     mkdirSync(tmpDir, { recursive: true });
-    const emptyYamlPath = path.join(tmpDir, "empty.yaml");
-    writeFileSync(emptyYamlPath, "{}");
+    const emptyJsonPath = path.join(tmpDir, "empty.json");
+    writeFileSync(emptyJsonPath, "{}");
 
     const flags: SharedFlags = {
-      config: emptyYamlPath,
+      config: emptyJsonPath,
       "repo-url": "https://github.com/example/repo.git",
     };
-    const requiredFields: YamlKey[] = ["repo_url"];
+    const requiredFields: JsonKey[] = ["repo_url"];
 
     const result = createMergedConfig({
       flags,
@@ -383,16 +383,16 @@ describe("createMergedConfig", () => {
     );
   });
 
-  it("should handle empty YAML config file", async () => {
+  it("should handle empty JSON config file", async () => {
     mkdirSync(tmpDir, { recursive: true });
-    const emptyYamlPath = path.join(tmpDir, "truly-empty.yaml");
-    writeFileSync(emptyYamlPath, "");
+    const emptyJsonPath = path.join(tmpDir, "truly-empty.json");
+    writeFileSync(emptyJsonPath, "");
 
     const flags: SharedFlags = {
-      config: emptyYamlPath,
+      config: emptyJsonPath,
       "repo-url": "https://github.com/example/repo.git",
     };
-    const requiredFields: YamlKey[] = ["repo_url"];
+    const requiredFields: JsonKey[] = ["repo_url"];
 
     let errorMessage = "";
     try {
@@ -406,7 +406,7 @@ describe("createMergedConfig", () => {
     }
 
     expect(errorMessage).toMatchInlineSnapshot(
-      `"[\n  {\n    \"expected\": \"object\",\n    \"code\": \"invalid_type\",\n    \"path\": [],\n    \"message\": \"Invalid input: expected object, received null\"\n  }\n]"`,
+      `"JSON parse error: ValueExpected at offset 0"`,
     );
   });
 
@@ -414,13 +414,13 @@ describe("createMergedConfig", () => {
     await setupTestWithConfig({
       tmpDir,
       createDirectories: {},
-      yamlConfig: {
+      jsonConfig: {
         repo_url: "https://github.com/example/repo.git",
       },
     });
 
     const flags: SharedFlags = {};
-    const requiredFields: YamlKey[] = ["repo_base_dir", "patches_dir"];
+    const requiredFields: JsonKey[] = ["repo_base_dir", "patches_dir"];
 
     const result = createMergedConfig({
       flags,
@@ -432,9 +432,9 @@ describe("createMergedConfig", () => {
     expect(stabilizeTempDir(result.error)).toMatchInlineSnapshot(`
       "Missing required parameters:
 
-        Missing Repository base directory: set repo_base_dir in ./patchy.yaml or use --repo-base-dir flag
+        Missing Repository base directory: set repo_base_dir in ./patchy.json or use --repo-base-dir flag
 
-      You can set up ./patchy.yaml by running:
+      You can set up ./patchy.json by running:
         patchy init
 
       "
@@ -448,7 +448,7 @@ describe("createMergedConfig", () => {
         repoBaseDir: "base",
         repoDir: "repo",
       },
-      yamlConfig: {
+      jsonConfig: {
         repo_url: "https://github.com/example/repo.git",
         repo_base_dir: "base",
         repo_dir: "repo",
@@ -460,7 +460,7 @@ describe("createMergedConfig", () => {
       verbose: true,
       "dry-run": true,
     };
-    const requiredFields: YamlKey[] = ["repo_url", "repo_base_dir", "repo_dir"];
+    const requiredFields: JsonKey[] = ["repo_url", "repo_base_dir", "repo_dir"];
 
     const result = createMergedConfig({
       flags,
@@ -494,7 +494,7 @@ describe("createMergedConfig", () => {
         repoBaseDir: "my-base/nested",
         repoDir: "my-repo/nested-repo",
       },
-      yamlConfig: {
+      jsonConfig: {
         repo_url: "https://github.com/example/repo.git",
         repo_base_dir: "my-base/nested",
         repo_dir: "my-repo/nested-repo",
@@ -502,7 +502,7 @@ describe("createMergedConfig", () => {
     });
 
     const flags: SharedFlags = {};
-    const requiredFields: YamlKey[] = ["repo_url", "repo_base_dir", "repo_dir"];
+    const requiredFields: JsonKey[] = ["repo_url", "repo_base_dir", "repo_dir"];
 
     const result = createMergedConfig({
       flags,
@@ -531,7 +531,7 @@ describe("createMergedConfig", () => {
 
   it("should use custom config path", async () => {
     const customConfigDir = path.join(tmpDir, "custom");
-    const customConfigPath = path.join(customConfigDir, "config.yaml");
+    const customConfigPath = path.join(customConfigDir, "config.json");
     mkdirSync(customConfigDir, { recursive: true });
 
     await setupTestWithConfig({
@@ -540,7 +540,7 @@ describe("createMergedConfig", () => {
         repoBaseDir: "base",
         repoDir: "repo",
       },
-      yamlConfig: {
+      jsonConfig: {
         repo_url: "https://github.com/example/custom.git",
         repo_base_dir: "base",
         repo_dir: "repo",
@@ -550,13 +550,22 @@ describe("createMergedConfig", () => {
 
     writeFileSync(
       customConfigPath,
-      "repo_url: https://github.com/example/custom.git\nrepo_base_dir: base\nrepo_dir: repo\nref: custom-branch",
+      JSON.stringify(
+        {
+          repo_url: "https://github.com/example/custom.git",
+          repo_base_dir: "base",
+          repo_dir: "repo",
+          ref: "custom-branch",
+        },
+        null,
+        2,
+      ),
     );
 
     const flags: SharedFlags = {
       config: customConfigPath,
     };
-    const requiredFields: YamlKey[] = ["repo_url", "repo_base_dir", "repo_dir"];
+    const requiredFields: JsonKey[] = ["repo_url", "repo_base_dir", "repo_dir"];
 
     const result = createMergedConfig({
       flags,
@@ -591,7 +600,7 @@ describe("createMergedConfig", () => {
         repoBaseDir: "base",
         repoDir: "repo",
       },
-      yamlConfig: {
+      jsonConfig: {
         repo_url: "https://github.com/example/repo.git",
         repo_base_dir: "base",
         repo_dir: "repo",
@@ -599,7 +608,7 @@ describe("createMergedConfig", () => {
     });
 
     const flags: SharedFlags = {};
-    const requiredFields: YamlKey[] = ["repo_url", "repo_base_dir", "repo_dir"];
+    const requiredFields: JsonKey[] = ["repo_url", "repo_base_dir", "repo_dir"];
 
     const originalCwd = process.cwd();
     const result = createMergedConfig({
@@ -635,7 +644,7 @@ describe("createMergedConfig", () => {
         repoBaseDir: "base",
         repoDir: "repo",
       },
-      yamlConfig: {
+      jsonConfig: {
         repo_url: "https://github.com/example/repo.git",
         repo_base_dir: "base",
         repo_dir: "repo",
@@ -643,7 +652,7 @@ describe("createMergedConfig", () => {
     });
 
     const flags: SharedFlags = {};
-    const requiredFields: YamlKey[] = ["repo_url", "repo_base_dir", "repo_dir"];
+    const requiredFields: JsonKey[] = ["repo_url", "repo_base_dir", "repo_dir"];
     let callbackConfig: object | null = null;
 
     const result = createMergedConfig({
@@ -682,7 +691,7 @@ describe("createMergedConfig", () => {
         repoBaseDir: "base",
         repoDir: "repo",
       },
-      yamlConfig: {
+      jsonConfig: {
         repo_url: "https://github.com/example/repo.git",
         repo_base_dir: "base",
         repo_dir: "repo",
@@ -690,7 +699,7 @@ describe("createMergedConfig", () => {
     });
 
     const flags: SharedFlags = {};
-    const requiredFields: YamlKey[] = ["repo_url", "repo_base_dir", "repo_dir"];
+    const requiredFields: JsonKey[] = ["repo_url", "repo_base_dir", "repo_dir"];
     const originalCwd = process.cwd();
 
     const result = createMergedConfig({
@@ -718,18 +727,22 @@ describe("createMergedConfig", () => {
     );
   });
 
-  it("should handle Zod validation errors for invalid YAML structure", async () => {
+  it("should handle Zod validation errors for invalid JSON structure", async () => {
     mkdirSync(tmpDir, { recursive: true });
-    const invalidYamlPath = path.join(tmpDir, "invalid-structure.yaml");
+    const invalidJsonPath = path.join(tmpDir, "invalid-structure.json");
     writeFileSync(
-      invalidYamlPath,
-      "repo_url: 123\nverbose: 'not-a-boolean'\nref: [array, not, string]",
+      invalidJsonPath,
+      JSON.stringify({
+        repo_url: 123,
+        verbose: "not-a-boolean",
+        ref: ["array", "not", "string"],
+      }),
     );
 
     const flags: SharedFlags = {
-      config: invalidYamlPath,
+      config: invalidJsonPath,
     };
-    const requiredFields: YamlKey[] = ["repo_url"];
+    const requiredFields: JsonKey[] = ["repo_url"];
 
     let errorMessage = "";
     try {
@@ -752,7 +765,7 @@ describe("createMergedConfig", () => {
         repoBaseDir: "base",
         repoDir: "repo",
       },
-      yamlConfig: {
+      jsonConfig: {
         repo_url: "invalid-url-format",
         repo_base_dir: "base",
         repo_dir: "repo",
@@ -760,7 +773,7 @@ describe("createMergedConfig", () => {
     });
 
     const flags: SharedFlags = {};
-    const requiredFields: YamlKey[] = ["repo_url", "repo_base_dir", "repo_dir"];
+    const requiredFields: JsonKey[] = ["repo_url", "repo_base_dir", "repo_dir"];
 
     const result = createMergedConfig({
       flags,
@@ -772,7 +785,7 @@ describe("createMergedConfig", () => {
     expect(stabilizeTempDir(result.error)).toMatchInlineSnapshot(`
       "Validation errors:
 
-      repo_url: invalid-url-format in ./patchy.yaml is invalid.  Example repo: https://github.com/user/repo.git
+      repo_url: invalid-url-format in ./patchy.json is invalid.  Example repo: https://github.com/user/repo.git
 
       "
     `);

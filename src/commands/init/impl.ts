@@ -3,7 +3,6 @@ import { mkdir, writeFile } from "node:fs/promises";
 import { resolve } from "node:path";
 import enquirer from "enquirer";
 import { compact, omitBy } from "es-toolkit";
-import { stringify } from "yaml";
 import {
   DEFAULT_CONFIG_PATH,
   DEFAULT_PATCHES_DIR,
@@ -124,10 +123,10 @@ export default async function (
     return;
   }
 
-  const yamlContent = generateYamlConfig(finalConfig);
+  const jsonContent = generateJsonConfig(finalConfig);
 
   try {
-    await writeFile(configPath, yamlContent, "utf8");
+    await writeFile(configPath, jsonContent, "utf8");
     this.process.stdout.write(`Created configuration file: ${configPath}\n`);
   } catch (error) {
     this.process.stderr.write(
@@ -146,14 +145,14 @@ export default async function (
   this.process.stdout.write(`3. Generate patches: patchy generate\n`);
 }
 
-const generateYamlConfig = (config: RequiredConfigData): string => {
+const generateJsonConfig = (config: RequiredConfigData): string => {
   const validatedConfig = requiredConfigSchema.parse(config);
 
-  const yamlData = omitBy(
+  const jsonData = omitBy(
     validatedConfig,
     (value, key) =>
       value === "" || value == null || (key === "verbose" && value === false),
   );
 
-  return stringify(yamlData);
+  return `${JSON.stringify(jsonData, null, 2)}\n`;
 };

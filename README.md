@@ -21,7 +21,7 @@ my-patch-repo/
 ├── patches/
 │   ├── path/in/repo/newFile.ts          # new file
 │   ├── path/in/repo/oldFile.ts.diff     # diff file
-├── patchy.yaml                          # optional config
+├── patchy.json                          # optional config
 
 repo-dir/
 ├── path/in/repo/newFile.ts              # will be copied from patches/
@@ -45,11 +45,11 @@ These flags are accepted by **all commands**:
 | `--repo-dir`      | Path to the Git repo you're patching             |
 | `--repo-base-dir` | Parent directory where upstream repos are cloned |
 | `--patches-dir`   | Path to your patch files (default: `./patches/`)   |
-| `--config`        | YAML config file (default: `patchy.yaml`)        |
+| `--config`        | JSON config file (default: `patchy.json`)        |
 | `--verbose`       | Enable verbose log output                        |
 | `--dry-run`       | Simulate the command without writing files       |
 
-> CLI flags override all values in `patchy.yaml`.
+> CLI flags override all values in `patchy.json`.
 
 ## Commands
 
@@ -93,22 +93,24 @@ Clone a repository into a subdirectory of `repo_base_dir`. The target directory 
 patchy repo clone [--repo-base-dir] [--ref] [--repo-url] 
 ```
 
-## Configuration (`patchy.yaml`)
+## Configuration (`patchy.json`)
 
 Optional file to set default values:
 
-```yaml
-repo_url: https://github.com/richardgill/upstream.git
-repo_dir: upstream-repo
-repo_base_dir: ../clones
-patches_dir: patches/
-ref: main
+```json
+{
+  "repo_url": "https://github.com/richardgill/upstream.git",
+  "repo_dir": "upstream-repo",
+  "repo_base_dir": "../clones",
+  "patches_dir": "patches/",
+  "ref": "main"
+}
 ```
 
 ### Precedence Order
 
 1. CLI flags
-2. `--config` (defaults to `./patchy.yaml`)
+2. `--config` (defaults to `./patchy.json`)
 
 ## Example Workflow
 

@@ -21,14 +21,14 @@ describe("patchy apply", () => {
         repoBaseDir: "repos",
         repoDir: "main",
       },
-      yamlConfig: {
+      jsonConfig: {
         repo_url: "https://github.com/example/test-repo.git",
         repo_dir: "config-repo",
       },
     });
 
     const result = await assertSuccessfulCommand(
-      `apply --repo-dir main --repo-base-dir repos --patches-dir patches --config patchy.yaml --verbose --dry-run`,
+      `apply --repo-dir main --repo-base-dir repos --patches-dir patches --config patchy.json --verbose --dry-run`,
       tmpDir,
     );
 
@@ -53,7 +53,7 @@ describe("patchy apply", () => {
         repoBaseDir: "repos",
         repoDir: "upstream",
       },
-      yamlConfig: {
+      jsonConfig: {
         repo_url: "https://github.com/example/test-repo.git",
         repo_dir: "upstream",
         repo_base_dir: `${tmpDir}/repos`,
@@ -63,7 +63,7 @@ describe("patchy apply", () => {
     });
 
     const result = await assertSuccessfulCommand(
-      `apply --config patchy.yaml --dry-run --verbose`,
+      `apply --config patchy.json --dry-run --verbose`,
       tmpDir,
     );
 
@@ -88,7 +88,7 @@ describe("patchy apply", () => {
         repoBaseDir: "repos",
         repoDir: "cli-repo",
       },
-      yamlConfig: {
+      jsonConfig: {
         repo_url: "https://github.com/example/test-repo.git",
         repo_dir: "config-repo",
         repo_base_dir: `${tmpDir}/repos`,
@@ -98,7 +98,7 @@ describe("patchy apply", () => {
     });
 
     const result = await assertSuccessfulCommand(
-      `apply --repo-dir cli-repo --patches-dir cli-patches --config patchy.yaml --dry-run --verbose`,
+      `apply --repo-dir cli-repo --patches-dir cli-patches --config patchy.json --dry-run --verbose`,
       tmpDir,
     );
 
@@ -124,7 +124,7 @@ describe("patchy apply", () => {
   //         repoBaseDir: "repos",
   //         repoDir: "main",
   //       },
-  //       yamlConfig: {
+  //       jsonConfig: {
   //         repo_dir: "main",
   //         repo_base_dir: join(tmpDir, "repos"),
   //         patches_dir: "patches",
@@ -145,7 +145,7 @@ describe("patchy apply", () => {
   //         patchesDir: "patches",
   //         repoBaseDir: "repos",
   //       },
-  //       yamlConfig: {
+  //       jsonConfig: {
   //         repo_url: "https://github.com/example/test-repo.git",
   //         repo_base_dir: join(tmpDir, "repos"),
   //         patches_dir: "patches",
@@ -166,7 +166,7 @@ describe("patchy apply", () => {
   //         patchesDir: "patches",
   //         repoBaseDir: "repos",
   //       },
-  //       yamlConfig: {
+  //       jsonConfig: {
   //         repo_base_dir: join(tmpDir, "repos"),
   //         patches_dir: "patches",
   //       },
@@ -185,7 +185,7 @@ describe("patchy apply", () => {
   //       directories: {
   //         patchesDir: "patches",
   //       },
-  //       yamlConfig: {},
+  //       jsonConfig: {},
   //     });
   //
   //     await assertFailedCommand(
@@ -202,7 +202,7 @@ describe("patchy apply", () => {
   //       directories: {
   //         patchesDir: "patches",
   //       },
-  //       yamlConfig: {},
+  //       jsonConfig: {},
   //     });
   //
   //     // Remove any existing patchy.yaml file
@@ -228,7 +228,7 @@ describe("patchy apply", () => {
   //         repoBaseDir: "repos",
   //         repoDir: "main",
   //       },
-  //       yamlConfig: {
+  //       jsonConfig: {
   //         repo_url: "https://github.com/example/test-repo.git",
   //         repo_dir: "main",
   //         repo_base_dir: join(tmpDir, "repos"),
@@ -261,7 +261,7 @@ describe("patchy apply", () => {
   //         repoBaseDir: "repos",
   //         repoDir: "main",
   //       },
-  //       yamlConfig: {
+  //       jsonConfig: {
   //         repo_url: "https://github.com/example/test-repo.git",
   //         repo_dir: "main",
   //         repo_base_dir: join(tmpDir, "repos"),
@@ -295,7 +295,7 @@ describe("patchy apply", () => {
   //       directories: {
   //         patchesDir: "patches",
   //       },
-  //       yamlConfig: {
+  //       jsonConfig: {
   //         repo_url: "https://github.com/yaml/repo.git",
   //         repo_dir: "yaml-dir",
   //         repo_base_dir: "/yaml/base",
@@ -334,7 +334,7 @@ describe("patchy apply", () => {
   //       directories: {
   //         patchesDir: "patches",
   //       },
-  //       yamlConfig: {
+  //       jsonConfig: {
   //         repo_url: "https://github.com/yaml/repo.git",
   //         repo_dir: "yaml-dir",
   //         repo_base_dir: "/yaml/base",
@@ -373,7 +373,7 @@ describe("patchy apply", () => {
   //       directories: {
   //         patchesDir: "patches",
   //       },
-  //       yamlConfig: {
+  //       jsonConfig: {
   //         repo_url: "https://github.com/test/repo.git",
   //         repo_dir: "test-dir",
   //       },
@@ -407,7 +407,7 @@ describe("patchy apply", () => {
   //       directories: {
   //         patchesDir: "patches",
   //       },
-  //       yamlConfig: {
+  //       jsonConfig: {
   //         repo_url: "https://github.com/yaml/repo.git",
   //         repo_dir: "yaml-dir",
   //         repo_base_dir: "/yaml/base",
@@ -449,7 +449,7 @@ describe("patchy apply", () => {
   //         repoBaseDir: "repos",
   //         repoDir: "test-dir",
   //       },
-  //       yamlConfig: {
+  //       jsonConfig: {
   //         repo_url: "https://github.com/test/repo.git",
   //         repo_dir: "test-dir",
   //         repo_base_dir: join(tmpDir, "repos"),
@@ -481,7 +481,7 @@ describe("patchy apply", () => {
   //         repoBaseDir: "repos",
   //         repoDir: "test-dir",
   //       },
-  //       yamlConfig: {
+  //       jsonConfig: {
   //         repo_url: "https://github.com/test/repo.git",
   //         repo_dir: "test-dir",
   //         repo_base_dir: join(tmpDir, "repos"),

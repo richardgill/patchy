@@ -12,7 +12,8 @@
       "!**/dist",
       "!**/node_modules",
       "!**/tsconfig.json",
-      "!**/coverage"
+      "!**/coverage",
+      "!**/e2e/tmp"
     ]
   },
   "formatter": {
