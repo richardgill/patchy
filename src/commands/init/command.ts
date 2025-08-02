@@ -21,7 +21,6 @@ export const initCommand = buildCommand({
     },
   },
   docs: {
-    brief:
-      "Initialize patchy project with directory structure and configuration",
+    brief: "Initialize patchy.yml configuration",
   },
 });

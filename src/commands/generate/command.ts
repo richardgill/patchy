@@ -12,6 +12,6 @@ export const generateCommand = buildCommand({
   },
   docs: {
     brief:
-      "Generate .diff files and new full files inthe configured patches directory based on current dirty changes in repo_dir",
+      "Analyze diff in the repo_dir and generate .diff files in the configured patches directory",
   },
 });
