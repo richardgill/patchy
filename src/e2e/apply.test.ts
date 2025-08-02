@@ -1,9 +1,5 @@
 import { afterEach, beforeEach, describe, expect, it } from "vitest";
-import { existsSync } from "node:fs";
-import { mkdir, rm } from "node:fs/promises";
-import { join } from "node:path";
 import {
-  assertFailedCommand,
   assertSuccessfulCommand,
   cleanupTmpDir,
   createTmpDir,
