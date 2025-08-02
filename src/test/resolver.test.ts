@@ -3,9 +3,17 @@ import { createMergedConfig } from "../config/resolver";
 import type { SharedFlags, YamlKey } from "../config/types";
 import {
   generateTmpDir,
+  getStabilizedJson,
   setupTestWithConfig,
-  stableizeTempDir,
 } from "../e2e/test-utils";
+
+const expectSuccessfulMerge = (result: {
+  success: boolean;
+  error?: string;
+}) => {
+  expect(result.error).toBeUndefined();
+  expect(result.success).toBe(true);
+};
 
 describe("createMergedConfig", () => {
   let tmpDir: string;
@@ -48,12 +56,8 @@ describe("createMergedConfig", () => {
       cwd: tmpDir,
     });
 
-    expect(result.error).toBeUndefined();
-
-    expect(result.success).toBe(true);
-    expect(
-      stableizeTempDir(JSON.stringify(result.mergedConfig, null, 2)),
-    ).toMatchInlineSnapshot(
+    expectSuccessfulMerge(result);
+    expect(getStabilizedJson(result.mergedConfig)).toMatchInlineSnapshot(
       `
       "{
         "repo_url": "https://github.com/example/flag-repo.git",

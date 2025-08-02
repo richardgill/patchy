@@ -101,7 +101,15 @@ export const assertConfigContent = (
 
 export const stableizeTempDir = (output: string): string => {
   // Replace paths up to and including tmp/test-UUID directory with <TEST_DIR>
-  return output.replace(/\/[^\s]*\/(?:e2e\/)?tmp\/test-[a-f0-9-]+/g, "<TEST_DIR>");
+  return output.replace(
+    /\/[^\s]*\/(?:e2e\/)?tmp\/test-[a-f0-9-]+/g,
+    "<TEST_DIR>",
+  );
+};
+
+// biome-ignore lint/suspicious/noExplicitAny: Generic utility function needs to accept any JSON-serializable value
+export const getStabilizedJson = (value: any): string => {
+  return stableizeTempDir(JSON.stringify(value, null, 2));
 };
 
 export const generateTmpDir = (): string => {
