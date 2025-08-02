@@ -1,6 +1,6 @@
-import { describe, it, expect, vi } from "vitest";
+import { describe, expect, it, vi } from "vitest";
 import { createMergedConfig } from "~/config/resolver";
-import type { SharedFlags, ResolvedConfig } from "~/config/types";
+import type { ResolvedConfig, SharedFlags } from "~/config/types";
 
 describe("createMergedConfig", () => {
   const createTestCase = (
@@ -308,7 +308,7 @@ ref: main
           flags: {},
           requiredFields: [],
           configPath: "./test.yaml",
-        })
+        }),
       ).toThrow();
     });
 
@@ -319,7 +319,7 @@ ref: main
           flags: {},
           requiredFields: [],
           configPath: "./test.yaml",
-        })
+        }),
       ).toThrow();
     });
 

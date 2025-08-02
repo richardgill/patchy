@@ -1,16 +1,17 @@
-import { existsSync } from "node:fs";
+import { existsSync, readFileSync } from "node:fs";
 import path, { resolve } from "node:path";
+import chalk from "chalk";
+import { isNil } from "es-toolkit";
 import type { MarkOptional } from "ts-essentials";
-import type { LocalContext } from "../context";
-import { readFileSync } from "node:fs";
 import YAML from "yaml";
-import { yamlConfigSchema } from "./schemas";
+import type { LocalContext } from "../context";
 import {
   DEFAULT_CONFIG_PATH,
   DEFAULT_PATCHES_DIR,
   DEFAULT_REF,
 } from "./defaults";
 import type { YamlConfig } from "./schemas";
+import { yamlConfigSchema } from "./schemas";
 import {
   CONFIG_FIELD_METADATA,
   type PartialResolvedConfig,
@@ -18,8 +19,38 @@ import {
   type SharedFlags,
   type YamlKey,
 } from "./types";
-import { isNil } from "es-toolkit";
-import chalk from "chalk";
+
+const getFlagOrYamlValue = <T>(
+  flagValue: T | undefined,
+  yamlValue: T | undefined,
+): T | undefined => {
+  return flagValue ?? yamlValue;
+};
+
+const getFlagOrYamlValueByKey = <K extends YamlKey>(
+  yamlKey: K,
+  flags: SharedFlags,
+  yamlConfig: YamlConfig,
+): YamlConfig[K] | undefined => {
+  const metadata = CONFIG_FIELD_METADATA[yamlKey];
+  const flagValue = flags[metadata.flag as keyof typeof flags];
+  return getFlagOrYamlValue(flagValue, yamlConfig[yamlKey]);
+};
+
+const formatFlagOrYamlSource = <K extends YamlKey>(
+  yamlKey: K,
+  flags: SharedFlags,
+  yamlConfig: YamlConfig,
+  configPath: string,
+): string => {
+  const metadata = CONFIG_FIELD_METADATA[yamlKey];
+  const flagValue = flags[metadata.flag as keyof typeof flags];
+  const yamlValue = yamlConfig[yamlKey];
+
+  return flagValue !== undefined
+    ? `--${metadata.flag} ${flagValue}`
+    : `${yamlKey}: ${yamlValue} in ${configPath}`;
+};
 
 type ConfigError = { field: keyof ResolvedConfig } & (
   | {
@@ -77,7 +108,7 @@ export const createMergedConfig = ({
   onConfigMerged = () => null,
 }: {
   yamlString: string | undefined;
-  flags: SharedFlags & { "repo-url"?: string; ref?: string };
+  flags: SharedFlags;
   requiredFields: YamlKey[];
   configPath: string;
   configPathFlag: string | undefined;
@@ -85,11 +116,15 @@ export const createMergedConfig = ({
 }) => {
   const yamlConfig = parseOptionalYamlConfig(yamlString);
   console.log("zzz yamlConfig", yamlConfig);
-  const repoBaseDir = flags["repo-base-dir"] ?? yamlConfig.repo_base_dir;
-  const repoDir = flags["repo-dir"] ?? yamlConfig.repo_dir;
+  const repoBaseDir = getFlagOrYamlValueByKey(
+    "repo_base_dir",
+    flags,
+    yamlConfig,
+  );
+  const repoDir = getFlagOrYamlValueByKey("repo_dir", flags, yamlConfig);
   const mergedConfig: MergedConfig = {
-    repo_url: flags["repo-url"] ?? yamlConfig.repo_url,
-    ref: flags.ref ?? yamlConfig.ref ?? DEFAULT_REF,
+    repo_url: getFlagOrYamlValueByKey("repo_url", flags, yamlConfig),
+    ref: getFlagOrYamlValueByKey("ref", flags, yamlConfig) ?? DEFAULT_REF,
     repo_base_dir: repoBaseDir,
     absoluteRepoBaseDir: repoBaseDir ? resolve(repoBaseDir) : undefined,
     repo_dir: repoDir,
@@ -98,8 +133,9 @@ export const createMergedConfig = ({
         ? resolve(path.join(repoBaseDir, repoDir))
         : undefined,
     patches_dir:
-      flags["patches-dir"] ?? yamlConfig.patches_dir ?? DEFAULT_PATCHES_DIR,
-    verbose: flags.verbose ?? yamlConfig.verbose ?? false,
+      getFlagOrYamlValueByKey("patches_dir", flags, yamlConfig) ??
+      DEFAULT_PATCHES_DIR,
+    verbose: getFlagOrYamlValueByKey("verbose", flags, yamlConfig) ?? false,
     dry_run: flags["dry-run"] ?? false,
   };
   console.log("zzz mergedConfig", mergedConfig);
@@ -130,7 +166,7 @@ const calcError = ({
   configPath: string;
   configPathFlag: string | undefined;
   yamlConfig: YamlConfig;
-  flags: SharedFlags & { "repo-url"?: string; ref?: string };
+  flags: SharedFlags;
 }): { success: boolean; error?: string } => {
   console.log("zzz ", { mergedConfig, requiredFields, configPathFlag });
 
@@ -174,7 +210,7 @@ const calcError = ({
     !existsSync(mergedConfig.absoluteRepoDir)
   ) {
     validationErrors.push(
-      `${flags["repo-dir"] ? `--repo-dir ${flags["repo-dir"]}` : `repo_dir: ${yamlConfig.repo_dir} in ${configPath}`} does not exist: ${chalk.blue(mergedConfig.absoluteRepoDir)}`,
+      `${formatFlagOrYamlSource("repo_dir", flags, yamlConfig, configPath)} does not exist: ${chalk.blue(mergedConfig.absoluteRepoDir)}`,
     );
   }
 
@@ -192,7 +228,7 @@ const calcError = ({
 
 export const resolveConfig = async (
   context: LocalContext,
-  flags: SharedFlags & { "repo-url"?: string; ref?: string },
+  flags: SharedFlags,
   requiredFields: YamlKey[],
 ): Promise<PartialResolvedConfig | ResolvedConfig> => {
   const configPath = flags.config ?? DEFAULT_CONFIG_PATH;
