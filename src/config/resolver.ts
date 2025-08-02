@@ -101,22 +101,26 @@ const logConfiguration = (
 };
 
 export const createMergedConfig = ({
-  yamlString,
   flags,
   requiredFields,
-  configPath,
-  configPathFlag,
   onConfigMerged = () => null,
   cwd = process.cwd(),
 }: {
-  yamlString: string | undefined;
   flags: SharedFlags;
   requiredFields: YamlKey[];
-  configPath: string;
-  configPathFlag: string | undefined;
   onConfigMerged?: (config: MergedConfig) => void;
   cwd?: string;
 }) => {
+  const configPath = flags.config ?? DEFAULT_CONFIG_PATH;
+  const absoluteConfigPath = resolve(configPath);
+  let yamlString: string | undefined;
+  if (!existsSync(absoluteConfigPath) && flags.config !== undefined) {
+    throw new Error(`Configuration file not found: ${absoluteConfigPath}`);
+  }
+  if (existsSync(absoluteConfigPath)) {
+    yamlString = readFileSync(absoluteConfigPath, "utf8");
+  }
+
   const yamlConfig = parseOptionalYamlConfig(yamlString);
   const repoBaseDir = getFlagOrYamlValueByKey(
     "repo_base_dir",
@@ -148,7 +152,6 @@ export const createMergedConfig = ({
     mergedConfig,
     requiredFields,
     configPath,
-    configPathFlag,
     yamlConfig,
     flags,
   });
@@ -160,14 +163,12 @@ const calcError = ({
   mergedConfig,
   requiredFields,
   configPath,
-  configPathFlag,
   yamlConfig,
   flags,
 }: {
   mergedConfig: MergedConfig;
   requiredFields: YamlKey[];
   configPath: string;
-  configPathFlag: string | undefined;
   yamlConfig: YamlConfig;
   flags: SharedFlags;
 }): { success: boolean; error?: string } => {
@@ -186,7 +187,7 @@ const calcError = ({
       ...missingFieldLines,
       "",
       `${chalk.yellow("You can set up")} ${chalk.blue(configPath)} ${chalk.yellow("by running:")}`,
-      `  ${chalk.bold(`patchy init${configPathFlag ? ` --config ${configPathFlag}` : ""}`)}`,
+      `  ${chalk.bold(`patchy init${flags.config ? ` --config ${flags.config}` : ""}`)}`,
     ].join("\n")}\n\n`;
 
     return { success: false, error: missingFieldsError };
@@ -240,22 +241,9 @@ export const resolveConfig = async (
   flags: SharedFlags,
   requiredFields: YamlKey[],
 ): Promise<PartialResolvedConfig | ResolvedConfig> => {
-  const configPath = flags.config ?? DEFAULT_CONFIG_PATH;
-  const absoluteConfigPath = resolve(configPath);
-  let yamlString: string | undefined;
-  if (!existsSync(absoluteConfigPath) && flags.config !== undefined) {
-    throw new Error(`Configuration file not found: ${absoluteConfigPath}`);
-  }
-  if (existsSync(absoluteConfigPath)) {
-    yamlString = readFileSync(absoluteConfigPath, "utf8");
-  }
-
   const { mergedConfig, success, error } = createMergedConfig({
-    yamlString,
     flags,
     requiredFields,
-    configPath,
-    configPathFlag: flags.config,
     onConfigMerged: (config) => logConfiguration(context, config),
   });
 
