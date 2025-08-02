@@ -1,15 +1,15 @@
 export type SharedFlags = {
+  "repo-url"?: string;
   "repo-dir"?: string;
   "repo-base-dir"?: string;
   "patches-dir"?: string;
+  ref?: string;
   config?: string;
   verbose?: boolean;
   "dry-run"?: boolean;
 };
 
 export type InitCommandFlags = SharedFlags & {
-  "repo-url"?: string;
-  ref?: string;
   force?: boolean;
 };
 
