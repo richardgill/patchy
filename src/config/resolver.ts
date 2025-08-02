@@ -200,7 +200,7 @@ const calcError = ({
     existsSync(mergedConfig.absoluteRepoBaseDir);
   if (!isRepoBaseDirValid) {
     validationErrors.push(
-      `  ${chalk.bold(CONFIG_FIELD_METADATA.repo_base_dir.name)} does not exist: ${chalk.blue(mergedConfig.absoluteRepoBaseDir)}`,
+      `${formatFlagOrYamlSource("repo_base_dir", flags, yamlConfig, configPath)} does not exist: ${chalk.blue(mergedConfig.absoluteRepoBaseDir)}`,
     );
   }
   if (
