@@ -180,15 +180,14 @@ const calcError = ({
       return `  Missing ${chalk.bold(field.name)}: set ${chalk.cyan(fieldKey)} in ${chalk.blue(configPath)} or use ${chalk.cyan(`--${field.flag}`)} flag`;
     });
 
-    const missingFieldsError =
-      [
-        chalk.red.bold("Missing required parameters:"),
-        "",
-        ...missingFieldLines,
-        "",
-        `${chalk.yellow("You can set up")} ${chalk.blue(configPath)} ${chalk.yellow("by running:")}`,
-        `  ${chalk.bold(`patchy init${configPathFlag ? ` --config ${configPathFlag}` : ""}`)}`,
-      ].join("\n") + "\n\n";
+    const missingFieldsError = `${[
+      chalk.red.bold("Missing required parameters:"),
+      "",
+      ...missingFieldLines,
+      "",
+      `${chalk.yellow("You can set up")} ${chalk.blue(configPath)} ${chalk.yellow("by running:")}`,
+      `  ${chalk.bold(`patchy init${configPathFlag ? ` --config ${configPathFlag}` : ""}`)}`,
+    ].join("\n")}\n\n`;
 
     return { success: false, error: missingFieldsError };
   }
@@ -224,10 +223,11 @@ const calcError = ({
   }
 
   if (validationErrors.length > 0) {
-    const validationError =
-      [chalk.red.bold("Validation errors:"), "", ...validationErrors].join(
-        "\n",
-      ) + "\n\n";
+    const validationError = `${[
+      chalk.red.bold("Validation errors:"),
+      "",
+      ...validationErrors,
+    ].join("\n")}\n\n`;
 
     return { success: false, error: validationError };
   }
