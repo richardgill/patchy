@@ -8,7 +8,7 @@ export default async function (
 ): Promise<void> {
   try {
     const config = (await resolveConfig(this, flags, [
-      "repo_url",
+      "repo_base_dir",
       "repo_dir",
     ])) as ResolvedConfig;
 
