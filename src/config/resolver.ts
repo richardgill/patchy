@@ -1,5 +1,5 @@
 import { existsSync } from "node:fs";
-import { resolve } from "node:path";
+import path, { resolve } from "node:path";
 import type { MarkOptional } from "ts-essentials";
 import type { LocalContext } from "../context";
 import { readFileSync } from "node:fs";
@@ -93,7 +93,10 @@ export const createMergedConfig = ({
     repo_base_dir: repoBaseDir,
     absoluteRepoBaseDir: repoBaseDir ? resolve(repoBaseDir) : undefined,
     repo_dir: repoDir,
-    absoluteRepoDir: repoDir ? resolve(repoDir) : undefined,
+    absoluteRepoDir:
+      repoBaseDir && repoDir
+        ? resolve(path.join(repoBaseDir, repoDir))
+        : undefined,
     patches_dir:
       flags["patches-dir"] ?? yamlConfig.patches_dir ?? DEFAULT_PATCHES_DIR,
     verbose: flags.verbose ?? yamlConfig.verbose ?? false,
@@ -128,8 +131,8 @@ const calcError = ({
   const missingFields = requiredFields.filter((field) => {
     return isNil(mergedConfig[field]);
   });
-
-  if (missingFields) {
+  console.log("zzz missingFields", missingFields);
+  if (missingFields.length > 0) {
     const missingFieldLines = missingFields.map((fieldKey) => {
       const field = CONFIG_FIELD_METADATA[fieldKey];
       return `  Missing ${chalk.bold(field.name)}: set ${chalk.cyan(fieldKey)} in ${chalk.blue(configPath)} or use ${chalk.cyan(`--${field.flag}`)} flag`;
@@ -149,27 +152,33 @@ const calcError = ({
   }
 
   const validationErrors = [];
-  if (
-    requiredFields.includes("repo_base_dir") &&
-    mergedConfig.absoluteRepoBaseDir &&
-    !existsSync(mergedConfig.absoluteRepoBaseDir)
-  ) {
+  const isRepoBaseDirValid =
+    !requiredFields.includes("repo_base_dir") ||
+    !mergedConfig.absoluteRepoBaseDir ||
+    existsSync(mergedConfig.absoluteRepoBaseDir);
+  if (!isRepoBaseDirValid) {
     validationErrors.push(
-      `${CONFIG_FIELD_METADATA.repo_base_dir.name} does not exist: ${mergedConfig.repo_base_dir}`,
+      `  ${chalk.bold(CONFIG_FIELD_METADATA.repo_base_dir.name)} does not exist: ${chalk.blue(mergedConfig.absoluteRepoBaseDir)}`,
     );
   }
   if (
+    isRepoBaseDirValid &&
     requiredFields.includes("repo_dir") &&
     mergedConfig.absoluteRepoDir &&
     !existsSync(mergedConfig.absoluteRepoDir)
   ) {
     validationErrors.push(
-      `${CONFIG_FIELD_METADATA.repo_dir.name} does not exist: ${mergedConfig.repo_dir}`,
+      `Resolved ${chalk.bold(CONFIG_FIELD_METADATA.repo_dir.name)} does not exist: ${chalk.blue(mergedConfig.absoluteRepoDir)}`,
     );
   }
 
   if (validationErrors.length > 0) {
-    return { success: false, error: validationErrors.join("\n") };
+    const validationError =
+      [chalk.red.bold("Validation errors:"), "", ...validationErrors].join(
+        "\n",
+      ) + "\n\n";
+
+    return { success: false, error: validationError };
   }
 
   return { success: true };
