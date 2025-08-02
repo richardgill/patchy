@@ -10,9 +10,9 @@ import { expect } from "vitest";
 export type TestContext = {
   testDir: string;
   originalCwd: string;
-  patchesDir: string | undefined;
-  repoBaseDir: string | undefined;
-  repoDir: string | undefined;
+  absolutePatchesDir: string | undefined;
+  absoluteRepoBaseDir: string | undefined;
+  absoluteRepoDir: string | undefined;
 };
 
 export const createTestDir = async (
@@ -139,9 +139,9 @@ const createTestDirStructure = async (
   return {
     testDir: tmpDir,
     originalCwd,
-    patchesDir: absolutePatchesDir,
-    repoBaseDir: absoluteRepoBaseDir,
-    repoDir: absoluteRepoDir,
+    absolutePatchesDir,
+    absoluteRepoBaseDir,
+    absoluteRepoDir,
   };
 };
 

@@ -19,7 +19,7 @@ describe("patchy apply", () => {
   });
 
   it("should apply patches with all flags specified", async () => {
-    const ctx = await setupTestWithConfig({
+    await setupTestWithConfig({
       tmpDir,
       createDirectories: {
         patchesDir: "patches",
@@ -33,7 +33,7 @@ describe("patchy apply", () => {
     });
 
     const result = await assertSuccessfulCommand(
-      `apply --repo-dir main --repo-base-dir ${ctx.repoBaseDir} --patches-dir patches --config patchy.yaml --verbose --dry-run`,
+      `apply --repo-dir main --repo-base-dir repos --patches-dir patches --config patchy.yaml --verbose --dry-run`,
       tmpDir,
     );
 
@@ -41,7 +41,7 @@ describe("patchy apply", () => {
       "Configuration resolved:
         repo_url: https://github.com/example/test-repo.git
         repo_dir: main
-        repo_base_dir: <TEST_DIR>/repos
+        repo_base_dir: repos
         patches_dir: patches
         ref: main
         verbose: true
@@ -51,7 +51,7 @@ describe("patchy apply", () => {
   });
 
   it("should apply patches using config file values", async () => {
-    const ctx = await setupTestWithConfig({
+    await setupTestWithConfig({
       tmpDir,
       createDirectories: {
         patchesDir: "my-patches",
@@ -86,7 +86,7 @@ describe("patchy apply", () => {
   });
 
   it("should override config file values with CLI flags", async () => {
-    const ctx = await setupTestWithConfig({
+    await setupTestWithConfig({
       tmpDir,
       createDirectories: {
         patchesDir: "cli-patches",
