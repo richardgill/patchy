@@ -116,7 +116,6 @@ export const createMergedConfig = ({
   onConfigMerged?: (config: MergedConfig) => void;
 }) => {
   const yamlConfig = parseOptionalYamlConfig(yamlString);
-  console.log("zzz yamlConfig", yamlConfig);
   const repoBaseDir = getFlagOrYamlValueByKey(
     "repo_base_dir",
     flags,
@@ -141,7 +140,6 @@ export const createMergedConfig = ({
     verbose: getFlagOrYamlValueByKey("verbose", flags, yamlConfig) ?? false,
     dry_run: flags["dry-run"] ?? false,
   };
-  console.log("zzz mergedConfig", mergedConfig);
 
   onConfigMerged(mergedConfig);
   const errors = calcError({

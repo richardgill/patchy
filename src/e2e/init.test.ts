@@ -50,10 +50,10 @@ describe("patchy init", () => {
 
     expect(stabilizeTempDir(yamlContent)).toMatchInlineSnapshot(`
       "repo_url: https://github.com/example/test-repo.git
-      repo_dir: main
+      ref: main
       repo_base_dir: <TEST_DIR>/repos
-      patches_dir: patches
-      ref: main"
+      repo_dir: main
+      patches_dir: patches"
     `);
   });
 
