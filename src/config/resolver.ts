@@ -4,7 +4,7 @@ import chalk from "chalk";
 import { isNil } from "es-toolkit";
 import type { MarkOptional } from "ts-essentials";
 import YAML from "yaml";
-import type { LocalContext } from "../context";
+import type { LocalContext } from "~/context";
 import {
   DEFAULT_CONFIG_PATH,
   DEFAULT_PATCHES_DIR,

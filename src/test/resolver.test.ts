@@ -2,16 +2,12 @@ import { mkdirSync, writeFileSync } from "node:fs";
 import path from "node:path";
 import { beforeEach, describe, expect, it } from "vitest";
 import { createMergedConfig } from "../config/resolver";
-import type {
-  PartialResolvedConfig,
-  SharedFlags,
-  YamlKey,
-} from "../config/types";
+import type { SharedFlags, YamlKey } from "../config/types";
 import {
   generateTmpDir,
   getStabilizedJson,
   setupTestWithConfig,
-  stableizeTempDir,
+  stabilizeTempDir,
 } from "../e2e/test-utils";
 
 const expectSuccessfulMerge = (
@@ -106,7 +102,7 @@ describe("createMergedConfig", () => {
     });
 
     expectFailedMerge(result);
-    expect(stableizeTempDir(result.error)).toMatchInlineSnapshot(`
+    expect(stabilizeTempDir(result.error)).toMatchInlineSnapshot(`
       "Missing required parameters:
 
         Missing Repository URL: set repo_url in ./patchy.yaml or use --repo-url flag
@@ -180,7 +176,7 @@ describe("createMergedConfig", () => {
       errorMessage = (error as Error).message;
     }
 
-    expect(stableizeTempDir(errorMessage)).toMatchInlineSnapshot(
+    expect(stabilizeTempDir(errorMessage)).toMatchInlineSnapshot(
       `"Configuration file not found: <TEST_DIR>/non-existent-config.yaml"`,
     );
   });
@@ -238,7 +234,7 @@ describe("createMergedConfig", () => {
     });
 
     expectFailedMerge(result);
-    expect(stableizeTempDir(result.error)).toMatchInlineSnapshot(`
+    expect(stabilizeTempDir(result.error)).toMatchInlineSnapshot(`
       "Validation errors:
 
       repo_base_dir: non-existent-base in ./patchy.yaml does not exist: <TEST_DIR>/non-existent-base
@@ -433,7 +429,7 @@ describe("createMergedConfig", () => {
     });
 
     expectFailedMerge(result);
-    expect(stableizeTempDir(result.error)).toMatchInlineSnapshot(`
+    expect(stabilizeTempDir(result.error)).toMatchInlineSnapshot(`
       "Missing required parameters:
 
         Missing Repository base directory: set repo_base_dir in ./patchy.yaml or use --repo-base-dir flag
@@ -648,7 +644,7 @@ describe("createMergedConfig", () => {
 
     const flags: SharedFlags = {};
     const requiredFields: YamlKey[] = ["repo_url", "repo_base_dir", "repo_dir"];
-    let callbackConfig: PartialResolvedConfig | null = null;
+    let callbackConfig: object | null = null;
 
     const result = createMergedConfig({
       flags,
@@ -773,7 +769,7 @@ describe("createMergedConfig", () => {
     });
 
     expectFailedMerge(result);
-    expect(stableizeTempDir(result.error)).toMatchInlineSnapshot(`
+    expect(stabilizeTempDir(result.error)).toMatchInlineSnapshot(`
       "Validation errors:
 
       repo_url: invalid-url-format in ./patchy.yaml is invalid.  Example repo: https://github.com/user/repo.git

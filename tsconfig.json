@@ -29,6 +29,6 @@
     "declarationMap": true,
     "types": ["vitest/globals"]
   },
-  "include": ["src", "test", "e2e"],
+  "include": ["src"],
   "exclude": ["node_modules", "dist"]
 }

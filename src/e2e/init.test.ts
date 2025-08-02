@@ -8,7 +8,7 @@ import {
   generateTmpDir,
   runPatchy,
   setupTestWithConfig,
-  stableizeTempDir,
+  stabilizeTempDir,
 } from "./test-utils";
 
 describe("patchy init", () => {
@@ -47,7 +47,7 @@ describe("patchy init", () => {
       `init --repo-url https://github.com/example/test-repo.git --repo-dir main --repo-base-dir repoBaseDir1 --patches-dir patches --ref main --config patchy.yaml --force`,
     );
 
-    expect(stableizeTempDir(yamlContent)).toMatchInlineSnapshot(`
+    expect(stabilizeTempDir(yamlContent)).toMatchInlineSnapshot(`
       "repo_url: https://github.com/example/test-repo.git
       ref: main
       repo_base_dir: repoBaseDir1

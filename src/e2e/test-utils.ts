@@ -80,7 +80,7 @@ export const assertConfigFileExists = (configPath: string) => {
   expect(existsSync(configPath)).toBe(true);
 };
 
-export const stableizeTempDir = (
+export const stabilizeTempDir = (
   output: string | undefined,
 ): string | undefined => {
   if (!output) return output;
@@ -93,7 +93,7 @@ export const stableizeTempDir = (
 
 // biome-ignore lint/suspicious/noExplicitAny: Generic utility function needs to accept any JSON-serializable value
 export const getStabilizedJson = (value: any): string | undefined => {
-  return stableizeTempDir(JSON.stringify(value, null, 2));
+  return stabilizeTempDir(JSON.stringify(value, null, 2));
 };
 
 export const generateTmpDir = (): string => {

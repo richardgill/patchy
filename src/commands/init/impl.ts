@@ -8,13 +8,13 @@ import {
   DEFAULT_CONFIG_PATH,
   DEFAULT_PATCHES_DIR,
   DEFAULT_REF,
-} from "../../config/defaults";
+} from "~/config/defaults";
 import {
   type RequiredConfigData,
   requiredConfigSchema,
-} from "../../config/schemas";
-import { isValidGitUrl, validateGitUrl } from "../../config/validation";
-import type { LocalContext } from "../../context";
+} from "~/config/schemas";
+import { isValidGitUrl, validateGitUrl } from "~/config/validation";
+import type { LocalContext } from "~/context";
 
 const { prompt } = enquirer;
 

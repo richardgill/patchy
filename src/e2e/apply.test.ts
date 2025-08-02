@@ -3,7 +3,7 @@ import {
   assertSuccessfulCommand,
   generateTmpDir,
   setupTestWithConfig,
-  stableizeTempDir,
+  stabilizeTempDir,
 } from "./test-utils";
 
 describe("patchy apply", () => {
@@ -32,7 +32,7 @@ describe("patchy apply", () => {
       tmpDir,
     );
 
-    expect(stableizeTempDir(result.stdout)).toMatchInlineSnapshot(`
+    expect(stabilizeTempDir(result.stdout)).toMatchInlineSnapshot(`
       "Configuration resolved:
         repo_url: https://github.com/example/test-repo.git
         repo_dir: main
@@ -67,7 +67,7 @@ describe("patchy apply", () => {
       tmpDir,
     );
 
-    expect(stableizeTempDir(result.stdout)).toMatchInlineSnapshot(`
+    expect(stabilizeTempDir(result.stdout)).toMatchInlineSnapshot(`
       "Configuration resolved:
         repo_url: https://github.com/example/test-repo.git
         repo_dir: upstream
@@ -102,7 +102,7 @@ describe("patchy apply", () => {
       tmpDir,
     );
 
-    expect(stableizeTempDir(result.stdout)).toMatchInlineSnapshot(`
+    expect(stabilizeTempDir(result.stdout)).toMatchInlineSnapshot(`
       "Configuration resolved:
         repo_url: https://github.com/example/test-repo.git
         repo_dir: cli-repo
