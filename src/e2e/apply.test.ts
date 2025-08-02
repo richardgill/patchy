@@ -1,5 +1,9 @@
 import { afterEach, beforeEach, describe, expect, it } from "vitest";
+import { existsSync } from "node:fs";
+import { mkdir, rm } from "node:fs/promises";
+import { join } from "node:path";
 import {
+  assertFailedCommand,
   assertSuccessfulCommand,
   cleanupTmpDir,
   createTmpDir,
@@ -21,7 +25,7 @@ describe("patchy apply", () => {
   it("should apply patches with all flags specified", async () => {
     const ctx = await setupTestWithConfig({
       tmpDir,
-      directories: {
+      createDirectories: {
         patchesDir: "patches",
         repoBaseDir: "repos",
         repoDir: "main",
@@ -50,65 +54,75 @@ describe("patchy apply", () => {
     `);
   });
 
-  // it("should apply patches using config file values", async () => {
-  //   const ctx = await setupTestWithConfig({
-  //     tmpDir,
-  //     directories: {
-  //       patchesDir: "patches",
-  //       repoBaseDir: "repos",
-  //       repoDir: "upstream",
-  //     },
-  //     yamlConfig: {
-  //       repo_url: "https://github.com/example/test-repo.git",
-  //       repo_dir: "upstream",
-  //       repo_base_dir: join(tmpDir, "repos"),
-  //       patches_dir: "my-patches",
-  //       ref: "main",
-  //     },
-  //   });
-  //
-  //   // Create the my-patches directory inside patches
-  //   await mkdir(join(ctx.patchesDir, "my-patches"), { recursive: true });
-  //
-  //   const result = await assertSuccessfulCommand(
-  //     `apply --dry-run`,
-  //     ctx.patchesDir,
-  //   );
-  //
-  //   expect(result.stdout).toMatchInlineSnapshot(
-  //     `"[DRY RUN] Would apply patches from my-patches to upstream"`,
-  //   );
-  // });
-  //
-  // it("should override config file values with CLI flags", async () => {
-  //   const ctx = await setupTestWithConfig({
-  //     tmpDir,
-  //     directories: {
-  //       patchesDir: "patches",
-  //       repoBaseDir: "repos",
-  //       repoDir: "cli-repo",
-  //     },
-  //     yamlConfig: {
-  //       repo_url: "https://github.com/example/test-repo.git",
-  //       repo_dir: "config-repo",
-  //       repo_base_dir: join(tmpDir, "repos"),
-  //       patches_dir: "config-patches",
-  //       ref: "main",
-  //     },
-  //   });
-  //
-  //   // Create the cli-patches directory inside patches
-  //   await mkdir(join(ctx.patchesDir, "cli-patches"), { recursive: true });
-  //
-  //   const result = await assertSuccessfulCommand(
-  //     `apply --repo-dir cli-repo --patches-dir cli-patches --dry-run`,
-  //     ctx.patchesDir,
-  //   );
-  //
-  //   expect(result.stdout).toMatchInlineSnapshot(
-  //     `"[DRY RUN] Would apply patches from cli-patches to cli-repo"`,
-  //   );
-  // });
+  it("should apply patches using config file values", async () => {
+    const ctx = await setupTestWithConfig({
+      tmpDir,
+      createDirectories: {
+        patchesDir: "my-patches",
+        repoBaseDir: "repos",
+        repoDir: "upstream",
+      },
+      yamlConfig: {
+        repo_url: "https://github.com/example/test-repo.git",
+        repo_dir: "upstream",
+        repo_base_dir: `${tmpDir}/repos`,
+        patches_dir: "my-patches",
+        ref: "main",
+      },
+    });
+
+    const result = await assertSuccessfulCommand(
+      `apply --config patchy.yaml --dry-run --verbose`,
+      tmpDir,
+    );
+
+    expect(stabilizeTempDir(result.stdout)).toMatchInlineSnapshot(`
+      "Configuration resolved:
+        repo_url: https://github.com/example/test-repo.git
+        repo_dir: upstream
+        repo_base_dir: <TEST_DIR>/repos
+        patches_dir: my-patches
+        ref: main
+        verbose: true
+        dry_run: true
+      [DRY RUN] Would apply patches from my-patches to upstream"
+    `);
+  });
+
+  it("should override config file values with CLI flags", async () => {
+    const ctx = await setupTestWithConfig({
+      tmpDir,
+      createDirectories: {
+        patchesDir: "cli-patches",
+        repoBaseDir: "repos",
+        repoDir: "cli-repo",
+      },
+      yamlConfig: {
+        repo_url: "https://github.com/example/test-repo.git",
+        repo_dir: "config-repo",
+        repo_base_dir: `${tmpDir}/repos`,
+        patches_dir: "config-patches",
+        ref: "main",
+      },
+    });
+
+    const result = await assertSuccessfulCommand(
+      `apply --repo-dir cli-repo --patches-dir cli-patches --config patchy.yaml --dry-run --verbose`,
+      tmpDir,
+    );
+
+    expect(stabilizeTempDir(result.stdout)).toMatchInlineSnapshot(`
+      "Configuration resolved:
+        repo_url: https://github.com/example/test-repo.git
+        repo_dir: cli-repo
+        repo_base_dir: <TEST_DIR>/repos
+        patches_dir: cli-patches
+        ref: main
+        verbose: true
+        dry_run: true
+      [DRY RUN] Would apply patches from cli-patches to cli-repo"
+    `);
+  });
   //
   // describe("error cases", () => {
   //   it("should fail when repo_url is missing", async () => {

@@ -151,18 +151,18 @@ export const cleanupTmpDir = async (tmpDir: string): Promise<void> => {
 
 export const setupTestWithConfig = async ({
   tmpDir,
-  directories = {},
+  createDirectories = {},
   yamlConfig = {},
 }: {
   tmpDir: string;
-  directories?: {
+  createDirectories?: {
     patchesDir?: string | undefined;
     repoBaseDir?: string | undefined;
     repoDir?: string | undefined;
   };
   yamlConfig?: Record<string, string | boolean | number>;
 }): Promise<TestContext> => {
-  const ctx = await createTestDirStructure(tmpDir, directories);
+  const ctx = await createTestDirStructure(tmpDir, createDirectories);
 
   const configPath = resolve(tmpDir, "patchy.yaml");
   await writeTestConfig(configPath, yamlConfig);
