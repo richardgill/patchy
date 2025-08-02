@@ -19,6 +19,7 @@ import {
   type SharedFlags,
   type YamlKey,
 } from "./types";
+import { isValidGitUrl } from "./validation";
 
 const getFlagOrYamlValue = <T>(
   flagValue: T | undefined,
@@ -219,6 +220,7 @@ const calcError = ({
       `${formatFlagOrYamlSource("repo_dir", flags, yamlConfig, configPath)} does not exist: ${chalk.blue(mergedConfig.absoluteRepoDir)}`,
     );
   }
+
   if (
     requiredFields.includes("patches_dir") &&
     mergedConfig.absolutePatchesDir &&
@@ -226,6 +228,16 @@ const calcError = ({
   ) {
     validationErrors.push(
       `${formatFlagOrYamlSource("patches_dir", flags, yamlConfig, configPath)} does not exist: ${chalk.blue(mergedConfig.absolutePatchesDir)}`,
+    );
+  }
+
+  if (
+    requiredFields.includes("repo_url") &&
+    mergedConfig.repo_url &&
+    !isValidGitUrl(mergedConfig.repo_url)
+  ) {
+    validationErrors.push(
+      `${formatFlagOrYamlSource("repo_url", flags, yamlConfig, configPath)} is invalid.  Example repo: ${CONFIG_FIELD_METADATA.repo_url.example}`,
     );
   }
 

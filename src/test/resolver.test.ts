@@ -387,7 +387,7 @@ describe("createMergedConfig", () => {
     );
   });
 
-  it("should handle truly empty YAML config file", async () => {
+  it("should handle empty YAML config file", async () => {
     mkdirSync(tmpDir, { recursive: true });
     const emptyYamlPath = path.join(tmpDir, "truly-empty.yaml");
     writeFileSync(emptyYamlPath, "");
@@ -747,5 +747,38 @@ describe("createMergedConfig", () => {
     }
 
     expect(errorMessage).toContain("Invalid input");
+  });
+
+  it("should fail validation when repo URL is invalid", async () => {
+    await setupTestWithConfig({
+      tmpDir,
+      createDirectories: {
+        repoBaseDir: "base",
+        repoDir: "repo",
+      },
+      yamlConfig: {
+        repo_url: "invalid-url-format",
+        repo_base_dir: "base",
+        repo_dir: "repo",
+      },
+    });
+
+    const flags: SharedFlags = {};
+    const requiredFields: YamlKey[] = ["repo_url", "repo_base_dir", "repo_dir"];
+
+    const result = createMergedConfig({
+      flags,
+      requiredFields,
+      cwd: tmpDir,
+    });
+
+    expectFailedMerge(result);
+    expect(stableizeTempDir(result.error)).toMatchInlineSnapshot(`
+      "Validation errors:
+
+      repo_url: invalid-url-format in ./patchy.yaml is invalid.  Example repo: https://github.com/user/repo.git
+
+      "
+    `);
   });
 });
