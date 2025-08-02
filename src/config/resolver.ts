@@ -1,8 +1,8 @@
 import { existsSync } from "node:fs";
 import { resolve } from "node:path";
-import type { LocalContext } from "../context";
-import type { OptionalConfigData } from "../yaml-config";
-import { parseOptionalYamlConfig } from "../yaml-config";
+import type { LocalContext } from "~/context";
+import type { OptionalConfigData } from "~/yaml-config";
+import { parseOptionalYamlConfig } from "~/yaml-config";
 import {
   DEFAULT_CONFIG_PATH,
   DEFAULT_PATCHES_DIR,

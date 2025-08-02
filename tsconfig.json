@@ -8,6 +8,9 @@
     "moduleDetection": "force",
     "verbatimModuleSyntax": true,
     "allowImportingTsExtensions": false,
+    "paths": {
+      "~/*": ["./src/*"]
+    },
     // Best practices
     "strict": true,
     "skipLibCheck": true,

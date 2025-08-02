@@ -1,6 +1,6 @@
-import { resolveConfig } from "../../config/resolver";
-import type { ApplyCommandFlags, ResolvedConfig } from "../../config/types";
-import type { LocalContext } from "../../context";
+import { resolveConfig } from "~/config/resolver";
+import type { ApplyCommandFlags, ResolvedConfig } from "~/config/types";
+import type { LocalContext } from "~/context";
 
 export default async function (
   this: LocalContext,

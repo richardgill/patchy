@@ -1,6 +1,6 @@
 import { buildCommand } from "@stricli/core";
 import { omit } from "es-toolkit";
-import { sharedFlags } from "../shared-parameters";
+import { sharedFlags } from "~/commands/shared-parameters";
 
 const initFlags = {
   ...omit(sharedFlags, ["dry-run"]),
