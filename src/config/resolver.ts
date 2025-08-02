@@ -17,6 +17,9 @@ import type {
   SharedFlags,
 } from "./types";
 import { isNil } from "es-toolkit";
+import { success } from "zod/mini";
+import dedent from "dedent";
+import { config } from "node:process";
 
 type ConfigError = { field: keyof ResolvedConfig } & (
   | {
@@ -66,12 +69,14 @@ export const createMergedConfig = ({
   flags,
   requiredFields,
   configPath,
+  configPathFlag,
   onConfigMerged = () => null,
 }: {
   yamlString: string | undefined;
   flags: SharedFlags & { "repo-url"?: string; ref?: string };
   requiredFields: (keyof ResolvedConfig)[];
   configPath: string;
+  configPathFlag: string | undefined;
   onConfigMerged?: (config: MergedConfig) => void;
 }) => {
   const yamlConfig = parseOptionalYamlConfig(yamlString);
@@ -89,7 +94,12 @@ export const createMergedConfig = ({
   console.log("zzz mergedConfig", mergedConfig);
 
   onConfigMerged(mergedConfig);
-  const errors = calcError({ mergedConfig, requiredFields, configPath });
+  const errors = calcError({
+    mergedConfig,
+    requiredFields,
+    configPath,
+    configPathFlag,
+  });
 
   return { mergedConfig, ...errors };
 };
@@ -98,14 +108,37 @@ const calcError = ({
   mergedConfig,
   requiredFields,
   configPath,
+  configPathFlag,
 }: {
   mergedConfig: MergedConfig;
   // todo extract this to a type
   requiredFields: (keyof ResolvedConfig)[];
   configPath: string;
-}): { success: boolean; error: string } => {
-  console.log("zzz ", { mergedConfig, requiredFields, configPath });
-  return { success: true, error: "whoop" };
+  configPathFlag: string | undefined;
+}): { success: boolean; error?: string } => {
+  console.log("zzz ", { mergedConfig, requiredFields, configPathFlag });
+
+  const missingFields = requiredFields.filter((field) => {
+    return isNil(mergedConfig[field]);
+  });
+
+  if (missingFields) {
+    const missingFieldsError = dedent(`
+    Missing required parameters:
+
+    ${missingFields
+      .map((field) => {
+        return `  ${field} please set ${field} in ${configPath} or use --${field} flag`;
+      })
+      .join("\n\n")}
+
+    You can set up ${configPath} by running: 
+    patchy init${configPathFlag ? ` --config ${configPathFlag}` : ""}
+  `);
+
+    return { success: false, error: missingFieldsError };
+  }
+  return { success: true };
 };
 
 export const resolveConfig = async (
@@ -113,8 +146,8 @@ export const resolveConfig = async (
   flags: SharedFlags & { "repo-url"?: string; ref?: string },
   requiredFields: (keyof ResolvedConfig)[],
 ): Promise<PartialResolvedConfig | ResolvedConfig> => {
-  const configPath = resolve(flags.config ?? DEFAULT_CONFIG_PATH);
-
+  const configPath = flags.config ?? DEFAULT_CONFIG_PATH;
+  const absoluteConfigPath = resolve(configPath);
   let yamlString: string | undefined;
   if (!existsSync(configPath) && flags.config !== undefined) {
     throw new Error(`Configuration file not found: ${configPath}`);
@@ -128,6 +161,7 @@ export const resolveConfig = async (
     flags,
     requiredFields,
     configPath,
+    configPathFlag: flags.config,
     onConfigMerged: (config) => logConfiguration(context, config),
   });
 
