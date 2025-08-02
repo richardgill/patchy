@@ -107,6 +107,7 @@ export const createMergedConfig = ({
   configPath,
   configPathFlag,
   onConfigMerged = () => null,
+  cwd = process.cwd(),
 }: {
   yamlString: string | undefined;
   flags: SharedFlags;
@@ -114,6 +115,7 @@ export const createMergedConfig = ({
   configPath: string;
   configPathFlag: string | undefined;
   onConfigMerged?: (config: MergedConfig) => void;
+  cwd?: string;
 }) => {
   const yamlConfig = parseOptionalYamlConfig(yamlString);
   const repoBaseDir = getFlagOrYamlValueByKey(
