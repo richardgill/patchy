@@ -15,7 +15,7 @@ describe("patchy apply", () => {
   });
 
   afterEach(async () => {
-    await cleanupTmpDir(tmpDir);
+    // await cleanupTmpDir(tmpDir);
   });
 
   it("should apply patches with all flags specified", async () => {
@@ -34,7 +34,7 @@ describe("patchy apply", () => {
 
     const result = await assertSuccessfulCommand(
       `apply --repo-dir main --repo-base-dir ${ctx.repoBaseDir} --patches-dir patches --config patchy.yaml --verbose --dry-run`,
-      ctx.patchesDir!,
+      tmpDir,
     );
 
     expect(stabilizeTempDir(result.stdout)).toMatchInlineSnapshot(`

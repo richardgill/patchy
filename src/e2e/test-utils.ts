@@ -1,7 +1,7 @@
 import { randomUUID } from "node:crypto";
 import { existsSync, readFileSync } from "node:fs";
 import { mkdir, rm, writeFile } from "node:fs/promises";
-import { join } from "node:path";
+import { join, resolve } from "node:path";
 import { execa, type Result } from "execa";
 
 import { parse as parseShell } from "shell-quote";
@@ -155,7 +155,6 @@ export const setupTestWithConfig = async ({
   yamlConfig?: Record<string, string | boolean | number>;
 }): Promise<TestContext> => {
   const originalCwd = process.cwd();
-
   await mkdir(tmpDir, { recursive: true });
 
   let absolutePatchesDir: string | undefined;
@@ -165,16 +164,12 @@ export const setupTestWithConfig = async ({
   }
   let absoluteRepoBaseDir: string | undefined;
   if (directories.repoBaseDir) {
-    absoluteRepoBaseDir = join(tmpDir, directories.repoBaseDir);
+    absoluteRepoBaseDir = resolve(tmpDir, directories.repoBaseDir);
     await mkdir(absoluteRepoBaseDir, { recursive: true });
   }
   let absoluteRepoDir: string | undefined;
-  if (directories.repoDir && directories.repoBaseDir) {
-    absoluteRepoDir = join(
-      tmpDir,
-      directories.repoBaseDir,
-      directories.repoDir,
-    );
+  if (directories.repoDir && absoluteRepoBaseDir) {
+    absoluteRepoDir = join(absoluteRepoBaseDir, directories.repoDir);
     await mkdir(absoluteRepoDir, { recursive: true });
   }
 
@@ -186,10 +181,8 @@ export const setupTestWithConfig = async ({
     repoDir: absoluteRepoDir,
   };
 
-  if (ctx.patchesDir) {
-    const configPath = join(ctx.patchesDir, "patchy.yaml");
-    await writeTestConfig(configPath, yamlConfig);
-  }
+  const configPath = resolve(tmpDir, "patchy.yaml");
+  await writeTestConfig(configPath, yamlConfig);
 
   return ctx;
 };
