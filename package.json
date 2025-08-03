@@ -12,8 +12,8 @@
   "scripts": {
     "build": "pnpm clean && tsgo",
     "clean": "rimraf dist",
-    "check-fix": "biome check --write",
-    "check": "biome check",
+    "check": "biome check --error-on-warnings --diagnostic-level=warn",
+    "check-fix": "biome check --write --error-on-warnings --diagnostic-level=warn",
     "changeset": "changeset",
     "changeset-version": "changeset version",
     "changeset-publish": "pnpm build && changeset publish",
