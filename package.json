@@ -19,7 +19,7 @@
     "dev": "tsx src/cli.ts",
     "local-ci": "concurrently --group -p none -n 'check,typecheck,test' 'pnpm run check-fix' 'pnpm run typecheck' 'pnpm run test'",
     "prepare": "lefthook install",
-    "typecheck": "tsc --noEmit",
+    "typecheck": "tsgo --noEmit",
     "test": "vitest run",
     "test-watch": "vitest --watch",
     "test-coverage": "vitest run --coverage"
