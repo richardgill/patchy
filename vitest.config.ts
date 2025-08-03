@@ -8,6 +8,11 @@ export default defineConfig({
     },
   },
   test: {
+    env: {
+      // Disable chalk colors in tests for consistent snapshots
+      NO_COLOR: "1",
+      FORCE_COLOR: "0",
+    },
     projects: [
       {
         test: {

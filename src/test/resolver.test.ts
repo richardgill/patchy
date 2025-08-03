@@ -1,7 +1,7 @@
 import { mkdirSync, writeFileSync } from "node:fs";
 import path from "node:path";
 import { beforeEach, describe, expect, it } from "vitest";
-import { createMergedConfig } from "../config/resolver";
+import { createMergedConfig, type MergedConfig } from "../config/resolver";
 import type { JsonKey, SharedFlags } from "../config/types";
 import {
   generateTmpDir,
@@ -10,16 +10,24 @@ import {
   stabilizeTempDir,
 } from "../e2e/test-utils";
 
-const expectSuccessfulMerge = (
+const expectSuccessfulMerge: (
   result: ReturnType<typeof createMergedConfig>,
+) => asserts result is { success: true; mergedConfig: MergedConfig } = (
+  result,
 ) => {
-  expect(result.error).toBeUndefined();
   expect(result.success).toBe(true);
+  if (result.success) {
+    expect(result.mergedConfig).toBeDefined();
+  }
 };
 
-const expectFailedMerge = (result: ReturnType<typeof createMergedConfig>) => {
-  expect(result.error).toBeDefined();
+const expectFailedMerge: (
+  result: ReturnType<typeof createMergedConfig>,
+) => asserts result is { success: false; error: string } = (result) => {
   expect(result.success).toBe(false);
+  if (!result.success) {
+    expect(result.error).toBeDefined();
+  }
 };
 
 describe("createMergedConfig", () => {
@@ -165,18 +173,14 @@ describe("createMergedConfig", () => {
     };
     const requiredFields: JsonKey[] = ["repo_url"];
 
-    let errorMessage = "";
-    try {
-      createMergedConfig({
-        flags,
-        requiredFields,
-        cwd: tmpDir,
-      });
-    } catch (error) {
-      errorMessage = (error as Error).message;
-    }
+    const result = createMergedConfig({
+      flags,
+      requiredFields,
+      cwd: tmpDir,
+    });
 
-    expect(stabilizeTempDir(errorMessage)).toMatchInlineSnapshot(
+    expectFailedMerge(result);
+    expect(stabilizeTempDir(result.error)).toMatchInlineSnapshot(
       `"Configuration file not found: <TEST_DIR>/non-existent-config.json"`,
     );
   });
@@ -191,18 +195,14 @@ describe("createMergedConfig", () => {
     };
     const requiredFields: JsonKey[] = ["repo_url"];
 
-    let errorMessage = "";
-    try {
-      createMergedConfig({
-        flags,
-        requiredFields,
-        cwd: tmpDir,
-      });
-    } catch (error) {
-      errorMessage = (error as Error).message;
-    }
+    const result = createMergedConfig({
+      flags,
+      requiredFields,
+      cwd: tmpDir,
+    });
 
-    expect(errorMessage).toMatchInlineSnapshot(
+    expectFailedMerge(result);
+    expect(result.error).toMatchInlineSnapshot(
       `"JSON parse error: InvalidSymbol at offset 2"`,
     );
   });
@@ -394,18 +394,14 @@ describe("createMergedConfig", () => {
     };
     const requiredFields: JsonKey[] = ["repo_url"];
 
-    let errorMessage = "";
-    try {
-      createMergedConfig({
-        flags,
-        requiredFields,
-        cwd: tmpDir,
-      });
-    } catch (error) {
-      errorMessage = (error as Error).message;
-    }
+    const result = createMergedConfig({
+      flags,
+      requiredFields,
+      cwd: tmpDir,
+    });
 
-    expect(errorMessage).toMatchInlineSnapshot(
+    expectFailedMerge(result);
+    expect(result.error).toMatchInlineSnapshot(
       `"JSON parse error: ValueExpected at offset 0"`,
     );
   });
@@ -708,6 +704,7 @@ describe("createMergedConfig", () => {
       cwd: tmpDir,
     });
 
+    expectSuccessfulMerge(result);
     expect(process.cwd()).toBe(originalCwd);
     expect(getStabilizedJson(result.mergedConfig)).toMatchInlineSnapshot(
       `
@@ -744,18 +741,14 @@ describe("createMergedConfig", () => {
     };
     const requiredFields: JsonKey[] = ["repo_url"];
 
-    let errorMessage = "";
-    try {
-      createMergedConfig({
-        flags,
-        requiredFields,
-        cwd: tmpDir,
-      });
-    } catch (error) {
-      errorMessage = (error as Error).message;
-    }
+    const result = createMergedConfig({
+      flags,
+      requiredFields,
+      cwd: tmpDir,
+    });
 
-    expect(errorMessage).toContain("Invalid input");
+    expectFailedMerge(result);
+    expect(result.error).toContain("Invalid input");
   });
 
   it("should fail validation when repo URL is invalid", async () => {

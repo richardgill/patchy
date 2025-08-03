@@ -152,7 +152,7 @@ describe("patchy apply", () => {
     );
 
     expect(stabilizeTempDir(result.stderr)).toMatchInlineSnapshot(`
-      "Error: Error: Configuration file not found: <TEST_DIR>/non-existent-config.json"
+      "Configuration file not found: <TEST_DIR>/non-existent-config.json"
     `);
   });
 
@@ -167,7 +167,7 @@ describe("patchy apply", () => {
     );
 
     expect(result.stderr).toMatchInlineSnapshot(`
-      "Error: Error: JSON parse error: InvalidSymbol at offset 2"
+      "JSON parse error: InvalidSymbol at offset 2"
     `);
   });
 
@@ -517,7 +517,7 @@ describe("patchy apply", () => {
     );
 
     expect(result.stderr).toMatchInlineSnapshot(`
-      "Error: Error: JSON parse error: ValueExpected at offset 0"
+      "JSON parse error: ValueExpected at offset 0"
     `);
   });
 
