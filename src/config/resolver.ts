@@ -127,7 +127,7 @@ export const createMergedConfig = ({
   requiredFields: JsonKey[];
   onConfigMerged?: (config: MergedConfig) => void;
   cwd?: string;
-}) => {
+}): { mergedConfig: MergedConfig; success: boolean; error?: string } => {
   const originalCwd = process.cwd();
   if (cwd) {
     process.chdir(cwd);
