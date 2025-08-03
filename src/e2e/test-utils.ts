@@ -57,11 +57,6 @@ export const assertFailedCommand = async (command: string, cwd: string) => {
     console.error(
       "Exit code is undefined - process may have been killed or timed out",
     );
-    console.error(
-      // biome-ignore lint/suspicious/noExplicitAny: accessing killed property from execa
-      `Failed: ${result.failed}, Killed: ${(result as any).killed}, Signal: ${result.signal}`,
-    );
-  }
   expect(result.exitCode).toBe(1);
   return result;
 };
