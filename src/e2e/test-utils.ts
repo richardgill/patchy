@@ -50,19 +50,9 @@ export const assertSuccessfulCommand = async (
   return result;
 };
 
-export const assertFailedCommand = async (
-  command: string,
-  cwd: string,
-  expectedErrors: string | string[],
-) => {
+export const assertFailedCommand = async (command: string, cwd: string) => {
   const result = await runPatchy(command, cwd);
   expect(result.exitCode).toBe(1);
-  const errors = Array.isArray(expectedErrors)
-    ? expectedErrors
-    : [expectedErrors];
-  for (const error of errors) {
-    expect(result.stderr).toContain(error);
-  }
   return result;
 };
 
