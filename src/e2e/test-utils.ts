@@ -1,9 +1,8 @@
+import { type ChildProcess, fork } from "node:child_process";
 import { randomUUID } from "node:crypto";
 import { existsSync } from "node:fs";
 import { mkdir, writeFile } from "node:fs/promises";
 import { join, resolve } from "node:path";
-import { execa, type Result } from "execa";
-
 import { parse as parseShell } from "shell-quote";
 import { expect } from "vitest";
 
@@ -15,33 +14,74 @@ type TestContext = {
   absoluteRepoDir: string | undefined;
 };
 
-type PatchyResult = Result<{ cwd: string; reject: false }>;
+type PatchyResult = {
+  stdout: string;
+  stderr: string;
+  exitCode: number;
+  cwd: string;
+};
 
 export const runPatchy = async (
   command: string,
   cwd: string,
 ): Promise<PatchyResult> => {
-  const cliPath = join(process.cwd(), "src/cli.ts");
-  const tsxPath = join(process.cwd(), "node_modules/.bin/tsx");
-
   const args = parseShell(command) as string[];
 
-  const result = await execa(tsxPath, [cliPath, ...args], {
-    cwd,
-    reject: false,
-    timeout: 10000,
-  });
-  if (result.exitCode === undefined) {
-    console.error(
-      "Exit code is undefined - process may have been killed or timed out",
-    );
-    console.error(
-      // biome-ignore lint/suspicious/noExplicitAny: accessing killed property from execa
-      `Failed: ${result.failed}, Killed: ${(result as any).killed}, Signal: ${result.signal}, Command: ${command}`,
-    );
-  }
+  // Ensure the directory exists before trying to run the command
+  await mkdir(cwd, { recursive: true });
 
-  return result;
+  return new Promise((resolve) => {
+    const cliPath = join(process.cwd(), "dist/cli.js");
+
+    let stdout = "";
+    let stderr = "";
+
+    // Use fork to run the CLI in a child process
+    const child: ChildProcess = fork(cliPath, args, {
+      cwd,
+      silent: true, // Capture stdout/stderr
+      env: {
+        ...process.env,
+        NO_COLOR: "1",
+        FORCE_COLOR: "0",
+      },
+    });
+
+    // Capture stdout
+    if (child.stdout) {
+      child.stdout.on("data", (data: Buffer) => {
+        stdout += data.toString();
+      });
+    }
+
+    // Capture stderr
+    if (child.stderr) {
+      child.stderr.on("data", (data: Buffer) => {
+        stderr += data.toString();
+      });
+    }
+
+    // Handle process exit
+    child.on("exit", (code) => {
+      resolve({
+        stdout: stdout.trimEnd(),
+        stderr: stderr.trimEnd(),
+        exitCode: code ?? 0,
+        cwd,
+      });
+    });
+
+    // Handle errors
+    child.on("error", (error) => {
+      stderr += error.message;
+      resolve({
+        stdout: stdout.trimEnd(),
+        stderr: stderr.trimEnd(),
+        exitCode: 1,
+        cwd,
+      });
+    });
+  });
 };
 
 export const assertSuccessfulCommand = async (
