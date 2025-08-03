@@ -28,14 +28,8 @@ describe("patchy init", () => {
     return jsonContent.trim();
   };
 
-  const assertFailedInit = async ({
-    command,
-    expectedErrors,
-  }: {
-    command: string;
-    expectedErrors: string | string[];
-  }) => {
-    await assertFailedCommand(command, tmpDir, expectedErrors);
+  const assertFailedInit = async (command: string) => {
+    return await assertFailedCommand(command, tmpDir);
   };
 
   it("should initialize patchy with all flags", async () => {
@@ -64,10 +58,13 @@ describe("patchy init", () => {
         tmpDir,
         createDirectories: { repoBaseDir: "repoBaseDir1", repoDir: "main" },
       });
-      await assertFailedInit({
-        command: `init --repo-url github.com/example/repo --repo-dir main --repo-base-dir repoBaseDir1 --patches-dir patches --ref main --config patchy.json --force`,
-        expectedErrors: "valid Git URL",
-      });
+      const result = await assertFailedInit(
+        `init --repo-url github.com/example/repo --repo-dir main --repo-base-dir repoBaseDir1 --patches-dir patches --ref main --config patchy.json --force`,
+      );
+
+      expect(result.stderr).toMatchInlineSnapshot(
+        `"Please enter a valid Git URL (https://github.com/owner/repo or git@github.com:owner/repo.git)"`,
+      );
     });
 
     it("should fail with malformed repo url - invalid domain", async () => {
@@ -76,10 +73,12 @@ describe("patchy init", () => {
         createDirectories: { repoBaseDir: "repoBaseDir1", repoDir: "main" },
       });
 
-      await assertFailedInit({
-        command: `init --repo-url https://invalid_domain/repo --repo-dir main --repo-base-dir repoBaseDir1 --patches-dir patches --ref main --config patchy.json --force`,
-        expectedErrors: "valid Git URL",
-      });
+      const result = await assertFailedInit(
+        `init --repo-url https://invalid_domain/repo --repo-dir main --repo-base-dir repoBaseDir1 --patches-dir patches --ref main --config patchy.json --force`,
+      );
+      expect(result.stderr).toMatchInlineSnapshot(
+        `"Please enter a valid Git URL (https://github.com/owner/repo or git@github.com:owner/repo.git)"`,
+      );
     });
 
     it("should fail with malformed repo url - incomplete path", async () => {
@@ -88,10 +87,10 @@ describe("patchy init", () => {
         createDirectories: { repoBaseDir: "repoBaseDir1", repoDir: "main" },
       });
 
-      await assertFailedInit({
-        command: `init --repo-url https://github.com/ --repo-dir main --repo-base-dir repoBaseDir1 --patches-dir patches --ref main --config patchy.json --force`,
-        expectedErrors: "valid Git URL",
-      });
+      const result = await assertFailedInit(
+        `init --repo-url https://github.com/ --repo-dir main --repo-base-dir repoBaseDir1 --patches-dir patches --ref main --config patchy.json --force`,
+      );
+      expect(result.stderr).toContain("valid Git URL");
     });
 
     it("should fail when config file exists without force flag", async () => {
@@ -106,13 +105,15 @@ describe("patchy init", () => {
         tmpDir,
       );
 
-      await assertFailedInit({
-        command: `init --repo-url https://github.com/example/another-repo.git --repo-dir main --repo-base-dir repoBaseDir1 --patches-dir patches --ref main --config patchy.json`,
-        expectedErrors: [
-          "Configuration file already exists",
-          "Use --force to overwrite",
-        ],
-      });
+      const result = await assertFailedInit(
+        `init --repo-url https://github.com/example/another-repo.git --repo-dir main --repo-base-dir repoBaseDir1 --patches-dir patches --ref main --config patchy.json`,
+      );
+      expect(stabilizeTempDir(result.stderr)).toMatchInlineSnapshot(
+        `
+        "Configuration file already exists at <TEST_DIR>/patchy.json
+        Use --force to overwrite"
+      `,
+      );
     });
 
     it("should fail with validation error for empty repo_url", async () => {
@@ -120,10 +121,12 @@ describe("patchy init", () => {
         tmpDir,
         createDirectories: { repoBaseDir: "repoBaseDir1", repoDir: "main" },
       });
-      await assertFailedInit({
-        command: `init --repo-url "" --repo-dir main --repo-base-dir repoBaseDir1 --patches-dir patches --ref main --config patchy.json --force`,
-        expectedErrors: "Repository URL is required",
-      });
+      const result = await assertFailedInit(
+        `init --repo-url "" --repo-dir main --repo-base-dir repoBaseDir1 --patches-dir patches --ref main --config patchy.json --force`,
+      );
+      expect(result.stderr).toMatchInlineSnapshot(
+        `"Repository URL is required"`,
+      );
     });
   });
 });

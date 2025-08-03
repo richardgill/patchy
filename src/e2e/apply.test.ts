@@ -129,11 +129,7 @@ describe("patchy apply", () => {
       },
     });
 
-    const result = await assertFailedCommand(`apply --dry-run`, tmpDir, [
-      "Missing required parameters:",
-      "Missing Repository base directory",
-      "Missing Repository directory",
-    ]);
+    const result = await assertFailedCommand(`apply --dry-run`, tmpDir);
 
     expect(stabilizeTempDir(result.stderr)).toMatchInlineSnapshot(`
       "Missing required parameters:
@@ -153,7 +149,6 @@ describe("patchy apply", () => {
     const result = await assertFailedCommand(
       `apply --config ./non-existent-config.json`,
       tmpDir,
-      "Configuration file not found",
     );
 
     expect(stabilizeTempDir(result.stderr)).toMatchInlineSnapshot(`
@@ -169,7 +164,6 @@ describe("patchy apply", () => {
     const result = await assertFailedCommand(
       `apply --config invalid.json`,
       tmpDir,
-      "JSON parse error",
     );
 
     expect(result.stderr).toMatchInlineSnapshot(`
@@ -189,10 +183,7 @@ describe("patchy apply", () => {
       },
     });
 
-    const result = await assertFailedCommand(`apply`, tmpDir, [
-      "Validation errors:",
-      "does not exist",
-    ]);
+    const result = await assertFailedCommand(`apply`, tmpDir);
 
     expect(stabilizeTempDir(result.stderr)).toMatchInlineSnapshot(`
       "Validation errors:
@@ -431,11 +422,7 @@ describe("patchy apply", () => {
       },
     });
 
-    const result = await assertFailedCommand(`apply`, tmpDir, [
-      "Missing required parameters:",
-      "Missing Repository base directory",
-    ]);
-
+    const result = await assertFailedCommand(`apply`, tmpDir);
     expect(stabilizeTempDir(result.stderr)).toMatchInlineSnapshot(`
       "Missing required parameters:
 
@@ -527,7 +514,6 @@ describe("patchy apply", () => {
     const result = await assertFailedCommand(
       `apply --config truly-empty.json`,
       tmpDir,
-      "JSON parse error",
     );
 
     expect(result.stderr).toMatchInlineSnapshot(`
@@ -550,9 +536,7 @@ describe("patchy apply", () => {
     const result = await assertFailedCommand(
       `apply --config invalid-structure.json`,
       tmpDir,
-      "Invalid input",
     );
-
     expect(result.stderr).toContain("Invalid input");
   });
 });
