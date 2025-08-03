@@ -70,25 +70,39 @@ export type MergedConfig = MarkOptional<
   | "absolutePatchesDir"
 >;
 
+type ConfigParseResult =
+  | { success: true; data: JsonConfig }
+  | { success: false; error: string };
+
 export const parseOptionalJsonConfig = (
   jsonString: string | undefined,
-): JsonConfig => {
+): ConfigParseResult => {
   if (isNil(jsonString)) {
-    return {};
+    return { success: true, data: {} };
   }
 
   const parseResult = parseJsonc<unknown>(jsonString);
 
   if (!parseResult.success) {
-    throw new Error(parseResult.error);
+    return { success: false, error: parseResult.error };
   }
 
   const { data, success, error } = jsonConfigSchema.safeParse(parseResult.json);
   if (success) {
-    return data;
+    return { success: true, data };
   }
-  // todo human format
-  throw error;
+
+  // Format zod errors in a human-readable way
+  if (error.issues && error.issues.length > 0) {
+    const zodErrors = error.issues
+      .map((issue) => {
+        const path = issue.path.length > 0 ? `${issue.path.join(".")}: ` : "";
+        return `  ${path}${issue.message}`;
+      })
+      .join("\n");
+    return { success: false, error: zodErrors.trim() };
+  }
+  return { success: false, error: error.message };
 };
 
 const logConfiguration = (
@@ -137,15 +151,14 @@ export const createMergedConfig = ({
     jsonString = readFileSync(absoluteConfigPath, "utf8");
   }
 
-  let jsonConfig: JsonConfig;
-  try {
-    jsonConfig = parseOptionalJsonConfig(jsonString);
-  } catch (error) {
+  const parseResult = parseOptionalJsonConfig(jsonString);
+  if (!parseResult.success) {
     return {
       success: false,
-      error: error instanceof Error ? error.message : String(error),
+      error: parseResult.error,
     };
   }
+  const jsonConfig = parseResult.data;
   const repoBaseDir = getFlagOrJsonValueByKey(
     "repo_base_dir",
     flags,

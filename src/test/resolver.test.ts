@@ -789,4 +789,223 @@ describe("createMergedConfig", () => {
       "
     `);
   });
+
+  it("should handle Zod validation error for empty string fields", async () => {
+    mkdirSync(tmpDir, { recursive: true });
+    const jsonPath = path.join(tmpDir, "empty-strings.json");
+    writeFileSync(
+      jsonPath,
+      JSON.stringify({
+        repo_url: "",
+        ref: "",
+        repo_base_dir: "",
+      }),
+    );
+
+    const flags: SharedFlags = {
+      config: jsonPath,
+    };
+    const requiredFields: JsonKey[] = [];
+
+    const result = createMergedConfig({
+      flags,
+      requiredFields,
+      cwd: tmpDir,
+    });
+
+    expectFailedMerge(result);
+    expect(result.error).toMatchInlineSnapshot(`
+      "repo_url: Repository URL is required
+        ref: Git ref is required
+        repo_base_dir: Repository base directory is required"
+    `);
+  });
+
+  it("should handle Zod validation error for null values", async () => {
+    mkdirSync(tmpDir, { recursive: true });
+    const jsonPath = path.join(tmpDir, "null-values.json");
+    writeFileSync(
+      jsonPath,
+      JSON.stringify({
+        repo_url: null,
+        verbose: null,
+        patches_dir: null,
+      }),
+    );
+
+    const flags: SharedFlags = {
+      config: jsonPath,
+    };
+    const requiredFields: JsonKey[] = [];
+
+    const result = createMergedConfig({
+      flags,
+      requiredFields,
+      cwd: tmpDir,
+    });
+
+    expectFailedMerge(result);
+    expect(result.error).toMatchInlineSnapshot(`
+      "repo_url: Invalid input: expected string, received null
+        patches_dir: Invalid input: expected string, received null
+        verbose: Invalid input: expected boolean, received null"
+    `);
+  });
+
+  it("should handle Zod strict mode error for unknown fields", async () => {
+    mkdirSync(tmpDir, { recursive: true });
+    const jsonPath = path.join(tmpDir, "unknown-fields.json");
+    writeFileSync(
+      jsonPath,
+      JSON.stringify({
+        repo_url: "https://github.com/user/repo.git",
+        unknown_field: "value",
+        another_unknown: 123,
+      }),
+    );
+
+    const flags: SharedFlags = {
+      config: jsonPath,
+    };
+    const requiredFields: JsonKey[] = [];
+
+    const result = createMergedConfig({
+      flags,
+      requiredFields,
+      cwd: tmpDir,
+    });
+
+    expectFailedMerge(result);
+    expect(result.error).toMatchInlineSnapshot(`
+      "Unrecognized keys: "unknown_field", "another_unknown""
+    `);
+  });
+
+  it("should handle boolean field with string value", async () => {
+    mkdirSync(tmpDir, { recursive: true });
+    const jsonPath = path.join(tmpDir, "boolean-string.json");
+    writeFileSync(
+      jsonPath,
+      JSON.stringify({
+        verbose: "yes",
+        dry_run: "true",
+      }),
+    );
+
+    const flags: SharedFlags = {
+      config: jsonPath,
+    };
+    const requiredFields: JsonKey[] = [];
+
+    const result = createMergedConfig({
+      flags,
+      requiredFields,
+      cwd: tmpDir,
+    });
+
+    expectFailedMerge(result);
+    expect(result.error).toMatchInlineSnapshot(`
+      "verbose: Invalid input: expected boolean, received string
+        dry_run: Invalid input: expected boolean, received string"
+    `);
+  });
+
+  it("should handle array values where strings are expected", async () => {
+    mkdirSync(tmpDir, { recursive: true });
+    const jsonPath = path.join(tmpDir, "array-values.json");
+    writeFileSync(
+      jsonPath,
+      JSON.stringify({
+        repo_url: ["https://github.com/user/repo.git"],
+        ref: ["main", "develop"],
+        patches_dir: ["./patches"],
+      }),
+    );
+
+    const flags: SharedFlags = {
+      config: jsonPath,
+    };
+    const requiredFields: JsonKey[] = [];
+
+    const result = createMergedConfig({
+      flags,
+      requiredFields,
+      cwd: tmpDir,
+    });
+
+    expectFailedMerge(result);
+    expect(result.error).toMatchInlineSnapshot(`
+      "repo_url: Invalid input: expected string, received array
+        ref: Invalid input: expected string, received array
+        patches_dir: Invalid input: expected string, received array"
+    `);
+  });
+
+  it("should handle object values where primitives are expected", async () => {
+    mkdirSync(tmpDir, { recursive: true });
+    const jsonPath = path.join(tmpDir, "object-values.json");
+    writeFileSync(
+      jsonPath,
+      JSON.stringify({
+        repo_url: { url: "https://github.com/user/repo.git" },
+        verbose: { enabled: true },
+      }),
+    );
+
+    const flags: SharedFlags = {
+      config: jsonPath,
+    };
+    const requiredFields: JsonKey[] = [];
+
+    const result = createMergedConfig({
+      flags,
+      requiredFields,
+      cwd: tmpDir,
+    });
+
+    expectFailedMerge(result);
+    expect(result.error).toMatchInlineSnapshot(`
+      "repo_url: Invalid input: expected string, received object
+        verbose: Invalid input: expected boolean, received object"
+    `);
+  });
+
+  it("should handle multiple Zod errors with mixed types", async () => {
+    mkdirSync(tmpDir, { recursive: true });
+    const jsonPath = path.join(tmpDir, "mixed-errors.json");
+    writeFileSync(
+      jsonPath,
+      JSON.stringify({
+        repo_url: 123,
+        ref: true,
+        repo_base_dir: ["base"],
+        repo_dir: null,
+        patches_dir: {},
+        verbose: "false",
+        dry_run: 1,
+      }),
+    );
+
+    const flags: SharedFlags = {
+      config: jsonPath,
+    };
+    const requiredFields: JsonKey[] = [];
+
+    const result = createMergedConfig({
+      flags,
+      requiredFields,
+      cwd: tmpDir,
+    });
+
+    expectFailedMerge(result);
+    expect(result.error).toMatchInlineSnapshot(`
+      "repo_url: Invalid input: expected string, received number
+        ref: Invalid input: expected string, received boolean
+        repo_base_dir: Invalid input: expected string, received array
+        repo_dir: Invalid input: expected string, received null
+        patches_dir: Invalid input: expected string, received object
+        verbose: Invalid input: expected boolean, received string
+        dry_run: Invalid input: expected boolean, received number"
+    `);
+  });
 });
