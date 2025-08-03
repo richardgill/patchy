@@ -2,7 +2,6 @@ import { existsSync, readFileSync } from "node:fs";
 import path, { resolve } from "node:path";
 import chalk from "chalk";
 import { isNil } from "es-toolkit";
-import * as JSONC from "jsonc-parser";
 import type { MarkOptional } from "ts-essentials";
 import type { LocalContext } from "~/context";
 import {
@@ -10,6 +9,7 @@ import {
   DEFAULT_PATCHES_DIR,
   DEFAULT_REF,
 } from "./defaults";
+import { parseJsonc } from "./jsonc";
 import type { JsonConfig } from "./schemas";
 import { jsonConfigSchema } from "./schemas";
 import {
@@ -76,24 +76,14 @@ export const parseOptionalJsonConfig = (
   if (isNil(jsonString)) {
     return {};
   }
-  const errors: JSONC.ParseError[] = [];
-  const parsedData = JSONC.parseTree(jsonString, errors, {
-    disallowComments: false,
-    allowTrailingComma: true,
-  });
 
-  if (errors.length > 0) {
-    throw new Error(
-      `JSON parse error: ${JSONC.printParseErrorCode(errors[0].error)} at offset ${errors[0].offset}`,
-    );
+  const parseResult = parseJsonc<unknown>(jsonString);
+
+  if (!parseResult.success) {
+    throw new Error(parseResult.error);
   }
 
-  if (!parsedData) {
-    throw new Error("Failed to parse JSON");
-  }
-
-  const jsonData = JSONC.getNodeValue(parsedData);
-  const { data, success, error } = jsonConfigSchema.safeParse(jsonData);
+  const { data, success, error } = jsonConfigSchema.safeParse(parseResult.json);
   if (success) {
     return data;
   }

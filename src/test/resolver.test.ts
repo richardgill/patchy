@@ -203,7 +203,10 @@ describe("createMergedConfig", () => {
 
     expectFailedMerge(result);
     expect(result.error).toMatchInlineSnapshot(
-      `"JSON parse error: InvalidSymbol at offset 2"`,
+      `"JSON parse error: InvalidSymbol
+
+>    1 | { invalid json: content }
+          ^"`,
     );
   });
 
@@ -402,7 +405,10 @@ describe("createMergedConfig", () => {
 
     expectFailedMerge(result);
     expect(result.error).toMatchInlineSnapshot(
-      `"JSON parse error: ValueExpected at offset 0"`,
+      `"JSON parse error: ValueExpected
+
+>    1 | 
+        ^"`,
     );
   });
 
