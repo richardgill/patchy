@@ -167,7 +167,10 @@ describe("patchy apply", () => {
     );
 
     expect(result.stderr).toMatchInlineSnapshot(`
-      "JSON parse error: InvalidSymbol at offset 2"
+      "JSON parse error: InvalidSymbol
+
+>    1 | { invalid json: content }
+          ^"
     `);
   });
 
@@ -517,7 +520,10 @@ describe("patchy apply", () => {
     );
 
     expect(result.stderr).toMatchInlineSnapshot(`
-      "JSON parse error: ValueExpected at offset 0"
+      "JSON parse error: ValueExpected
+
+>    1 | 
+        ^"
     `);
   });
 
