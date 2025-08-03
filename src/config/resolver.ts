@@ -60,7 +60,7 @@ const formatFlagOrJsonSource = <K extends JsonKey>(
   return metadata.name;
 };
 
-type MergedConfig = MarkOptional<
+export type MergedConfig = MarkOptional<
   ResolvedConfig,
   | "repo_url"
   | "repo_dir"
@@ -127,7 +127,9 @@ export const createMergedConfig = ({
   requiredFields: JsonKey[];
   onConfigMerged?: (config: MergedConfig) => void;
   cwd?: string;
-}): { mergedConfig: MergedConfig; success: boolean; error?: string } => {
+}):
+  | { mergedConfig: MergedConfig; success: true }
+  | { success: false; error: string } => {
   const originalCwd = process.cwd();
   if (cwd) {
     process.chdir(cwd);
@@ -136,13 +138,24 @@ export const createMergedConfig = ({
   const absoluteConfigPath = resolve(configPath);
   let jsonString: string | undefined;
   if (!existsSync(absoluteConfigPath) && flags.config !== undefined) {
-    throw new Error(`Configuration file not found: ${absoluteConfigPath}`);
+    return {
+      success: false,
+      error: `Configuration file not found: ${absoluteConfigPath}`,
+    };
   }
   if (existsSync(absoluteConfigPath)) {
     jsonString = readFileSync(absoluteConfigPath, "utf8");
   }
 
-  const jsonConfig = parseOptionalJsonConfig(jsonString);
+  let jsonConfig: JsonConfig;
+  try {
+    jsonConfig = parseOptionalJsonConfig(jsonString);
+  } catch (error) {
+    return {
+      success: false,
+      error: error instanceof Error ? error.message : String(error),
+    };
+  }
   const repoBaseDir = getFlagOrJsonValueByKey(
     "repo_base_dir",
     flags,
@@ -179,7 +192,10 @@ export const createMergedConfig = ({
   if (cwd) {
     process.chdir(originalCwd);
   }
-  return { mergedConfig, ...errors };
+  if (!errors.success) {
+    return { success: false, error: errors.error };
+  }
+  return { mergedConfig, success: true };
 };
 
 const calcError = ({
@@ -194,7 +210,7 @@ const calcError = ({
   configPath: string;
   jsonConfig: JsonConfig;
   flags: SharedFlags;
-}): { success: boolean; error?: string } => {
+}): { success: true } | { success: false; error: string } => {
   const missingFields = requiredFields.filter((field) => {
     return isNil(mergedConfig[field]);
   });
@@ -275,18 +291,16 @@ export const resolveConfig = async (
   flags: SharedFlags,
   requiredFields: JsonKey[],
 ): Promise<PartialResolvedConfig | ResolvedConfig> => {
-  const { mergedConfig, success, error } = createMergedConfig({
+  const result = createMergedConfig({
     flags,
     requiredFields,
     onConfigMerged: (config) => logConfiguration(context, config),
   });
 
-  if (!success) {
-    if (error) {
-      context.process.stderr.write(error);
-    }
+  if (!result.success) {
+    context.process.stderr.write(result.error);
     context.process.exit(1);
   }
 
-  return mergedConfig;
+  return result.mergedConfig;
 };
