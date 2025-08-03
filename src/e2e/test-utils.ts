@@ -3,7 +3,6 @@ import { existsSync } from "node:fs";
 import { mkdir, writeFile } from "node:fs/promises";
 import { join, resolve } from "node:path";
 import { execa, type Result } from "execa";
-
 import { parse as parseShell } from "shell-quote";
 import { expect } from "vitest";
 
@@ -21,16 +20,15 @@ export const runPatchy = async (
   command: string,
   cwd: string,
 ): Promise<PatchyResult> => {
-  const cliPath = join(process.cwd(), "src/cli.ts");
-  const tsxPath = join(process.cwd(), "node_modules/.bin/tsx");
-
+  const cliPath = join(process.cwd(), "dist/cli.js");
   const args = parseShell(command) as string[];
 
-  const result = await execa(tsxPath, [cliPath, ...args], {
+  const result = await execa("node", [cliPath, ...args], {
     cwd,
     reject: false,
     timeout: 10000,
   });
+
   if (result.exitCode === undefined) {
     console.error(
       "Exit code is undefined - process may have been killed or timed out",
