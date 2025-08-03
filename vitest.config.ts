@@ -9,6 +9,7 @@ export default defineConfig({
     },
   },
   test: {
+    globalSetup: "./vitest.globalSetup.ts",
     reporters: [new AIFriendlyReporter()],
     env: {
       // Disable chalk colors in tests for consistent snapshots

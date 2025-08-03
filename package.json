@@ -10,8 +10,7 @@
     "dist"
   ],
   "scripts": {
-    "build": "pnpm clean && tsgo",
-    "clean": "rimraf dist",
+    "build": "tsdown",
     "check": "biome check --error-on-warnings --diagnostic-level=warn",
     "check-fix": "biome check --write --error-on-warnings --diagnostic-level=warn",
     "changeset": "changeset",
@@ -20,10 +19,8 @@
     "dev": "tsx src/cli.ts",
     "local-ci": "concurrently --group -p none -n 'check,typecheck,test' 'pnpm run check-fix' 'pnpm run typecheck' 'pnpm run test'",
     "prepare": "lefthook install",
-    "typecheck": "tsgo --noEmit",
+    "typecheck": "tsc --noEmit",
     "test": "vitest run",
-    "test-unit": "vitest run --project unit",
-    "test-e2e": "vitest run --project e2e",
     "test-watch": "vitest --watch",
     "test-coverage": "vitest run --coverage"
   },
@@ -38,9 +35,10 @@
     "concurrently": "^9.2.0",
     "execa": "^9.6.0",
     "lefthook": "^1.12.2",
-    "rimraf": "^6.0.1",
     "shell-quote": "^1.8.3",
+    "tsdown": "^0.13.2",
     "tsx": "^4.20.3",
+    "typescript": "^5.9.2",
     "vitest": "^3.2.4"
   },
   "dependencies": {

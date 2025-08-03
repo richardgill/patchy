@@ -57,6 +57,7 @@ export const assertFailedCommand = async (command: string, cwd: string) => {
     console.error(
       "Exit code is undefined - process may have been killed or timed out",
     );
+  }
   expect(result.exitCode).toBe(1);
   return result;
 };
