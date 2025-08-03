@@ -1,5 +1,6 @@
 import { resolve } from "node:path";
 import { defineConfig } from "vitest/config";
+import { AIFriendlyReporter } from "./vitest-ai-reporter";
 
 export default defineConfig({
   resolve: {
@@ -8,6 +9,8 @@ export default defineConfig({
     },
   },
   test: {
+    globalSetup: "./vitest.globalSetup.ts",
+    reporters: [new AIFriendlyReporter()],
     env: {
       // Disable chalk colors in tests for consistent snapshots
       NO_COLOR: "1",

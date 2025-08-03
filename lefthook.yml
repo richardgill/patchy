@@ -2,13 +2,19 @@ pre-commit:
   parallel: false
   commands:
     biome:
-      glob: "*.{js,ts,jsx,tsx,json}"
-      run: pnpm exec biome check --fix --no-errors-on-unmatched --files-ignore-unknown=true {staged_files}
+      glob: "*.{js,ts,cjs,mjs,d.cts,d.mts,jsx,tsx,json,jsonc}"
+      run: pnpm exec biome check --write --error-on-warnings --diagnostic-level=warn --no-errors-on-unmatched --files-ignore-unknown=true {staged_files}
       stage_fixed: true
     typecheck:
       run: pnpm typecheck
     test:
       run: pnpm test
+
+pre-push:
+  commands:
+    biome:
+      glob: "*.{js,ts,cjs,mjs,d.cts,d.mts,jsx,tsx,json,jsonc}"
+      run: pnpm exec biome check --error-on-warnings --diagnostic-level=warn --no-errors-on-unmatched --files-ignore-unknown=true {push_files}
 
 post-commit:
   commands:

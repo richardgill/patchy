@@ -29,7 +29,18 @@ export const runPatchy = async (
   const result = await execa(tsxPath, [cliPath, ...args], {
     cwd,
     reject: false,
+    timeout: 10000,
   });
+  if (result.exitCode === undefined) {
+    console.error(
+      "Exit code is undefined - process may have been killed or timed out",
+    );
+    console.error(
+      // biome-ignore lint/suspicious/noExplicitAny: accessing killed property from execa
+      `Failed: ${result.failed}, Killed: ${(result as any).killed}, Signal: ${result.signal}, Command: ${command}`,
+    );
+  }
+
   return result;
 };
 
