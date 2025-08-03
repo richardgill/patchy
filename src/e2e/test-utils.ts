@@ -1,9 +1,9 @@
+import { spawn } from "node:child_process";
 import { randomUUID } from "node:crypto";
 import { existsSync } from "node:fs";
 import { mkdir, writeFile } from "node:fs/promises";
 import { join, resolve } from "node:path";
-import { execa, type Result } from "execa";
-
+import type { Result } from "execa";
 import { parse as parseShell } from "shell-quote";
 import { expect } from "vitest";
 
@@ -21,27 +21,81 @@ export const runPatchy = async (
   command: string,
   cwd: string,
 ): Promise<PatchyResult> => {
-  const cliPath = join(process.cwd(), "src/cli.ts");
-  const tsxPath = join(process.cwd(), "node_modules/.bin/tsx");
-
+  // Run the built CLI file directly using Node.js spawn
+  const cliPath = join(process.cwd(), "dist/cli.js");
   const args = parseShell(command) as string[];
 
-  const result = await execa(tsxPath, [cliPath, ...args], {
-    cwd,
-    reject: false,
-    timeout: 10000,
-  });
-  if (result.exitCode === undefined) {
-    console.error(
-      "Exit code is undefined - process may have been killed or timed out",
-    );
-    console.error(
-      // biome-ignore lint/suspicious/noExplicitAny: accessing killed property from execa
-      `Failed: ${result.failed}, Killed: ${(result as any).killed}, Signal: ${result.signal}, Command: ${command}`,
-    );
-  }
+  return new Promise((resolve) => {
+    let stdout = "";
+    let stderr = "";
 
-  return result;
+    const child = spawn("node", [cliPath, ...args], {
+      cwd,
+      env: process.env,
+      timeout: 10000,
+    });
+
+    child.stdout?.on("data", (data) => {
+      stdout += data.toString();
+    });
+
+    child.stderr?.on("data", (data) => {
+      stderr += data.toString();
+    });
+
+    child.on("close", (code, signal) => {
+      const exitCode = code ?? 1;
+
+      // Return a result object that matches the execa Result type
+      const result = {
+        stdout: stdout.trimEnd(),
+        stderr: stderr.trimEnd(),
+        exitCode,
+        failed: exitCode !== 0,
+        signal,
+        cwd,
+        reject: false,
+        // Add minimal required properties for Result type
+        all: undefined,
+        stdio: [undefined, stdout, stderr] as const,
+        ipcOutput: [],
+        pipedFrom: [],
+        command: command,
+        escapedCommand: command,
+        timedOut: false,
+        killed: false,
+        exited: true,
+        signalDescription: undefined,
+      } as unknown as PatchyResult;
+
+      resolve(result);
+    });
+
+    child.on("error", (error) => {
+      const result = {
+        stdout: stdout.trimEnd(),
+        stderr: (stderr + error.message).trimEnd(),
+        exitCode: 1,
+        failed: true,
+        signal: undefined,
+        cwd,
+        reject: false,
+        // Add minimal required properties for Result type
+        all: undefined,
+        stdio: [undefined, stdout, stderr] as const,
+        ipcOutput: [],
+        pipedFrom: [],
+        command: command,
+        escapedCommand: command,
+        timedOut: false,
+        killed: false,
+        exited: true,
+        signalDescription: undefined,
+      } as unknown as PatchyResult;
+
+      resolve(result);
+    });
+  });
 };
 
 export const assertSuccessfulCommand = async (
