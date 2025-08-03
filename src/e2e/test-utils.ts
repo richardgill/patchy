@@ -31,6 +31,16 @@ export const runPatchy = async (
     reject: false,
     timeout: 10000,
   });
+  if (result.exitCode === undefined) {
+    console.error(
+      "Exit code is undefined - process may have been killed or timed out",
+    );
+    console.error(
+      // biome-ignore lint/suspicious/noExplicitAny: accessing killed property from execa
+      `Failed: ${result.failed}, Killed: ${(result as any).killed}, Signal: ${result.signal}, Command: ${command}`,
+    );
+  }
+
   return result;
 };
 
@@ -53,11 +63,6 @@ export const assertSuccessfulCommand = async (
 
 export const assertFailedCommand = async (command: string, cwd: string) => {
   const result = await runPatchy(command, cwd);
-  if (result.exitCode === undefined) {
-    console.error(
-      "Exit code is undefined - process may have been killed or timed out",
-    );
-  }
   expect(result.exitCode).toBe(1);
   return result;
 };
