@@ -31,7 +31,7 @@ describe("patchy apply", () => {
     });
 
     const result = await assertSuccessfulCommand(
-      `apply --repo-dir main --repo-base-dir repos --patches-dir patches --config patchy.json --verbose --dry-run`,
+      `patchy apply --repo-dir main --repo-base-dir repos --patches-dir patches --config patchy.json --verbose --dry-run`,
       tmpDir,
     );
 
@@ -66,7 +66,7 @@ describe("patchy apply", () => {
     });
 
     const result = await assertSuccessfulCommand(
-      `apply --config patchy.json --dry-run --verbose`,
+      `patchy apply --config patchy.json --dry-run --verbose`,
       tmpDir,
     );
 
@@ -101,7 +101,7 @@ describe("patchy apply", () => {
     });
 
     const result = await assertSuccessfulCommand(
-      `apply --repo-dir cli-repo --patches-dir cli-patches --config patchy.json --dry-run --verbose`,
+      `patchy apply --repo-dir cli-repo --patches-dir cli-patches --config patchy.json --dry-run --verbose`,
       tmpDir,
     );
 
@@ -129,7 +129,7 @@ describe("patchy apply", () => {
       },
     });
 
-    const result = await assertFailedCommand(`apply --dry-run`, tmpDir);
+    const result = await assertFailedCommand(`patchy apply --dry-run`, tmpDir);
 
     expect(stabilizeTempDir(result.stderr)).toMatchInlineSnapshot(`
       "Missing required parameters:
@@ -146,7 +146,7 @@ describe("patchy apply", () => {
     mkdirSync(tmpDir, { recursive: true });
 
     const result = await assertFailedCommand(
-      `apply --config ./non-existent-config.json`,
+      `patchy apply --config ./non-existent-config.json`,
       tmpDir,
     );
 
@@ -161,7 +161,7 @@ describe("patchy apply", () => {
     writeFileSync(invalidJsonPath, "{ invalid json: content }");
 
     const result = await assertFailedCommand(
-      `apply --config invalid.json`,
+      `patchy apply --config invalid.json`,
       tmpDir,
     );
 
@@ -185,7 +185,7 @@ describe("patchy apply", () => {
       },
     });
 
-    const result = await assertFailedCommand(`apply`, tmpDir);
+    const result = await assertFailedCommand(`patchy apply`, tmpDir);
 
     expect(stabilizeTempDir(result.stderr)).toMatchInlineSnapshot(`
       "Validation errors:
@@ -211,7 +211,7 @@ describe("patchy apply", () => {
     });
 
     const result = await assertSuccessfulCommand(
-      `apply --dry-run --verbose`,
+      `patchy apply --dry-run --verbose`,
       tmpDir,
     );
 
@@ -244,7 +244,7 @@ describe("patchy apply", () => {
     });
 
     const result = await assertSuccessfulCommand(
-      `apply --config empty.json --repo-url https://github.com/example/repo.git --repo-base-dir base --repo-dir repo --dry-run --verbose`,
+      `patchy apply --config empty.json --repo-url https://github.com/example/repo.git --repo-base-dir base --repo-dir repo --dry-run --verbose`,
       tmpDir,
     );
 
@@ -279,7 +279,7 @@ describe("patchy apply", () => {
     });
 
     const result = await assertSuccessfulCommand(
-      `apply --verbose --dry-run`,
+      `patchy apply --verbose --dry-run`,
       tmpDir,
     );
 
@@ -331,7 +331,7 @@ describe("patchy apply", () => {
     );
 
     const result = await assertSuccessfulCommand(
-      `apply --config ${customConfigPath} --dry-run --verbose`,
+      `patchy apply --config ${customConfigPath} --dry-run --verbose`,
       tmpDir,
     );
 
@@ -364,7 +364,7 @@ describe("patchy apply", () => {
     });
 
     const result = await assertSuccessfulCommand(
-      `apply --dry-run --verbose`,
+      `patchy apply --dry-run --verbose`,
       tmpDir,
     );
 
@@ -397,7 +397,7 @@ describe("patchy apply", () => {
     });
 
     const result = await assertSuccessfulCommand(
-      `apply --dry-run --verbose`,
+      `patchy apply --dry-run --verbose`,
       tmpDir,
     );
 
@@ -423,7 +423,7 @@ describe("patchy apply", () => {
       },
     });
 
-    const result = await assertFailedCommand(`apply`, tmpDir);
+    const result = await assertFailedCommand(`patchy apply`, tmpDir);
     expect(stabilizeTempDir(result.stderr)).toMatchInlineSnapshot(`
       "Missing required parameters:
 
@@ -452,7 +452,7 @@ describe("patchy apply", () => {
     });
 
     const result = await assertSuccessfulCommand(
-      `apply --ref cli-ref --dry-run --verbose`,
+      `patchy apply --ref cli-ref --dry-run --verbose`,
       tmpDir,
     );
 
@@ -489,7 +489,7 @@ describe("patchy apply", () => {
     });
 
     const result = await assertSuccessfulCommand(
-      `apply --dry-run --verbose`,
+      `patchy apply --dry-run --verbose`,
       tmpDir,
     );
 
@@ -512,7 +512,7 @@ describe("patchy apply", () => {
     writeFileSync(emptyJsonPath, "");
 
     const result = await assertFailedCommand(
-      `apply --config truly-empty.json`,
+      `patchy apply --config truly-empty.json`,
       tmpDir,
     );
 
@@ -537,7 +537,7 @@ describe("patchy apply", () => {
     );
 
     const result = await assertFailedCommand(
-      `apply --config invalid-structure.json`,
+      `patchy apply --config invalid-structure.json`,
       tmpDir,
     );
     expect(result.stderr).toContain("Invalid input");
@@ -556,7 +556,7 @@ describe("patchy apply", () => {
     );
 
     const result = await assertFailedCommand(
-      `apply --config empty-strings.json`,
+      `patchy apply --config empty-strings.json`,
       tmpDir,
     );
 
@@ -580,7 +580,7 @@ describe("patchy apply", () => {
     );
 
     const result = await assertFailedCommand(
-      `apply --config null-values.json`,
+      `patchy apply --config null-values.json`,
       tmpDir,
     );
 
@@ -604,7 +604,7 @@ describe("patchy apply", () => {
     );
 
     const result = await assertFailedCommand(
-      `apply --config unknown-fields.json`,
+      `patchy apply --config unknown-fields.json`,
       tmpDir,
     );
 
@@ -625,7 +625,7 @@ describe("patchy apply", () => {
     );
 
     const result = await assertFailedCommand(
-      `apply --config boolean-string.json`,
+      `patchy apply --config boolean-string.json`,
       tmpDir,
     );
 
@@ -648,7 +648,7 @@ describe("patchy apply", () => {
     );
 
     const result = await assertFailedCommand(
-      `apply --config array-values.json`,
+      `patchy apply --config array-values.json`,
       tmpDir,
     );
 
@@ -671,7 +671,7 @@ describe("patchy apply", () => {
     );
 
     const result = await assertFailedCommand(
-      `apply --config object-values.json`,
+      `patchy apply --config object-values.json`,
       tmpDir,
     );
 
@@ -698,7 +698,7 @@ describe("patchy apply", () => {
     );
 
     const result = await assertFailedCommand(
-      `apply --config mixed-errors.json`,
+      `patchy apply --config mixed-errors.json`,
       tmpDir,
     );
 

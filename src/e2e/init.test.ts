@@ -38,7 +38,7 @@ describe("patchy init", () => {
       createDirectories: { repoBaseDir: "repoBaseDir1", repoDir: "main" },
     });
     const jsonContent = await assertSuccessfulInit(
-      `init --repo-url https://github.com/example/test-repo.git --repo-dir main --repo-base-dir repoBaseDir1 --patches-dir patches --ref main --config patchy.json --force`,
+      `patchy init --repo-url https://github.com/example/test-repo.git --repo-dir main --repo-base-dir repoBaseDir1 --patches-dir patches --ref main --config patchy.json --force`,
     );
 
     expect(stabilizeTempDir(jsonContent)).toMatchInlineSnapshot(`
@@ -59,7 +59,7 @@ describe("patchy init", () => {
         createDirectories: { repoBaseDir: "repoBaseDir1", repoDir: "main" },
       });
       const result = await assertFailedInit(
-        `init --repo-url github.com/example/repo --repo-dir main --repo-base-dir repoBaseDir1 --patches-dir patches --ref main --config patchy.json --force`,
+        `patchy init --repo-url github.com/example/repo --repo-dir main --repo-base-dir repoBaseDir1 --patches-dir patches --ref main --config patchy.json --force`,
       );
 
       expect(result.stderr).toMatchInlineSnapshot(
@@ -74,7 +74,7 @@ describe("patchy init", () => {
       });
 
       const result = await assertFailedInit(
-        `init --repo-url https://invalid_domain/repo --repo-dir main --repo-base-dir repoBaseDir1 --patches-dir patches --ref main --config patchy.json --force`,
+        `patchy init --repo-url https://invalid_domain/repo --repo-dir main --repo-base-dir repoBaseDir1 --patches-dir patches --ref main --config patchy.json --force`,
       );
       expect(result.stderr).toMatchInlineSnapshot(
         `"Please enter a valid Git URL (https://github.com/owner/repo or git@github.com:owner/repo.git)"`,
@@ -88,7 +88,7 @@ describe("patchy init", () => {
       });
 
       const result = await assertFailedInit(
-        `init --repo-url https://github.com/ --repo-dir main --repo-base-dir repoBaseDir1 --patches-dir patches --ref main --config patchy.json --force`,
+        `patchy init --repo-url https://github.com/ --repo-dir main --repo-base-dir repoBaseDir1 --patches-dir patches --ref main --config patchy.json --force`,
       );
       expect(result.stderr).toContain("valid Git URL");
     });
@@ -101,12 +101,12 @@ describe("patchy init", () => {
       });
 
       await runCli(
-        `init --repo-url https://github.com/example/repo.git --repo-dir main --repo-base-dir repoBaseDir1 --patches-dir patches --ref main --config patchy.json --force`,
+        `patchy init --repo-url https://github.com/example/repo.git --repo-dir main --repo-base-dir repoBaseDir1 --patches-dir patches --ref main --config patchy.json --force`,
         tmpDir,
       );
 
       const result = await assertFailedInit(
-        `init --repo-url https://github.com/example/another-repo.git --repo-dir main --repo-base-dir repoBaseDir1 --patches-dir patches --ref main --config patchy.json`,
+        `patchy init --repo-url https://github.com/example/another-repo.git --repo-dir main --repo-base-dir repoBaseDir1 --patches-dir patches --ref main --config patchy.json`,
       );
       expect(stabilizeTempDir(result.stderr)).toMatchInlineSnapshot(
         `
@@ -122,7 +122,7 @@ describe("patchy init", () => {
         createDirectories: { repoBaseDir: "repoBaseDir1", repoDir: "main" },
       });
       const result = await assertFailedInit(
-        `init --repo-url "" --repo-dir main --repo-base-dir repoBaseDir1 --patches-dir patches --ref main --config patchy.json --force`,
+        `patchy init --repo-url "" --repo-dir main --repo-base-dir repoBaseDir1 --patches-dir patches --ref main --config patchy.json --force`,
       );
       expect(result.stderr).toMatchInlineSnapshot(
         `"Repository URL is required"`,

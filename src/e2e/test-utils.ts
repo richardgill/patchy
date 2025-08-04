@@ -35,7 +35,11 @@ export const runCli = async (
   command: string,
   cwd: string,
 ): Promise<CLIResult> => {
-  const args = parseShell(command) as string[];
+  // Drop everything before the first space if there is one
+  // e.g., "patchy init" becomes "init"
+  const processedCommand = command.replace(/^\S+\s+/, "");
+
+  const args = parseShell(processedCommand) as string[];
 
   const testContext = buildTestContext({ cwd });
 
