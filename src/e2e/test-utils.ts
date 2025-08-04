@@ -21,7 +21,7 @@ type TestDirContext = {
   absoluteRepoDir: string | undefined;
 };
 
-type PatchyResult = {
+type CLIResult = {
   stdout: string;
   stderr: string;
   exitCode: number;
@@ -31,10 +31,10 @@ type PatchyResult = {
   signal?: NodeJS.Signals;
 };
 
-export const runPatchy = async (
+export const runCli = async (
   command: string,
   cwd: string,
-): Promise<PatchyResult> => {
+): Promise<CLIResult> => {
   const args = parseShell(command) as string[];
 
   const testContext = buildTestContext({ cwd });
@@ -66,9 +66,9 @@ export const runPatchy = async (
 export const assertSuccessfulCommand = async (
   command: string,
   cwd: string,
-  validateFn?: (result: PatchyResult) => void,
+  validateFn?: (result: CLIResult) => void,
 ) => {
-  const result = await runPatchy(command, cwd);
+  const result = await runCli(command, cwd);
   if (result.exitCode !== 0) {
     console.error(`Command failed: ${command}`);
     console.error(`Exit code: ${result.exitCode}`);
@@ -81,7 +81,7 @@ export const assertSuccessfulCommand = async (
 };
 
 export const assertFailedCommand = async (command: string, cwd: string) => {
-  const result = await runPatchy(command, cwd);
+  const result = await runCli(command, cwd);
   expect(result.exitCode).toBe(1);
   return result;
 };

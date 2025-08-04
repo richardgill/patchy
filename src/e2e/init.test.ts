@@ -6,7 +6,7 @@ import {
   assertFailedCommand,
   assertSuccessfulCommand,
   generateTmpDir,
-  runPatchy,
+  runCli,
   setupTestWithConfig,
   stabilizeTempDir,
 } from "./test-utils";
@@ -100,7 +100,7 @@ describe("patchy init", () => {
         jsonConfig: { hello: "world" },
       });
 
-      await runPatchy(
+      await runCli(
         `init --repo-url https://github.com/example/repo.git --repo-dir main --repo-base-dir repoBaseDir1 --patches-dir patches --ref main --config patchy.json --force`,
         tmpDir,
       );
