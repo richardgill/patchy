@@ -150,9 +150,9 @@ describe("patchy apply", () => {
       tmpDir,
     );
 
-    expect(stabilizeTempDir(result.stderr)).toMatchInlineSnapshot(`
-      "Configuration file not found: <TEST_DIR>/non-existent-config.json"
-    `);
+    expect(stabilizeTempDir(result.stderr)).toMatchInlineSnapshot(
+      `"Configuration file not found: <TEST_DIR>/non-existent-config.json"`,
+    );
   });
 
   it("should fail on invalid JSON syntax", async () => {
@@ -168,8 +168,8 @@ describe("patchy apply", () => {
     expect(result.stderr).toMatchInlineSnapshot(`
       "JSON parse error: InvalidSymbol
 
->    1 | { invalid json: content }
-          ^"
+      >    1 | { invalid json: content }
+                ^"
     `);
   });
 
@@ -519,8 +519,8 @@ describe("patchy apply", () => {
     expect(result.stderr).toMatchInlineSnapshot(`
       "JSON parse error: ValueExpected
 
->    1 | 
-        ^"
+      >    1 | 
+              ^"
     `);
   });
 
@@ -608,9 +608,9 @@ describe("patchy apply", () => {
       tmpDir,
     );
 
-    expect(result.stderr).toMatchInlineSnapshot(`
-      "Unrecognized keys: "unknown_field", "another_unknown""
-    `);
+    expect(result.stderr).toMatchInlineSnapshot(
+      `"Unrecognized keys: "unknown_field", "another_unknown""`,
+    );
   });
 
   it("should handle boolean field with string value", async () => {

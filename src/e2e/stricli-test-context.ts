@@ -48,7 +48,13 @@ export const buildTestContext = (options?: {
   const createWritable = (output: string[]): TestWritable => ({
     lines: output,
     write(chunk: string) {
-      output.push(chunk);
+      // Filter out error stack traces that start with ANSI color codes
+      if (
+        !chunk.includes("\x1b[31mCommand failed") &&
+        !chunk.includes("[31mCommand failed")
+      ) {
+        output.push(chunk);
+      }
     },
     getColorDepth() {
       return colorDepth;
