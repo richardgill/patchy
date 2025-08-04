@@ -1,6 +1,7 @@
 import { resolve } from "node:path";
 import type { LocalContext } from "../context";
 
+// Test context pattern from Stricli docs: https://bloomberg.github.io/stricli/docs/features/isolated-context
 interface TestWritable {
   readonly lines: string[];
   write(chunk: string): void;
