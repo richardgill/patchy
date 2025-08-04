@@ -65,7 +65,7 @@ export const buildTestContext = (options?: {
     stdout: createWritable(stdout),
     stderr: createWritable(stderr),
     env: { ...process.env, ...env },
-    exit(code?: number): void {
+    exit(code?: number): never {
       exitCode = code ?? 0;
       throw new ProcessExitError(exitCode);
     },
