@@ -6,23 +6,18 @@ export default async function (
   this: LocalContext,
   flags: ApplyCommandFlags,
 ): Promise<void> {
-  try {
-    const config = (await resolveConfig(this, flags, [
-      "repo_base_dir",
-      "repo_dir",
-      "patches_dir",
-    ])) as ResolvedConfig;
+  const config = (await resolveConfig(this, flags, [
+    "repo_base_dir",
+    "repo_dir",
+    "patches_dir",
+  ])) as ResolvedConfig;
 
-    if (config.dry_run) {
-      this.process.stdout.write(
-        "[DRY RUN] Would apply patches from " +
-          `${config.patches_dir} to ${config.repo_dir}\n`,
-      );
-    } else {
-      this.process.stdout.write("applying..\n");
-    }
-  } catch (error) {
-    this.process.stderr.write(`Error: ${error}\n`);
-    this.process.exit?.(1);
+  if (config.dry_run) {
+    this.process.stdout.write(
+      "[DRY RUN] Would apply patches from " +
+        `${config.patches_dir} to ${config.repo_dir}\n`,
+    );
+  } else {
+    this.process.stdout.write("applying..\n");
   }
 }

@@ -138,8 +138,7 @@ describe("patchy apply", () => {
         Missing Repository directory: set repo_dir in ./patchy.json or use --repo-dir flag
 
       You can set up ./patchy.json by running:
-        patchy init
-      "
+        patchy init"
     `);
   });
 
@@ -192,8 +191,7 @@ describe("patchy apply", () => {
       "Validation errors:
 
       repo_base_dir: non-existent-base in ./patchy.json does not exist: <TEST_DIR>/non-existent-base
-      patches_dir: non-existent-patches in ./patchy.json does not exist: <TEST_DIR>/non-existent-patches
-      "
+      patches_dir: non-existent-patches in ./patchy.json does not exist: <TEST_DIR>/non-existent-patches"
     `);
   });
 
@@ -433,8 +431,7 @@ describe("patchy apply", () => {
         Missing Repository directory: set repo_dir in ./patchy.json or use --repo-dir flag
 
       You can set up ./patchy.json by running:
-        patchy init
-      "
+        patchy init"
     `);
   });
 

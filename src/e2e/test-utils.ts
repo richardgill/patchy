@@ -7,7 +7,11 @@ import { run } from "@stricli/core";
 import { parse as parseShell } from "shell-quote";
 import { expect } from "vitest";
 import { app } from "../app";
-import { buildTestContext, getTestOutput } from "./stricli-test-context";
+import {
+  buildTestContext,
+  getTestOutput,
+  ProcessExitError,
+} from "./stricli-test-context";
 
 type TestDirContext = {
   testDir: string;
@@ -37,7 +41,11 @@ export const runPatchy = async (
 
   try {
     await run(app, args, testContext);
-  } catch (_error) {
+  } catch (error) {
+    // Ignore the exit error - it's expected when process.exit() is called
+    if (!(error instanceof ProcessExitError)) {
+      throw error;
+    }
   } finally {
     // Restore original process methods
     testContext.cleanup();

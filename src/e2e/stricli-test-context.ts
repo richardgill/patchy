@@ -1,6 +1,13 @@
 import { resolve } from "node:path";
 import type { LocalContext } from "../context";
 
+export class ProcessExitError extends Error {
+  constructor(public code: number) {
+    super(`Process exited with code ${code}`);
+    this.name = "ProcessExitError";
+  }
+}
+
 // Test context pattern from Stricli docs: https://bloomberg.github.io/stricli/docs/features/isolated-context
 interface TestWritable {
   readonly lines: string[];
@@ -60,6 +67,7 @@ export const buildTestContext = (options?: {
     env: { ...process.env, ...env },
     exit(code?: number): void {
       exitCode = code ?? 0;
+      throw new ProcessExitError(exitCode);
     },
     cwd: () => currentCwd,
     chdir: (dir: string) => {
