@@ -1,0 +1,1011 @@
+import { mkdirSync, writeFileSync } from "node:fs";
+import path from "node:path";
+import { beforeEach, describe, expect, it } from "vitest";
+import { createMergedConfig, type MergedConfig } from "~/config/resolver";
+import type { JsonKey, SharedFlags } from "~/config/types";
+import {
+  generateTmpDir,
+  getStabilizedJson,
+  setupTestWithConfig,
+  stabilizeTempDir,
+} from "~/e2e/test-utils";
+
+const expectSuccessfulMerge: (
+  result: ReturnType<typeof createMergedConfig>,
+) => asserts result is { success: true; mergedConfig: MergedConfig } = (
+  result,
+) => {
+  expect(result.success).toBe(true);
+  if (result.success) {
+    expect(result.mergedConfig).toBeDefined();
+  }
+};
+
+const expectFailedMerge: (
+  result: ReturnType<typeof createMergedConfig>,
+) => asserts result is { success: false; error: string } = (result) => {
+  expect(result.success).toBe(false);
+  if (!result.success) {
+    expect(result.error).toBeDefined();
+  }
+};
+
+describe("createMergedConfig", () => {
+  let tmpDir: string;
+
+  beforeEach(() => {
+    tmpDir = generateTmpDir();
+  });
+
+  it("should merge JSON config with CLI flags successfully", async () => {
+    await setupTestWithConfig({
+      tmpDir,
+      createDirectories: {
+        repoBaseDir: "repoBaseDir1",
+        repoDir: "repoDir1",
+        patchesDir: "patches",
+      },
+      jsonConfig: {
+        repo_url: "https://github.com/example/test-repo.git",
+        repo_base_dir: "repoBaseDir1",
+        repo_dir: "repoDir1",
+        ref: "main",
+        verbose: true,
+      },
+    });
+
+    const flags: SharedFlags = {
+      "repo-url": "https://github.com/example/flag-repo.git",
+      "dry-run": true,
+    };
+
+    const requiredFields: JsonKey[] = ["repo_url", "repo_base_dir", "repo_dir"];
+
+    const result = createMergedConfig({
+      flags,
+      requiredFields,
+      cwd: tmpDir,
+    });
+
+    expectSuccessfulMerge(result);
+    expect(getStabilizedJson(result.mergedConfig)).toMatchInlineSnapshot(
+      `
+      "{
+        "repo_url": "https://github.com/example/flag-repo.git",
+        "ref": "main",
+        "repo_base_dir": "repoBaseDir1",
+        "absoluteRepoBaseDir": "<TEST_DIR>/repoBaseDir1",
+        "repo_dir": "repoDir1",
+        "absoluteRepoDir": "<TEST_DIR>/repoBaseDir1/repoDir1",
+        "patches_dir": "./patches/",
+        "absolutePatchesDir": "<TEST_DIR>/patches",
+        "verbose": true,
+        "dry_run": true
+      }"
+    `,
+    );
+  });
+
+  it("should fail when required fields are missing", async () => {
+    await setupTestWithConfig({
+      tmpDir,
+      createDirectories: {
+        patchesDir: "patches",
+      },
+      jsonConfig: {
+        verbose: true,
+      },
+    });
+
+    const flags: SharedFlags = {
+      "dry-run": true,
+    };
+
+    const requiredFields: JsonKey[] = ["repo_url", "repo_base_dir", "repo_dir"];
+
+    const result = createMergedConfig({
+      flags,
+      requiredFields,
+      cwd: tmpDir,
+    });
+
+    expectFailedMerge(result);
+    expect(stabilizeTempDir(result.error)).toMatchInlineSnapshot(`
+      "Missing required parameters:
+
+        Missing Repository URL: set repo_url in ./patchy.json or use --repo-url flag
+        Missing Repository base directory: set repo_base_dir in ./patchy.json or use --repo-base-dir flag
+        Missing Repository directory: set repo_dir in ./patchy.json or use --repo-dir flag
+
+      You can set up ./patchy.json by running:
+        patchy init
+
+      "
+    `);
+  });
+
+  it("should use default values when not specified", async () => {
+    await setupTestWithConfig({
+      tmpDir,
+      createDirectories: {
+        repoBaseDir: "repoBaseDir1",
+        repoDir: "repoDir1",
+      },
+      jsonConfig: {
+        repo_url: "https://github.com/example/repo.git",
+        repo_base_dir: "repoBaseDir1",
+        repo_dir: "repoDir1",
+      },
+    });
+
+    const flags: SharedFlags = {};
+    const requiredFields: JsonKey[] = ["repo_url", "repo_base_dir", "repo_dir"];
+
+    const result = createMergedConfig({
+      flags,
+      requiredFields,
+      cwd: tmpDir,
+    });
+
+    expectSuccessfulMerge(result);
+    expect(getStabilizedJson(result.mergedConfig)).toMatchInlineSnapshot(
+      `
+      "{
+        "repo_url": "https://github.com/example/repo.git",
+        "ref": "main",
+        "repo_base_dir": "repoBaseDir1",
+        "absoluteRepoBaseDir": "<TEST_DIR>/repoBaseDir1",
+        "repo_dir": "repoDir1",
+        "absoluteRepoDir": "<TEST_DIR>/repoBaseDir1/repoDir1",
+        "patches_dir": "./patches/",
+        "absolutePatchesDir": "<TEST_DIR>/patches",
+        "verbose": false,
+        "dry_run": false
+      }"
+    `,
+    );
+  });
+
+  it("should throw error when config file doesn't exist with explicit path", async () => {
+    mkdirSync(tmpDir, { recursive: true });
+    const flags: SharedFlags = {
+      config: "./non-existent-config.json",
+    };
+    const requiredFields: JsonKey[] = ["repo_url"];
+
+    const result = createMergedConfig({
+      flags,
+      requiredFields,
+      cwd: tmpDir,
+    });
+
+    expectFailedMerge(result);
+    expect(stabilizeTempDir(result.error)).toMatchInlineSnapshot(
+      `"Configuration file not found: <TEST_DIR>/non-existent-config.json"`,
+    );
+  });
+
+  it("should throw error on invalid JSON", async () => {
+    mkdirSync(tmpDir, { recursive: true });
+    const invalidJsonPath = path.join(tmpDir, "invalid.json");
+    writeFileSync(invalidJsonPath, "{ invalid json: content }");
+
+    const flags: SharedFlags = {
+      config: invalidJsonPath,
+    };
+    const requiredFields: JsonKey[] = ["repo_url"];
+
+    const result = createMergedConfig({
+      flags,
+      requiredFields,
+      cwd: tmpDir,
+    });
+
+    expectFailedMerge(result);
+    expect(result.error).toMatchInlineSnapshot(
+      `"JSON parse error: InvalidSymbol
+
+>    1 | { invalid json: content }
+          ^"`,
+    );
+  });
+
+  it("should fail validation when directories don't exist", async () => {
+    await setupTestWithConfig({
+      tmpDir,
+      createDirectories: {},
+      jsonConfig: {
+        repo_url: "https://github.com/example/repo.git",
+        repo_base_dir: "non-existent-base",
+        repo_dir: "non-existent-repo",
+        patches_dir: "non-existent-patches",
+      },
+    });
+
+    const flags: SharedFlags = {};
+    const requiredFields: JsonKey[] = [
+      "repo_url",
+      "repo_base_dir",
+      "repo_dir",
+      "patches_dir",
+    ];
+
+    const result = createMergedConfig({
+      flags,
+      requiredFields,
+      cwd: tmpDir,
+    });
+
+    expectFailedMerge(result);
+    expect(stabilizeTempDir(result.error)).toMatchInlineSnapshot(`
+      "Validation errors:
+
+      repo_base_dir: non-existent-base in ./patchy.json does not exist: <TEST_DIR>/non-existent-base
+      patches_dir: non-existent-patches in ./patchy.json does not exist: <TEST_DIR>/non-existent-patches
+
+      "
+    `);
+  });
+
+  it("should prioritize CLI flags over JSON values", async () => {
+    await setupTestWithConfig({
+      tmpDir,
+      createDirectories: {
+        repoBaseDir: "flag-base",
+        repoDir: "flag-repo",
+        patchesDir: "flag-patches",
+      },
+      jsonConfig: {
+        repo_url: "https://github.com/example/test-repo.git",
+        repo_base_dir: "json-base",
+        repo_dir: "json-repo",
+        patches_dir: "json-patches",
+        ref: "json-ref",
+        verbose: false,
+      },
+    });
+
+    const flags: SharedFlags = {
+      "repo-url": "https://github.com/example/flag-repo.git",
+      "repo-base-dir": "flag-base",
+      "repo-dir": "flag-repo",
+      "patches-dir": "flag-patches",
+      ref: "flag-ref",
+      verbose: true,
+    };
+    const requiredFields: JsonKey[] = [
+      "repo_url",
+      "repo_base_dir",
+      "repo_dir",
+      "patches_dir",
+    ];
+
+    const result = createMergedConfig({
+      flags,
+      requiredFields,
+      cwd: tmpDir,
+    });
+
+    expectSuccessfulMerge(result);
+    expect(getStabilizedJson(result.mergedConfig)).toMatchInlineSnapshot(
+      `
+      "{
+        "repo_url": "https://github.com/example/flag-repo.git",
+        "ref": "flag-ref",
+        "repo_base_dir": "flag-base",
+        "absoluteRepoBaseDir": "<TEST_DIR>/flag-base",
+        "repo_dir": "flag-repo",
+        "absoluteRepoDir": "<TEST_DIR>/flag-base/flag-repo",
+        "patches_dir": "flag-patches",
+        "absolutePatchesDir": "<TEST_DIR>/flag-patches",
+        "verbose": true,
+        "dry_run": false
+      }"
+    `,
+    );
+  });
+
+  it("should correctly resolve absolute paths", async () => {
+    await setupTestWithConfig({
+      tmpDir,
+      createDirectories: {
+        repoBaseDir: "base",
+        repoDir: "repo",
+        patchesDir: "patches",
+      },
+      jsonConfig: {
+        repo_url: "https://github.com/example/repo.git",
+        repo_base_dir: "base",
+        repo_dir: "repo",
+        patches_dir: "patches",
+      },
+    });
+
+    const flags: SharedFlags = {};
+    const requiredFields: JsonKey[] = [
+      "repo_url",
+      "repo_base_dir",
+      "repo_dir",
+      "patches_dir",
+    ];
+
+    const result = createMergedConfig({
+      flags,
+      requiredFields,
+      cwd: tmpDir,
+    });
+
+    expectSuccessfulMerge(result);
+    expect(getStabilizedJson(result.mergedConfig)).toMatchInlineSnapshot(
+      `
+      "{
+        "repo_url": "https://github.com/example/repo.git",
+        "ref": "main",
+        "repo_base_dir": "base",
+        "absoluteRepoBaseDir": "<TEST_DIR>/base",
+        "repo_dir": "repo",
+        "absoluteRepoDir": "<TEST_DIR>/base/repo",
+        "patches_dir": "patches",
+        "absolutePatchesDir": "<TEST_DIR>/patches",
+        "verbose": false,
+        "dry_run": false
+      }"
+    `,
+    );
+  });
+
+  it("should handle empty JSON config file", async () => {
+    mkdirSync(tmpDir, { recursive: true });
+    const emptyJsonPath = path.join(tmpDir, "empty.json");
+    writeFileSync(emptyJsonPath, "{}");
+
+    const flags: SharedFlags = {
+      config: emptyJsonPath,
+      "repo-url": "https://github.com/example/repo.git",
+    };
+    const requiredFields: JsonKey[] = ["repo_url"];
+
+    const result = createMergedConfig({
+      flags,
+      requiredFields,
+      cwd: tmpDir,
+    });
+
+    expectSuccessfulMerge(result);
+    expect(getStabilizedJson(result.mergedConfig)).toMatchInlineSnapshot(
+      `
+      "{
+        "repo_url": "https://github.com/example/repo.git",
+        "ref": "main",
+        "patches_dir": "./patches/",
+        "absolutePatchesDir": "<TEST_DIR>/patches",
+        "verbose": false,
+        "dry_run": false
+      }"
+    `,
+    );
+  });
+
+  it("should handle empty JSON config file", async () => {
+    mkdirSync(tmpDir, { recursive: true });
+    const emptyJsonPath = path.join(tmpDir, "truly-empty.json");
+    writeFileSync(emptyJsonPath, "");
+
+    const flags: SharedFlags = {
+      config: emptyJsonPath,
+      "repo-url": "https://github.com/example/repo.git",
+    };
+    const requiredFields: JsonKey[] = ["repo_url"];
+
+    const result = createMergedConfig({
+      flags,
+      requiredFields,
+      cwd: tmpDir,
+    });
+
+    expectFailedMerge(result);
+    expect(result.error).toMatchInlineSnapshot(
+      `"JSON parse error: ValueExpected
+
+>    1 | 
+        ^"`,
+    );
+  });
+
+  it("should handle different combinations of missing required fields", async () => {
+    await setupTestWithConfig({
+      tmpDir,
+      createDirectories: {},
+      jsonConfig: {
+        repo_url: "https://github.com/example/repo.git",
+      },
+    });
+
+    const flags: SharedFlags = {};
+    const requiredFields: JsonKey[] = ["repo_base_dir", "patches_dir"];
+
+    const result = createMergedConfig({
+      flags,
+      requiredFields,
+      cwd: tmpDir,
+    });
+
+    expectFailedMerge(result);
+    expect(stabilizeTempDir(result.error)).toMatchInlineSnapshot(`
+      "Missing required parameters:
+
+        Missing Repository base directory: set repo_base_dir in ./patchy.json or use --repo-base-dir flag
+
+      You can set up ./patchy.json by running:
+        patchy init
+
+      "
+    `);
+  });
+
+  it("should handle boolean flags correctly", async () => {
+    await setupTestWithConfig({
+      tmpDir,
+      createDirectories: {
+        repoBaseDir: "base",
+        repoDir: "repo",
+      },
+      jsonConfig: {
+        repo_url: "https://github.com/example/repo.git",
+        repo_base_dir: "base",
+        repo_dir: "repo",
+        verbose: false,
+      },
+    });
+
+    const flags: SharedFlags = {
+      verbose: true,
+      "dry-run": true,
+    };
+    const requiredFields: JsonKey[] = ["repo_url", "repo_base_dir", "repo_dir"];
+
+    const result = createMergedConfig({
+      flags,
+      requiredFields,
+      cwd: tmpDir,
+    });
+
+    expectSuccessfulMerge(result);
+    expect(getStabilizedJson(result.mergedConfig)).toMatchInlineSnapshot(
+      `
+      "{
+        "repo_url": "https://github.com/example/repo.git",
+        "ref": "main",
+        "repo_base_dir": "base",
+        "absoluteRepoBaseDir": "<TEST_DIR>/base",
+        "repo_dir": "repo",
+        "absoluteRepoDir": "<TEST_DIR>/base/repo",
+        "patches_dir": "./patches/",
+        "absolutePatchesDir": "<TEST_DIR>/patches",
+        "verbose": true,
+        "dry_run": true
+      }"
+    `,
+    );
+  });
+
+  it("should correctly join repo_base_dir and repo_dir paths", async () => {
+    await setupTestWithConfig({
+      tmpDir,
+      createDirectories: {
+        repoBaseDir: "my-base/nested",
+        repoDir: "my-repo/nested-repo",
+      },
+      jsonConfig: {
+        repo_url: "https://github.com/example/repo.git",
+        repo_base_dir: "my-base/nested",
+        repo_dir: "my-repo/nested-repo",
+      },
+    });
+
+    const flags: SharedFlags = {};
+    const requiredFields: JsonKey[] = ["repo_url", "repo_base_dir", "repo_dir"];
+
+    const result = createMergedConfig({
+      flags,
+      requiredFields,
+      cwd: tmpDir,
+    });
+
+    expectSuccessfulMerge(result);
+    expect(getStabilizedJson(result.mergedConfig)).toMatchInlineSnapshot(
+      `
+      "{
+        "repo_url": "https://github.com/example/repo.git",
+        "ref": "main",
+        "repo_base_dir": "my-base/nested",
+        "absoluteRepoBaseDir": "<TEST_DIR>/my-base/nested",
+        "repo_dir": "my-repo/nested-repo",
+        "absoluteRepoDir": "<TEST_DIR>/my-base/nested/my-repo/nested-repo",
+        "patches_dir": "./patches/",
+        "absolutePatchesDir": "<TEST_DIR>/patches",
+        "verbose": false,
+        "dry_run": false
+      }"
+    `,
+    );
+  });
+
+  it("should use custom config path", async () => {
+    const customConfigDir = path.join(tmpDir, "custom");
+    const customConfigPath = path.join(customConfigDir, "config.json");
+    mkdirSync(customConfigDir, { recursive: true });
+
+    await setupTestWithConfig({
+      tmpDir,
+      createDirectories: {
+        repoBaseDir: "base",
+        repoDir: "repo",
+      },
+      jsonConfig: {
+        repo_url: "https://github.com/example/custom.git",
+        repo_base_dir: "base",
+        repo_dir: "repo",
+        ref: "custom-branch",
+      },
+    });
+
+    writeFileSync(
+      customConfigPath,
+      JSON.stringify(
+        {
+          repo_url: "https://github.com/example/custom.git",
+          repo_base_dir: "base",
+          repo_dir: "repo",
+          ref: "custom-branch",
+        },
+        null,
+        2,
+      ),
+    );
+
+    const flags: SharedFlags = {
+      config: customConfigPath,
+    };
+    const requiredFields: JsonKey[] = ["repo_url", "repo_base_dir", "repo_dir"];
+
+    const result = createMergedConfig({
+      flags,
+      requiredFields,
+      cwd: tmpDir,
+    });
+
+    expectSuccessfulMerge(result);
+    expect(getStabilizedJson(result.mergedConfig)).toMatchInlineSnapshot(
+      `
+      "{
+        "repo_url": "https://github.com/example/custom.git",
+        "ref": "custom-branch",
+        "repo_base_dir": "base",
+        "absoluteRepoBaseDir": "<TEST_DIR>/base",
+        "repo_dir": "repo",
+        "absoluteRepoDir": "<TEST_DIR>/base/repo",
+        "patches_dir": "./patches/",
+        "absolutePatchesDir": "<TEST_DIR>/patches",
+        "verbose": false,
+        "dry_run": false
+      }"
+    `,
+    );
+  });
+
+  it("should handle working directory changes with cwd parameter", async () => {
+    const subDir = path.join(tmpDir, "subdir");
+    await setupTestWithConfig({
+      tmpDir: subDir,
+      createDirectories: {
+        repoBaseDir: "base",
+        repoDir: "repo",
+      },
+      jsonConfig: {
+        repo_url: "https://github.com/example/repo.git",
+        repo_base_dir: "base",
+        repo_dir: "repo",
+      },
+    });
+
+    const flags: SharedFlags = {};
+    const requiredFields: JsonKey[] = ["repo_url", "repo_base_dir", "repo_dir"];
+
+    const originalCwd = process.cwd();
+    const result = createMergedConfig({
+      flags,
+      requiredFields,
+      cwd: subDir,
+    });
+
+    expectSuccessfulMerge(result);
+    expect(process.cwd()).toBe(originalCwd);
+    expect(getStabilizedJson(result.mergedConfig)).toMatchInlineSnapshot(
+      `
+      "{
+        "repo_url": "https://github.com/example/repo.git",
+        "ref": "main",
+        "repo_base_dir": "base",
+        "absoluteRepoBaseDir": "<TEST_DIR>/subdir/base",
+        "repo_dir": "repo",
+        "absoluteRepoDir": "<TEST_DIR>/subdir/base/repo",
+        "patches_dir": "./patches/",
+        "absolutePatchesDir": "<TEST_DIR>/subdir/patches",
+        "verbose": false,
+        "dry_run": false
+      }"
+    `,
+    );
+  });
+
+  it("should call onConfigMerged callback with merged config", async () => {
+    await setupTestWithConfig({
+      tmpDir,
+      createDirectories: {
+        repoBaseDir: "base",
+        repoDir: "repo",
+      },
+      jsonConfig: {
+        repo_url: "https://github.com/example/repo.git",
+        repo_base_dir: "base",
+        repo_dir: "repo",
+      },
+    });
+
+    const flags: SharedFlags = {};
+    const requiredFields: JsonKey[] = ["repo_url", "repo_base_dir", "repo_dir"];
+    let callbackConfig: object | null = null;
+
+    const result = createMergedConfig({
+      flags,
+      requiredFields,
+      cwd: tmpDir,
+      onConfigMerged: (config) => {
+        callbackConfig = config;
+      },
+    });
+
+    expectSuccessfulMerge(result);
+    expect(callbackConfig).not.toBeNull();
+    expect(getStabilizedJson(callbackConfig)).toMatchInlineSnapshot(
+      `
+      "{
+        "repo_url": "https://github.com/example/repo.git",
+        "ref": "main",
+        "repo_base_dir": "base",
+        "absoluteRepoBaseDir": "<TEST_DIR>/base",
+        "repo_dir": "repo",
+        "absoluteRepoDir": "<TEST_DIR>/base/repo",
+        "patches_dir": "./patches/",
+        "absolutePatchesDir": "<TEST_DIR>/patches",
+        "verbose": false,
+        "dry_run": false
+      }"
+    `,
+    );
+  });
+
+  it("should restore process working directory after execution", async () => {
+    await setupTestWithConfig({
+      tmpDir,
+      createDirectories: {
+        repoBaseDir: "base",
+        repoDir: "repo",
+      },
+      jsonConfig: {
+        repo_url: "https://github.com/example/repo.git",
+        repo_base_dir: "base",
+        repo_dir: "repo",
+      },
+    });
+
+    const flags: SharedFlags = {};
+    const requiredFields: JsonKey[] = ["repo_url", "repo_base_dir", "repo_dir"];
+    const originalCwd = process.cwd();
+
+    const result = createMergedConfig({
+      flags,
+      requiredFields,
+      cwd: tmpDir,
+    });
+
+    expectSuccessfulMerge(result);
+    expect(process.cwd()).toBe(originalCwd);
+    expect(getStabilizedJson(result.mergedConfig)).toMatchInlineSnapshot(
+      `
+      "{
+        "repo_url": "https://github.com/example/repo.git",
+        "ref": "main",
+        "repo_base_dir": "base",
+        "absoluteRepoBaseDir": "<TEST_DIR>/base",
+        "repo_dir": "repo",
+        "absoluteRepoDir": "<TEST_DIR>/base/repo",
+        "patches_dir": "./patches/",
+        "absolutePatchesDir": "<TEST_DIR>/patches",
+        "verbose": false,
+        "dry_run": false
+      }"
+    `,
+    );
+  });
+
+  it("should handle Zod validation errors for invalid JSON structure", async () => {
+    mkdirSync(tmpDir, { recursive: true });
+    const invalidJsonPath = path.join(tmpDir, "invalid-structure.json");
+    writeFileSync(
+      invalidJsonPath,
+      JSON.stringify({
+        repo_url: 123,
+        verbose: "not-a-boolean",
+        ref: ["array", "not", "string"],
+      }),
+    );
+
+    const flags: SharedFlags = {
+      config: invalidJsonPath,
+    };
+    const requiredFields: JsonKey[] = ["repo_url"];
+
+    const result = createMergedConfig({
+      flags,
+      requiredFields,
+      cwd: tmpDir,
+    });
+
+    expectFailedMerge(result);
+    expect(result.error).toContain("Invalid input");
+  });
+
+  it("should fail validation when repo URL is invalid", async () => {
+    await setupTestWithConfig({
+      tmpDir,
+      createDirectories: {
+        repoBaseDir: "base",
+        repoDir: "repo",
+      },
+      jsonConfig: {
+        repo_url: "invalid-url-format",
+        repo_base_dir: "base",
+        repo_dir: "repo",
+      },
+    });
+
+    const flags: SharedFlags = {};
+    const requiredFields: JsonKey[] = ["repo_url", "repo_base_dir", "repo_dir"];
+
+    const result = createMergedConfig({
+      flags,
+      requiredFields,
+      cwd: tmpDir,
+    });
+
+    expectFailedMerge(result);
+    expect(stabilizeTempDir(result.error)).toMatchInlineSnapshot(`
+      "Validation errors:
+
+      repo_url: invalid-url-format in ./patchy.json is invalid.  Example repo: https://github.com/user/repo.git
+
+      "
+    `);
+  });
+
+  it("should handle Zod validation error for empty string fields", async () => {
+    mkdirSync(tmpDir, { recursive: true });
+    const jsonPath = path.join(tmpDir, "empty-strings.json");
+    writeFileSync(
+      jsonPath,
+      JSON.stringify({
+        repo_url: "",
+        ref: "",
+        repo_base_dir: "",
+      }),
+    );
+
+    const flags: SharedFlags = {
+      config: jsonPath,
+    };
+    const requiredFields: JsonKey[] = [];
+
+    const result = createMergedConfig({
+      flags,
+      requiredFields,
+      cwd: tmpDir,
+    });
+
+    expectFailedMerge(result);
+    expect(result.error).toMatchInlineSnapshot(`
+      "repo_url: Repository URL is required
+        ref: Git ref is required
+        repo_base_dir: Repository base directory is required"
+    `);
+  });
+
+  it("should handle Zod validation error for null values", async () => {
+    mkdirSync(tmpDir, { recursive: true });
+    const jsonPath = path.join(tmpDir, "null-values.json");
+    writeFileSync(
+      jsonPath,
+      JSON.stringify({
+        repo_url: null,
+        verbose: null,
+        patches_dir: null,
+      }),
+    );
+
+    const flags: SharedFlags = {
+      config: jsonPath,
+    };
+    const requiredFields: JsonKey[] = [];
+
+    const result = createMergedConfig({
+      flags,
+      requiredFields,
+      cwd: tmpDir,
+    });
+
+    expectFailedMerge(result);
+    expect(result.error).toMatchInlineSnapshot(`
+      "repo_url: Invalid input: expected string, received null
+        patches_dir: Invalid input: expected string, received null
+        verbose: Invalid input: expected boolean, received null"
+    `);
+  });
+
+  it("should handle Zod strict mode error for unknown fields", async () => {
+    mkdirSync(tmpDir, { recursive: true });
+    const jsonPath = path.join(tmpDir, "unknown-fields.json");
+    writeFileSync(
+      jsonPath,
+      JSON.stringify({
+        repo_url: "https://github.com/user/repo.git",
+        unknown_field: "value",
+        another_unknown: 123,
+      }),
+    );
+
+    const flags: SharedFlags = {
+      config: jsonPath,
+    };
+    const requiredFields: JsonKey[] = [];
+
+    const result = createMergedConfig({
+      flags,
+      requiredFields,
+      cwd: tmpDir,
+    });
+
+    expectFailedMerge(result);
+    expect(result.error).toMatchInlineSnapshot(`
+      "Unrecognized keys: "unknown_field", "another_unknown""
+    `);
+  });
+
+  it("should handle boolean field with string value", async () => {
+    mkdirSync(tmpDir, { recursive: true });
+    const jsonPath = path.join(tmpDir, "boolean-string.json");
+    writeFileSync(
+      jsonPath,
+      JSON.stringify({
+        verbose: "yes",
+        dry_run: "true",
+      }),
+    );
+
+    const flags: SharedFlags = {
+      config: jsonPath,
+    };
+    const requiredFields: JsonKey[] = [];
+
+    const result = createMergedConfig({
+      flags,
+      requiredFields,
+      cwd: tmpDir,
+    });
+
+    expectFailedMerge(result);
+    expect(result.error).toMatchInlineSnapshot(`
+      "verbose: Invalid input: expected boolean, received string
+        dry_run: Invalid input: expected boolean, received string"
+    `);
+  });
+
+  it("should handle array values where strings are expected", async () => {
+    mkdirSync(tmpDir, { recursive: true });
+    const jsonPath = path.join(tmpDir, "array-values.json");
+    writeFileSync(
+      jsonPath,
+      JSON.stringify({
+        repo_url: ["https://github.com/user/repo.git"],
+        ref: ["main", "develop"],
+        patches_dir: ["./patches"],
+      }),
+    );
+
+    const flags: SharedFlags = {
+      config: jsonPath,
+    };
+    const requiredFields: JsonKey[] = [];
+
+    const result = createMergedConfig({
+      flags,
+      requiredFields,
+      cwd: tmpDir,
+    });
+
+    expectFailedMerge(result);
+    expect(result.error).toMatchInlineSnapshot(`
+      "repo_url: Invalid input: expected string, received array
+        ref: Invalid input: expected string, received array
+        patches_dir: Invalid input: expected string, received array"
+    `);
+  });
+
+  it("should handle object values where primitives are expected", async () => {
+    mkdirSync(tmpDir, { recursive: true });
+    const jsonPath = path.join(tmpDir, "object-values.json");
+    writeFileSync(
+      jsonPath,
+      JSON.stringify({
+        repo_url: { url: "https://github.com/user/repo.git" },
+        verbose: { enabled: true },
+      }),
+    );
+
+    const flags: SharedFlags = {
+      config: jsonPath,
+    };
+    const requiredFields: JsonKey[] = [];
+
+    const result = createMergedConfig({
+      flags,
+      requiredFields,
+      cwd: tmpDir,
+    });
+
+    expectFailedMerge(result);
+    expect(result.error).toMatchInlineSnapshot(`
+      "repo_url: Invalid input: expected string, received object
+        verbose: Invalid input: expected boolean, received object"
+    `);
+  });
+
+  it("should handle multiple Zod errors with mixed types", async () => {
+    mkdirSync(tmpDir, { recursive: true });
+    const jsonPath = path.join(tmpDir, "mixed-errors.json");
+    writeFileSync(
+      jsonPath,
+      JSON.stringify({
+        repo_url: 123,
+        ref: true,
+        repo_base_dir: ["base"],
+        repo_dir: null,
+        patches_dir: {},
+        verbose: "false",
+        dry_run: 1,
+      }),
+    );
+
+    const flags: SharedFlags = {
+      config: jsonPath,
+    };
+    const requiredFields: JsonKey[] = [];
+
+    const result = createMergedConfig({
+      flags,
+      requiredFields,
+      cwd: tmpDir,
+    });
+
+    expectFailedMerge(result);
+    expect(result.error).toMatchInlineSnapshot(`
+      "repo_url: Invalid input: expected string, received number
+        ref: Invalid input: expected string, received boolean
+        repo_base_dir: Invalid input: expected string, received array
+        repo_dir: Invalid input: expected string, received null
+        patches_dir: Invalid input: expected string, received object
+        verbose: Invalid input: expected boolean, received string
+        dry_run: Invalid input: expected boolean, received number"
+    `);
+  });
+});

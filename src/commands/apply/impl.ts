@@ -1,0 +1,23 @@
+import { resolveConfig } from "~/config/resolver";
+import type { ApplyCommandFlags, ResolvedConfig } from "~/config/types";
+import type { LocalContext } from "~/context";
+
+export default async function (
+  this: LocalContext,
+  flags: ApplyCommandFlags,
+): Promise<void> {
+  const config = (await resolveConfig(this, flags, [
+    "repo_base_dir",
+    "repo_dir",
+    "patches_dir",
+  ])) as ResolvedConfig;
+
+  if (config.dry_run) {
+    this.process.stdout.write(
+      "[DRY RUN] Would apply patches from " +
+        `${config.patches_dir} to ${config.repo_dir}\n`,
+    );
+  } else {
+    this.process.stdout.write("applying..\n");
+  }
+}

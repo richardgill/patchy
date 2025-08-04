@@ -1,0 +1,27 @@
+amends "https://joist.fsn1.your-objectstorage.com/pkl/Pipeline.pkl"
+
+import "../shared.pkl"
+
+stages = new Listing<Stage> {
+  new {
+    name = "Lint"
+    system = shared.main
+    actions = new Listing {
+      "pnpm run check"
+    }
+  }
+  new {
+    name = "Typecheck"
+    system = shared.main
+    actions = new Listing {
+      "pnpm run typecheck"
+    }
+  }
+  new {
+    name = "Test"
+    system = shared.main
+    actions = new Listing {
+      "pnpm run test"
+    }
+  }
+}
