@@ -1,14 +1,14 @@
 import { mkdirSync, writeFileSync } from "node:fs";
 import path from "node:path";
 import { beforeEach, describe, expect, it } from "vitest";
-import { createMergedConfig, type MergedConfig } from "../config/resolver";
-import type { JsonKey, SharedFlags } from "../config/types";
+import { createMergedConfig, type MergedConfig } from "~/config/resolver";
+import type { JsonKey, SharedFlags } from "~/config/types";
 import {
   generateTmpDir,
   getStabilizedJson,
   setupTestWithConfig,
   stabilizeTempDir,
-} from "../e2e/test-utils";
+} from "~/e2e/test-utils";
 
 const expectSuccessfulMerge: (
   result: ReturnType<typeof createMergedConfig>,

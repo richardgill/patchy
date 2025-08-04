@@ -2,14 +2,15 @@ import { resolve } from "node:path";
 import { defineConfig } from "vitest/config";
 import { AIFriendlyReporter } from "./vitest-ai-reporter";
 
-export default defineConfig({
-  resolve: {
-    alias: {
-      "~": resolve(__dirname, "./src"),
-    },
+const resolveConfig = {
+  alias: {
+    "~": resolve(__dirname, "src"),
   },
+};
+
+export default defineConfig({
+  resolve: resolveConfig,
   test: {
-    globalSetup: "./vitest.globalSetup.ts",
     reporters: [new AIFriendlyReporter()],
     env: {
       // Disable chalk colors in tests for consistent snapshots
@@ -18,12 +19,15 @@ export default defineConfig({
     },
     projects: [
       {
+        // this is needed on each project to work
+        resolve: resolveConfig,
         test: {
           name: "unit",
           include: ["src/test/**/*.test.ts"],
         },
       },
       {
+        resolve: resolveConfig,
         test: {
           name: "e2e",
           include: ["src/e2e/**/*.test.ts"],

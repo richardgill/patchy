@@ -2,12 +2,14 @@ import { randomUUID } from "node:crypto";
 import { existsSync } from "node:fs";
 import { mkdir, writeFile } from "node:fs/promises";
 import { join, resolve } from "node:path";
-import { execa, type Result } from "execa";
+import { run } from "@stricli/core";
 
 import { parse as parseShell } from "shell-quote";
 import { expect } from "vitest";
+import { app } from "../app";
+import { buildTestContext, getTestOutput } from "./stricli-test-context";
 
-type TestContext = {
+type TestDirContext = {
   testDir: string;
   originalCwd: string;
   absolutePatchesDir: string | undefined;
@@ -15,33 +17,42 @@ type TestContext = {
   absoluteRepoDir: string | undefined;
 };
 
-type PatchyResult = Result<{ cwd: string; reject: false }>;
+type PatchyResult = {
+  stdout: string;
+  stderr: string;
+  exitCode: number;
+  failed: boolean;
+  command: string;
+  cwd: string;
+  signal?: NodeJS.Signals;
+};
 
 export const runPatchy = async (
   command: string,
   cwd: string,
 ): Promise<PatchyResult> => {
-  const cliPath = join(process.cwd(), "src/cli.ts");
-  const tsxPath = join(process.cwd(), "node_modules/.bin/tsx");
-
   const args = parseShell(command) as string[];
 
-  const result = await execa(tsxPath, [cliPath, ...args], {
-    cwd,
-    reject: false,
-    timeout: 10000,
-  });
-  if (result.exitCode === undefined) {
-    console.error(
-      "Exit code is undefined - process may have been killed or timed out",
-    );
-    console.error(
-      // biome-ignore lint/suspicious/noExplicitAny: accessing killed property from execa
-      `Failed: ${result.failed}, Killed: ${(result as any).killed}, Signal: ${result.signal}, Command: ${command}`,
-    );
+  const testContext = buildTestContext({ cwd });
+
+  try {
+    await run(app, args, testContext);
+  } catch (_error) {
+  } finally {
+    // Restore original process methods
+    testContext.cleanup();
   }
 
-  return result;
+  const output = getTestOutput(testContext);
+
+  return {
+    stdout: output.stdout,
+    stderr: output.stderr,
+    exitCode: output.exitCode,
+    failed: output.exitCode !== 0,
+    command,
+    cwd,
+  };
 };
 
 export const assertSuccessfulCommand = async (
@@ -107,7 +118,7 @@ const createTestDirStructure = async (
     repoBaseDir?: string | undefined;
     repoDir?: string | undefined;
   },
-): Promise<TestContext> => {
+): Promise<TestDirContext> => {
   const originalCwd = process.cwd();
   await mkdir(tmpDir, { recursive: true });
 
@@ -148,7 +159,7 @@ export const setupTestWithConfig = async ({
     repoDir?: string | undefined;
   };
   jsonConfig?: Record<string, string | boolean | number>;
-}): Promise<TestContext> => {
+}): Promise<TestDirContext> => {
   const ctx = await createTestDirStructure(tmpDir, createDirectories);
 
   const configPath = resolve(tmpDir, "patchy.json");
