@@ -36,7 +36,7 @@
     "execa": "^9.6.0",
     "lefthook": "^1.12.2",
     "shell-quote": "^1.8.3",
-    "tsdown": "^0.13.2",
+    "tsdown": "^0.15.1",
     "tsx": "^4.20.3",
     "typescript": "^5.9.2",
     "vitest": "^3.2.4"
