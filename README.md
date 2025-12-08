@@ -107,6 +107,8 @@ Optional file to set default values:
 }
 ```
 
+All options may be set with environment variables as well e.g. `PATCHY_REPO_URL`.
+
 ### Precedence Order
 
 1. CLI flags
