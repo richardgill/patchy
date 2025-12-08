@@ -1,8 +1,8 @@
 import { existsSync, mkdirSync, readFileSync, writeFileSync } from "node:fs";
 import path from "node:path";
-import { simpleGit } from "simple-git";
 import { beforeEach, describe, expect, it } from "vitest";
 import { assertDefined } from "~/lib/assert";
+import { createTestGitClient } from "~/lib/git";
 import {
   assertFailedCommand,
   assertSuccessfulCommand,
@@ -11,23 +11,8 @@ import {
   stabilizeTempDir,
 } from "./test-utils";
 
-// Removes GIT_* env vars and disables LEFTHOOK to prevent interference during tests
-const getCleanTestGitEnv = (): NodeJS.ProcessEnv =>
-  Object.fromEntries(
-    Object.entries(process.env).filter(
-      ([key]) => !key.startsWith("GIT_") && key !== "LEFTHOOK",
-    ),
-  );
-
-const testGitClient = (repoDir: string) =>
-  simpleGit({
-    baseDir: repoDir,
-    binary: "git",
-    maxConcurrentProcesses: 6,
-  }).env({ ...getCleanTestGitEnv(), LEFTHOOK: "0" });
-
 const initGitRepo = async (repoDir: string): Promise<void> => {
-  const git = testGitClient(repoDir);
+  const git = createTestGitClient(repoDir);
 
   await git.init();
   await git.addConfig("user.email", "test@test.com");
