@@ -3,7 +3,13 @@ import { pick } from "es-toolkit";
 import { sharedFlags } from "~/commands/shared-parameters";
 
 const checkoutFlags = {
-  ...pick(sharedFlags, ["repo-dir", "repo-base-dir", "config", "verbose"]),
+  ...pick(sharedFlags, [
+    "repo-dir",
+    "repo-base-dir",
+    "config",
+    "verbose",
+    "dry-run",
+  ]),
   ref: {
     kind: "parsed",
     parse: String,

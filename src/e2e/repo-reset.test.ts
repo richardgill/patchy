@@ -146,4 +146,43 @@ describe("patchy repo reset", () => {
       expect(result.stderr).toContain("Missing");
     });
   });
+
+  describe("dry-run", () => {
+    it("should not reset when --dry-run is set", async () => {
+      const ctx = await setupTestWithConfig({
+        tmpDir,
+        createDirectories: { repoBaseDir: "repos", repoDir: "test-repo" },
+      });
+
+      const repoPath = assertDefined(ctx.absoluteRepoDir, "absoluteRepoDir");
+      await initGitRepo(repoPath);
+      await createInitialCommit(repoPath, "test.txt", "original content");
+      await modifyFile(repoPath, "test.txt", "modified content");
+
+      const result = await assertSuccessfulCommand(
+        `patchy repo reset --repo-base-dir repos --repo-dir test-repo --dry-run`,
+        tmpDir,
+      );
+
+      expect(result.stdout).toContain("[DRY RUN]");
+      expect(result.stdout).toContain("Would hard reset");
+
+      const contentAfter = readFileSync(join(repoPath, "test.txt"), "utf-8");
+      expect(contentAfter).toBe("modified content");
+    });
+
+    it("should still validate repo exists in dry-run mode", async () => {
+      await setupTestWithConfig({
+        tmpDir,
+        createDirectories: { repoBaseDir: "repos" },
+      });
+
+      const result = await assertFailedCommand(
+        `patchy repo reset --repo-base-dir repos --repo-dir nonexistent --dry-run`,
+        tmpDir,
+      );
+
+      expect(stabilizeTempDir(result.stderr)).toContain("does not exist");
+    });
+  });
 });
