@@ -3,7 +3,6 @@ import path, { resolve } from "node:path";
 import chalk from "chalk";
 import { isNil } from "es-toolkit";
 import type { MarkOptional } from "ts-essentials";
-import type { LocalContext } from "~/context";
 import {
   DEFAULT_CONFIG_PATH,
   DEFAULT_PATCHES_DIR,
@@ -15,7 +14,6 @@ import { jsonConfigSchema } from "./schemas";
 import {
   CONFIG_FIELD_METADATA,
   type JsonKey,
-  type PartialResolvedConfig,
   type ResolvedConfig,
   type SharedFlags,
 } from "./types";
@@ -134,22 +132,6 @@ export const parseOptionalJsonConfig = (
     return { success: false, error: zodErrors.trim() };
   }
   return { success: false, error: error.message };
-};
-
-const logConfiguration = (
-  context: LocalContext,
-  config: ResolvedConfig | PartialResolvedConfig,
-): void => {
-  if (config.verbose) {
-    context.process.stdout.write("Configuration resolved:\n");
-    context.process.stdout.write(`  repo_url: ${config.repo_url}\n`);
-    context.process.stdout.write(`  repo_dir: ${config.repo_dir}\n`);
-    context.process.stdout.write(`  repo_base_dir: ${config.repo_base_dir}\n`);
-    context.process.stdout.write(`  patches_dir: ${config.patches_dir}\n`);
-    context.process.stdout.write(`  ref: ${config.ref}\n`);
-    context.process.stdout.write(`  verbose: ${config.verbose}\n`);
-    context.process.stdout.write(`  dry_run: ${config.dry_run}\n`);
-  }
 };
 
 export const createMergedConfig = ({
@@ -315,23 +297,4 @@ const calcError = ({
   }
 
   return { success: true };
-};
-
-export const resolveConfig = async (
-  context: LocalContext,
-  flags: SharedFlags,
-  requiredFields: JsonKey[],
-): Promise<PartialResolvedConfig | ResolvedConfig> => {
-  const result = createMergedConfig({
-    flags,
-    requiredFields,
-    onConfigMerged: (config) => logConfiguration(context, config),
-  });
-
-  if (!result.success) {
-    context.process.stderr.write(result.error);
-    context.process.exit(1);
-  }
-
-  return result.mergedConfig;
 };

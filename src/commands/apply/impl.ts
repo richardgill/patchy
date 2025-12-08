@@ -1,8 +1,8 @@
 import { existsSync } from "node:fs";
 import { copyFile, mkdir, readFile, writeFile } from "node:fs/promises";
 import path from "node:path";
-import { resolveConfig } from "~/config/resolver";
-import type { ApplyCommandFlags, ResolvedConfig } from "~/config/types";
+import { createMergedConfig } from "~/config/resolver";
+import type { ApplyCommandFlags } from "~/config/types";
 import type { LocalContext } from "~/context";
 import { getAllFiles } from "~/lib/fs";
 import { applyDiff } from "./apply-diff";
@@ -81,63 +81,84 @@ export default async function (
   this: LocalContext,
   flags: ApplyCommandFlags,
 ): Promise<void> {
-  const config = (await resolveConfig(this, flags, [
-    "repo_base_dir",
-    "repo_dir",
-    "patches_dir",
-  ])) as ResolvedConfig;
+  try {
+    const result = createMergedConfig({
+      flags,
+      requiredFields: ["repo_base_dir", "repo_dir", "patches_dir"],
+    });
 
-  if (config.dry_run) {
+    if (!result.success) {
+      this.process.stderr.write(result.error);
+      this.process.exit(1);
+      return;
+    }
+
+    const config = result.mergedConfig;
+    const absolutePatchesDir = config.absolutePatchesDir ?? "";
+    const absoluteRepoDir = config.absoluteRepoDir ?? "";
+
+    if (config.dry_run) {
+      this.process.stdout.write(
+        "[DRY RUN] Would apply patches from " +
+          `${config.patches_dir} to ${config.repo_dir}\n`,
+      );
+    }
+
+    const patchFiles = await collectPatchToApplys(
+      absolutePatchesDir,
+      absoluteRepoDir,
+    );
+
+    if (patchFiles.length === 0) {
+      this.process.stdout.write("No patch files found.\n");
+      return;
+    }
+
+    if (config.dry_run) {
+      this.process.stdout.write(
+        `\nWould apply ${patchFiles.length} file(s):\n`,
+      );
+      for (const patchFile of patchFiles) {
+        const action = patchFile.type === "copy" ? "Copy" : "Apply diff";
+        this.process.stdout.write(`  ${action}: ${patchFile.relativePath}\n`);
+      }
+      return;
+    }
+
     this.process.stdout.write(
-      "[DRY RUN] Would apply patches from " +
-        `${config.patches_dir} to ${config.repo_dir}\n`,
+      `Applying ${patchFiles.length} patch file(s)...\n`,
     );
-  }
 
-  const patchFiles = await collectPatchToApplys(
-    config.absolutePatchesDir,
-    config.absoluteRepoDir,
-  );
+    const errors: Array<{ file: string; error: string }> = [];
 
-  if (patchFiles.length === 0) {
-    this.process.stdout.write("No patch files found.\n");
-    return;
-  }
-
-  if (config.dry_run) {
-    this.process.stdout.write(`\nWould apply ${patchFiles.length} file(s):\n`);
     for (const patchFile of patchFiles) {
-      const action = patchFile.type === "copy" ? "Copy" : "Apply diff";
-      this.process.stdout.write(`  ${action}: ${patchFile.relativePath}\n`);
+      const patchResult = await applyPatch(
+        patchFile,
+        config.verbose,
+        this.process.stdout as NodeJS.WriteStream,
+      );
+      if (!patchResult.success && patchResult.error) {
+        errors.push({ file: patchFile.relativePath, error: patchResult.error });
+      }
     }
-    return;
-  }
 
-  this.process.stdout.write(`Applying ${patchFiles.length} patch file(s)...\n`);
+    if (errors.length > 0) {
+      this.process.stderr.write(`\nErrors occurred while applying patches:\n`);
+      for (const { file, error } of errors) {
+        this.process.stderr.write(`  ${file}: ${error}\n`);
+      }
+      this.process.exit(1);
+      return;
+    }
 
-  const errors: Array<{ file: string; error: string }> = [];
-
-  for (const patchFile of patchFiles) {
-    const result = await applyPatch(
-      patchFile,
-      config.verbose,
-      this.process.stdout as NodeJS.WriteStream,
+    this.process.stdout.write(
+      `Successfully applied ${patchFiles.length} patch file(s).\n`,
     );
-    if (!result.success && result.error) {
-      errors.push({ file: patchFile.relativePath, error: result.error });
+  } catch (error) {
+    if (error instanceof Error && error.name === "ProcessExitError") {
+      throw error;
     }
+    this.process.stderr.write(`Error: ${error}\n`);
+    this.process.exit(1);
   }
-
-  if (errors.length > 0) {
-    this.process.stderr.write(`\nErrors occurred while applying patches:\n`);
-    for (const { file, error } of errors) {
-      this.process.stderr.write(`  ${file}: ${error}\n`);
-    }
-    this.process.exit?.(1);
-    return;
-  }
-
-  this.process.stdout.write(
-    `Successfully applied ${patchFiles.length} patch file(s).\n`,
-  );
 }
