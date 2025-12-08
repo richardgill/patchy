@@ -1,7 +1,7 @@
 import { mkdirSync, writeFileSync } from "node:fs";
 import path from "node:path";
-import { simpleGit } from "simple-git";
 import { beforeEach, describe, expect, it } from "vitest";
+import { createTestGitClient } from "~/lib/git";
 import {
   assertFailedCommand,
   assertSuccessfulCommand,
@@ -11,22 +11,8 @@ import {
   stabilizeTempDir,
 } from "./test-utils";
 
-const getCleanTestGitEnv = (): NodeJS.ProcessEnv =>
-  Object.fromEntries(
-    Object.entries(process.env).filter(
-      ([key]) => !key.startsWith("GIT_") && key !== "LEFTHOOK",
-    ),
-  );
-
-const testGitClient = (repoDir: string) =>
-  simpleGit({
-    baseDir: repoDir,
-    binary: "git",
-    maxConcurrentProcesses: 6,
-  }).env({ ...getCleanTestGitEnv(), LEFTHOOK: "0" });
-
 const initGitRepo = async (repoDir: string): Promise<void> => {
-  const git = testGitClient(repoDir);
+  const git = createTestGitClient(repoDir);
   await git.init();
   await git.addConfig("user.email", "test@test.com");
   await git.addConfig("user.name", "Test User");
@@ -39,7 +25,7 @@ const createBranch = async (
   repoDir: string,
   branchName: string,
 ): Promise<void> => {
-  const git = testGitClient(repoDir);
+  const git = createTestGitClient(repoDir);
   await git.checkoutLocalBranch(branchName);
   writeFileSync(
     path.join(repoDir, "branch-file.txt"),
@@ -51,18 +37,18 @@ const createBranch = async (
 };
 
 const createTag = async (repoDir: string, tagName: string): Promise<void> => {
-  const git = testGitClient(repoDir);
+  const git = createTestGitClient(repoDir);
   await git.addTag(tagName);
 };
 
 const getCurrentBranch = async (repoDir: string): Promise<string> => {
-  const git = testGitClient(repoDir);
+  const git = createTestGitClient(repoDir);
   const branch = await git.revparse(["--abbrev-ref", "HEAD"]);
   return branch.trim();
 };
 
 const getCurrentCommit = async (repoDir: string): Promise<string> => {
-  const git = testGitClient(repoDir);
+  const git = createTestGitClient(repoDir);
   const commit = await git.revparse(["HEAD"]);
   return commit.trim();
 };
@@ -178,9 +164,7 @@ describe("patchy repo checkout", () => {
       tmpDir,
     );
 
-    expect(result.stderr).toContain(
-      'Error: Invalid git ref "non-existent-ref"',
-    );
+    expect(result.stderr).toContain('Invalid git ref "non-existent-ref"');
     expect(result.stderr).toContain(
       "Please specify a valid branch, tag, or commit SHA",
     );
