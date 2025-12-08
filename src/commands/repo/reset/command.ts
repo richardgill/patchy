@@ -8,6 +8,7 @@ const resetFlags = pick(sharedFlags, [
   "config",
   "verbose",
   "dry-run",
+  "yes",
 ]);
 
 export const resetCommand = buildCommand({

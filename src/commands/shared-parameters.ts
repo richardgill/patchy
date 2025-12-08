@@ -46,4 +46,9 @@ export const sharedFlags = {
     brief: "Simulate the command without writing files [env: PATCHY_DRY_RUN]",
     optional: true,
   },
+  yes: {
+    kind: "boolean",
+    brief: "Skip confirmation prompts",
+    optional: true,
+  },
 } as const;

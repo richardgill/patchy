@@ -7,6 +7,7 @@ export type SharedFlags = {
   config?: string;
   verbose?: boolean;
   "dry-run"?: boolean;
+  yes?: boolean;
 };
 
 export type InitCommandFlags = SharedFlags & {
@@ -31,7 +32,7 @@ export type CloneCommandFlags = Pick<
 
 export type ResetCommandFlags = Pick<
   SharedFlags,
-  "repo-base-dir" | "repo-dir" | "config" | "verbose" | "dry-run"
+  "repo-base-dir" | "repo-dir" | "config" | "verbose" | "dry-run" | "yes"
 >;
 
 // Note: underscore_case property names match JSON config keys
