@@ -40,14 +40,14 @@ npm install -g @richardgill/patchy
 
 These flags are accepted by **all commands**:
 
-| Flag              | Description                                      |
-| ----------------- | ------------------------------------------------ |
-| `--repo-dir`      | Path to the Git repo you're patching             |
-| `--repo-base-dir` | Parent directory where upstream repos are cloned |
-| `--patches-dir`   | Path to your patch files (default: `./patches/`)   |
-| `--config`        | JSON config file (default: `patchy.json`)        |
-| `--verbose`       | Enable verbose log output                        |
-| `--dry-run`       | Simulate the command without writing files       |
+| CLI Flag          | Env Variable           | Description                                      |
+| ----------------- | ---------------------- | ------------------------------------------------ |
+| `--repo-dir`      | `PATCHY_REPO_DIR`      | Path to the Git repo you're patching             |
+| `--repo-base-dir` | `PATCHY_REPO_BASE_DIR` | Parent directory where upstream repos are cloned |
+| `--patches-dir`   | `PATCHY_PATCHES_DIR`   | Path to your patch files (default: `./patches/`) |
+| `--config`        | `PATCHY_CONFIG`        | JSON config file (default: `patchy.json`)        |
+| `--verbose`       | `PATCHY_VERBOSE`       | Enable verbose log output                        |
+| `--dry-run`       | `PATCHY_DRY_RUN`       | Simulate the command without writing files       |
 
 > CLI flags override all values in `patchy.json`.
 
@@ -63,7 +63,7 @@ patchy apply [--repo-dir] [--patches-dir] [--dry-run]
 
 ### `patchy generate`
 
-Generate `.diff` files and new full files into `./patches/` based on current dirty changes in `repo_dir`.
+Generate `.diff` files and new full files into `./patches/` based on current `git diff` in `repo_dir`.
 
 ```sh
 patchy generate [--repo-dir] [--patches-dir] [--dry-run]
@@ -107,10 +107,13 @@ Optional file to set default values:
 }
 ```
 
+All options may be set with environment variables as well e.g. `PATCHY_REPO_URL`.
+
 ### Precedence Order
 
 1. CLI flags
-2. `--config` (defaults to `./patchy.json`)
+2. Environment variables
+3. `--config` (defaults to `./patchy.json`)
 
 ## Example Workflow
 

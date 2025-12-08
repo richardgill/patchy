@@ -1,4 +1,4 @@
-import { mkdirSync, writeFileSync } from "node:fs";
+import { existsSync, mkdirSync, readFileSync, writeFileSync } from "node:fs";
 import path from "node:path";
 import { beforeEach, describe, expect, it } from "vitest";
 import {
@@ -44,7 +44,8 @@ describe("patchy apply", () => {
         ref: main
         verbose: true
         dry_run: true
-      [DRY RUN] Would apply patches from patches to main"
+      [DRY RUN] Would apply patches from patches to main
+      No patch files found."
     `);
   });
 
@@ -79,7 +80,8 @@ describe("patchy apply", () => {
         ref: main
         verbose: true
         dry_run: true
-      [DRY RUN] Would apply patches from my-patches to upstream"
+      [DRY RUN] Would apply patches from my-patches to upstream
+      No patch files found."
     `);
   });
 
@@ -114,7 +116,8 @@ describe("patchy apply", () => {
         ref: main
         verbose: true
         dry_run: true
-      [DRY RUN] Would apply patches from cli-patches to cli-repo"
+      [DRY RUN] Would apply patches from cli-patches to cli-repo
+      No patch files found."
     `);
   });
 
@@ -224,7 +227,8 @@ describe("patchy apply", () => {
         ref: main
         verbose: true
         dry_run: true
-      [DRY RUN] Would apply patches from ./patches/ to repo"
+      [DRY RUN] Would apply patches from ./patches/ to repo
+      No patch files found."
     `);
   });
 
@@ -257,7 +261,8 @@ describe("patchy apply", () => {
         ref: main
         verbose: true
         dry_run: true
-      [DRY RUN] Would apply patches from ./patches/ to repo"
+      [DRY RUN] Would apply patches from ./patches/ to repo
+      No patch files found."
     `);
   });
 
@@ -292,7 +297,8 @@ describe("patchy apply", () => {
         ref: main
         verbose: true
         dry_run: true
-      [DRY RUN] Would apply patches from ./patches/ to repo"
+      [DRY RUN] Would apply patches from ./patches/ to repo
+      No patch files found."
     `);
   });
 
@@ -344,7 +350,8 @@ describe("patchy apply", () => {
         ref: custom-branch
         verbose: true
         dry_run: true
-      [DRY RUN] Would apply patches from ./patches/ to repo"
+      [DRY RUN] Would apply patches from ./patches/ to repo
+      No patch files found."
     `);
   });
 
@@ -377,7 +384,8 @@ describe("patchy apply", () => {
         ref: main
         verbose: true
         dry_run: true
-      [DRY RUN] Would apply patches from ./patches/ to my-repo/nested-repo"
+      [DRY RUN] Would apply patches from ./patches/ to my-repo/nested-repo
+      No patch files found."
     `);
   });
 
@@ -410,7 +418,8 @@ describe("patchy apply", () => {
         ref: main
         verbose: true
         dry_run: true
-      [DRY RUN] Would apply patches from ./patches/ to repoDir1"
+      [DRY RUN] Would apply patches from ./patches/ to repoDir1
+      No patch files found."
     `);
   });
 
@@ -465,7 +474,8 @@ describe("patchy apply", () => {
         ref: cli-ref
         verbose: true
         dry_run: true
-      [DRY RUN] Would apply patches from ./patches/ to repo"
+      [DRY RUN] Would apply patches from ./patches/ to repo
+      No patch files found."
     `);
   });
 
@@ -502,7 +512,8 @@ describe("patchy apply", () => {
         ref: main
         verbose: true
         dry_run: true
-      [DRY RUN] Would apply patches from <TEST_DIR>/absolute-patches to repo"
+      [DRY RUN] Would apply patches from <TEST_DIR>/absolute-patches to repo
+      No patch files found."
     `);
   });
 
@@ -711,5 +722,284 @@ describe("patchy apply", () => {
         verbose: Invalid input: expected boolean, received string
         dry_run: Invalid input: expected boolean, received number"
     `);
+  });
+
+  it("should copy new files from patches to repo", async () => {
+    const ctx = await setupTestWithConfig({
+      tmpDir,
+      createDirectories: {
+        repoBaseDir: "repos",
+        repoDir: "main",
+        patchesDir: "patches",
+      },
+      jsonConfig: {
+        repo_url: "https://github.com/example/test-repo.git",
+        repo_base_dir: "repos",
+        repo_dir: "main",
+      },
+    });
+
+    const patchesDir = ctx.absolutePatchesDir as string;
+    const repoDir = ctx.absoluteRepoDir as string;
+
+    const patchFile = path.join(patchesDir, "newFile.ts");
+    writeFileSync(patchFile, 'export const hello = "world";');
+
+    const result = await assertSuccessfulCommand(
+      `patchy apply --verbose`,
+      tmpDir,
+    );
+
+    expect(result.stdout).toContain("Applying 1 patch file(s)...");
+    expect(result.stdout).toContain("Copied: newFile.ts");
+    expect(result.stdout).toContain("Successfully applied 1 patch file(s).");
+
+    const targetFile = path.join(repoDir, "newFile.ts");
+    expect(existsSync(targetFile)).toBe(true);
+    expect(readFileSync(targetFile, "utf-8")).toBe(
+      'export const hello = "world";',
+    );
+  });
+
+  it("should copy new files in nested directories", async () => {
+    const ctx = await setupTestWithConfig({
+      tmpDir,
+      createDirectories: {
+        repoBaseDir: "repos",
+        repoDir: "main",
+        patchesDir: "patches",
+      },
+      jsonConfig: {
+        repo_url: "https://github.com/example/test-repo.git",
+        repo_base_dir: "repos",
+        repo_dir: "main",
+      },
+    });
+
+    const patchesDir = ctx.absolutePatchesDir as string;
+    const repoDir = ctx.absoluteRepoDir as string;
+
+    const nestedPatchDir = path.join(patchesDir, "src", "utils");
+    mkdirSync(nestedPatchDir, { recursive: true });
+    const patchFile = path.join(nestedPatchDir, "helper.ts");
+    writeFileSync(
+      patchFile,
+      "export const add = (a: number, b: number) => a + b;",
+    );
+
+    const result = await assertSuccessfulCommand(
+      `patchy apply --verbose`,
+      tmpDir,
+    );
+
+    expect(result.stdout).toContain("Copied: src/utils/helper.ts");
+
+    const targetFile = path.join(repoDir, "src", "utils", "helper.ts");
+    expect(existsSync(targetFile)).toBe(true);
+    expect(readFileSync(targetFile, "utf-8")).toBe(
+      "export const add = (a: number, b: number) => a + b;",
+    );
+  });
+
+  it("should apply diff files to existing files", async () => {
+    const ctx = await setupTestWithConfig({
+      tmpDir,
+      createDirectories: {
+        repoBaseDir: "repos",
+        repoDir: "main",
+        patchesDir: "patches",
+      },
+      jsonConfig: {
+        repo_url: "https://github.com/example/test-repo.git",
+        repo_base_dir: "repos",
+        repo_dir: "main",
+      },
+    });
+
+    const patchesDir = ctx.absolutePatchesDir as string;
+    const repoDir = ctx.absoluteRepoDir as string;
+
+    const targetFile = path.join(repoDir, "existing.ts");
+    writeFileSync(targetFile, "const value = 1;\nconst other = 2;\n");
+
+    const diffFile = path.join(patchesDir, "existing.ts.diff");
+    writeFileSync(
+      diffFile,
+      `--- a/existing.ts
++++ b/existing.ts
+@@ -1,2 +1,2 @@
+-const value = 1;
++const value = 42;
+ const other = 2;
+`,
+    );
+
+    const result = await assertSuccessfulCommand(
+      `patchy apply --verbose`,
+      tmpDir,
+    );
+
+    expect(result.stdout).toContain("Applied diff: existing.ts.diff");
+
+    expect(readFileSync(targetFile, "utf-8")).toBe(
+      "const value = 42;\nconst other = 2;\n",
+    );
+  });
+
+  it("should handle mixed files (copies and diffs)", async () => {
+    const ctx = await setupTestWithConfig({
+      tmpDir,
+      createDirectories: {
+        repoBaseDir: "repos",
+        repoDir: "main",
+        patchesDir: "patches",
+      },
+      jsonConfig: {
+        repo_url: "https://github.com/example/test-repo.git",
+        repo_base_dir: "repos",
+        repo_dir: "main",
+      },
+    });
+
+    const patchesDir = ctx.absolutePatchesDir as string;
+    const repoDir = ctx.absoluteRepoDir as string;
+
+    const existingFile = path.join(repoDir, "existing.ts");
+    writeFileSync(existingFile, "const x = 1;\n");
+
+    const newPatchFile = path.join(patchesDir, "new.ts");
+    writeFileSync(newPatchFile, "export const y = 2;");
+
+    const diffFile = path.join(patchesDir, "existing.ts.diff");
+    writeFileSync(
+      diffFile,
+      `--- a/existing.ts
++++ b/existing.ts
+@@ -1 +1 @@
+-const x = 1;
++const x = 100;
+`,
+    );
+
+    const result = await assertSuccessfulCommand(
+      `patchy apply --verbose`,
+      tmpDir,
+    );
+
+    expect(result.stdout).toContain("Applying 2 patch file(s)...");
+    expect(result.stdout).toContain("Successfully applied 2 patch file(s).");
+
+    expect(readFileSync(existingFile, "utf-8")).toBe("const x = 100;\n");
+    const newTargetFile = path.join(repoDir, "new.ts");
+    expect(readFileSync(newTargetFile, "utf-8")).toBe("export const y = 2;");
+  });
+
+  it("should report error when diff target file does not exist", async () => {
+    const ctx = await setupTestWithConfig({
+      tmpDir,
+      createDirectories: {
+        repoBaseDir: "repos",
+        repoDir: "main",
+        patchesDir: "patches",
+      },
+      jsonConfig: {
+        repo_url: "https://github.com/example/test-repo.git",
+        repo_base_dir: "repos",
+        repo_dir: "main",
+      },
+    });
+
+    const patchesDir = ctx.absolutePatchesDir as string;
+
+    const diffFile = path.join(patchesDir, "missing.ts.diff");
+    writeFileSync(
+      diffFile,
+      `--- a/missing.ts
++++ b/missing.ts
+@@ -1 +1 @@
+-old
++new
+`,
+    );
+
+    const result = await assertFailedCommand(`patchy apply`, tmpDir);
+
+    expect(result.stderr).toContain("Errors occurred while applying patches:");
+    expect(result.stderr).toContain(
+      "missing.ts.diff: Target file does not exist",
+    );
+  });
+
+  it("should list what would be done in dry-run mode", async () => {
+    const ctx = await setupTestWithConfig({
+      tmpDir,
+      createDirectories: {
+        repoBaseDir: "repos",
+        repoDir: "main",
+        patchesDir: "patches",
+      },
+      jsonConfig: {
+        repo_url: "https://github.com/example/test-repo.git",
+        repo_base_dir: "repos",
+        repo_dir: "main",
+      },
+    });
+
+    const patchesDir = ctx.absolutePatchesDir as string;
+    const repoDir = ctx.absoluteRepoDir as string;
+
+    const newFile = path.join(patchesDir, "newFile.ts");
+    writeFileSync(newFile, "content");
+
+    const diffFile = path.join(patchesDir, "existing.ts.diff");
+    writeFileSync(diffFile, "diff content");
+
+    const result = await assertSuccessfulCommand(
+      `patchy apply --dry-run`,
+      tmpDir,
+    );
+
+    expect(result.stdout).toContain("[DRY RUN]");
+    expect(result.stdout).toContain("Would apply 2 file(s):");
+    expect(result.stdout).toContain("Apply diff: existing.ts.diff");
+    expect(result.stdout).toContain("Copy: newFile.ts");
+
+    expect(existsSync(path.join(repoDir, "newFile.ts"))).toBe(false);
+  });
+
+  it("should preserve file content when copying", async () => {
+    const ctx = await setupTestWithConfig({
+      tmpDir,
+      createDirectories: {
+        repoBaseDir: "repos",
+        repoDir: "main",
+        patchesDir: "patches",
+      },
+      jsonConfig: {
+        repo_url: "https://github.com/example/test-repo.git",
+        repo_base_dir: "repos",
+        repo_dir: "main",
+      },
+    });
+
+    const complexContent = `import { foo } from "bar";
+
+export const component = () => {
+  return <div>Hello</div>;
+};
+
+// Special characters: "quotes", 'single', \`backticks\`
+// Unicode: 你好 🎉
+`;
+    const patchesDir = ctx.absolutePatchesDir as string;
+    const repoDir = ctx.absoluteRepoDir as string;
+
+    const patchFile = path.join(patchesDir, "complex.tsx");
+    writeFileSync(patchFile, complexContent);
+
+    await assertSuccessfulCommand(`patchy apply`, tmpDir);
+
+    const targetFile = path.join(repoDir, "complex.tsx");
+    expect(readFileSync(targetFile, "utf-8")).toBe(complexContent);
   });
 });
