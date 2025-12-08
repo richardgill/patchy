@@ -34,23 +34,20 @@ const gitClient = (repoDir: string) =>
   }).env(getCleanGitEnv());
 
 const getGitChanges = async (repoDir: string): Promise<GitChange[]> => {
-  const changes: GitChange[] = [];
   const git = gitClient(repoDir);
 
   const diffSummary = await git.diffSummary(["HEAD"]);
-  for (const file of diffSummary.files) {
-    changes.push({ type: "modified", path: file.file });
-  }
+  const modifiedFiles: GitChange[] = diffSummary.files.map((file) => ({
+    type: "modified",
+    path: file.file,
+  }));
 
   const status = await git.status();
-  for (const file of status.not_added) {
-    changes.push({ type: "new", path: file });
-  }
-  for (const file of status.created) {
-    changes.push({ type: "new", path: file });
-  }
+  const newFiles: GitChange[] = [...status.not_added, ...status.created].map(
+    (file) => ({ type: "new", path: file }),
+  );
 
-  return changes;
+  return [...modifiedFiles, ...newFiles];
 };
 
 const generateDiff = async (
