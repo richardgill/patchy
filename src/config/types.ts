@@ -17,6 +17,13 @@ export type ApplyCommandFlags = SharedFlags;
 
 export type GenerateCommandFlags = SharedFlags;
 
+export type CheckoutCommandFlags = Pick<
+  SharedFlags,
+  "repo-dir" | "repo-base-dir" | "config" | "verbose"
+> & {
+  ref: string;
+};
+
 export type CloneCommandFlags = Pick<
   SharedFlags,
   "repo-url" | "repo-base-dir" | "ref" | "config" | "verbose" | "dry-run"
