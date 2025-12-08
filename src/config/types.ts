@@ -53,42 +53,49 @@ export const CONFIG_FIELD_METADATA = {
   repo_url: {
     flag: "repo-url",
     env: "PATCHY_REPO_URL",
+    type: "string",
     name: "Repository URL",
     example: "https://github.com/user/repo.git",
   },
   repo_dir: {
     flag: "repo-dir",
     env: "PATCHY_REPO_DIR",
+    type: "string",
     name: "Repository directory",
     example: "./repo",
   },
   repo_base_dir: {
     flag: "repo-base-dir",
     env: "PATCHY_REPO_BASE_DIR",
+    type: "string",
     name: "Repository base directory",
     example: "./upstream",
   },
   patches_dir: {
     flag: "patches-dir",
     env: "PATCHY_PATCHES_DIR",
+    type: "string",
     name: "Patches directory",
     example: "./patches",
   },
   ref: {
     flag: "ref",
     env: "PATCHY_REF",
+    type: "string",
     name: "Git reference",
     example: "main",
   },
   verbose: {
     flag: "verbose",
     env: "PATCHY_VERBOSE",
+    type: "boolean",
     name: "Verbose output",
     example: "true",
   },
   dry_run: {
     flag: "dry-run",
     env: "PATCHY_DRY_RUN",
+    type: "boolean",
     name: "Dry run mode",
     example: "true",
   },
@@ -97,6 +104,7 @@ export const CONFIG_FIELD_METADATA = {
   {
     flag: keyof SharedFlags;
     env: string;
+    type: "boolean" | "string";
     name: string;
     example: string;
   }
