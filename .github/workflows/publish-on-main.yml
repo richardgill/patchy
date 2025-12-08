@@ -28,9 +28,6 @@ jobs:
         with:
           fetch-depth: 0
 
-      - name: Setup mise
-        uses: jdx/mise-action@v3
-
       - name: Setup pnpm
         uses: pnpm/action-setup@v4
 
@@ -41,7 +38,7 @@ jobs:
           cache: "pnpm"
 
       - name: Install dependencies
-        run: pnpm install --frozen-lockfile
+        run: pnpm install --frozen-lockfile --ignore-scripts
 
       - name: Create Release Pull Request or Publish
         id: changesets
