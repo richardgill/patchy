@@ -32,7 +32,9 @@ export type CloneCommandFlags = Pick<
 export type ResetCommandFlags = Pick<
   SharedFlags,
   "repo-base-dir" | "repo-dir" | "config" | "verbose"
->;
+> & {
+  yes?: boolean;
+};
 
 // Note: underscore_case property names match JSON config keys
 export type CompleteJsonConfig = {

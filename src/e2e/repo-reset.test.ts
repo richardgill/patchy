@@ -62,7 +62,7 @@ describe("patchy repo reset", () => {
     expect(contentBefore).toBe("modified content");
 
     await assertSuccessfulCommand(
-      `patchy repo reset --repo-base-dir repos --repo-dir test-repo`,
+      `patchy repo reset --repo-base-dir repos --repo-dir test-repo --yes`,
       tmpDir,
     );
 
@@ -81,7 +81,7 @@ describe("patchy repo reset", () => {
     await createInitialCommit(repoPath, "test.txt", "content");
 
     const result = await assertSuccessfulCommand(
-      `patchy repo reset --repo-base-dir repos --repo-dir test-repo`,
+      `patchy repo reset --repo-base-dir repos --repo-dir test-repo --yes`,
       tmpDir,
     );
 
