@@ -1,13 +1,10 @@
-import { exec } from "node:child_process";
 import { existsSync, mkdirSync, writeFileSync } from "node:fs";
 import { copyFile } from "node:fs/promises";
 import { dirname, join } from "node:path";
-import { promisify } from "node:util";
+import { simpleGit } from "simple-git";
 import { resolveConfig } from "~/config/resolver";
 import type { GenerateCommandFlags, ResolvedConfig } from "~/config/types";
 import type { LocalContext } from "~/context";
-
-const execAsync = promisify(exec);
 
 const getCleanGitEnv = (): NodeJS.ProcessEnv => {
   return Object.fromEntries(
@@ -20,41 +17,28 @@ type GitChange = {
   path: string;
 };
 
+const createGit = (repoDir: string) =>
+  simpleGit({
+    baseDir: repoDir,
+    binary: "git",
+    maxConcurrentProcesses: 6,
+  }).env(getCleanGitEnv());
+
 const getGitChanges = async (repoDir: string): Promise<GitChange[]> => {
   const changes: GitChange[] = [];
-  const env = getCleanGitEnv();
+  const git = createGit(repoDir);
 
-  const { stdout: diffOutput } = await execAsync("git diff --name-only HEAD", {
-    cwd: repoDir,
-    env,
-  });
-  const modifiedFiles = diffOutput
-    .split("\n")
-    .filter((line) => line.trim().length > 0);
-
-  for (const file of modifiedFiles) {
-    changes.push({ type: "modified", path: file });
+  const diffSummary = await git.diffSummary(["HEAD"]);
+  for (const file of diffSummary.files) {
+    changes.push({ type: "modified", path: file.file });
   }
 
-  const { stdout: statusOutput } = await execAsync(
-    "git status --porcelain -uall",
-    { cwd: repoDir, env },
-  );
-  const statusLines = statusOutput
-    .split("\n")
-    .filter((line) => line.trim().length > 0);
-
-  for (const line of statusLines) {
-    const status = line.substring(0, 2);
-    const filePath = line.substring(3).trim();
-
-    if (filePath.endsWith("/")) {
-      continue;
-    }
-
-    if (status === "??" || status === "A ") {
-      changes.push({ type: "new", path: filePath });
-    }
+  const status = await git.status();
+  for (const file of status.not_added) {
+    changes.push({ type: "new", path: file });
+  }
+  for (const file of status.created) {
+    changes.push({ type: "new", path: file });
   }
 
   return changes;
@@ -64,11 +48,8 @@ const generateDiff = async (
   repoDir: string,
   filePath: string,
 ): Promise<string> => {
-  const { stdout } = await execAsync(`git diff HEAD -- "${filePath}"`, {
-    cwd: repoDir,
-    env: getCleanGitEnv(),
-  });
-  return stdout;
+  const git = createGit(repoDir);
+  return git.diff(["HEAD", "--", filePath]);
 };
 
 const ensureDir = (dirPath: string): void => {
