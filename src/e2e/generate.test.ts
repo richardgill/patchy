@@ -2,6 +2,7 @@ import { existsSync, mkdirSync, readFileSync, writeFileSync } from "node:fs";
 import path from "node:path";
 import { simpleGit } from "simple-git";
 import { beforeEach, describe, expect, it } from "vitest";
+import { assertDefined } from "~/lib/assert";
 import {
   assertFailedCommand,
   assertSuccessfulCommand,
@@ -48,13 +49,6 @@ const modifyFile = (
     mkdirSync(dir, { recursive: true });
   }
   writeFileSync(fullPath, content);
-};
-
-const assertDefined = <T>(value: T | undefined, name: string): T => {
-  if (value === undefined) {
-    throw new Error(`Expected ${name} to be defined`);
-  }
-  return value;
 };
 
 describe("patchy generate", () => {
