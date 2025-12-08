@@ -1,9 +1,16 @@
 import { buildCommand } from "@stricli/core";
-import { omit } from "es-toolkit";
+import { pick } from "es-toolkit";
 import { sharedFlags } from "~/commands/shared-parameters";
 
 const cloneFlags = {
-  ...omit(sharedFlags, ["repo-dir", "patches-dir"]),
+  ...pick(sharedFlags, [
+    "repo-url",
+    "repo-base-dir",
+    "ref",
+    "config",
+    "verbose",
+    "dry-run",
+  ]),
 } as const;
 
 export const cloneCommand = buildCommand({

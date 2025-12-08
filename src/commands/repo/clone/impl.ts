@@ -106,6 +106,7 @@ export default async function (
       chalk.green(`Successfully cloned repository to ${targetDir}\n`),
     );
   } catch (error) {
+    // Re-throw intentional exits (in tests, process.exit throws ProcessExitError)
     if (error instanceof Error && error.name === "ProcessExitError") {
       throw error;
     }
