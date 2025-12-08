@@ -3,7 +3,7 @@ import { writeFile } from "node:fs/promises";
 import { join } from "node:path";
 import { beforeEach, describe, expect, it } from "vitest";
 import { assertDefined } from "~/lib/assert";
-import { createGitClient } from "~/lib/git";
+import { createTestGitClient } from "~/lib/git";
 import {
   assertFailedCommand,
   assertSuccessfulCommand,
@@ -20,7 +20,7 @@ describe("patchy repo reset", () => {
   });
 
   const initGitRepo = async (repoPath: string) => {
-    const git = createGitClient(repoPath);
+    const git = createTestGitClient(repoPath);
     await git.init();
     await git.addConfig("user.email", "test@test.com");
     await git.addConfig("user.name", "Test User");
@@ -33,7 +33,7 @@ describe("patchy repo reset", () => {
   ) => {
     const filePath = join(repoPath, filename);
     await writeFile(filePath, content);
-    const git = createGitClient(repoPath);
+    const git = createTestGitClient(repoPath);
     await git.add(filename);
     await git.commit("initial commit");
   };
