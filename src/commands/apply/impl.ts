@@ -1,6 +1,7 @@
 import { existsSync } from "node:fs";
 import { copyFile, mkdir, readFile, writeFile } from "node:fs/promises";
 import path from "node:path";
+import { DEFAULT_FUZZ_FACTOR } from "~/config/defaults";
 import { createMergedConfig } from "~/config/resolver";
 import type { ApplyCommandFlags } from "~/config/types";
 import type { LocalContext } from "~/context";
@@ -40,6 +41,7 @@ const collectPatchToApplys = async (
 const applyPatch = async (
   patchFile: PatchToApply,
   verbose: boolean,
+  fuzzFactor: number,
   stdout: NodeJS.WriteStream,
 ): Promise<{ success: boolean; error?: string }> => {
   try {
@@ -59,7 +61,11 @@ const applyPatch = async (
 
       const diffContent = await readFile(patchFile.absolutePath, "utf-8");
       const originalContent = await readFile(patchFile.targetPath, "utf-8");
-      const patchedContent = applyDiff(originalContent, diffContent);
+      const patchedContent = applyDiff(
+        originalContent,
+        diffContent,
+        fuzzFactor,
+      );
 
       await mkdir(path.dirname(patchFile.targetPath), { recursive: true });
       await writeFile(patchFile.targetPath, patchedContent);
@@ -131,10 +137,13 @@ export default async function (
 
     const errors: Array<{ file: string; error: string }> = [];
 
+    const fuzzFactor = flags["fuzz-factor"] ?? DEFAULT_FUZZ_FACTOR;
+
     for (const patchFile of patchFiles) {
       const patchResult = await applyPatch(
         patchFile,
         config.verbose,
+        fuzzFactor,
         this.process.stdout as NodeJS.WriteStream,
       );
       if (!patchResult.success && patchResult.error) {

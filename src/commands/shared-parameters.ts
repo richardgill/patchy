@@ -46,6 +46,20 @@ export const sharedFlags = {
     brief: "Simulate the command without writing files [env: PATCHY_DRY_RUN]",
     optional: true,
   },
+} as const;
+
+export const applyFlags = {
+  ...sharedFlags,
+  "fuzz-factor": {
+    kind: "parsed",
+    parse: Number,
+    brief:
+      "Fuzz factor for patch application (higher = more lenient) [env: PATCHY_FUZZ_FACTOR]",
+    optional: true,
+  },
+} as const;
+
+export const yesFlag = {
   yes: {
     kind: "boolean",
     brief: "Skip confirmation prompts",

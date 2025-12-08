@@ -1,15 +1,17 @@
 import { buildCommand } from "@stricli/core";
 import { pick } from "es-toolkit";
-import { sharedFlags } from "~/commands/shared-parameters";
+import { sharedFlags, yesFlag } from "~/commands/shared-parameters";
 
-const resetFlags = pick(sharedFlags, [
-  "repo-base-dir",
-  "repo-dir",
-  "config",
-  "verbose",
-  "dry-run",
-  "yes",
-]);
+const resetFlags = {
+  ...pick(sharedFlags, [
+    "repo-base-dir",
+    "repo-dir",
+    "config",
+    "verbose",
+    "dry-run",
+  ]),
+  ...yesFlag,
+};
 
 export const resetCommand = buildCommand({
   loader: async () => import("./impl"),
