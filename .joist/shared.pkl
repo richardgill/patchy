@@ -1,9 +1,0 @@
-import "https://joist.fsn1.your-objectstorage.com/pkl/Pipeline.pkl" as Pipeline
-
-main = new Pipeline.LocalSystem {
-  allowed_bins = new Listing { "pnpm"; "npm"; "node"; "mise" }
-  use_default_bins = true
-  setup = new Listing {
-    "pnpm install"
-  }
-}
