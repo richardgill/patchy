@@ -349,8 +349,9 @@ describe("patchy generate", () => {
       tmpDir,
     );
 
-    expect(result.stdout).toContain("Configuration resolved:");
-    expect(result.stdout).toContain("repo_base_dir: repos");
-    expect(result.stdout).toContain("repo_dir: upstream");
+    expect(result.stdout).toContain(
+      "Generating patches from upstream to patches",
+    );
+    expect(result.stdout).toContain("Created diff: initial.txt.diff");
   });
 });
