@@ -27,6 +27,12 @@ type ConfigSources = {
   json: JsonConfig;
 };
 
+type ConfigValues<K extends JsonKey> = {
+  flag: JsonConfig[K] | undefined;
+  env: JsonConfig[K] | undefined;
+  json: JsonConfig[K] | undefined;
+};
+
 const getEnvValue = <K extends JsonKey>(
   jsonKey: K,
   env: NodeJS.ProcessEnv,
@@ -43,17 +49,26 @@ const getEnvValue = <K extends JsonKey>(
   return envValue as JsonConfig[K];
 };
 
+const getValuesByKey = <K extends JsonKey>(
+  jsonKey: K,
+  sources: ConfigSources,
+): ConfigValues<K> => {
+  const metadata = CONFIG_FIELD_METADATA[jsonKey];
+  return {
+    flag: sources.flags[metadata.flag as keyof SharedFlags] as
+      | JsonConfig[K]
+      | undefined,
+    env: getEnvValue(jsonKey, sources.env),
+    json: sources.json[jsonKey],
+  };
+};
+
 const getValueByKey = <K extends JsonKey>(
   jsonKey: K,
   sources: ConfigSources,
 ): JsonConfig[K] | undefined => {
-  const metadata = CONFIG_FIELD_METADATA[jsonKey];
-  const flagValue = sources.flags[metadata.flag as keyof SharedFlags] as
-    | JsonConfig[K]
-    | undefined;
-  const envValue = getEnvValue(jsonKey, sources.env);
-  const jsonValue = sources.json[jsonKey];
-  return flagValue ?? envValue ?? jsonValue;
+  const values = getValuesByKey(jsonKey, sources);
+  return values.flag ?? values.env ?? values.json;
 };
 
 const formatSourceLocation = <K extends JsonKey>(
@@ -62,18 +77,16 @@ const formatSourceLocation = <K extends JsonKey>(
   configPath: string,
 ): string => {
   const metadata = CONFIG_FIELD_METADATA[jsonKey];
-  const flagValue = sources.flags[metadata.flag as keyof SharedFlags];
-  const envValue = getEnvValue(jsonKey, sources.env);
-  const jsonValue = sources.json[jsonKey];
+  const values = getValuesByKey(jsonKey, sources);
 
-  if (flagValue) {
-    return `--${metadata.flag} ${flagValue}`;
+  if (values.flag) {
+    return `--${metadata.flag} ${values.flag}`;
   }
-  if (envValue !== undefined) {
+  if (values.env !== undefined) {
     return `${metadata.env}=${sources.env[metadata.env]}`;
   }
-  if (jsonValue) {
-    return `${jsonKey}: ${jsonValue} in ${configPath}`;
+  if (values.json) {
+    return `${jsonKey}: ${values.json} in ${configPath}`;
   }
   return metadata.name;
 };
