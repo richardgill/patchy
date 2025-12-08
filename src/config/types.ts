@@ -17,6 +17,13 @@ export type ApplyCommandFlags = SharedFlags;
 
 export type GenerateCommandFlags = SharedFlags;
 
+export type CheckoutCommandFlags = Pick<
+  SharedFlags,
+  "repo-dir" | "repo-base-dir" | "config" | "verbose"
+> & {
+  ref: string;
+};
+
 // Note: underscore_case property names match JSON config keys
 export type CompleteJsonConfig = {
   repo_url: string;

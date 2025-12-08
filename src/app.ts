@@ -2,12 +2,14 @@ import { buildApplication, buildRouteMap } from "@stricli/core";
 import { applyCommand } from "./commands/apply/command";
 import { generateCommand } from "./commands/generate/command";
 import { initCommand } from "./commands/init/command";
+import { repoRoutes } from "./commands/repo/routes";
 
 const routes = buildRouteMap({
   routes: {
     init: initCommand,
     apply: applyCommand,
     generate: generateCommand,
+    repo: repoRoutes,
   },
   docs: {
     brief: "A CLI tool for managing Git patch workflows",
