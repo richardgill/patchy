@@ -20,7 +20,7 @@
     "changeset-publish": "pnpm build && changeset publish",
     "dev": "bun run src/cli.ts",
     "local-ci": "concurrently --group -p none -n 'check,typecheck,test' 'pnpm run check-fix' 'pnpm run typecheck' 'pnpm run test'",
-    "prepare": "lefthook install",
+    "prepare": "lefthook install && ./scripts/setup-git.sh",
     "typecheck": "tsgo --noEmit",
     "test": "vitest run",
     "test-watch": "vitest --watch",
