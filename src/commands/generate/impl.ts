@@ -6,6 +6,7 @@ import { resolveConfig } from "~/config/resolver";
 import type { GenerateCommandFlags, ResolvedConfig } from "~/config/types";
 import type { LocalContext } from "~/context";
 
+// Removes GIT_* env vars that can interfere when running inside git hooks or other git processes
 const getCleanGitEnv = (): NodeJS.ProcessEnv => {
   return Object.fromEntries(
     Object.entries(process.env).filter(([key]) => !key.startsWith("GIT_")),
@@ -17,7 +18,7 @@ type GitChange = {
   path: string;
 };
 
-const createGit = (repoDir: string) =>
+const gitClient = (repoDir: string) =>
   simpleGit({
     baseDir: repoDir,
     binary: "git",
@@ -26,7 +27,7 @@ const createGit = (repoDir: string) =>
 
 const getGitChanges = async (repoDir: string): Promise<GitChange[]> => {
   const changes: GitChange[] = [];
-  const git = createGit(repoDir);
+  const git = gitClient(repoDir);
 
   const diffSummary = await git.diffSummary(["HEAD"]);
   for (const file of diffSummary.files) {
@@ -48,7 +49,7 @@ const generateDiff = async (
   repoDir: string,
   filePath: string,
 ): Promise<string> => {
-  const git = createGit(repoDir);
+  const git = gitClient(repoDir);
   return git.diff(["HEAD", "--", filePath]);
 };
 
