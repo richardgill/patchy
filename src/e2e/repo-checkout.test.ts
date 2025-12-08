@@ -278,4 +278,59 @@ describe("patchy repo checkout", () => {
     expect(result.stdout).toContain("--ref");
     expect(result.stdout).not.toContain("[--ref]");
   });
+
+  describe("dry-run", () => {
+    it("should not checkout when --dry-run is set", async () => {
+      const ctx = await setupTestWithConfig({
+        tmpDir,
+        createDirectories: {
+          repoBaseDir: "repos",
+          repoDir: "main",
+        },
+        jsonConfig: {
+          repo_base_dir: "repos",
+          repo_dir: "main",
+        },
+      });
+
+      const repoDir = ctx.absoluteRepoDir as string;
+      await initGitRepo(repoDir);
+      await createBranch(repoDir, "feature-branch");
+
+      const initialBranch = await getCurrentBranch(repoDir);
+
+      const result = await assertSuccessfulCommand(
+        `patchy repo checkout --ref feature-branch --dry-run`,
+        tmpDir,
+      );
+
+      expect(result.stdout).toContain("[DRY RUN]");
+      expect(result.stdout).toContain("feature-branch");
+      expect(await getCurrentBranch(repoDir)).toBe(initialBranch);
+    });
+
+    it("should still validate the ref exists in dry-run mode", async () => {
+      const ctx = await setupTestWithConfig({
+        tmpDir,
+        createDirectories: {
+          repoBaseDir: "repos",
+          repoDir: "main",
+        },
+        jsonConfig: {
+          repo_base_dir: "repos",
+          repo_dir: "main",
+        },
+      });
+
+      const repoDir = ctx.absoluteRepoDir as string;
+      await initGitRepo(repoDir);
+
+      const result = await assertFailedCommand(
+        `patchy repo checkout --ref non-existent-ref --dry-run`,
+        tmpDir,
+      );
+
+      expect(result.stderr).toContain('Invalid git ref "non-existent-ref"');
+    });
+  });
 });

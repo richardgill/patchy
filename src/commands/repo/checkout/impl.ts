@@ -44,6 +44,7 @@ export default async function (
   const repoDir = config.absoluteRepoDir ?? "";
   const ref = flags.ref;
   const verbose = config.verbose;
+  const dryRun = config.dry_run;
 
   if (!existsSync(repoDir)) {
     this.process.stderr.write(
@@ -82,6 +83,13 @@ export default async function (
       "Please specify a valid branch, tag, or commit SHA.\n",
     );
     this.process.exit(1);
+    return;
+  }
+
+  if (dryRun) {
+    this.process.stdout.write(
+      `[DRY RUN] Would checkout ref "${ref}" in ${repoDir}\n`,
+    );
     return;
   }
 

@@ -21,8 +21,8 @@ export default async function (
   }
 
   const config = result.mergedConfig;
-
   const repoDir = config.absoluteRepoDir ?? "";
+  const dryRun = config.dry_run;
 
   if (!existsSync(repoDir)) {
     this.process.stderr.write(
@@ -36,6 +36,13 @@ export default async function (
   if (!isRepo) {
     this.process.stderr.write(chalk.red(`Not a Git repository: ${repoDir}\n`));
     this.process.exit(1);
+  }
+
+  if (dryRun) {
+    this.process.stdout.write(
+      `[DRY RUN] Would hard reset repository: ${repoDir}\n`,
+    );
+    return;
   }
 
   await git.reset(["--hard"]);
