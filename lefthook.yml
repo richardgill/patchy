@@ -12,6 +12,13 @@ pre-commit:
 
 pre-push:
   commands:
+    block-main:
+      use_stdin: true
+      run: |
+        if grep -qE '\srefs/heads/(main|master)\s'; then
+          echo "Error: Direct push to main/master branch is not allowed"
+          exit 1
+        fi
     biome:
       glob: "*.{js,ts,cjs,mjs,d.cts,d.mts,jsx,tsx,json,jsonc}"
       run: pnpm exec biome check --error-on-warnings --diagnostic-level=warn --no-errors-on-unmatched --files-ignore-unknown=true {push_files}
