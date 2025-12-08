@@ -113,9 +113,9 @@ describe("createMergedConfig", () => {
     expect(stabilizeTempDir(result.error)).toMatchInlineSnapshot(`
       "Missing required parameters:
 
-        Missing Repository URL: set repo_url in ./patchy.json or use --repo-url flag
-        Missing Repository base directory: set repo_base_dir in ./patchy.json or use --repo-base-dir flag
-        Missing Repository directory: set repo_dir in ./patchy.json or use --repo-dir flag
+        Missing Repository URL: set repo_url in ./patchy.json, PATCHY_REPO_URL env var, or --repo-url flag
+        Missing Repository base directory: set repo_base_dir in ./patchy.json, PATCHY_REPO_BASE_DIR env var, or --repo-base-dir flag
+        Missing Repository directory: set repo_dir in ./patchy.json, PATCHY_REPO_DIR env var, or --repo-dir flag
 
       You can set up ./patchy.json by running:
         patchy init
@@ -434,7 +434,7 @@ describe("createMergedConfig", () => {
     expect(stabilizeTempDir(result.error)).toMatchInlineSnapshot(`
       "Missing required parameters:
 
-        Missing Repository base directory: set repo_base_dir in ./patchy.json or use --repo-base-dir flag
+        Missing Repository base directory: set repo_base_dir in ./patchy.json, PATCHY_REPO_BASE_DIR env var, or --repo-base-dir flag
 
       You can set up ./patchy.json by running:
         patchy init
@@ -1007,5 +1007,359 @@ describe("createMergedConfig", () => {
         verbose: Invalid input: expected boolean, received string
         dry_run: Invalid input: expected boolean, received number"
     `);
+  });
+
+  it("should use environment variables when flags and JSON are not set", async () => {
+    await setupTestWithConfig({
+      tmpDir,
+      createDirectories: {
+        repoBaseDir: "env-base",
+        repoDir: "env-repo",
+        patchesDir: "env-patches",
+      },
+      jsonConfig: {},
+    });
+
+    const flags: SharedFlags = {};
+    const requiredFields: JsonKey[] = [
+      "repo_url",
+      "repo_base_dir",
+      "repo_dir",
+      "patches_dir",
+    ];
+    const env = {
+      PATCHY_REPO_URL: "https://github.com/example/env-repo.git",
+      PATCHY_REPO_BASE_DIR: "env-base",
+      PATCHY_REPO_DIR: "env-repo",
+      PATCHY_PATCHES_DIR: "env-patches",
+      PATCHY_REF: "env-branch",
+      PATCHY_VERBOSE: "true",
+      PATCHY_DRY_RUN: "1",
+    };
+
+    const result = createMergedConfig({
+      flags,
+      requiredFields,
+      cwd: tmpDir,
+      env,
+    });
+
+    expectSuccessfulMerge(result);
+    expect(getStabilizedJson(result.mergedConfig)).toMatchInlineSnapshot(
+      `
+      "{
+        "repo_url": "https://github.com/example/env-repo.git",
+        "ref": "env-branch",
+        "repo_base_dir": "env-base",
+        "absoluteRepoBaseDir": "<TEST_DIR>/env-base",
+        "repo_dir": "env-repo",
+        "absoluteRepoDir": "<TEST_DIR>/env-base/env-repo",
+        "patches_dir": "env-patches",
+        "absolutePatchesDir": "<TEST_DIR>/env-patches",
+        "verbose": true,
+        "dry_run": true
+      }"
+    `,
+    );
+  });
+
+  it("should prioritize CLI flags over environment variables", async () => {
+    await setupTestWithConfig({
+      tmpDir,
+      createDirectories: {
+        repoBaseDir: "flag-base",
+        repoDir: "flag-repo",
+        patchesDir: "flag-patches",
+      },
+      jsonConfig: {},
+    });
+
+    const flags: SharedFlags = {
+      "repo-url": "https://github.com/example/flag-repo.git",
+      "repo-base-dir": "flag-base",
+      "repo-dir": "flag-repo",
+      "patches-dir": "flag-patches",
+      ref: "flag-ref",
+      verbose: true,
+      "dry-run": true,
+    };
+    const requiredFields: JsonKey[] = [
+      "repo_url",
+      "repo_base_dir",
+      "repo_dir",
+      "patches_dir",
+    ];
+    const env = {
+      PATCHY_REPO_URL: "https://github.com/example/env-repo.git",
+      PATCHY_REPO_BASE_DIR: "env-base",
+      PATCHY_REPO_DIR: "env-repo",
+      PATCHY_PATCHES_DIR: "env-patches",
+      PATCHY_REF: "env-branch",
+      PATCHY_VERBOSE: "false",
+      PATCHY_DRY_RUN: "false",
+    };
+
+    const result = createMergedConfig({
+      flags,
+      requiredFields,
+      cwd: tmpDir,
+      env,
+    });
+
+    expectSuccessfulMerge(result);
+    expect(getStabilizedJson(result.mergedConfig)).toMatchInlineSnapshot(
+      `
+      "{
+        "repo_url": "https://github.com/example/flag-repo.git",
+        "ref": "flag-ref",
+        "repo_base_dir": "flag-base",
+        "absoluteRepoBaseDir": "<TEST_DIR>/flag-base",
+        "repo_dir": "flag-repo",
+        "absoluteRepoDir": "<TEST_DIR>/flag-base/flag-repo",
+        "patches_dir": "flag-patches",
+        "absolutePatchesDir": "<TEST_DIR>/flag-patches",
+        "verbose": true,
+        "dry_run": true
+      }"
+    `,
+    );
+  });
+
+  it("should prioritize environment variables over JSON config", async () => {
+    await setupTestWithConfig({
+      tmpDir,
+      createDirectories: {
+        repoBaseDir: "env-base",
+        repoDir: "env-repo",
+        patchesDir: "env-patches",
+      },
+      jsonConfig: {
+        repo_url: "https://github.com/example/json-repo.git",
+        repo_base_dir: "json-base",
+        repo_dir: "json-repo",
+        patches_dir: "json-patches",
+        ref: "json-ref",
+        verbose: false,
+      },
+    });
+
+    const flags: SharedFlags = {};
+    const requiredFields: JsonKey[] = [
+      "repo_url",
+      "repo_base_dir",
+      "repo_dir",
+      "patches_dir",
+    ];
+    const env = {
+      PATCHY_REPO_URL: "https://github.com/example/env-repo.git",
+      PATCHY_REPO_BASE_DIR: "env-base",
+      PATCHY_REPO_DIR: "env-repo",
+      PATCHY_PATCHES_DIR: "env-patches",
+      PATCHY_REF: "env-branch",
+      PATCHY_VERBOSE: "true",
+    };
+
+    const result = createMergedConfig({
+      flags,
+      requiredFields,
+      cwd: tmpDir,
+      env,
+    });
+
+    expectSuccessfulMerge(result);
+    expect(getStabilizedJson(result.mergedConfig)).toMatchInlineSnapshot(
+      `
+      "{
+        "repo_url": "https://github.com/example/env-repo.git",
+        "ref": "env-branch",
+        "repo_base_dir": "env-base",
+        "absoluteRepoBaseDir": "<TEST_DIR>/env-base",
+        "repo_dir": "env-repo",
+        "absoluteRepoDir": "<TEST_DIR>/env-base/env-repo",
+        "patches_dir": "env-patches",
+        "absolutePatchesDir": "<TEST_DIR>/env-patches",
+        "verbose": true,
+        "dry_run": false
+      }"
+    `,
+    );
+  });
+
+  it("should use PATCHY_CONFIG env var for config path", async () => {
+    const customConfigDir = path.join(tmpDir, "custom-env");
+    const customConfigPath = path.join(customConfigDir, "env-config.json");
+    mkdirSync(customConfigDir, { recursive: true });
+
+    await setupTestWithConfig({
+      tmpDir,
+      createDirectories: {
+        repoBaseDir: "base",
+        repoDir: "repo",
+      },
+      jsonConfig: {},
+    });
+
+    writeFileSync(
+      customConfigPath,
+      JSON.stringify(
+        {
+          repo_url: "https://github.com/example/env-config.git",
+          repo_base_dir: "base",
+          repo_dir: "repo",
+          ref: "env-config-branch",
+        },
+        null,
+        2,
+      ),
+    );
+
+    const flags: SharedFlags = {};
+    const requiredFields: JsonKey[] = ["repo_url", "repo_base_dir", "repo_dir"];
+    const env = {
+      PATCHY_CONFIG: customConfigPath,
+    };
+
+    const result = createMergedConfig({
+      flags,
+      requiredFields,
+      cwd: tmpDir,
+      env,
+    });
+
+    expectSuccessfulMerge(result);
+    expect(getStabilizedJson(result.mergedConfig)).toMatchInlineSnapshot(
+      `
+      "{
+        "repo_url": "https://github.com/example/env-config.git",
+        "ref": "env-config-branch",
+        "repo_base_dir": "base",
+        "absoluteRepoBaseDir": "<TEST_DIR>/base",
+        "repo_dir": "repo",
+        "absoluteRepoDir": "<TEST_DIR>/base/repo",
+        "patches_dir": "./patches/",
+        "absolutePatchesDir": "<TEST_DIR>/patches",
+        "verbose": false,
+        "dry_run": false
+      }"
+    `,
+    );
+  });
+
+  it("should fail when PATCHY_CONFIG env var points to non-existent file", async () => {
+    mkdirSync(tmpDir, { recursive: true });
+
+    const flags: SharedFlags = {};
+    const requiredFields: JsonKey[] = ["repo_url"];
+    const env = {
+      PATCHY_CONFIG: "./non-existent-env-config.json",
+    };
+
+    const result = createMergedConfig({
+      flags,
+      requiredFields,
+      cwd: tmpDir,
+      env,
+    });
+
+    expectFailedMerge(result);
+    expect(stabilizeTempDir(result.error)).toMatchInlineSnapshot(
+      `"Configuration file not found: <TEST_DIR>/non-existent-env-config.json"`,
+    );
+  });
+
+  it("should handle boolean env vars with different truthy values", async () => {
+    await setupTestWithConfig({
+      tmpDir,
+      createDirectories: {
+        repoBaseDir: "base",
+        repoDir: "repo",
+      },
+      jsonConfig: {
+        repo_url: "https://github.com/example/repo.git",
+        repo_base_dir: "base",
+        repo_dir: "repo",
+      },
+    });
+
+    const testCases = [
+      {
+        PATCHY_VERBOSE: "true",
+        PATCHY_DRY_RUN: "1",
+        expectedVerbose: true,
+        expectedDryRun: true,
+      },
+      {
+        PATCHY_VERBOSE: "TRUE",
+        PATCHY_DRY_RUN: "True",
+        expectedVerbose: true,
+        expectedDryRun: true,
+      },
+      {
+        PATCHY_VERBOSE: "false",
+        PATCHY_DRY_RUN: "0",
+        expectedVerbose: false,
+        expectedDryRun: false,
+      },
+      {
+        PATCHY_VERBOSE: "yes",
+        PATCHY_DRY_RUN: "no",
+        expectedVerbose: false,
+        expectedDryRun: false,
+      },
+    ];
+
+    for (const {
+      PATCHY_VERBOSE,
+      PATCHY_DRY_RUN,
+      expectedVerbose,
+      expectedDryRun,
+    } of testCases) {
+      const result = createMergedConfig({
+        flags: {},
+        requiredFields: ["repo_url", "repo_base_dir", "repo_dir"],
+        cwd: tmpDir,
+        env: { PATCHY_VERBOSE, PATCHY_DRY_RUN },
+      });
+
+      expectSuccessfulMerge(result);
+      expect(result.mergedConfig.verbose).toBe(expectedVerbose);
+      expect(result.mergedConfig.dry_run).toBe(expectedDryRun);
+    }
+  });
+
+  it("should ignore empty string env vars", async () => {
+    await setupTestWithConfig({
+      tmpDir,
+      createDirectories: {
+        repoBaseDir: "json-base",
+        repoDir: "json-repo",
+      },
+      jsonConfig: {
+        repo_url: "https://github.com/example/json-repo.git",
+        repo_base_dir: "json-base",
+        repo_dir: "json-repo",
+        ref: "json-ref",
+      },
+    });
+
+    const flags: SharedFlags = {};
+    const requiredFields: JsonKey[] = ["repo_url", "repo_base_dir", "repo_dir"];
+    const env = {
+      PATCHY_REPO_URL: "",
+      PATCHY_REF: "",
+    };
+
+    const result = createMergedConfig({
+      flags,
+      requiredFields,
+      cwd: tmpDir,
+      env,
+    });
+
+    expectSuccessfulMerge(result);
+    expect(result.mergedConfig.repo_url).toBe(
+      "https://github.com/example/json-repo.git",
+    );
+    expect(result.mergedConfig.ref).toBe("json-ref");
   });
 });

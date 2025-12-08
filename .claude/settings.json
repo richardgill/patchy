@@ -1,6 +1,6 @@
 {
   "permissions": {
-    "allow": ["Bash(bd:*)", "Bash(bun:*)"]
+    "allow": ["Bash(bd:*)"]
   },
   "hooks": {
     "SessionStart": [

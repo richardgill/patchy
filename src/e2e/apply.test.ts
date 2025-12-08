@@ -134,8 +134,8 @@ describe("patchy apply", () => {
     expect(stabilizeTempDir(result.stderr)).toMatchInlineSnapshot(`
       "Missing required parameters:
 
-        Missing Repository base directory: set repo_base_dir in ./patchy.json or use --repo-base-dir flag
-        Missing Repository directory: set repo_dir in ./patchy.json or use --repo-dir flag
+        Missing Repository base directory: set repo_base_dir in ./patchy.json, PATCHY_REPO_BASE_DIR env var, or --repo-base-dir flag
+        Missing Repository directory: set repo_dir in ./patchy.json, PATCHY_REPO_DIR env var, or --repo-dir flag
 
       You can set up ./patchy.json by running:
         patchy init"
@@ -427,8 +427,8 @@ describe("patchy apply", () => {
     expect(stabilizeTempDir(result.stderr)).toMatchInlineSnapshot(`
       "Missing required parameters:
 
-        Missing Repository base directory: set repo_base_dir in ./patchy.json or use --repo-base-dir flag
-        Missing Repository directory: set repo_dir in ./patchy.json or use --repo-dir flag
+        Missing Repository base directory: set repo_base_dir in ./patchy.json, PATCHY_REPO_BASE_DIR env var, or --repo-base-dir flag
+        Missing Repository directory: set repo_dir in ./patchy.json, PATCHY_REPO_DIR env var, or --repo-dir flag
 
       You can set up ./patchy.json by running:
         patchy init"
