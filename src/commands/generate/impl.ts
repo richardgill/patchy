@@ -1,10 +1,11 @@
-import { existsSync, mkdirSync, writeFileSync } from "node:fs";
+import { writeFileSync } from "node:fs";
 import { copyFile } from "node:fs/promises";
 import { dirname, join } from "node:path";
 import { simpleGit } from "simple-git";
 import { resolveConfig } from "~/config/resolver";
 import type { GenerateCommandFlags, ResolvedConfig } from "~/config/types";
 import type { LocalContext } from "~/context";
+import { ensureDirExists } from "~/lib/fs";
 
 // Removes GIT_* env vars that can interfere when running inside git hooks or other git processes
 const getCleanGitEnv = (): NodeJS.ProcessEnv => {
@@ -16,6 +17,13 @@ const getCleanGitEnv = (): NodeJS.ProcessEnv => {
 type GitChange = {
   type: "modified" | "new";
   path: string;
+};
+
+type PatchOperation = {
+  type: "diff" | "copy";
+  sourcePath: string;
+  destPath: string;
+  relativePath: string;
 };
 
 const gitClient = (repoDir: string) =>
@@ -53,11 +61,27 @@ const generateDiff = async (
   return git.diff(["HEAD", "--", filePath]);
 };
 
-const ensureDir = (dirPath: string): void => {
-  if (!existsSync(dirPath)) {
-    mkdirSync(dirPath, { recursive: true });
-  }
-};
+const toPatchOperations = (
+  changes: GitChange[],
+  repoDir: string,
+  patchesDir: string,
+): PatchOperation[] =>
+  changes.map((change) => {
+    if (change.type === "modified") {
+      return {
+        type: "diff",
+        sourcePath: join(repoDir, change.path),
+        destPath: join(patchesDir, `${change.path}.diff`),
+        relativePath: change.path,
+      };
+    }
+    return {
+      type: "copy",
+      sourcePath: join(repoDir, change.path),
+      destPath: join(patchesDir, change.path),
+      relativePath: change.path,
+    };
+  });
 
 export default async function (
   this: LocalContext,
@@ -76,16 +100,20 @@ export default async function (
       return;
     }
 
+    const operations = toPatchOperations(
+      changes,
+      config.absoluteRepoDir,
+      config.absolutePatchesDir,
+    );
+
     if (config.dry_run) {
       this.process.stdout.write(
         `[DRY RUN] Would generate patches from ${config.repo_dir} to ${config.patches_dir}\n`,
       );
-      this.process.stdout.write(`Found ${changes.length} change(s):\n`);
-      for (const change of changes) {
-        const patchPath =
-          change.type === "modified" ? `${change.path}.diff` : change.path;
+      this.process.stdout.write(`Found ${operations.length} change(s):\n`);
+      for (const op of operations) {
         this.process.stdout.write(
-          `  ${change.type}: ${change.path} -> ${join(config.patches_dir, patchPath)}\n`,
+          `  ${op.type}: ${op.relativePath} -> ${op.destPath}\n`,
         );
       }
       return;
@@ -95,30 +123,26 @@ export default async function (
       `Generating patches from ${config.repo_dir} to ${config.patches_dir}...\n`,
     );
 
-    ensureDir(config.absolutePatchesDir);
+    ensureDirExists(config.absolutePatchesDir);
 
-    for (const change of changes) {
-      const targetDir = dirname(join(config.absolutePatchesDir, change.path));
-      ensureDir(targetDir);
+    for (const op of operations) {
+      ensureDirExists(dirname(op.destPath));
 
-      if (change.type === "modified") {
-        const diff = await generateDiff(config.absoluteRepoDir, change.path);
-        const patchPath = join(
-          config.absolutePatchesDir,
-          `${change.path}.diff`,
+      if (op.type === "diff") {
+        const diff = await generateDiff(
+          config.absoluteRepoDir,
+          op.relativePath,
         );
-        writeFileSync(patchPath, diff);
-        this.process.stdout.write(`  Created diff: ${change.path}.diff\n`);
+        writeFileSync(op.destPath, diff);
+        this.process.stdout.write(`  Created diff: ${op.relativePath}.diff\n`);
       } else {
-        const sourcePath = join(config.absoluteRepoDir, change.path);
-        const destPath = join(config.absolutePatchesDir, change.path);
-        await copyFile(sourcePath, destPath);
-        this.process.stdout.write(`  Copied new file: ${change.path}\n`);
+        await copyFile(op.sourcePath, op.destPath);
+        this.process.stdout.write(`  Copied new file: ${op.relativePath}\n`);
       }
     }
 
     this.process.stdout.write(
-      `Generated ${changes.length} patch(es) successfully.\n`,
+      `Generated ${operations.length} patch(es) successfully.\n`,
     );
   } catch (error) {
     if (error instanceof Error && error.name === "ProcessExitError") {

@@ -1,5 +1,6 @@
 import { existsSync, mkdirSync, readFileSync, writeFileSync } from "node:fs";
 import path from "node:path";
+import { simpleGit } from "simple-git";
 import { beforeEach, describe, expect, it } from "vitest";
 import {
   assertFailedCommand,
@@ -9,34 +10,31 @@ import {
   stabilizeTempDir,
 } from "./test-utils";
 
-const initGitRepo = async (repoDir: string): Promise<void> => {
-  const { exec } = await import("node:child_process");
-  const { promisify } = await import("node:util");
-  const execAsync = promisify(exec);
-
-  const cleanEnv = Object.fromEntries(
+// Removes GIT_* env vars and disables LEFTHOOK to prevent interference during tests
+const getCleanTestGitEnv = (): NodeJS.ProcessEnv =>
+  Object.fromEntries(
     Object.entries(process.env).filter(
       ([key]) => !key.startsWith("GIT_") && key !== "LEFTHOOK",
     ),
   );
-  const gitEnv = { ...cleanEnv, LEFTHOOK: "0" };
 
-  await execAsync("git init", { cwd: repoDir, env: gitEnv });
-  await execAsync('git config user.email "test@test.com"', {
-    cwd: repoDir,
-    env: gitEnv,
-  });
-  await execAsync('git config user.name "Test User"', {
-    cwd: repoDir,
-    env: gitEnv,
-  });
+const testGitClient = (repoDir: string) =>
+  simpleGit({
+    baseDir: repoDir,
+    binary: "git",
+    maxConcurrentProcesses: 6,
+  }).env({ ...getCleanTestGitEnv(), LEFTHOOK: "0" });
+
+const initGitRepo = async (repoDir: string): Promise<void> => {
+  const git = testGitClient(repoDir);
+
+  await git.init();
+  await git.addConfig("user.email", "test@test.com");
+  await git.addConfig("user.name", "Test User");
 
   writeFileSync(path.join(repoDir, "initial.txt"), "initial content\n");
-  await execAsync("git add .", { cwd: repoDir, env: gitEnv });
-  await execAsync('git commit -m "initial commit"', {
-    cwd: repoDir,
-    env: gitEnv,
-  });
+  await git.add(".");
+  await git.commit("initial commit");
 };
 
 const modifyFile = (
@@ -241,8 +239,8 @@ describe("patchy generate", () => {
       "[DRY RUN] Would generate patches from upstream to patches",
     );
     expect(result.stdout).toContain("Found 2 change(s):");
-    expect(result.stdout).toContain("modified: initial.txt");
-    expect(result.stdout).toContain("new: newfile.txt");
+    expect(result.stdout).toContain("diff: initial.txt");
+    expect(result.stdout).toContain("copy: newfile.txt");
 
     expect(existsSync(path.join(patchesDir, "initial.txt.diff"))).toBe(false);
     expect(existsSync(path.join(patchesDir, "newfile.txt"))).toBe(false);
