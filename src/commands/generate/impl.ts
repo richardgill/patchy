@@ -19,7 +19,7 @@ type GitChange = {
   path: string;
 };
 
-type PatchOperation = {
+type PatchToGenerate = {
   type: "diff" | "copy";
   sourcePath: string;
   destPath: string;
@@ -58,11 +58,11 @@ const generateDiff = async (
   return git.diff(["HEAD", "--", filePath]);
 };
 
-const toPatchOperations = (
+const toPatchToGenerates = (
   changes: GitChange[],
   repoDir: string,
   patchesDir: string,
-): PatchOperation[] =>
+): PatchToGenerate[] =>
   changes.map((change) => {
     if (change.type === "modified") {
       return {
@@ -97,7 +97,7 @@ export default async function (
       return;
     }
 
-    const operations = toPatchOperations(
+    const operations = toPatchToGenerates(
       changes,
       config.absoluteRepoDir,
       config.absolutePatchesDir,
