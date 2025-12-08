@@ -19,7 +19,7 @@ export type GenerateCommandFlags = SharedFlags;
 
 export type CheckoutCommandFlags = Pick<
   SharedFlags,
-  "repo-dir" | "repo-base-dir" | "config" | "verbose"
+  "repo-dir" | "repo-base-dir" | "config" | "verbose" | "dry-run"
 > & {
   ref: string;
 };
@@ -31,7 +31,7 @@ export type CloneCommandFlags = Pick<
 
 export type ResetCommandFlags = Pick<
   SharedFlags,
-  "repo-base-dir" | "repo-dir" | "config" | "verbose"
+  "repo-base-dir" | "repo-dir" | "config" | "verbose" | "dry-run"
 >;
 
 // Note: underscore_case property names match JSON config keys
