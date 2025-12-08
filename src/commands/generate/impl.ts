@@ -1,8 +1,8 @@
 import { writeFileSync } from "node:fs";
 import { copyFile } from "node:fs/promises";
 import { dirname, join } from "node:path";
-import { resolveConfig } from "~/config/resolver";
-import type { GenerateCommandFlags, ResolvedConfig } from "~/config/types";
+import { createMergedConfig } from "~/config/resolver";
+import type { GenerateCommandFlags } from "~/config/types";
 import type { LocalContext } from "~/context";
 import { ensureDirExists } from "~/lib/fs";
 import { createGitClient } from "~/lib/git";
@@ -70,12 +70,22 @@ export default async function (
   this: LocalContext,
   flags: GenerateCommandFlags,
 ): Promise<void> {
-  const config = (await resolveConfig(this, flags, [
-    "repo_base_dir",
-    "repo_dir",
-  ])) as ResolvedConfig;
+  const result = createMergedConfig({
+    flags,
+    requiredFields: ["repo_base_dir", "repo_dir"],
+  });
 
-  const changes = await getGitChanges(config.absoluteRepoDir);
+  if (!result.success) {
+    this.process.stderr.write(result.error);
+    this.process.exit(1);
+    return;
+  }
+
+  const config = result.mergedConfig;
+  const absoluteRepoDir = config.absoluteRepoDir ?? "";
+  const absolutePatchesDir = config.absolutePatchesDir ?? "";
+
+  const changes = await getGitChanges(absoluteRepoDir);
 
   if (changes.length === 0) {
     this.process.stdout.write("No changes detected in repository.\n");
@@ -84,8 +94,8 @@ export default async function (
 
   const operations = toPatchToGenerates(
     changes,
-    config.absoluteRepoDir,
-    config.absolutePatchesDir,
+    absoluteRepoDir,
+    absolutePatchesDir,
   );
 
   if (config.dry_run) {
@@ -105,13 +115,13 @@ export default async function (
     `Generating patches from ${config.repo_dir} to ${config.patches_dir}...\n`,
   );
 
-  ensureDirExists(config.absolutePatchesDir);
+  ensureDirExists(absolutePatchesDir);
 
   for (const op of operations) {
     ensureDirExists(dirname(op.destPath));
 
     if (op.type === "diff") {
-      const diff = await generateDiff(config.absoluteRepoDir, op.relativePath);
+      const diff = await generateDiff(absoluteRepoDir, op.relativePath);
       writeFileSync(op.destPath, diff);
       this.process.stdout.write(`  Created diff: ${op.relativePath}.diff\n`);
     } else {
