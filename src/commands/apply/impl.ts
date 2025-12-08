@@ -7,17 +7,17 @@ import type { LocalContext } from "~/context";
 import { getAllFiles } from "~/lib/fs";
 import { applyDiff } from "./apply-diff";
 
-type PatchFile = {
+type PatchToApply = {
   relativePath: string;
   absolutePath: string;
   type: "copy" | "diff";
   targetPath: string;
 };
 
-const collectPatchFiles = async (
+const collectPatchToApplys = async (
   patchesDir: string,
   repoDir: string,
-): Promise<PatchFile[]> => {
+): Promise<PatchToApply[]> => {
   const relativePaths = await getAllFiles(patchesDir);
 
   return relativePaths.map((relativePath) => {
@@ -38,7 +38,7 @@ const collectPatchFiles = async (
 };
 
 const applyPatch = async (
-  patchFile: PatchFile,
+  patchFile: PatchToApply,
   verbose: boolean,
   stdout: NodeJS.WriteStream,
 ): Promise<{ success: boolean; error?: string }> => {
@@ -94,7 +94,7 @@ export default async function (
     );
   }
 
-  const patchFiles = await collectPatchFiles(
+  const patchFiles = await collectPatchToApplys(
     config.absolutePatchesDir,
     config.absoluteRepoDir,
   );
