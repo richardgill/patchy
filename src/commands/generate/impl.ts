@@ -70,75 +70,67 @@ export default async function (
   this: LocalContext,
   flags: GenerateCommandFlags,
 ): Promise<void> {
-  try {
-    const result = createMergedConfig({
-      flags,
-      requiredFields: ["repo_base_dir", "repo_dir"],
-    });
+  const result = createMergedConfig({
+    flags,
+    requiredFields: ["repo_base_dir", "repo_dir"],
+  });
 
-    if (!result.success) {
-      this.process.stderr.write(result.error);
-      this.process.exit(1);
-      return;
-    }
-
-    const config = result.mergedConfig;
-    const absoluteRepoDir = config.absoluteRepoDir ?? "";
-    const absolutePatchesDir = config.absolutePatchesDir ?? "";
-
-    const changes = await getGitChanges(absoluteRepoDir);
-
-    if (changes.length === 0) {
-      this.process.stdout.write("No changes detected in repository.\n");
-      return;
-    }
-
-    const operations = toPatchToGenerates(
-      changes,
-      absoluteRepoDir,
-      absolutePatchesDir,
-    );
-
-    if (config.dry_run) {
-      this.process.stdout.write(
-        `[DRY RUN] Would generate patches from ${config.repo_dir} to ${config.patches_dir}\n`,
-      );
-      this.process.stdout.write(`Found ${operations.length} change(s):\n`);
-      for (const op of operations) {
-        this.process.stdout.write(
-          `  ${op.type}: ${op.relativePath} -> ${op.destPath}\n`,
-        );
-      }
-      return;
-    }
-
-    this.process.stdout.write(
-      `Generating patches from ${config.repo_dir} to ${config.patches_dir}...\n`,
-    );
-
-    ensureDirExists(absolutePatchesDir);
-
-    for (const op of operations) {
-      ensureDirExists(dirname(op.destPath));
-
-      if (op.type === "diff") {
-        const diff = await generateDiff(absoluteRepoDir, op.relativePath);
-        writeFileSync(op.destPath, diff);
-        this.process.stdout.write(`  Created diff: ${op.relativePath}.diff\n`);
-      } else {
-        await copyFile(op.sourcePath, op.destPath);
-        this.process.stdout.write(`  Copied new file: ${op.relativePath}\n`);
-      }
-    }
-
-    this.process.stdout.write(
-      `Generated ${operations.length} patch(es) successfully.\n`,
-    );
-  } catch (error) {
-    if (error instanceof Error && error.name === "ProcessExitError") {
-      throw error;
-    }
-    this.process.stderr.write(`Error: ${error}\n`);
+  if (!result.success) {
+    this.process.stderr.write(result.error);
     this.process.exit(1);
+    return;
   }
+
+  const config = result.mergedConfig;
+  const absoluteRepoDir = config.absoluteRepoDir ?? "";
+  const absolutePatchesDir = config.absolutePatchesDir ?? "";
+
+  const changes = await getGitChanges(absoluteRepoDir);
+
+  if (changes.length === 0) {
+    this.process.stdout.write("No changes detected in repository.\n");
+    return;
+  }
+
+  const operations = toPatchToGenerates(
+    changes,
+    absoluteRepoDir,
+    absolutePatchesDir,
+  );
+
+  if (config.dry_run) {
+    this.process.stdout.write(
+      `[DRY RUN] Would generate patches from ${config.repo_dir} to ${config.patches_dir}\n`,
+    );
+    this.process.stdout.write(`Found ${operations.length} change(s):\n`);
+    for (const op of operations) {
+      this.process.stdout.write(
+        `  ${op.type}: ${op.relativePath} -> ${op.destPath}\n`,
+      );
+    }
+    return;
+  }
+
+  this.process.stdout.write(
+    `Generating patches from ${config.repo_dir} to ${config.patches_dir}...\n`,
+  );
+
+  ensureDirExists(absolutePatchesDir);
+
+  for (const op of operations) {
+    ensureDirExists(dirname(op.destPath));
+
+    if (op.type === "diff") {
+      const diff = await generateDiff(absoluteRepoDir, op.relativePath);
+      writeFileSync(op.destPath, diff);
+      this.process.stdout.write(`  Created diff: ${op.relativePath}.diff\n`);
+    } else {
+      await copyFile(op.sourcePath, op.destPath);
+      this.process.stdout.write(`  Copied new file: ${op.relativePath}\n`);
+    }
+  }
+
+  this.process.stdout.write(
+    `Generated ${operations.length} patch(es) successfully.\n`,
+  );
 }

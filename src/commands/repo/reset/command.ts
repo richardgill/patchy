@@ -7,6 +7,7 @@ const resetFlags = pick(sharedFlags, [
   "repo-dir",
   "config",
   "verbose",
+  "dry-run",
   "yes",
 ]);
 
