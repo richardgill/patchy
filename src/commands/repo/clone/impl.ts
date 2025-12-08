@@ -7,19 +7,7 @@ import { isValidGitUrl } from "~/config/validation";
 import type { LocalContext } from "~/context";
 import { assertDefined } from "~/lib/assert";
 import { ensureDirExists } from "~/lib/fs";
-import { createGitClient } from "~/lib/git";
-
-const extractRepoName = (url: string): string | undefined => {
-  const httpsMatch = url.match(/\/([^/]+?)(\.git)?$/);
-  if (httpsMatch) {
-    return httpsMatch[1];
-  }
-  const sshMatch = url.match(/:([^/]+\/)?([^/]+?)(\.git)?$/);
-  if (sshMatch) {
-    return sshMatch[2];
-  }
-  return undefined;
-};
+import { createGitClient, extractRepoName } from "~/lib/git";
 
 export default async function (
   this: LocalContext,

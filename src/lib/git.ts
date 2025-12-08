@@ -7,3 +7,15 @@ const getCleanGitEnv = (): NodeJS.ProcessEnv =>
 
 export const createGitClient = (baseDir: string): SimpleGit =>
   simpleGit({ baseDir }).env(getCleanGitEnv());
+
+export const extractRepoName = (url: string): string | undefined => {
+  const httpsMatch = url.match(/\/([^/]+?)(\.git)?$/);
+  if (httpsMatch) {
+    return httpsMatch[1];
+  }
+  const sshMatch = url.match(/:([^/]+\/)?([^/]+?)(\.git)?$/);
+  if (sshMatch) {
+    return sshMatch[2];
+  }
+  return undefined;
+};
