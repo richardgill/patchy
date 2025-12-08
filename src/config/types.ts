@@ -1,3 +1,7 @@
+export type YesFlag = {
+  yes?: boolean;
+};
+
 export type SharedFlags = {
   "repo-url"?: string;
   "repo-dir"?: string;
@@ -7,14 +11,15 @@ export type SharedFlags = {
   config?: string;
   verbose?: boolean;
   "dry-run"?: boolean;
-  yes?: boolean;
 };
 
 export type InitCommandFlags = SharedFlags & {
   force?: boolean;
 };
 
-export type ApplyCommandFlags = SharedFlags;
+export type ApplyCommandFlags = SharedFlags & {
+  "fuzz-factor"?: number;
+};
 
 export type GenerateCommandFlags = SharedFlags;
 
@@ -32,8 +37,9 @@ export type CloneCommandFlags = Pick<
 
 export type ResetCommandFlags = Pick<
   SharedFlags,
-  "repo-base-dir" | "repo-dir" | "config" | "verbose" | "dry-run" | "yes"
->;
+  "repo-base-dir" | "repo-dir" | "config" | "verbose" | "dry-run"
+> &
+  YesFlag;
 
 // Note: underscore_case property names match JSON config keys
 export type CompleteJsonConfig = {

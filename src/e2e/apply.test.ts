@@ -914,4 +914,111 @@ export const component = () => {
     const targetFile = path.join(repoDir, "complex.tsx");
     expect(readFileSync(targetFile, "utf-8")).toBe(complexContent);
   });
+
+  it("should apply diff with fuzzy matching when context lines are missing from target", async () => {
+    const ctx = await setupTestWithConfig({
+      tmpDir,
+      createDirectories: {
+        repoBaseDir: "repos",
+        repoDir: "main",
+        patchesDir: "patches",
+      },
+      jsonConfig: {
+        repo_url: "https://github.com/example/test-repo.git",
+        repo_base_dir: "repos",
+        repo_dir: "main",
+      },
+    });
+
+    const patchesDir = ctx.absolutePatchesDir as string;
+    const repoDir = ctx.absoluteRepoDir as string;
+
+    // The target file has fewer lines than the diff's context expects
+    const targetFile = path.join(repoDir, "fuzzy.ts");
+    writeFileSync(
+      targetFile,
+      `const value = 1;
+const other = 2;
+`,
+    );
+
+    // The diff has an extra context line that doesn't exist in the target
+    const diffFile = path.join(patchesDir, "fuzzy.ts.diff");
+    writeFileSync(
+      diffFile,
+      `--- a/fuzzy.ts
++++ b/fuzzy.ts
+@@ -1,3 +1,3 @@
+-const value = 1;
++const value = 42;
+ const other = 2;
+ EXTRA CONTEXT LINE
+`,
+    );
+
+    // With default fuzz factor (2), this should still apply despite missing context
+    const result = await assertSuccessfulCommand(
+      `patchy apply --verbose`,
+      tmpDir,
+    );
+
+    expect(result.stdout).toContain("Applied diff: fuzzy.ts.diff");
+
+    expect(readFileSync(targetFile, "utf-8")).toBe(
+      `const value = 42;
+const other = 2;
+`,
+    );
+  });
+
+  it("should fail to apply diff when fuzz-factor is 0 and context lines are missing", async () => {
+    const ctx = await setupTestWithConfig({
+      tmpDir,
+      createDirectories: {
+        repoBaseDir: "repos",
+        repoDir: "main",
+        patchesDir: "patches",
+      },
+      jsonConfig: {
+        repo_url: "https://github.com/example/test-repo.git",
+        repo_base_dir: "repos",
+        repo_dir: "main",
+      },
+    });
+
+    const patchesDir = ctx.absolutePatchesDir as string;
+    const repoDir = ctx.absoluteRepoDir as string;
+
+    // The target file has fewer lines than the diff's context expects
+    const targetFile = path.join(repoDir, "fuzzy.ts");
+    writeFileSync(
+      targetFile,
+      `const value = 1;
+const other = 2;
+`,
+    );
+
+    // The diff has an extra context line that doesn't exist in the target
+    const diffFile = path.join(patchesDir, "fuzzy.ts.diff");
+    writeFileSync(
+      diffFile,
+      `--- a/fuzzy.ts
++++ b/fuzzy.ts
+@@ -1,3 +1,3 @@
+-const value = 1;
++const value = 42;
+ const other = 2;
+ EXTRA CONTEXT LINE
+`,
+    );
+
+    // With fuzz-factor 0, this should fail because the context line doesn't match
+    const result = await assertFailedCommand(
+      `patchy apply --fuzz-factor 0`,
+      tmpDir,
+    );
+
+    expect(result.stderr).toContain("Errors occurred while applying patches:");
+    expect(result.stderr).toContain("Patch failed to apply");
+  });
 });
