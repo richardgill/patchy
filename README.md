@@ -63,7 +63,7 @@ patchy apply [--repo-dir] [--patches-dir] [--dry-run]
 
 ### `patchy generate`
 
-Generate `.diff` files and new full files into `./patches/` based on current dirty changes in `repo_dir`.
+Generate `.diff` files and new full files into `./patches/` based on current `git diff` in `repo_dir`.
 
 ```sh
 patchy generate [--repo-dir] [--patches-dir] [--dry-run]
