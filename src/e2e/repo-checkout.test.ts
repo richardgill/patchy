@@ -1,7 +1,13 @@
 import { mkdirSync, writeFileSync } from "node:fs";
 import path from "node:path";
 import { beforeEach, describe, expect, it } from "vitest";
-import { createTestGitClient } from "~/lib/git";
+import {
+  createBranch,
+  createTag,
+  getCurrentBranch,
+  getCurrentCommit,
+  initGitRepoWithCommit,
+} from "./git-helpers";
 import {
   assertFailedCommand,
   assertSuccessfulCommand,
@@ -10,48 +16,6 @@ import {
   setupTestWithConfig,
   stabilizeTempDir,
 } from "./test-utils";
-
-const initGitRepo = async (repoDir: string): Promise<void> => {
-  const git = createTestGitClient(repoDir);
-  await git.init();
-  await git.addConfig("user.email", "test@test.com");
-  await git.addConfig("user.name", "Test User");
-  writeFileSync(path.join(repoDir, "file.txt"), "initial content");
-  await git.add(".");
-  await git.commit("initial commit");
-};
-
-const createBranch = async (
-  repoDir: string,
-  branchName: string,
-): Promise<void> => {
-  const git = createTestGitClient(repoDir);
-  await git.checkoutLocalBranch(branchName);
-  writeFileSync(
-    path.join(repoDir, "branch-file.txt"),
-    `content from ${branchName}`,
-  );
-  await git.add(".");
-  await git.commit(`commit on ${branchName}`);
-  await git.checkout("-");
-};
-
-const createTag = async (repoDir: string, tagName: string): Promise<void> => {
-  const git = createTestGitClient(repoDir);
-  await git.addTag(tagName);
-};
-
-const getCurrentBranch = async (repoDir: string): Promise<string> => {
-  const git = createTestGitClient(repoDir);
-  const branch = await git.revparse(["--abbrev-ref", "HEAD"]);
-  return branch.trim();
-};
-
-const getCurrentCommit = async (repoDir: string): Promise<string> => {
-  const git = createTestGitClient(repoDir);
-  const commit = await git.revparse(["HEAD"]);
-  return commit.trim();
-};
 
 describe("patchy repo checkout", () => {
   let tmpDir: string;
@@ -74,7 +38,7 @@ describe("patchy repo checkout", () => {
     });
 
     const repoDir = ctx.absoluteRepoDir as string;
-    await initGitRepo(repoDir);
+    await initGitRepoWithCommit(repoDir, "file.txt", "initial content");
     await createBranch(repoDir, "feature-branch");
 
     const result = await assertSuccessfulCommand(
@@ -102,7 +66,7 @@ describe("patchy repo checkout", () => {
     });
 
     const repoDir = ctx.absoluteRepoDir as string;
-    await initGitRepo(repoDir);
+    await initGitRepoWithCommit(repoDir, "file.txt", "initial content");
     await createTag(repoDir, "v1.0.0");
     await createBranch(repoDir, "other-branch");
 
@@ -128,7 +92,7 @@ describe("patchy repo checkout", () => {
     });
 
     const repoDir = ctx.absoluteRepoDir as string;
-    await initGitRepo(repoDir);
+    await initGitRepoWithCommit(repoDir, "file.txt", "initial content");
     const initialCommit = await getCurrentCommit(repoDir);
     await createBranch(repoDir, "other-branch");
 
@@ -157,7 +121,7 @@ describe("patchy repo checkout", () => {
     });
 
     const repoDir = ctx.absoluteRepoDir as string;
-    await initGitRepo(repoDir);
+    await initGitRepoWithCommit(repoDir, "file.txt", "initial content");
 
     const result = await assertFailedCommand(
       `patchy repo checkout --ref non-existent-ref`,
@@ -184,7 +148,7 @@ describe("patchy repo checkout", () => {
     });
 
     const repoDir = ctx.absoluteRepoDir as string;
-    await initGitRepo(repoDir);
+    await initGitRepoWithCommit(repoDir, "file.txt", "initial content");
     await createBranch(repoDir, "feature-branch");
 
     writeFileSync(path.join(repoDir, "uncommitted.txt"), "dirty content");
@@ -214,7 +178,7 @@ describe("patchy repo checkout", () => {
     });
 
     const repoDir = ctx.absoluteRepoDir as string;
-    await initGitRepo(repoDir);
+    await initGitRepoWithCommit(repoDir, "file.txt", "initial content");
     await createBranch(repoDir, "feature-branch");
 
     const result = await assertSuccessfulCommand(
@@ -240,7 +204,7 @@ describe("patchy repo checkout", () => {
     });
 
     const repoDir = path.join(tmpDir, "repos", "custom-repo");
-    await initGitRepo(repoDir);
+    await initGitRepoWithCommit(repoDir, "file.txt", "initial content");
     await createBranch(repoDir, "feature-branch");
 
     const result = await assertSuccessfulCommand(
@@ -294,7 +258,7 @@ describe("patchy repo checkout", () => {
       });
 
       const repoDir = ctx.absoluteRepoDir as string;
-      await initGitRepo(repoDir);
+      await initGitRepoWithCommit(repoDir, "file.txt", "initial content");
       await createBranch(repoDir, "feature-branch");
 
       const initialBranch = await getCurrentBranch(repoDir);
@@ -323,7 +287,7 @@ describe("patchy repo checkout", () => {
       });
 
       const repoDir = ctx.absoluteRepoDir as string;
-      await initGitRepo(repoDir);
+      await initGitRepoWithCommit(repoDir, "file.txt", "initial content");
 
       const result = await assertFailedCommand(
         `patchy repo checkout --ref non-existent-ref --dry-run`,

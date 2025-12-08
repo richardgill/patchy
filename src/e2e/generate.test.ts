@@ -1,8 +1,8 @@
-import { existsSync, mkdirSync, readFileSync, writeFileSync } from "node:fs";
+import { existsSync, readFileSync } from "node:fs";
 import path from "node:path";
 import { beforeEach, describe, expect, it } from "vitest";
 import { assertDefined } from "~/lib/assert";
-import { createTestGitClient } from "~/lib/git";
+import { initGitRepoWithCommit, writeRepoFile } from "./git-helpers";
 import {
   assertFailedCommand,
   assertSuccessfulCommand,
@@ -10,31 +10,6 @@ import {
   setupTestWithConfig,
   stabilizeTempDir,
 } from "./test-utils";
-
-const initGitRepo = async (repoDir: string): Promise<void> => {
-  const git = createTestGitClient(repoDir);
-
-  await git.init();
-  await git.addConfig("user.email", "test@test.com");
-  await git.addConfig("user.name", "Test User");
-
-  writeFileSync(path.join(repoDir, "initial.txt"), "initial content\n");
-  await git.add(".");
-  await git.commit("initial commit");
-};
-
-const modifyFile = (
-  repoDir: string,
-  filePath: string,
-  content: string,
-): void => {
-  const fullPath = path.join(repoDir, filePath);
-  const dir = path.dirname(fullPath);
-  if (!existsSync(dir)) {
-    mkdirSync(dir, { recursive: true });
-  }
-  writeFileSync(fullPath, content);
-};
 
 describe("patchy generate", () => {
   let tmpDir: string;
@@ -64,8 +39,8 @@ describe("patchy generate", () => {
       "absolutePatchesDir",
     );
 
-    await initGitRepo(repoDir);
-    modifyFile(repoDir, "initial.txt", "modified content\n");
+    await initGitRepoWithCommit(repoDir);
+    writeRepoFile(repoDir, "initial.txt", "modified content\n");
 
     const result = await assertSuccessfulCommand(`patchy generate`, tmpDir);
 
@@ -104,8 +79,8 @@ describe("patchy generate", () => {
       "absolutePatchesDir",
     );
 
-    await initGitRepo(repoDir);
-    modifyFile(repoDir, "newfile.txt", "new file content\n");
+    await initGitRepoWithCommit(repoDir);
+    writeRepoFile(repoDir, "newfile.txt", "new file content\n");
 
     const result = await assertSuccessfulCommand(`patchy generate`, tmpDir);
 
@@ -139,8 +114,8 @@ describe("patchy generate", () => {
       "absolutePatchesDir",
     );
 
-    await initGitRepo(repoDir);
-    modifyFile(
+    await initGitRepoWithCommit(repoDir);
+    writeRepoFile(
       repoDir,
       "src/components/Button.tsx",
       "export const Button = () => <button />\n",
@@ -173,9 +148,9 @@ describe("patchy generate", () => {
 
     const repoDir = assertDefined(ctx.absoluteRepoDir, "absoluteRepoDir");
 
-    await initGitRepo(repoDir);
-    modifyFile(repoDir, "initial.txt", "modified content\n");
-    modifyFile(repoDir, "newfile.txt", "new file content\n");
+    await initGitRepoWithCommit(repoDir);
+    writeRepoFile(repoDir, "initial.txt", "modified content\n");
+    writeRepoFile(repoDir, "newfile.txt", "new file content\n");
 
     const result = await assertSuccessfulCommand(`patchy generate`, tmpDir);
 
@@ -205,9 +180,9 @@ describe("patchy generate", () => {
       "absolutePatchesDir",
     );
 
-    await initGitRepo(repoDir);
-    modifyFile(repoDir, "initial.txt", "modified content\n");
-    modifyFile(repoDir, "newfile.txt", "new file content\n");
+    await initGitRepoWithCommit(repoDir);
+    writeRepoFile(repoDir, "initial.txt", "modified content\n");
+    writeRepoFile(repoDir, "newfile.txt", "new file content\n");
 
     const result = await assertSuccessfulCommand(
       `patchy generate --dry-run`,
@@ -242,7 +217,7 @@ describe("patchy generate", () => {
 
     const repoDir = assertDefined(ctx.absoluteRepoDir, "absoluteRepoDir");
 
-    await initGitRepo(repoDir);
+    await initGitRepoWithCommit(repoDir);
 
     const result = await assertSuccessfulCommand(`patchy generate`, tmpDir);
 
@@ -312,8 +287,8 @@ describe("patchy generate", () => {
 
     const repoDir = assertDefined(ctx.absoluteRepoDir, "absoluteRepoDir");
 
-    await initGitRepo(repoDir);
-    modifyFile(repoDir, "initial.txt", "modified content\n");
+    await initGitRepoWithCommit(repoDir);
+    writeRepoFile(repoDir, "initial.txt", "modified content\n");
 
     const result = await assertSuccessfulCommand(`patchy generate`, tmpDir);
 
@@ -341,8 +316,8 @@ describe("patchy generate", () => {
 
     const repoDir = assertDefined(ctx.absoluteRepoDir, "absoluteRepoDir");
 
-    await initGitRepo(repoDir);
-    modifyFile(repoDir, "initial.txt", "modified content\n");
+    await initGitRepoWithCommit(repoDir);
+    writeRepoFile(repoDir, "initial.txt", "modified content\n");
 
     const result = await assertSuccessfulCommand(
       `patchy generate --verbose`,
