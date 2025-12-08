@@ -17,6 +17,8 @@ export type ApplyCommandFlags = SharedFlags;
 
 export type GenerateCommandFlags = SharedFlags;
 
+export type CloneCommandFlags = Omit<SharedFlags, "repo-dir" | "patches-dir">;
+
 // Note: underscore_case property names match JSON config keys
 export type CompleteJsonConfig = {
   repo_url: string;
