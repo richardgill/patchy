@@ -1,0 +1,157 @@
+name: Publish
+
+on:
+  push:
+    branches:
+      - main
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  checks:
+    name: Checks
+    uses: ./.github/workflows/pre-checks.yml
+    secrets: inherit
+
+  release:
+    name: Release
+    needs: checks
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+      pull-requests: write
+    outputs:
+      published: ${{ steps.changesets.outputs.published }}
+      version: ${{ steps.version.outputs.version }}
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: pnpm
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Create Release Pull Request or Publish
+        id: changesets
+        uses: changesets/action@v1
+        with:
+          publish: pnpm changeset-publish
+          title: "chore: release"
+          commit: "chore: release"
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          NPM_TOKEN: ${{ secrets.NPM_TOKEN }}
+
+      - name: Get published version
+        id: version
+        if: steps.changesets.outputs.published == 'true'
+        run: |
+          VERSION=$(node -p "require('./package.json').version")
+          echo "version=$VERSION" >> $GITHUB_OUTPUT
+
+  build-and-release:
+    name: Build binaries and create GitHub release
+    needs: release
+    if: needs.release.outputs.published == 'true'
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          ref: main
+
+      - name: Setup Bun
+        uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: latest
+
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: pnpm
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Build all binaries
+        run: pnpm build-binary
+        env:
+          PATCHY_VERSION: ${{ needs.release.outputs.version }}
+
+      - name: Prepare release assets
+        run: |
+          mkdir -p release
+
+          # Copy binaries to release folder
+          cp dist/patchy-linux-x64/bin/patchy release/patchy-linux-x64
+          cp dist/patchy-linux-arm64/bin/patchy release/patchy-linux-arm64
+          cp dist/patchy-darwin-x64/bin/patchy release/patchy-darwin-x64
+          cp dist/patchy-darwin-arm64/bin/patchy release/patchy-darwin-arm64
+          cp dist/patchy-windows-x64/bin/patchy.exe release/patchy-windows-x64.exe
+
+          # Create archives
+          cd release
+          tar -czf patchy-linux-x64.tar.gz patchy-linux-x64
+          tar -czf patchy-linux-arm64.tar.gz patchy-linux-arm64
+          zip patchy-darwin-x64.zip patchy-darwin-x64
+          zip patchy-darwin-arm64.zip patchy-darwin-arm64
+          zip patchy-windows-x64.zip patchy-windows-x64.exe
+
+          sha256sum *.tar.gz *.zip > checksums.txt
+
+      - name: Create GitHub Release
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: v${{ needs.release.outputs.version }}
+          name: patchy v${{ needs.release.outputs.version }}
+          body: |
+            ## patchy v${{ needs.release.outputs.version }}
+
+            See [CHANGELOG](https://github.com/richardgill/patchy/blob/main/CHANGELOG.md) for details.
+
+            ### Installation
+
+            **npm (recommended):**
+            ```bash
+            npm install -g @richardgill/patchy
+            ```
+
+            **Manual download:**
+            | Platform | Architecture | Download |
+            |----------|--------------|----------|
+            | Linux | x64 | `patchy-linux-x64.tar.gz` |
+            | Linux | arm64 | `patchy-linux-arm64.tar.gz` |
+            | macOS | Intel | `patchy-darwin-x64.zip` |
+            | macOS | Apple Silicon | `patchy-darwin-arm64.zip` |
+            | Windows | x64 | `patchy-windows-x64.zip` |
+          files: |
+            release/patchy-linux-x64.tar.gz
+            release/patchy-linux-arm64.tar.gz
+            release/patchy-darwin-x64.zip
+            release/patchy-darwin-arm64.zip
+            release/patchy-windows-x64.zip
+            release/checksums.txt
+          draft: false
+          prerelease: ${{ contains(needs.release.outputs.version, '-') }}
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
