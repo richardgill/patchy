@@ -46,9 +46,14 @@ export const runCli = async (
   try {
     await run(app, args, testContext);
   } catch (error) {
-    // Ignore the exit error - it's expected when process.exit() is called
+    // In tests, process.exit() throws ProcessExitError - this is expected behavior.
+    // Any OTHER error is an unexpected failure from the command (e.g., git operation failed).
+    // We handle unexpected errors here so commands don't need try/catch boilerplate
+    // just to re-throw ProcessExitError.
     if (!(error instanceof ProcessExitError)) {
-      throw error;
+      const message = error instanceof Error ? error.message : String(error);
+      testContext.process.stderr.write(`Error: ${message}\n`);
+      testContext.process.exit(1);
     }
   } finally {
     // Restore original process methods
