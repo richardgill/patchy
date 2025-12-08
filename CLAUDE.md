@@ -1,3 +1,5 @@
+@BEADS.md
+
 # Patchy CLI Project
 
 ## Project Overview
