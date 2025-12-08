@@ -15,9 +15,3 @@ pre-push:
     biome:
       glob: "*.{js,ts,cjs,mjs,d.cts,d.mts,jsx,tsx,json,jsonc}"
       run: pnpm exec biome check --error-on-warnings --diagnostic-level=warn --no-errors-on-unmatched --files-ignore-unknown=true {push_files}
-
-post-commit:
-  commands:
-    joist-run:
-      run: |
-        tmux new-session -d -s jcli 'jcli run . > jcli.log 2>&1 && tmux kill-session -t jcli'
