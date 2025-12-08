@@ -1,18 +1,11 @@
 import { writeFileSync } from "node:fs";
 import { copyFile } from "node:fs/promises";
 import { dirname, join } from "node:path";
-import { simpleGit } from "simple-git";
 import { resolveConfig } from "~/config/resolver";
 import type { GenerateCommandFlags, ResolvedConfig } from "~/config/types";
 import type { LocalContext } from "~/context";
 import { ensureDirExists } from "~/lib/fs";
-
-// Removes GIT_* env vars that can interfere when running inside git hooks or other git processes
-const getCleanGitEnv = (): NodeJS.ProcessEnv => {
-  return Object.fromEntries(
-    Object.entries(process.env).filter(([key]) => !key.startsWith("GIT_")),
-  );
-};
+import { createGitClient } from "~/lib/git";
 
 type GitChange = {
   type: "modified" | "new";
@@ -26,15 +19,8 @@ type PatchToGenerate = {
   relativePath: string;
 };
 
-const gitClient = (repoDir: string) =>
-  simpleGit({
-    baseDir: repoDir,
-    binary: "git",
-    maxConcurrentProcesses: 6,
-  }).env(getCleanGitEnv());
-
 const getGitChanges = async (repoDir: string): Promise<GitChange[]> => {
-  const git = gitClient(repoDir);
+  const git = createGitClient(repoDir);
 
   const diffSummary = await git.diffSummary(["HEAD"]);
   const modifiedFiles: GitChange[] = diffSummary.files.map((file) => ({
@@ -54,7 +40,7 @@ const generateDiff = async (
   repoDir: string,
   filePath: string,
 ): Promise<string> => {
-  const git = gitClient(repoDir);
+  const git = createGitClient(repoDir);
   return git.diff(["HEAD", "--", filePath]);
 };
 

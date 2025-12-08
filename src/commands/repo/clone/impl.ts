@@ -1,13 +1,13 @@
 import { existsSync } from "node:fs";
 import { join, resolve } from "node:path";
 import chalk from "chalk";
-import { simpleGit } from "simple-git";
 import { createMergedConfig } from "~/config/resolver";
 import type { CloneCommandFlags } from "~/config/types";
 import { isValidGitUrl } from "~/config/validation";
 import type { LocalContext } from "~/context";
 import { assertDefined } from "~/lib/assert";
 import { ensureDirExists } from "~/lib/fs";
+import { createGitClient } from "~/lib/git";
 
 const extractRepoName = (url: string): string | undefined => {
   const httpsMatch = url.match(/\/([^/]+?)(\.git)?$/);
@@ -20,11 +20,6 @@ const extractRepoName = (url: string): string | undefined => {
   }
   return undefined;
 };
-
-const getCleanGitEnv = (): NodeJS.ProcessEnv =>
-  Object.fromEntries(
-    Object.entries(process.env).filter(([key]) => !key.startsWith("GIT_")),
-  );
 
 export default async function (
   this: LocalContext,
@@ -110,12 +105,12 @@ export default async function (
 
     this.process.stdout.write(`Cloning ${repoUrl} to ${targetDir}...\n`);
 
-    const git = simpleGit({ baseDir: repoBaseDir }).env(getCleanGitEnv());
+    const git = createGitClient(repoBaseDir);
     await git.clone(repoUrl, repoName);
 
     if (ref) {
       this.process.stdout.write(`Checking out ${ref}...\n`);
-      const repoGit = simpleGit({ baseDir: targetDir }).env(getCleanGitEnv());
+      const repoGit = createGitClient(targetDir);
       await repoGit.checkout(ref);
     }
 
