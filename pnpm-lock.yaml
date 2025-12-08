@@ -17,6 +17,9 @@ importers:
       dedent:
         specifier: ^1.6.0
         version: 1.6.0
+      diff:
+        specifier: ^8.0.2
+        version: 8.0.2
       enquirer:
         specifier: ^2.4.1
         version: 2.4.1
