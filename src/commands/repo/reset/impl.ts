@@ -1,4 +1,5 @@
 import { existsSync } from "node:fs";
+import * as prompts from "@clack/prompts";
 import chalk from "chalk";
 import { CheckRepoActions } from "simple-git";
 import { createMergedConfig } from "~/config/resolver";
@@ -43,6 +44,18 @@ export default async function (
       `[DRY RUN] Would hard reset repository: ${repoDir}\n`,
     );
     return;
+  }
+
+  if (!flags.yes) {
+    const confirmed = await prompts.confirm({
+      message: `This will discard all uncommitted changes in ${repoDir}. Continue?`,
+      initialValue: false,
+    });
+
+    if (prompts.isCancel(confirmed) || !confirmed) {
+      this.process.stderr.write("Reset cancelled\n");
+      this.process.exit(1);
+    }
   }
 
   await git.reset(["--hard"]);

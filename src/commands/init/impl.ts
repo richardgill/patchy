@@ -15,6 +15,18 @@ import {
 import { isValidGitUrl } from "~/config/validation";
 import type { LocalContext } from "~/context";
 
+const handleCancel = <T>(
+  value: T | symbol,
+  process: LocalContext["process"],
+): value is symbol => {
+  if (prompts.isCancel(value)) {
+    prompts.cancel("Initialization cancelled");
+    process.exit?.(1);
+    return true;
+  }
+  return false;
+};
+
 type InitCommandFlags = {
   "repo-url"?: string;
   "repo-dir"?: string;
@@ -78,11 +90,7 @@ export default async function (
         return undefined;
       },
     });
-    if (prompts.isCancel(repoUrl)) {
-      prompts.cancel("Initialization cancelled");
-      this.process.exit?.(1);
-      return;
-    }
+    if (handleCancel(repoUrl, this.process)) return;
     answers.repoUrl = repoUrl;
   }
 
@@ -92,11 +100,7 @@ export default async function (
       placeholder: "Branch, tag, or commit to compare against",
       initialValue: DEFAULT_REF,
     });
-    if (prompts.isCancel(ref)) {
-      prompts.cancel("Initialization cancelled");
-      this.process.exit?.(1);
-      return;
-    }
+    if (handleCancel(ref, this.process)) return;
     answers.ref = ref;
   }
 
@@ -106,11 +110,7 @@ export default async function (
       placeholder: "Where generated patch files will be stored",
       initialValue: DEFAULT_PATCHES_DIR,
     });
-    if (prompts.isCancel(patchesDir)) {
-      prompts.cancel("Initialization cancelled");
-      this.process.exit?.(1);
-      return;
-    }
+    if (handleCancel(patchesDir, this.process)) return;
     answers.patchesDir = patchesDir;
   }
 
