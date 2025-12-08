@@ -6,8 +6,6 @@ This is a CLI tool for managing Git patch workflows. It helps maintain curated p
 
 ## Development Commands
 
-
-- When you're finished making your code changes run `pnpm run local-ci` 
 - `pnpm dev` - Run CLI in development with tsx
 
 ## Key Dependencies
