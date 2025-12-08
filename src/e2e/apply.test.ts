@@ -36,15 +36,7 @@ describe("patchy apply", () => {
     );
 
     expect(stabilizeTempDir(result.stdout)).toMatchInlineSnapshot(`
-      "Configuration resolved:
-        repo_url: https://github.com/example/test-repo.git
-        repo_dir: main
-        repo_base_dir: repos
-        patches_dir: patches
-        ref: main
-        verbose: true
-        dry_run: true
-      [DRY RUN] Would apply patches from patches to main
+      "[DRY RUN] Would apply patches from patches to main
       No patch files found."
     `);
   });
@@ -72,15 +64,7 @@ describe("patchy apply", () => {
     );
 
     expect(stabilizeTempDir(result.stdout)).toMatchInlineSnapshot(`
-      "Configuration resolved:
-        repo_url: https://github.com/example/test-repo.git
-        repo_dir: upstream
-        repo_base_dir: <TEST_DIR>/repos
-        patches_dir: my-patches
-        ref: main
-        verbose: true
-        dry_run: true
-      [DRY RUN] Would apply patches from my-patches to upstream
+      "[DRY RUN] Would apply patches from my-patches to upstream
       No patch files found."
     `);
   });
@@ -108,15 +92,7 @@ describe("patchy apply", () => {
     );
 
     expect(stabilizeTempDir(result.stdout)).toMatchInlineSnapshot(`
-      "Configuration resolved:
-        repo_url: https://github.com/example/test-repo.git
-        repo_dir: cli-repo
-        repo_base_dir: <TEST_DIR>/repos
-        patches_dir: cli-patches
-        ref: main
-        verbose: true
-        dry_run: true
-      [DRY RUN] Would apply patches from cli-patches to cli-repo
+      "[DRY RUN] Would apply patches from cli-patches to cli-repo
       No patch files found."
     `);
   });
@@ -219,15 +195,7 @@ describe("patchy apply", () => {
     );
 
     expect(stabilizeTempDir(result.stdout)).toMatchInlineSnapshot(`
-      "Configuration resolved:
-        repo_url: invalid-url-format
-        repo_dir: repo
-        repo_base_dir: base
-        patches_dir: ./patches/
-        ref: main
-        verbose: true
-        dry_run: true
-      [DRY RUN] Would apply patches from ./patches/ to repo
+      "[DRY RUN] Would apply patches from ./patches/ to repo
       No patch files found."
     `);
   });
@@ -253,15 +221,7 @@ describe("patchy apply", () => {
     );
 
     expect(stabilizeTempDir(result.stdout)).toMatchInlineSnapshot(`
-      "Configuration resolved:
-        repo_url: https://github.com/example/repo.git
-        repo_dir: repo
-        repo_base_dir: base
-        patches_dir: ./patches/
-        ref: main
-        verbose: true
-        dry_run: true
-      [DRY RUN] Would apply patches from ./patches/ to repo
+      "[DRY RUN] Would apply patches from ./patches/ to repo
       No patch files found."
     `);
   });
@@ -289,15 +249,7 @@ describe("patchy apply", () => {
     );
 
     expect(stabilizeTempDir(result.stdout)).toMatchInlineSnapshot(`
-      "Configuration resolved:
-        repo_url: https://github.com/example/repo.git
-        repo_dir: repo
-        repo_base_dir: base
-        patches_dir: ./patches/
-        ref: main
-        verbose: true
-        dry_run: true
-      [DRY RUN] Would apply patches from ./patches/ to repo
+      "[DRY RUN] Would apply patches from ./patches/ to repo
       No patch files found."
     `);
   });
@@ -342,15 +294,7 @@ describe("patchy apply", () => {
     );
 
     expect(stabilizeTempDir(result.stdout)).toMatchInlineSnapshot(`
-      "Configuration resolved:
-        repo_url: https://github.com/example/custom.git
-        repo_dir: repo
-        repo_base_dir: base
-        patches_dir: ./patches/
-        ref: custom-branch
-        verbose: true
-        dry_run: true
-      [DRY RUN] Would apply patches from ./patches/ to repo
+      "[DRY RUN] Would apply patches from ./patches/ to repo
       No patch files found."
     `);
   });
@@ -376,15 +320,7 @@ describe("patchy apply", () => {
     );
 
     expect(stabilizeTempDir(result.stdout)).toMatchInlineSnapshot(`
-      "Configuration resolved:
-        repo_url: https://github.com/example/repo.git
-        repo_dir: my-repo/nested-repo
-        repo_base_dir: my-base/nested
-        patches_dir: ./patches/
-        ref: main
-        verbose: true
-        dry_run: true
-      [DRY RUN] Would apply patches from ./patches/ to my-repo/nested-repo
+      "[DRY RUN] Would apply patches from ./patches/ to my-repo/nested-repo
       No patch files found."
     `);
   });
@@ -410,15 +346,7 @@ describe("patchy apply", () => {
     );
 
     expect(stabilizeTempDir(result.stdout)).toMatchInlineSnapshot(`
-      "Configuration resolved:
-        repo_url: https://github.com/example/repo.git
-        repo_dir: repoDir1
-        repo_base_dir: repoBaseDir1
-        patches_dir: ./patches/
-        ref: main
-        verbose: true
-        dry_run: true
-      [DRY RUN] Would apply patches from ./patches/ to repoDir1
+      "[DRY RUN] Would apply patches from ./patches/ to repoDir1
       No patch files found."
     `);
   });
@@ -466,15 +394,7 @@ describe("patchy apply", () => {
     );
 
     expect(stabilizeTempDir(result.stdout)).toMatchInlineSnapshot(`
-      "Configuration resolved:
-        repo_url: https://github.com/example/repo.git
-        repo_dir: repo
-        repo_base_dir: base
-        patches_dir: ./patches/
-        ref: cli-ref
-        verbose: true
-        dry_run: true
-      [DRY RUN] Would apply patches from ./patches/ to repo
+      "[DRY RUN] Would apply patches from ./patches/ to repo
       No patch files found."
     `);
   });
@@ -504,15 +424,7 @@ describe("patchy apply", () => {
     );
 
     expect(stabilizeTempDir(result.stdout)).toMatchInlineSnapshot(`
-      "Configuration resolved:
-        repo_url: https://github.com/example/repo.git
-        repo_dir: repo
-        repo_base_dir: <TEST_DIR>/absolute-base
-        patches_dir: <TEST_DIR>/absolute-patches
-        ref: main
-        verbose: true
-        dry_run: true
-      [DRY RUN] Would apply patches from <TEST_DIR>/absolute-patches to repo
+      "[DRY RUN] Would apply patches from <TEST_DIR>/absolute-patches to repo
       No patch files found."
     `);
   });
