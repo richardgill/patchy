@@ -1,18 +1,7 @@
 import { expect } from "vitest";
-
-type CLIResult = {
-  stdout: string;
-  stderr: string;
-  exitCode: number;
-  failed: boolean;
-  command: string;
-  cwd: string;
-};
+import type { CLIResult } from "./test-utils";
 
 export const cliMatchers = {
-  /**
-   * Assert that a CLI command succeeded (exit code 0)
-   */
   toSucceed(received: CLIResult) {
     const pass = received.exitCode === 0;
 
@@ -25,9 +14,6 @@ export const cliMatchers = {
     };
   },
 
-  /**
-   * Assert that a CLI command failed (exit code !== 0)
-   */
   toFail(received: CLIResult) {
     const pass = received.exitCode !== 0;
 
@@ -40,9 +26,6 @@ export const cliMatchers = {
     };
   },
 
-  /**
-   * Assert that stdout contains a string or matches a regex
-   */
   toHaveOutput(received: CLIResult, expected: string | RegExp) {
     const matches =
       typeof expected === "string"
@@ -58,9 +41,6 @@ export const cliMatchers = {
     };
   },
 
-  /**
-   * Assert that stderr contains a string or matches a regex
-   */
   toHaveError(received: CLIResult, expected: string | RegExp) {
     const matches =
       typeof expected === "string"
@@ -76,9 +56,6 @@ export const cliMatchers = {
     };
   },
 
-  /**
-   * Assert that a CLI command failed with a specific error message
-   */
   toFailWith(received: CLIResult, expected: string | RegExp) {
     const failed = received.exitCode !== 0;
     const matches =
@@ -103,10 +80,8 @@ export const cliMatchers = {
   },
 };
 
-// Extend Vitest's expect
 expect.extend(cliMatchers);
 
-// Type declarations for the custom matchers
 declare module "vitest" {
   interface Assertion {
     toSucceed(): void;

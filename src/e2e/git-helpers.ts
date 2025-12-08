@@ -3,9 +3,6 @@ import { writeFile } from "node:fs/promises";
 import { dirname, join } from "node:path";
 import { createTestGitClient } from "~/lib/git";
 
-/**
- * Initialize a git repository with basic config
- */
 export const initGitRepo = async (repoDir: string): Promise<void> => {
   const git = createTestGitClient(repoDir);
   await git.init();
@@ -13,9 +10,6 @@ export const initGitRepo = async (repoDir: string): Promise<void> => {
   await git.addConfig("user.name", "Test User");
 };
 
-/**
- * Initialize a git repository with an initial commit containing a file
- */
 export const initGitRepoWithCommit = async (
   repoDir: string,
   filename = "initial.txt",
@@ -28,9 +22,6 @@ export const initGitRepoWithCommit = async (
   await git.commit("initial commit");
 };
 
-/**
- * Create a file and commit it
- */
 export const commitFile = async (
   repoDir: string,
   filename: string,
@@ -44,9 +35,6 @@ export const commitFile = async (
   await git.commit(message);
 };
 
-/**
- * Create or modify a file in the repo (sync version, creates parent dirs)
- */
 export const writeRepoFile = (
   repoDir: string,
   filePath: string,
@@ -60,9 +48,6 @@ export const writeRepoFile = (
   writeFileSync(fullPath, content);
 };
 
-/**
- * Create or modify a file in the repo (async version)
- */
 export const writeRepoFileAsync = async (
   repoDir: string,
   filename: string,
@@ -72,9 +57,6 @@ export const writeRepoFileAsync = async (
   await writeFile(filePath, content);
 };
 
-/**
- * Create a branch with a commit and return to previous branch
- */
 export const createBranch = async (
   repoDir: string,
   branchName: string,
@@ -92,9 +74,6 @@ export const createBranch = async (
   await git.checkout("-");
 };
 
-/**
- * Create a tag at current HEAD
- */
 export const createTag = async (
   repoDir: string,
   tagName: string,
@@ -103,18 +82,12 @@ export const createTag = async (
   await git.addTag(tagName);
 };
 
-/**
- * Get the current branch name
- */
 export const getCurrentBranch = async (repoDir: string): Promise<string> => {
   const git = createTestGitClient(repoDir);
   const branch = await git.revparse(["--abbrev-ref", "HEAD"]);
   return branch.trim();
 };
 
-/**
- * Get the current commit SHA
- */
 export const getCurrentCommit = async (repoDir: string): Promise<string> => {
   const git = createTestGitClient(repoDir);
   const commit = await git.revparse(["HEAD"]);

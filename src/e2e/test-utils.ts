@@ -21,7 +21,7 @@ type TestDirContext = {
   absoluteRepoDir: string | undefined;
 };
 
-type CLIResult = {
+export type CLIResult = {
   stdout: string;
   stderr: string;
   exitCode: number;
