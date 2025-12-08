@@ -21,42 +21,65 @@ import {
 } from "./types";
 import { isValidGitUrl } from "./validation";
 
-const getFlagOrJsonValue = <T>(
-  flagValue: T | undefined,
-  jsonValue: T | undefined,
-): T | undefined => {
-  return flagValue ?? jsonValue;
+const getEnvValue = <K extends JsonKey>(
+  jsonKey: K,
+  env: NodeJS.ProcessEnv = process.env,
+): JsonConfig[K] | undefined => {
+  const metadata = CONFIG_FIELD_METADATA[jsonKey];
+  const envValue = env[metadata.env];
+  if (envValue === undefined || envValue === "") {
+    return undefined;
+  }
+  if (jsonKey === "verbose" || jsonKey === "dry_run") {
+    return (envValue.toLowerCase() === "true" ||
+      envValue === "1") as JsonConfig[K];
+  }
+  return envValue as JsonConfig[K];
 };
 
-const getFlagOrJsonValueByKey = <K extends JsonKey>(
+const getFlagOrEnvOrJsonValue = <T>(
+  flagValue: T | undefined,
+  envValue: T | undefined,
+  jsonValue: T | undefined,
+): T | undefined => {
+  return flagValue ?? envValue ?? jsonValue;
+};
+
+const getFlagOrEnvOrJsonValueByKey = <K extends JsonKey>(
   jsonKey: K,
   flags: SharedFlags,
   jsonConfig: JsonConfig,
+  env: NodeJS.ProcessEnv = process.env,
 ): JsonConfig[K] | undefined => {
   const metadata = CONFIG_FIELD_METADATA[jsonKey];
   const flagValue = flags[metadata.flag as keyof typeof flags] as
     | JsonConfig[K]
     | undefined;
-  return getFlagOrJsonValue(flagValue, jsonConfig[jsonKey]);
+  const envValue = getEnvValue(jsonKey, env);
+  return getFlagOrEnvOrJsonValue(flagValue, envValue, jsonConfig[jsonKey]);
 };
 
-const formatFlagOrJsonSource = <K extends JsonKey>(
+const formatFlagOrEnvOrJsonSource = <K extends JsonKey>(
   jsonKey: K,
   flags: SharedFlags,
   jsonConfig: JsonConfig,
   configPath: string,
+  env: NodeJS.ProcessEnv = process.env,
 ): string => {
   const metadata = CONFIG_FIELD_METADATA[jsonKey];
   const flagValue = flags[metadata.flag as keyof typeof flags];
+  const envValue = getEnvValue(jsonKey, env);
   const jsonValue = jsonConfig[jsonKey];
 
   if (flagValue) {
     return `--${metadata.flag} ${flagValue}`;
   }
+  if (envValue !== undefined) {
+    return `${metadata.env}=${env[metadata.env]}`;
+  }
   if (jsonValue) {
     return `${jsonKey}: ${jsonValue} in ${configPath}`;
   }
-  // default value
   return metadata.name;
 };
 
@@ -126,11 +149,13 @@ export const createMergedConfig = ({
   requiredFields,
   onConfigMerged = () => null,
   cwd = process.cwd(),
+  env = process.env,
 }: {
   flags: SharedFlags;
   requiredFields: JsonKey[];
   onConfigMerged?: (config: MergedConfig) => void;
   cwd?: string;
+  env?: NodeJS.ProcessEnv;
 }):
   | { mergedConfig: MergedConfig; success: true }
   | { success: false; error: string } => {
@@ -138,10 +163,13 @@ export const createMergedConfig = ({
   if (cwd) {
     process.chdir(cwd);
   }
-  const configPath = flags.config ?? DEFAULT_CONFIG_PATH;
+  const configPath =
+    flags.config ?? env["PATCHY_CONFIG"] ?? DEFAULT_CONFIG_PATH;
+  const configExplicitlySet =
+    flags.config !== undefined || env["PATCHY_CONFIG"] !== undefined;
   const absoluteConfigPath = resolve(configPath);
   let jsonString: string | undefined;
-  if (!existsSync(absoluteConfigPath) && flags.config !== undefined) {
+  if (!existsSync(absoluteConfigPath) && configExplicitlySet) {
     return {
       success: false,
       error: `Configuration file not found: ${absoluteConfigPath}`,
@@ -159,18 +187,26 @@ export const createMergedConfig = ({
     };
   }
   const jsonConfig = parseResult.data;
-  const repoBaseDir = getFlagOrJsonValueByKey(
+  const repoBaseDir = getFlagOrEnvOrJsonValueByKey(
     "repo_base_dir",
     flags,
     jsonConfig,
+    env,
   );
-  const repoDir = getFlagOrJsonValueByKey("repo_dir", flags, jsonConfig);
+  const repoDir = getFlagOrEnvOrJsonValueByKey(
+    "repo_dir",
+    flags,
+    jsonConfig,
+    env,
+  );
   const patchesDir =
-    getFlagOrJsonValueByKey("patches_dir", flags, jsonConfig) ??
+    getFlagOrEnvOrJsonValueByKey("patches_dir", flags, jsonConfig, env) ??
     DEFAULT_PATCHES_DIR;
   const mergedConfig: MergedConfig = {
-    repo_url: getFlagOrJsonValueByKey("repo_url", flags, jsonConfig),
-    ref: getFlagOrJsonValueByKey("ref", flags, jsonConfig) ?? DEFAULT_REF,
+    repo_url: getFlagOrEnvOrJsonValueByKey("repo_url", flags, jsonConfig, env),
+    ref:
+      getFlagOrEnvOrJsonValueByKey("ref", flags, jsonConfig, env) ??
+      DEFAULT_REF,
     repo_base_dir: repoBaseDir,
     absoluteRepoBaseDir: repoBaseDir ? resolve(repoBaseDir) : undefined,
     repo_dir: repoDir,
@@ -180,8 +216,10 @@ export const createMergedConfig = ({
         : undefined,
     patches_dir: patchesDir,
     absolutePatchesDir: patchesDir ? resolve(patchesDir) : undefined,
-    verbose: getFlagOrJsonValueByKey("verbose", flags, jsonConfig) ?? false,
-    dry_run: flags["dry-run"] ?? false,
+    verbose:
+      getFlagOrEnvOrJsonValueByKey("verbose", flags, jsonConfig, env) ?? false,
+    dry_run:
+      getFlagOrEnvOrJsonValueByKey("dry_run", flags, jsonConfig, env) ?? false,
   };
 
   onConfigMerged(mergedConfig);
@@ -191,6 +229,7 @@ export const createMergedConfig = ({
     configPath,
     jsonConfig,
     flags,
+    env,
   });
   if (cwd) {
     process.chdir(originalCwd);
@@ -207,12 +246,14 @@ const calcError = ({
   configPath,
   jsonConfig,
   flags,
+  env = process.env,
 }: {
   mergedConfig: MergedConfig;
   requiredFields: JsonKey[];
   configPath: string;
   jsonConfig: JsonConfig;
   flags: SharedFlags;
+  env?: NodeJS.ProcessEnv;
 }): { success: true } | { success: false; error: string } => {
   const missingFields = requiredFields.filter((field) => {
     return isNil(mergedConfig[field]);
@@ -220,7 +261,7 @@ const calcError = ({
   if (missingFields.length > 0) {
     const missingFieldLines = missingFields.map((fieldKey) => {
       const field = CONFIG_FIELD_METADATA[fieldKey];
-      return `  Missing ${chalk.bold(field.name)}: set ${chalk.cyan(fieldKey)} in ${chalk.blue(configPath)} or use ${chalk.cyan(`--${field.flag}`)} flag`;
+      return `  Missing ${chalk.bold(field.name)}: set ${chalk.cyan(fieldKey)} in ${chalk.blue(configPath)}, ${chalk.cyan(field.env)} env var, or ${chalk.cyan(`--${field.flag}`)} flag`;
     });
 
     const missingFieldsError = `${[
@@ -242,7 +283,7 @@ const calcError = ({
     existsSync(mergedConfig.absoluteRepoBaseDir);
   if (!isRepoBaseDirValid) {
     validationErrors.push(
-      `${formatFlagOrJsonSource("repo_base_dir", flags, jsonConfig, configPath)} does not exist: ${chalk.blue(mergedConfig.absoluteRepoBaseDir)}`,
+      `${formatFlagOrEnvOrJsonSource("repo_base_dir", flags, jsonConfig, configPath, env)} does not exist: ${chalk.blue(mergedConfig.absoluteRepoBaseDir)}`,
     );
   }
   if (
@@ -252,7 +293,7 @@ const calcError = ({
     !existsSync(mergedConfig.absoluteRepoDir)
   ) {
     validationErrors.push(
-      `${formatFlagOrJsonSource("repo_dir", flags, jsonConfig, configPath)} does not exist: ${chalk.blue(mergedConfig.absoluteRepoDir)}`,
+      `${formatFlagOrEnvOrJsonSource("repo_dir", flags, jsonConfig, configPath, env)} does not exist: ${chalk.blue(mergedConfig.absoluteRepoDir)}`,
     );
   }
 
@@ -262,7 +303,7 @@ const calcError = ({
     !existsSync(mergedConfig.absolutePatchesDir)
   ) {
     validationErrors.push(
-      `${formatFlagOrJsonSource("patches_dir", flags, jsonConfig, configPath)} does not exist: ${chalk.blue(mergedConfig.absolutePatchesDir)}`,
+      `${formatFlagOrEnvOrJsonSource("patches_dir", flags, jsonConfig, configPath, env)} does not exist: ${chalk.blue(mergedConfig.absolutePatchesDir)}`,
     );
   }
 
@@ -272,7 +313,7 @@ const calcError = ({
     !isValidGitUrl(mergedConfig.repo_url)
   ) {
     validationErrors.push(
-      `${formatFlagOrJsonSource("repo_url", flags, jsonConfig, configPath)} is invalid.  Example repo: ${CONFIG_FIELD_METADATA.repo_url.example}`,
+      `${formatFlagOrEnvOrJsonSource("repo_url", flags, jsonConfig, configPath, env)} is invalid.  Example repo: ${CONFIG_FIELD_METADATA.repo_url.example}`,
     );
   }
 

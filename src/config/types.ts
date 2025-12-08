@@ -52,36 +52,43 @@ export type PartialCamelCaseResolvedConfig = Partial<CamelCaseResolvedConfig>;
 export const CONFIG_FIELD_METADATA = {
   repo_url: {
     flag: "repo-url",
+    env: "PATCHY_REPO_URL",
     name: "Repository URL",
     example: "https://github.com/user/repo.git",
   },
   repo_dir: {
     flag: "repo-dir",
+    env: "PATCHY_REPO_DIR",
     name: "Repository directory",
     example: "./repo",
   },
   repo_base_dir: {
     flag: "repo-base-dir",
+    env: "PATCHY_REPO_BASE_DIR",
     name: "Repository base directory",
     example: "./upstream",
   },
   patches_dir: {
     flag: "patches-dir",
+    env: "PATCHY_PATCHES_DIR",
     name: "Patches directory",
     example: "./patches",
   },
   ref: {
     flag: "ref",
+    env: "PATCHY_REF",
     name: "Git reference",
     example: "main",
   },
   verbose: {
     flag: "verbose",
+    env: "PATCHY_VERBOSE",
     name: "Verbose output",
     example: "true",
   },
   dry_run: {
     flag: "dry-run",
+    env: "PATCHY_DRY_RUN",
     name: "Dry run mode",
     example: "true",
   },
@@ -89,6 +96,7 @@ export const CONFIG_FIELD_METADATA = {
   JsonKey,
   {
     flag: keyof SharedFlags;
+    env: string;
     name: string;
     example: string;
   }
