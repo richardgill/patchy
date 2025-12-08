@@ -1,9 +1,10 @@
 import { existsSync } from "node:fs";
-import { copyFile, mkdir, readdir, readFile } from "node:fs/promises";
+import { copyFile, mkdir, readFile, writeFile } from "node:fs/promises";
 import path from "node:path";
 import { resolveConfig } from "~/config/resolver";
 import type { ApplyCommandFlags, ResolvedConfig } from "~/config/types";
 import type { LocalContext } from "~/context";
+import { getAllFiles } from "~/lib/fs";
 import { applyDiff } from "./apply-diff";
 
 type PatchFile = {
@@ -16,41 +17,24 @@ type PatchFile = {
 const collectPatchFiles = async (
   patchesDir: string,
   repoDir: string,
-  currentPath = "",
 ): Promise<PatchFile[]> => {
-  const files: PatchFile[] = [];
-  const entries = await readdir(path.join(patchesDir, currentPath), {
-    withFileTypes: true,
-  });
+  const relativePaths = await getAllFiles(patchesDir);
 
-  for (const entry of entries) {
-    const relativePath = path.join(currentPath, entry.name);
+  return relativePaths.map((relativePath) => {
     const absolutePath = path.join(patchesDir, relativePath);
+    const isDiff = relativePath.endsWith(".diff");
+    const targetRelativePath = isDiff
+      ? relativePath.slice(0, -5)
+      : relativePath;
+    const targetPath = path.join(repoDir, targetRelativePath);
 
-    if (entry.isDirectory()) {
-      const nestedFiles = await collectPatchFiles(
-        patchesDir,
-        repoDir,
-        relativePath,
-      );
-      files.push(...nestedFiles);
-    } else if (entry.isFile()) {
-      const isDiff = entry.name.endsWith(".diff");
-      const targetRelativePath = isDiff
-        ? relativePath.slice(0, -5)
-        : relativePath;
-      const targetPath = path.join(repoDir, targetRelativePath);
-
-      files.push({
-        relativePath,
-        absolutePath,
-        type: isDiff ? "diff" : "copy",
-        targetPath,
-      });
-    }
-  }
-
-  return files;
+    return {
+      relativePath,
+      absolutePath,
+      type: isDiff ? "diff" : "copy",
+      targetPath,
+    };
+  });
 };
 
 const applyPatch = async (
@@ -78,7 +62,6 @@ const applyPatch = async (
       const patchedContent = applyDiff(originalContent, diffContent);
 
       await mkdir(path.dirname(patchFile.targetPath), { recursive: true });
-      const { writeFile } = await import("node:fs/promises");
       await writeFile(patchFile.targetPath, patchedContent);
 
       if (verbose) {
