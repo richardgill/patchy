@@ -3,10 +3,12 @@ import { applyCommand } from "./commands/apply/command";
 import { generateCommand } from "./commands/generate/command";
 import { initCommand } from "./commands/init/command";
 import { cloneCommand } from "./commands/repo/clone/command";
+import { resetCommand } from "./commands/repo/reset/command";
 
 const repoRoutes = buildRouteMap({
   routes: {
     clone: cloneCommand,
+    reset: resetCommand,
   },
   docs: {
     brief: "Repository management commands",

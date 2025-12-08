@@ -22,6 +22,11 @@ export type CloneCommandFlags = Pick<
   "repo-url" | "repo-base-dir" | "ref" | "config" | "verbose" | "dry-run"
 >;
 
+export type ResetCommandFlags = Pick<
+  SharedFlags,
+  "repo-base-dir" | "repo-dir" | "config" | "verbose"
+>;
+
 // Note: underscore_case property names match JSON config keys
 export type CompleteJsonConfig = {
   repo_url: string;

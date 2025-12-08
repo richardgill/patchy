@@ -8,6 +8,9 @@ const getCleanGitEnv = (): NodeJS.ProcessEnv =>
 export const createGitClient = (baseDir: string): SimpleGit =>
   simpleGit({ baseDir }).env(getCleanGitEnv());
 
+export const createTestGitClient = (baseDir: string): SimpleGit =>
+  simpleGit({ baseDir }).env({ ...getCleanGitEnv(), LEFTHOOK: "0" });
+
 export const extractRepoName = (url: string): string | undefined => {
   const httpsMatch = url.match(/\/([^/]+?)(\.git)?$/);
   if (httpsMatch) {
