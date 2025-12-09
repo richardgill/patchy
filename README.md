@@ -33,7 +33,7 @@ File layout must mirror the structure of `repo_dir`.
 ## Installation
 
 ```sh
-npm install -g @richardgill/patchy
+npm install -g patchy-cli
 ```
 
 ## Shared Flags
