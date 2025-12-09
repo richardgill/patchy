@@ -21,15 +21,6 @@ export type CLIResult = {
   signal?: NodeJS.Signals;
 };
 
-// Runtime to use for CLI execution - can be set via TEST_RUNTIME env var
-// Default to "node" for backwards compatibility
-type Runtime = "node" | "bun";
-const getRuntime = (): Runtime => {
-  const runtime = process.env["TEST_RUNTIME"];
-  if (runtime === "bun") return "bun";
-  return "node";
-};
-
 // Path to the CLI entry point
 const CLI_PATH = resolve(import.meta.dirname, "../cli.ts");
 
@@ -41,13 +32,9 @@ export const runCli = async (
   const processedCommand = command.replace(/^patchy\s+/, "");
   const args = processedCommand.split(/\s+/).filter(Boolean);
 
-  const runtime = getRuntime();
-  const execArgs =
-    runtime === "bun"
-      ? ["run", CLI_PATH, ...args]
-      : ["--import", "tsx", CLI_PATH, ...args];
+  const execArgs = ["run", CLI_PATH, ...args];
 
-  const result = await execa(runtime, execArgs, {
+  const result = await execa("bun", execArgs, {
     cwd,
     reject: false,
     env: {

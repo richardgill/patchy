@@ -1,18 +1,14 @@
 name: Setup
-description: Setup pnpm/node and install dependencies
+description: Setup bun and install dependencies
 
 runs:
   using: composite
   steps:
-    - name: Setup pnpm
-      uses: pnpm/action-setup@v4
-
-    - name: Setup Node.js
-      uses: actions/setup-node@v4
+    - name: Setup Bun
+      uses: oven-sh/setup-bun@v2
       with:
-        node-version: 22
-        cache: pnpm
+        bun-version: latest
 
     - name: Install dependencies
-      run: pnpm install --frozen-lockfile --ignore-scripts
+      run: bun install --frozen-lockfile
       shell: bash

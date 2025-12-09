@@ -1,8 +1,8 @@
 #!/usr/bin/env bash
 
 echo ""
-echo "Running: pnpm run local-ci"
-output=$(pnpm run local-ci 2>&1)
+echo "Running: bun run local-ci"
+output=$(bun run local-ci 2>&1)
 if [ $? -eq 1 ]; then
   echo "" >&2
   echo "$output" >&2
