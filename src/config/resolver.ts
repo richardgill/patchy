@@ -138,26 +138,22 @@ export const createMergedConfig = ({
   flags,
   requiredFields,
   onConfigMerged = () => null,
-  cwd = process.cwd(),
+  cwd,
   env = process.env,
 }: {
   flags: SharedFlags;
   requiredFields: JsonKey[];
   onConfigMerged?: (config: MergedConfig) => void;
-  cwd?: string;
+  cwd: string;
   env?: NodeJS.ProcessEnv;
 }):
   | { mergedConfig: MergedConfig; success: true }
   | { success: false; error: string } => {
-  const originalCwd = process.cwd();
-  if (cwd) {
-    process.chdir(cwd);
-  }
   const configPath =
     flags.config ?? env["PATCHY_CONFIG"] ?? DEFAULT_CONFIG_PATH;
   const configExplicitlySet =
     flags.config !== undefined || env["PATCHY_CONFIG"] !== undefined;
-  const absoluteConfigPath = resolve(configPath);
+  const absoluteConfigPath = resolve(cwd, configPath);
   let jsonString: string | undefined;
   if (!existsSync(absoluteConfigPath) && configExplicitlySet) {
     return {
@@ -185,14 +181,14 @@ export const createMergedConfig = ({
     repo_url: getValueByKey("repo_url", sources),
     ref: getValueByKey("ref", sources) ?? DEFAULT_REF,
     repo_base_dir: repoBaseDir,
-    absoluteRepoBaseDir: repoBaseDir ? resolve(repoBaseDir) : undefined,
+    absoluteRepoBaseDir: repoBaseDir ? resolve(cwd, repoBaseDir) : undefined,
     repo_dir: repoDir,
     absoluteRepoDir:
       repoBaseDir && repoDir
-        ? resolve(path.join(repoBaseDir, repoDir))
+        ? resolve(cwd, path.join(repoBaseDir, repoDir))
         : undefined,
     patches_dir: patchesDir,
-    absolutePatchesDir: patchesDir ? resolve(patchesDir) : undefined,
+    absolutePatchesDir: patchesDir ? resolve(cwd, patchesDir) : undefined,
     verbose: getValueByKey("verbose", sources) ?? false,
     dry_run: getValueByKey("dry_run", sources) ?? false,
   };
@@ -204,9 +200,6 @@ export const createMergedConfig = ({
     configPath,
     sources,
   });
-  if (cwd) {
-    process.chdir(originalCwd);
-  }
   if (!errors.success) {
     return { success: false, error: errors.error };
   }

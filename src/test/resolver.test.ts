@@ -1,6 +1,6 @@
+import { beforeEach, describe, expect, it } from "bun:test";
 import { mkdirSync, writeFileSync } from "node:fs";
 import path from "node:path";
-import { beforeEach, describe, expect, it } from "vitest";
 import { createMergedConfig, type MergedConfig } from "~/config/resolver";
 import type { JsonKey, SharedFlags } from "~/config/types";
 import {
@@ -203,10 +203,12 @@ describe("createMergedConfig", () => {
 
     expectFailedMerge(result);
     expect(result.error).toMatchInlineSnapshot(
-      `"JSON parse error: InvalidSymbol
+      `
+        "JSON parse error: InvalidSymbol
 
->    1 | { invalid json: content }
-          ^"`,
+        >    1 | { invalid json: content }
+                  ^"
+      `,
     );
   });
 
@@ -405,10 +407,12 @@ describe("createMergedConfig", () => {
 
     expectFailedMerge(result);
     expect(result.error).toMatchInlineSnapshot(
-      `"JSON parse error: ValueExpected
+      `
+        "JSON parse error: ValueExpected
 
->    1 | 
-        ^"`,
+        >    1 | 
+                ^"
+      `,
     );
   });
 
@@ -876,9 +880,9 @@ describe("createMergedConfig", () => {
     });
 
     expectFailedMerge(result);
-    expect(result.error).toMatchInlineSnapshot(`
-      "Unrecognized keys: "unknown_field", "another_unknown""
-    `);
+    expect(result.error).toMatchInlineSnapshot(
+      `"Unrecognized keys: "unknown_field", "another_unknown""`,
+    );
   });
 
   it("should handle boolean field with string value", async () => {

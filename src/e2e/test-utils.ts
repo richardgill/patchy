@@ -2,14 +2,8 @@ import { randomUUID } from "node:crypto";
 import { mkdir, writeFile } from "node:fs/promises";
 import { join, resolve } from "node:path";
 import { run } from "@stricli/core";
-
-import { parse as parseShell } from "shell-quote";
-import { app } from "../app";
-import {
-  buildTestContext,
-  getTestOutput,
-  ProcessExitError,
-} from "./stricli-test-context";
+import { app } from "~/app";
+import type { LocalContext } from "~/context";
 
 type TestDirContext = {
   testDir: string;
@@ -26,45 +20,56 @@ export type CLIResult = {
   failed: boolean;
   command: string;
   cwd: string;
-  signal?: NodeJS.Signals;
 };
 
 export const runCli = async (
   command: string,
   cwd: string,
 ): Promise<CLIResult> => {
-  // Drop everything before the first space if there is one
-  // e.g., "patchy init" becomes "init"
-  const processedCommand = command.replace(/^\S+\s+/, "");
+  // Drop "patchy" prefix if present, e.g., "patchy init" becomes "init"
+  const processedCommand = command.replace(/^patchy\s+/, "");
+  const args = processedCommand.split(/\s+/).filter(Boolean);
 
-  const args = parseShell(processedCommand) as string[];
+  let stdout = "";
+  let stderr = "";
+  let exitCode = 0;
 
-  const testContext = buildTestContext({ cwd });
+  const mockProcess = {
+    stdout: {
+      write: (s: string) => {
+        stdout += s;
+      },
+    },
+    stderr: {
+      write: (s: string) => {
+        stderr += s;
+      },
+    },
+    env: { ...process.env, NO_COLOR: "1", FORCE_COLOR: "0" },
+    exit: (code: number) => {
+      exitCode = code;
+    },
+    cwd: () => cwd,
+  };
+
+  const context: LocalContext = {
+    process: mockProcess as unknown as NodeJS.Process,
+    cwd,
+  };
 
   try {
-    await run(app, args, testContext);
-  } catch (error) {
-    // In tests, process.exit() throws ProcessExitError - this is expected behavior.
-    // Any OTHER error is an unexpected failure from the command (e.g., git operation failed).
-    // We handle unexpected errors here so commands don't need try/catch boilerplate
-    // just to re-throw ProcessExitError.
-    if (!(error instanceof ProcessExitError)) {
-      const message = error instanceof Error ? error.message : String(error);
-      testContext.process.stderr.write(`Error: ${message}\n`);
-      testContext.process.exit(1);
+    await run(app, args, context);
+  } catch {
+    if (exitCode === 0) {
+      exitCode = 1;
     }
-  } finally {
-    // Restore original process methods
-    testContext.cleanup();
   }
 
-  const output = getTestOutput(testContext);
-
   return {
-    stdout: output.stdout,
-    stderr: output.stderr,
-    exitCode: output.exitCode,
-    failed: output.exitCode !== 0,
+    stdout: stdout.trim(),
+    stderr: stderr.trim(),
+    exitCode,
+    failed: exitCode !== 0,
     command,
     cwd,
   };

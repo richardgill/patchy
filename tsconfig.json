@@ -27,7 +27,7 @@
 
     "declaration": true,
     "declarationMap": true,
-    "types": ["vitest/globals"]
+    "types": ["bun-types"]
   },
   "include": ["src"],
   "exclude": ["node_modules", "dist"]

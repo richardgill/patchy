@@ -12,7 +12,7 @@ jobs:
       - uses: ./.github/actions/setup
 
       - name: Lint
-        run: pnpm check
+        run: bun run check
 
       - name: Auto Commit
         if: github.ref != 'refs/heads/main'
@@ -30,7 +30,7 @@ jobs:
     steps:
       - uses: actions/checkout@v4
       - uses: ./.github/actions/setup
-      - run: pnpm build
+      - run: bun run build
 
   typecheck:
     name: Typecheck
@@ -38,7 +38,7 @@ jobs:
     steps:
       - uses: actions/checkout@v4
       - uses: ./.github/actions/setup
-      - run: pnpm typecheck
+      - run: bun run typecheck
 
   test:
     name: Test
@@ -46,4 +46,4 @@ jobs:
     steps:
       - uses: actions/checkout@v4
       - uses: ./.github/actions/setup
-      - run: pnpm test
+      - run: bun run test

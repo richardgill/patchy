@@ -1,6 +1,6 @@
+import { beforeEach, describe, expect, it } from "bun:test";
 import { existsSync, readFileSync } from "node:fs";
 import path from "node:path";
-import { beforeEach, describe, expect, it } from "vitest";
 import { assertDefined } from "~/lib/assert";
 import { initGitRepoWithCommit, writeRepoFile } from "./git-helpers";
 import {

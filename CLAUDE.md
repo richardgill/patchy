@@ -8,7 +8,8 @@ This is a CLI tool for managing Git patch workflows. It helps maintain curated p
 
 ## Development Commands
 
-- `pnpm dev` - Run CLI in development with tsx
+- `bun run dev` - Run CLI in development with bun
+- Use dashes (not colons) for package.json script names: `test-node` not `test:node`
 
 ## Key Dependencies
 
@@ -21,6 +22,12 @@ This is a CLI tool for managing Git patch workflows. It helps maintain curated p
 ## Testing Preferences
 
 - Use parameterized tests, each one has an it(...) with shared functions, keep tests DRY and maintainable
-- `pnpm run test -- -u` to update inline snapshots
-
+- `bun run test -- -u` to update inline snapshots
 - Use `~/` imports instead of relative `../` imports
+
+## Runtime Testing
+
+The CLI uses Bun as its runtime:
+- `bun run test` - Run e2e tests with CLI executing on Bun
+
+The test suite uses bun:test and spawns the actual CLI as a subprocess using `bun`.

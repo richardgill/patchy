@@ -39,7 +39,7 @@ export default async function (
   this: LocalContext,
   flags: InitCommandFlags,
 ): Promise<void> {
-  const configPath = resolve(flags.config ?? DEFAULT_CONFIG_PATH);
+  const configPath = resolve(this.cwd, flags.config ?? DEFAULT_CONFIG_PATH);
 
   if (!flags.force && existsSync(configPath)) {
     this.process.stderr.write(
@@ -112,8 +112,9 @@ export default async function (
     verbose: false,
   };
 
+  const absolutePatchesDir = resolve(this.cwd, finalConfig.patches_dir);
   try {
-    await mkdir(finalConfig.patches_dir, { recursive: true });
+    await mkdir(absolutePatchesDir, { recursive: true });
     this.process.stdout.write(
       `Created patches directory: ${finalConfig.patches_dir}\n`,
     );

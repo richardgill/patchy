@@ -73,6 +73,7 @@ export default async function (
   const result = createMergedConfig({
     flags,
     requiredFields: ["repo_base_dir", "repo_dir"],
+    cwd: this.cwd,
   });
 
   if (!result.success) {
