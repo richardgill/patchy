@@ -20,7 +20,7 @@ pre-push:
           base=$([ "$remote_sha" = "0000000000000000000000000000000000000000" ] && echo "" || echo "$remote_sha..")
           changed_files=$(git diff --name-only "$base$local_sha" 2>/dev/null)
           [ -z "$changed_files" ] && continue
-          non_beads=$(echo "$changed_files" | grep -v '^\.beads/')
+          non_beads=$(echo "$changed_files" | grep -v '^\.beads/' || true)
           [ -n "$non_beads" ] && {
             echo "Error: Direct push to main/master - only .beads/ changes allowed"
             echo "Non-.beads files changed:"
@@ -28,6 +28,7 @@ pre-push:
             exit 1
           }
         done
+        exit 0
     biome:
       glob: "*.{js,ts,cjs,mjs,d.cts,d.mts,jsx,tsx,json,jsonc}"
       run: bun run biome check --error-on-warnings --diagnostic-level=warn --no-errors-on-unmatched --files-ignore-unknown=true {push_files}
