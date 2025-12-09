@@ -16,7 +16,7 @@ describe("patchy init", () => {
   });
 
   it("should initialize patchy with all flags", async () => {
-    setupTestWithConfig({
+    await setupTestWithConfig({
       tmpDir,
       createDirectories: { repoBaseDir: "repoBaseDir1", repoDir: "main" },
     });
@@ -44,7 +44,7 @@ describe("patchy init", () => {
 
   describe("error cases", () => {
     it("should fail with malformed repo url - missing protocol", async () => {
-      setupTestWithConfig({
+      await setupTestWithConfig({
         tmpDir,
         createDirectories: { repoBaseDir: "repoBaseDir1", repoDir: "main" },
       });
@@ -61,7 +61,7 @@ describe("patchy init", () => {
     });
 
     it("should fail with malformed repo url - invalid domain", async () => {
-      setupTestWithConfig({
+      await setupTestWithConfig({
         tmpDir,
         createDirectories: { repoBaseDir: "repoBaseDir1", repoDir: "main" },
       });
@@ -78,7 +78,7 @@ describe("patchy init", () => {
     });
 
     it("should fail with malformed repo url - incomplete path", async () => {
-      setupTestWithConfig({
+      await setupTestWithConfig({
         tmpDir,
         createDirectories: { repoBaseDir: "repoBaseDir1", repoDir: "main" },
       });
@@ -93,7 +93,7 @@ describe("patchy init", () => {
     });
 
     it("should fail when config file exists without force flag", async () => {
-      setupTestWithConfig({
+      await setupTestWithConfig({
         tmpDir,
         createDirectories: { repoBaseDir: "repoBaseDir1", repoDir: "main" },
         jsonConfig: { hello: "world" },
@@ -119,7 +119,7 @@ describe("patchy init", () => {
     });
 
     it("should fail with validation error for empty repo_url", async () => {
-      setupTestWithConfig({
+      await setupTestWithConfig({
         tmpDir,
         createDirectories: { repoBaseDir: "repoBaseDir1", repoDir: "main" },
       });
