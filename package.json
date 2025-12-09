@@ -2,17 +2,10 @@
   "name": "patchy-cli",
   "version": "0.0.0",
   "description": "A CLI tool for managing Git patch workflows.",
-  "bin": {
-    "patchy": "./dist/cli.js"
-  },
   "type": "module",
-  "files": [
-    "dist"
-  ],
   "scripts": {
-    "build": "tsdown",
-    "build-binary": "bun run ./script/build.ts",
-    "build-binary-single": "bun run ./script/build.ts --single",
+    "build": "bun run ./script/build.ts",
+    "build-single": "bun run ./script/build.ts --single",
     "check": "biome check --error-on-warnings --diagnostic-level=warn",
     "check-fix": "biome check --write --error-on-warnings --diagnostic-level=warn",
     "changeset": "changeset",
@@ -20,7 +13,6 @@
     "dev": "bun run src/cli.ts",
     "local-ci": "concurrently --group -p none -n 'check,typecheck,test' 'bun run check-fix' 'bun run typecheck' 'bun run test'",
     "prepare": "lefthook install",
-    "publish-binary": "bun run ./script/publish.ts",
     "typecheck": "tsgo --noEmit",
     "test": "bun run scripts/test.ts",
     "test-watch": "bun test --watch",
@@ -35,7 +27,6 @@
     "bun-types": "^1.3.4",
     "concurrently": "^9.2.0",
     "lefthook": "^1.12.2",
-    "tsdown": "^0.13.2",
     "typescript": "^5.9.2"
   },
   "dependencies": {
@@ -57,23 +48,9 @@
       "optional": true
     }
   },
-  "keywords": [
-    "git",
-    "patches",
-    "patch",
-    "fork"
-  ],
-  "author": "Richard Gill",
   "license": "MIT",
   "repository": {
     "url": "https://github.com/richardgill/patchy"
   },
-  "publishConfig": {
-    "access": "public"
-  },
-  "packageManager": "bun@1.3.4",
-  "engines": {
-    "node": ">=22.0.0"
-  },
-  "sideEffects": false
+  "packageManager": "bun@1.3.4"
 }

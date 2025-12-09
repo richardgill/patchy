@@ -77,17 +77,6 @@ When changes with changesets are merged to `main`:
    - SHA256 checksums
    - Installation instructions
 
-5. **NPM Binary Packages**: Platform-specific packages are published to npm:
-   - Individual platform packages (e.g., `patchy-linux-x64`)
-   - Wrapper package `patchy-cli` that automatically selects the right binary
-
-### What Gets Published
-
-| Package | Description |
-|---------|-------------|
-| `patchy-cli` | Binary wrapper (no Node.js required at runtime) |
-| `patchy-{platform}-{arch}` | Platform-specific binaries |
-
 ### Installation Methods
 
 Users can install patchy via:
@@ -97,32 +86,23 @@ Users can install patchy via:
    curl -fsSL https://raw.githubusercontent.com/richardgill/patchy/main/install | bash
    ```
 
-2. **npm**:
-   ```sh
-   npm install -g patchy-cli
-   ```
+2. **Direct download**: From the GitHub releases page
 
-3. **Direct download**: From the GitHub releases page
+### Manual Build
 
-### Manual Release (Not Recommended)
-
-For local testing or emergency releases, you can run the release scripts manually:
+For local testing, you can build binaries manually:
 
 ```sh
-# Build binaries for current platform only
-bun run build-binary-single
+# Build binary for current platform only
+bun run build-single
 
 # Build binaries for all platforms
-bun run build-binary
-
-# Publish to npm (requires NPM_TOKEN)
-bun run publish-binary
+bun run build
 ```
 
 ### Required Secrets
 
 The release workflow requires these GitHub repository secrets:
-- `NPM_TOKEN`: npm access token with publish permissions
 - `GITHUB_TOKEN`: Automatically provided by GitHub Actions
 
 ## Code Style
