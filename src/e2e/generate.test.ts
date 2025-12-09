@@ -4,9 +4,8 @@ import { beforeEach, describe, expect, it } from "vitest";
 import { assertDefined } from "~/lib/assert";
 import { initGitRepoWithCommit, writeRepoFile } from "./git-helpers";
 import {
-  assertFailedCommand,
-  assertSuccessfulCommand,
   generateTmpDir,
+  runCli,
   setupTestWithConfig,
   stabilizeTempDir,
 } from "./test-utils";
@@ -42,8 +41,9 @@ describe("patchy generate", () => {
     await initGitRepoWithCommit(repoDir);
     writeRepoFile(repoDir, "initial.txt", "modified content\n");
 
-    const result = await assertSuccessfulCommand(`patchy generate`, tmpDir);
+    const result = await runCli(`patchy generate`, tmpDir);
 
+    expect(result).toSucceed();
     expect(result.stdout).toContain(
       "Generating patches from upstream to patches",
     );
@@ -82,8 +82,9 @@ describe("patchy generate", () => {
     await initGitRepoWithCommit(repoDir);
     writeRepoFile(repoDir, "newfile.txt", "new file content\n");
 
-    const result = await assertSuccessfulCommand(`patchy generate`, tmpDir);
+    const result = await runCli(`patchy generate`, tmpDir);
 
+    expect(result).toSucceed();
     expect(result.stdout).toContain("Copied new file: newfile.txt");
 
     const newFilePath = path.join(patchesDir, "newfile.txt");
@@ -121,8 +122,9 @@ describe("patchy generate", () => {
       "export const Button = () => <button />\n",
     );
 
-    const result = await assertSuccessfulCommand(`patchy generate`, tmpDir);
+    const result = await runCli(`patchy generate`, tmpDir);
 
+    expect(result).toSucceed();
     expect(result.stdout).toContain(
       "Copied new file: src/components/Button.tsx",
     );
@@ -152,8 +154,9 @@ describe("patchy generate", () => {
     writeRepoFile(repoDir, "initial.txt", "modified content\n");
     writeRepoFile(repoDir, "newfile.txt", "new file content\n");
 
-    const result = await assertSuccessfulCommand(`patchy generate`, tmpDir);
+    const result = await runCli(`patchy generate`, tmpDir);
 
+    expect(result).toSucceed();
     expect(result.stdout).toContain("Created diff: initial.txt.diff");
     expect(result.stdout).toContain("Copied new file: newfile.txt");
     expect(result.stdout).toContain("Generated 2 patch(es) successfully");
@@ -184,11 +187,9 @@ describe("patchy generate", () => {
     writeRepoFile(repoDir, "initial.txt", "modified content\n");
     writeRepoFile(repoDir, "newfile.txt", "new file content\n");
 
-    const result = await assertSuccessfulCommand(
-      `patchy generate --dry-run`,
-      tmpDir,
-    );
+    const result = await runCli(`patchy generate --dry-run`, tmpDir);
 
+    expect(result).toSucceed();
     expect(result.stdout).toContain(
       "[DRY RUN] Would generate patches from upstream to patches",
     );
@@ -219,8 +220,9 @@ describe("patchy generate", () => {
 
     await initGitRepoWithCommit(repoDir);
 
-    const result = await assertSuccessfulCommand(`patchy generate`, tmpDir);
+    const result = await runCli(`patchy generate`, tmpDir);
 
+    expect(result).toSucceed();
     expect(result.stdout).toContain("No changes detected in repository");
   });
 
@@ -235,8 +237,9 @@ describe("patchy generate", () => {
       },
     });
 
-    const result = await assertFailedCommand(`patchy generate`, tmpDir);
+    const result = await runCli(`patchy generate`, tmpDir);
 
+    expect(result).toFail();
     expect(stabilizeTempDir(result.stderr)).toMatchInlineSnapshot(`
       "Missing required parameters:
 
@@ -262,8 +265,9 @@ describe("patchy generate", () => {
       },
     });
 
-    const result = await assertFailedCommand(`patchy generate`, tmpDir);
+    const result = await runCli(`patchy generate`, tmpDir);
 
+    expect(result).toFail();
     expect(stabilizeTempDir(result.stderr)).toMatchInlineSnapshot(`
       "Validation errors:
 
@@ -290,8 +294,9 @@ describe("patchy generate", () => {
     await initGitRepoWithCommit(repoDir);
     writeRepoFile(repoDir, "initial.txt", "modified content\n");
 
-    const result = await assertSuccessfulCommand(`patchy generate`, tmpDir);
+    const result = await runCli(`patchy generate`, tmpDir);
 
+    expect(result).toSucceed();
     expect(result.stdout).toContain("Generated 1 patch(es) successfully");
 
     const patchesDir = path.join(tmpDir, "new-patches");
@@ -319,11 +324,9 @@ describe("patchy generate", () => {
     await initGitRepoWithCommit(repoDir);
     writeRepoFile(repoDir, "initial.txt", "modified content\n");
 
-    const result = await assertSuccessfulCommand(
-      `patchy generate --verbose`,
-      tmpDir,
-    );
+    const result = await runCli(`patchy generate --verbose`, tmpDir);
 
+    expect(result).toSucceed();
     expect(result.stdout).toContain(
       "Generating patches from upstream to patches",
     );

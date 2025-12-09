@@ -1,11 +1,9 @@
 import { randomUUID } from "node:crypto";
-import { existsSync } from "node:fs";
 import { mkdir, writeFile } from "node:fs/promises";
 import { join, resolve } from "node:path";
 import { run } from "@stricli/core";
 
 import { parse as parseShell } from "shell-quote";
-import { expect } from "vitest";
 import { app } from "../app";
 import {
   buildTestContext,
@@ -72,39 +70,12 @@ export const runCli = async (
   };
 };
 
-export const assertSuccessfulCommand = async (
-  command: string,
-  cwd: string,
-  validateFn?: (result: CLIResult) => void,
-) => {
-  const result = await runCli(command, cwd);
-  if (result.exitCode !== 0) {
-    console.error(`Command failed: ${command}`);
-    console.error(`Exit code: ${result.exitCode}`);
-    console.error(`stderr: ${result.stderr}`);
-    console.error(`stdout: ${result.stdout}`);
-  }
-  expect(result.exitCode).toBe(0);
-  if (validateFn) validateFn(result);
-  return result;
-};
-
-export const assertFailedCommand = async (command: string, cwd: string) => {
-  const result = await runCli(command, cwd);
-  expect(result.exitCode).toBe(1);
-  return result;
-};
-
 export const writeTestConfig = async (
   configPath: string,
   config: Record<string, string | boolean | number>,
 ) => {
   const jsonContent = JSON.stringify(config, null, 2);
   await writeFile(configPath, jsonContent);
-};
-
-export const assertConfigFileExists = (configPath: string) => {
-  expect(existsSync(configPath)).toBe(true);
 };
 
 export const stabilizeTempDir = (

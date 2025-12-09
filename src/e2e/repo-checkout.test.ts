@@ -9,8 +9,6 @@ import {
   initGitRepoWithCommit,
 } from "./git-helpers";
 import {
-  assertFailedCommand,
-  assertSuccessfulCommand,
   generateTmpDir,
   runCli,
   setupTestWithConfig,
@@ -41,11 +39,12 @@ describe("patchy repo checkout", () => {
     await initGitRepoWithCommit(repoDir, "file.txt", "initial content");
     await createBranch(repoDir, "feature-branch");
 
-    const result = await assertSuccessfulCommand(
+    const result = await runCli(
       `patchy repo checkout --ref feature-branch`,
       tmpDir,
     );
 
+    expect(result).toSucceed();
     expect(result.stdout).toContain(
       'Successfully checked out "feature-branch"',
     );
@@ -70,11 +69,9 @@ describe("patchy repo checkout", () => {
     await createTag(repoDir, "v1.0.0");
     await createBranch(repoDir, "other-branch");
 
-    const result = await assertSuccessfulCommand(
-      `patchy repo checkout --ref v1.0.0`,
-      tmpDir,
-    );
+    const result = await runCli(`patchy repo checkout --ref v1.0.0`, tmpDir);
 
+    expect(result).toSucceed();
     expect(result.stdout).toContain('Successfully checked out "v1.0.0"');
   });
 
@@ -96,11 +93,12 @@ describe("patchy repo checkout", () => {
     const initialCommit = await getCurrentCommit(repoDir);
     await createBranch(repoDir, "other-branch");
 
-    const result = await assertSuccessfulCommand(
+    const result = await runCli(
       `patchy repo checkout --ref ${initialCommit}`,
       tmpDir,
     );
 
+    expect(result).toSucceed();
     expect(result.stdout).toContain(
       `Successfully checked out "${initialCommit}"`,
     );
@@ -123,11 +121,12 @@ describe("patchy repo checkout", () => {
     const repoDir = ctx.absoluteRepoDir as string;
     await initGitRepoWithCommit(repoDir, "file.txt", "initial content");
 
-    const result = await assertFailedCommand(
+    const result = await runCli(
       `patchy repo checkout --ref non-existent-ref`,
       tmpDir,
     );
 
+    expect(result).toFail();
     expect(result.stderr).toContain('Invalid git ref "non-existent-ref"');
     expect(result.stderr).toContain(
       "Please specify a valid branch, tag, or commit SHA",
@@ -153,11 +152,12 @@ describe("patchy repo checkout", () => {
 
     writeFileSync(path.join(repoDir, "uncommitted.txt"), "dirty content");
 
-    const result = await assertFailedCommand(
+    const result = await runCli(
       `patchy repo checkout --ref feature-branch`,
       tmpDir,
     );
 
+    expect(result).toFail();
     expect(stabilizeTempDir(result.stderr)).toContain(
       "has uncommitted changes",
     );
@@ -181,11 +181,12 @@ describe("patchy repo checkout", () => {
     await initGitRepoWithCommit(repoDir, "file.txt", "initial content");
     await createBranch(repoDir, "feature-branch");
 
-    const result = await assertSuccessfulCommand(
+    const result = await runCli(
       `patchy repo checkout --ref feature-branch --verbose`,
       tmpDir,
     );
 
+    expect(result).toSucceed();
     expect(stabilizeTempDir(result.stdout)).toContain("Checking out ref");
     expect(stabilizeTempDir(result.stdout)).toContain("feature-branch");
   });
@@ -207,11 +208,12 @@ describe("patchy repo checkout", () => {
     await initGitRepoWithCommit(repoDir, "file.txt", "initial content");
     await createBranch(repoDir, "feature-branch");
 
-    const result = await assertSuccessfulCommand(
+    const result = await runCli(
       `patchy repo checkout --ref feature-branch --repo-dir custom-repo`,
       tmpDir,
     );
 
+    expect(result).toSucceed();
     expect(result.stdout).toContain(
       'Successfully checked out "feature-branch"',
     );
@@ -222,11 +224,9 @@ describe("patchy repo checkout", () => {
     mkdirSync(tmpDir, { recursive: true });
     writeFileSync(path.join(tmpDir, "patchy.json"), "{}");
 
-    const result = await assertFailedCommand(
-      `patchy repo checkout --ref main`,
-      tmpDir,
-    );
+    const result = await runCli(`patchy repo checkout --ref main`, tmpDir);
 
+    expect(result).toFail();
     expect(stabilizeTempDir(result.stderr)).toContain(
       "Missing required parameters",
     );
@@ -263,11 +263,12 @@ describe("patchy repo checkout", () => {
 
       const initialBranch = await getCurrentBranch(repoDir);
 
-      const result = await assertSuccessfulCommand(
+      const result = await runCli(
         `patchy repo checkout --ref feature-branch --dry-run`,
         tmpDir,
       );
 
+      expect(result).toSucceed();
       expect(result.stdout).toContain("[DRY RUN]");
       expect(result.stdout).toContain("feature-branch");
       expect(await getCurrentBranch(repoDir)).toBe(initialBranch);
@@ -289,11 +290,12 @@ describe("patchy repo checkout", () => {
       const repoDir = ctx.absoluteRepoDir as string;
       await initGitRepoWithCommit(repoDir, "file.txt", "initial content");
 
-      const result = await assertFailedCommand(
+      const result = await runCli(
         `patchy repo checkout --ref non-existent-ref --dry-run`,
         tmpDir,
       );
 
+      expect(result).toFail();
       expect(result.stderr).toContain('Invalid git ref "non-existent-ref"');
     });
   });
