@@ -1,4 +1,4 @@
-name: Publish
+name: CI
 
 on:
   push:
@@ -11,7 +11,6 @@ concurrency:
 
 jobs:
   checks:
-    name: Checks
     uses: ./.github/workflows/pre-checks.yml
     secrets: inherit
 
@@ -59,8 +58,8 @@ jobs:
           VERSION=$(node -p "require('./package.json').version")
           echo "version=$VERSION" >> $GITHUB_OUTPUT
 
-  build-and-release:
-    name: Build binaries and create GitHub release
+  binaries:
+    name: Binaries
     needs: release
     if: needs.release.outputs.published == 'true'
     runs-on: ubuntu-latest
