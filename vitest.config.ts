@@ -31,6 +31,7 @@ export default defineConfig({
         test: {
           name: "e2e",
           include: ["src/e2e/**/*.test.ts"],
+          setupFiles: ["src/e2e/matchers.ts"],
           testTimeout: 30000,
           fileParallelism: true,
           pool: "forks",

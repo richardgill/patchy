@@ -2,9 +2,8 @@ import { existsSync, mkdirSync, readFileSync, writeFileSync } from "node:fs";
 import path from "node:path";
 import { beforeEach, describe, expect, it } from "vitest";
 import {
-  assertFailedCommand,
-  assertSuccessfulCommand,
   generateTmpDir,
+  runCli,
   setupTestWithConfig,
   stabilizeTempDir,
 } from "./test-utils";
@@ -30,11 +29,12 @@ describe("patchy apply", () => {
       },
     });
 
-    const result = await assertSuccessfulCommand(
+    const result = await runCli(
       `patchy apply --repo-dir main --repo-base-dir repos --patches-dir patches --config patchy.json --verbose --dry-run`,
       tmpDir,
     );
 
+    expect(result).toSucceed();
     expect(stabilizeTempDir(result.stdout)).toMatchInlineSnapshot(`
       "[DRY RUN] Would apply patches from patches to main
       No patch files found."
@@ -58,11 +58,12 @@ describe("patchy apply", () => {
       },
     });
 
-    const result = await assertSuccessfulCommand(
+    const result = await runCli(
       `patchy apply --config patchy.json --dry-run --verbose`,
       tmpDir,
     );
 
+    expect(result).toSucceed();
     expect(stabilizeTempDir(result.stdout)).toMatchInlineSnapshot(`
       "[DRY RUN] Would apply patches from my-patches to upstream
       No patch files found."
@@ -86,11 +87,12 @@ describe("patchy apply", () => {
       },
     });
 
-    const result = await assertSuccessfulCommand(
+    const result = await runCli(
       `patchy apply --repo-dir cli-repo --patches-dir cli-patches --config patchy.json --dry-run --verbose`,
       tmpDir,
     );
 
+    expect(result).toSucceed();
     expect(stabilizeTempDir(result.stdout)).toMatchInlineSnapshot(`
       "[DRY RUN] Would apply patches from cli-patches to cli-repo
       No patch files found."
@@ -108,8 +110,9 @@ describe("patchy apply", () => {
       },
     });
 
-    const result = await assertFailedCommand(`patchy apply --dry-run`, tmpDir);
+    const result = await runCli(`patchy apply --dry-run`, tmpDir);
 
+    expect(result).toFail();
     expect(stabilizeTempDir(result.stderr)).toMatchInlineSnapshot(`
       "Missing required parameters:
 
@@ -124,11 +127,12 @@ describe("patchy apply", () => {
   it("should fail when config file doesn't exist with explicit path", async () => {
     mkdirSync(tmpDir, { recursive: true });
 
-    const result = await assertFailedCommand(
+    const result = await runCli(
       `patchy apply --config ./non-existent-config.json`,
       tmpDir,
     );
 
+    expect(result).toFail();
     expect(stabilizeTempDir(result.stderr)).toMatchInlineSnapshot(
       `"Configuration file not found: <TEST_DIR>/non-existent-config.json"`,
     );
@@ -139,11 +143,9 @@ describe("patchy apply", () => {
     const invalidJsonPath = path.join(tmpDir, "invalid.json");
     writeFileSync(invalidJsonPath, "{ invalid json: content }");
 
-    const result = await assertFailedCommand(
-      `patchy apply --config invalid.json`,
-      tmpDir,
-    );
+    const result = await runCli(`patchy apply --config invalid.json`, tmpDir);
 
+    expect(result).toFail();
     expect(result.stderr).toMatchInlineSnapshot(`
       "JSON parse error: InvalidSymbol
 
@@ -164,8 +166,9 @@ describe("patchy apply", () => {
       },
     });
 
-    const result = await assertFailedCommand(`patchy apply`, tmpDir);
+    const result = await runCli(`patchy apply`, tmpDir);
 
+    expect(result).toFail();
     expect(stabilizeTempDir(result.stderr)).toMatchInlineSnapshot(`
       "Validation errors:
 
@@ -189,11 +192,9 @@ describe("patchy apply", () => {
       },
     });
 
-    const result = await assertSuccessfulCommand(
-      `patchy apply --dry-run --verbose`,
-      tmpDir,
-    );
+    const result = await runCli(`patchy apply --dry-run --verbose`, tmpDir);
 
+    expect(result).toSucceed();
     expect(stabilizeTempDir(result.stdout)).toMatchInlineSnapshot(`
       "[DRY RUN] Would apply patches from ./patches/ to repo
       No patch files found."
@@ -215,11 +216,12 @@ describe("patchy apply", () => {
       jsonConfig: {},
     });
 
-    const result = await assertSuccessfulCommand(
+    const result = await runCli(
       `patchy apply --config empty.json --repo-url https://github.com/example/repo.git --repo-base-dir base --repo-dir repo --dry-run --verbose`,
       tmpDir,
     );
 
+    expect(result).toSucceed();
     expect(stabilizeTempDir(result.stdout)).toMatchInlineSnapshot(`
       "[DRY RUN] Would apply patches from ./patches/ to repo
       No patch files found."
@@ -243,11 +245,9 @@ describe("patchy apply", () => {
       },
     });
 
-    const result = await assertSuccessfulCommand(
-      `patchy apply --verbose --dry-run`,
-      tmpDir,
-    );
+    const result = await runCli(`patchy apply --verbose --dry-run`, tmpDir);
 
+    expect(result).toSucceed();
     expect(stabilizeTempDir(result.stdout)).toMatchInlineSnapshot(`
       "[DRY RUN] Would apply patches from ./patches/ to repo
       No patch files found."
@@ -288,11 +288,12 @@ describe("patchy apply", () => {
       ),
     );
 
-    const result = await assertSuccessfulCommand(
+    const result = await runCli(
       `patchy apply --config ${customConfigPath} --dry-run --verbose`,
       tmpDir,
     );
 
+    expect(result).toSucceed();
     expect(stabilizeTempDir(result.stdout)).toMatchInlineSnapshot(`
       "[DRY RUN] Would apply patches from ./patches/ to repo
       No patch files found."
@@ -314,11 +315,9 @@ describe("patchy apply", () => {
       },
     });
 
-    const result = await assertSuccessfulCommand(
-      `patchy apply --dry-run --verbose`,
-      tmpDir,
-    );
+    const result = await runCli(`patchy apply --dry-run --verbose`, tmpDir);
 
+    expect(result).toSucceed();
     expect(stabilizeTempDir(result.stdout)).toMatchInlineSnapshot(`
       "[DRY RUN] Would apply patches from ./patches/ to my-repo/nested-repo
       No patch files found."
@@ -340,11 +339,9 @@ describe("patchy apply", () => {
       },
     });
 
-    const result = await assertSuccessfulCommand(
-      `patchy apply --dry-run --verbose`,
-      tmpDir,
-    );
+    const result = await runCli(`patchy apply --dry-run --verbose`, tmpDir);
 
+    expect(result).toSucceed();
     expect(stabilizeTempDir(result.stdout)).toMatchInlineSnapshot(`
       "[DRY RUN] Would apply patches from ./patches/ to repoDir1
       No patch files found."
@@ -360,7 +357,9 @@ describe("patchy apply", () => {
       },
     });
 
-    const result = await assertFailedCommand(`patchy apply`, tmpDir);
+    const result = await runCli(`patchy apply`, tmpDir);
+
+    expect(result).toFail();
     expect(stabilizeTempDir(result.stderr)).toMatchInlineSnapshot(`
       "Missing required parameters:
 
@@ -388,11 +387,12 @@ describe("patchy apply", () => {
       },
     });
 
-    const result = await assertSuccessfulCommand(
+    const result = await runCli(
       `patchy apply --ref cli-ref --dry-run --verbose`,
       tmpDir,
     );
 
+    expect(result).toSucceed();
     expect(stabilizeTempDir(result.stdout)).toMatchInlineSnapshot(`
       "[DRY RUN] Would apply patches from ./patches/ to repo
       No patch files found."
@@ -418,11 +418,9 @@ describe("patchy apply", () => {
       },
     });
 
-    const result = await assertSuccessfulCommand(
-      `patchy apply --dry-run --verbose`,
-      tmpDir,
-    );
+    const result = await runCli(`patchy apply --dry-run --verbose`, tmpDir);
 
+    expect(result).toSucceed();
     expect(stabilizeTempDir(result.stdout)).toMatchInlineSnapshot(`
       "[DRY RUN] Would apply patches from <TEST_DIR>/absolute-patches to repo
       No patch files found."
@@ -434,11 +432,12 @@ describe("patchy apply", () => {
     const emptyJsonPath = path.join(tmpDir, "truly-empty.json");
     writeFileSync(emptyJsonPath, "");
 
-    const result = await assertFailedCommand(
+    const result = await runCli(
       `patchy apply --config truly-empty.json`,
       tmpDir,
     );
 
+    expect(result).toFail();
     expect(result.stderr).toMatchInlineSnapshot(`
       "JSON parse error: ValueExpected
 
@@ -459,10 +458,12 @@ describe("patchy apply", () => {
       }),
     );
 
-    const result = await assertFailedCommand(
+    const result = await runCli(
       `patchy apply --config invalid-structure.json`,
       tmpDir,
     );
+
+    expect(result).toFail();
     expect(result.stderr).toContain("Invalid input");
   });
 
@@ -478,11 +479,12 @@ describe("patchy apply", () => {
       }),
     );
 
-    const result = await assertFailedCommand(
+    const result = await runCli(
       `patchy apply --config empty-strings.json`,
       tmpDir,
     );
 
+    expect(result).toFail();
     expect(result.stderr).toMatchInlineSnapshot(`
       "repo_url: Repository URL is required
         ref: Git ref is required
@@ -502,11 +504,12 @@ describe("patchy apply", () => {
       }),
     );
 
-    const result = await assertFailedCommand(
+    const result = await runCli(
       `patchy apply --config null-values.json`,
       tmpDir,
     );
 
+    expect(result).toFail();
     expect(result.stderr).toMatchInlineSnapshot(`
       "repo_url: Invalid input: expected string, received null
         patches_dir: Invalid input: expected string, received null
@@ -526,11 +529,12 @@ describe("patchy apply", () => {
       }),
     );
 
-    const result = await assertFailedCommand(
+    const result = await runCli(
       `patchy apply --config unknown-fields.json`,
       tmpDir,
     );
 
+    expect(result).toFail();
     expect(result.stderr).toMatchInlineSnapshot(
       `"Unrecognized keys: "unknown_field", "another_unknown""`,
     );
@@ -547,11 +551,12 @@ describe("patchy apply", () => {
       }),
     );
 
-    const result = await assertFailedCommand(
+    const result = await runCli(
       `patchy apply --config boolean-string.json`,
       tmpDir,
     );
 
+    expect(result).toFail();
     expect(result.stderr).toMatchInlineSnapshot(`
       "verbose: Invalid input: expected boolean, received string
         dry_run: Invalid input: expected boolean, received string"
@@ -570,11 +575,12 @@ describe("patchy apply", () => {
       }),
     );
 
-    const result = await assertFailedCommand(
+    const result = await runCli(
       `patchy apply --config array-values.json`,
       tmpDir,
     );
 
+    expect(result).toFail();
     expect(result.stderr).toMatchInlineSnapshot(`
       "repo_url: Invalid input: expected string, received array
         ref: Invalid input: expected string, received array
@@ -593,11 +599,12 @@ describe("patchy apply", () => {
       }),
     );
 
-    const result = await assertFailedCommand(
+    const result = await runCli(
       `patchy apply --config object-values.json`,
       tmpDir,
     );
 
+    expect(result).toFail();
     expect(result.stderr).toMatchInlineSnapshot(`
       "repo_url: Invalid input: expected string, received object
         verbose: Invalid input: expected boolean, received object"
@@ -620,11 +627,12 @@ describe("patchy apply", () => {
       }),
     );
 
-    const result = await assertFailedCommand(
+    const result = await runCli(
       `patchy apply --config mixed-errors.json`,
       tmpDir,
     );
 
+    expect(result).toFail();
     expect(result.stderr).toMatchInlineSnapshot(`
       "repo_url: Invalid input: expected string, received number
         ref: Invalid input: expected string, received boolean
@@ -657,11 +665,9 @@ describe("patchy apply", () => {
     const patchFile = path.join(patchesDir, "newFile.ts");
     writeFileSync(patchFile, 'export const hello = "world";');
 
-    const result = await assertSuccessfulCommand(
-      `patchy apply --verbose`,
-      tmpDir,
-    );
+    const result = await runCli(`patchy apply --verbose`, tmpDir);
 
+    expect(result).toSucceed();
     expect(result.stdout).toContain("Applying 1 patch file(s)...");
     expect(result.stdout).toContain("Copied: newFile.ts");
     expect(result.stdout).toContain("Successfully applied 1 patch file(s).");
@@ -699,11 +705,9 @@ describe("patchy apply", () => {
       "export const add = (a: number, b: number) => a + b;",
     );
 
-    const result = await assertSuccessfulCommand(
-      `patchy apply --verbose`,
-      tmpDir,
-    );
+    const result = await runCli(`patchy apply --verbose`, tmpDir);
 
+    expect(result).toSucceed();
     expect(result.stdout).toContain("Copied: src/utils/helper.ts");
 
     const targetFile = path.join(repoDir, "src", "utils", "helper.ts");
@@ -746,11 +750,9 @@ describe("patchy apply", () => {
 `,
     );
 
-    const result = await assertSuccessfulCommand(
-      `patchy apply --verbose`,
-      tmpDir,
-    );
+    const result = await runCli(`patchy apply --verbose`, tmpDir);
 
+    expect(result).toSucceed();
     expect(result.stdout).toContain("Applied diff: existing.ts.diff");
 
     expect(readFileSync(targetFile, "utf-8")).toBe(
@@ -793,11 +795,9 @@ describe("patchy apply", () => {
 `,
     );
 
-    const result = await assertSuccessfulCommand(
-      `patchy apply --verbose`,
-      tmpDir,
-    );
+    const result = await runCli(`patchy apply --verbose`, tmpDir);
 
+    expect(result).toSucceed();
     expect(result.stdout).toContain("Applying 2 patch file(s)...");
     expect(result.stdout).toContain("Successfully applied 2 patch file(s).");
 
@@ -834,8 +834,9 @@ describe("patchy apply", () => {
 `,
     );
 
-    const result = await assertFailedCommand(`patchy apply`, tmpDir);
+    const result = await runCli(`patchy apply`, tmpDir);
 
+    expect(result).toFail();
     expect(result.stderr).toContain("Errors occurred while applying patches:");
     expect(result.stderr).toContain(
       "missing.ts.diff: Target file does not exist",
@@ -866,11 +867,9 @@ describe("patchy apply", () => {
     const diffFile = path.join(patchesDir, "existing.ts.diff");
     writeFileSync(diffFile, "diff content");
 
-    const result = await assertSuccessfulCommand(
-      `patchy apply --dry-run`,
-      tmpDir,
-    );
+    const result = await runCli(`patchy apply --dry-run`, tmpDir);
 
+    expect(result).toSucceed();
     expect(result.stdout).toContain("[DRY RUN]");
     expect(result.stdout).toContain("Would apply 2 file(s):");
     expect(result.stdout).toContain("Apply diff: existing.ts.diff");
@@ -909,8 +908,9 @@ export const component = () => {
     const patchFile = path.join(patchesDir, "complex.tsx");
     writeFileSync(patchFile, complexContent);
 
-    await assertSuccessfulCommand(`patchy apply`, tmpDir);
+    const result = await runCli(`patchy apply`, tmpDir);
 
+    expect(result).toSucceed();
     const targetFile = path.join(repoDir, "complex.tsx");
     expect(readFileSync(targetFile, "utf-8")).toBe(complexContent);
   });
@@ -957,11 +957,9 @@ const other = 2;
     );
 
     // With default fuzz factor (2), this should still apply despite missing context
-    const result = await assertSuccessfulCommand(
-      `patchy apply --verbose`,
-      tmpDir,
-    );
+    const result = await runCli(`patchy apply --verbose`, tmpDir);
 
+    expect(result).toSucceed();
     expect(result.stdout).toContain("Applied diff: fuzzy.ts.diff");
 
     expect(readFileSync(targetFile, "utf-8")).toBe(
@@ -1013,11 +1011,9 @@ const other = 2;
     );
 
     // With fuzz-factor 0, this should fail because the context line doesn't match
-    const result = await assertFailedCommand(
-      `patchy apply --fuzz-factor 0`,
-      tmpDir,
-    );
+    const result = await runCli(`patchy apply --fuzz-factor 0`, tmpDir);
 
+    expect(result).toFail();
     expect(result.stderr).toContain("Errors occurred while applying patches:");
     expect(result.stderr).toContain("Patch failed to apply");
   });
