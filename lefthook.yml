@@ -18,8 +18,13 @@ pre-push:
         while read _ local_sha remote_ref remote_sha; do
           echo "$remote_ref" | grep -qE '^refs/heads/(main|master)$' || continue
           base=$([ "$remote_sha" = "0000000000000000000000000000000000000000" ] && echo "" || echo "$remote_sha..")
-          git diff --name-only "$base$local_sha" 2>/dev/null | grep -qv '^\.beads/' && {
+          changed_files=$(git diff --name-only "$base$local_sha" 2>/dev/null)
+          [ -z "$changed_files" ] && continue
+          non_beads=$(echo "$changed_files" | grep -v '^\.beads/')
+          [ -n "$non_beads" ] && {
             echo "Error: Direct push to main/master - only .beads/ changes allowed"
+            echo "Non-.beads files changed:"
+            echo "$non_beads"
             exit 1
           }
         done
