@@ -45,8 +45,7 @@ jobs:
         uses: changesets/action@v1
         with:
           # We use 'true' as the publish command - it exits successfully when changesets
-          # have been consumed (version bumped), which triggers the binary publish job.
-          # The actual npm publishing happens in build-and-release for patchy-cli only.
+          # have been consumed (version bumped), which triggers the binary build job.
           publish: "true"
           title: "chore: release"
           commit: "chore: release"
@@ -83,7 +82,7 @@ jobs:
         run: bun install --frozen-lockfile
 
       - name: Build all binaries
-        run: bun run build-binary
+        run: bun run build
         env:
           PATCHY_VERSION: ${{ needs.release.outputs.version }}
 
@@ -125,11 +124,6 @@ jobs:
             curl -fsSL https://raw.githubusercontent.com/richardgill/patchy/main/install | bash
             ```
 
-            **npm:**
-            ```bash
-            npm install -g patchy-cli
-            ```
-
             **Manual download:**
             | Platform | Architecture | Download |
             |----------|--------------|----------|
@@ -149,50 +143,3 @@ jobs:
           prerelease: ${{ contains(needs.release.outputs.version, '-') }}
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-
-      - name: Publish binary packages to npm
-        run: |
-          echo "//registry.npmjs.org/:_authToken=${{ secrets.NPM_TOKEN }}" > ~/.npmrc
-
-          # Publish platform-specific packages
-          for pkg in patchy-linux-x64 patchy-linux-arm64 patchy-darwin-x64 patchy-darwin-arm64 patchy-windows-x64; do
-            echo "Publishing $pkg..."
-            cd dist/$pkg
-            chmod 755 -R . 2>/dev/null || true
-            npm publish --access public
-            cd ../..
-          done
-
-          # Create and publish wrapper package
-          mkdir -p dist/patchy-cli
-          cp -r bin dist/patchy-cli/
-
-          cat > dist/patchy-cli/package.json << EOF
-          {
-            "name": "patchy-cli",
-            "version": "${{ needs.release.outputs.version }}",
-            "description": "A CLI tool for managing Git patch workflows.",
-            "bin": {
-              "patchy": "./bin/patchy"
-            },
-            "optionalDependencies": {
-              "patchy-linux-x64": "${{ needs.release.outputs.version }}",
-              "patchy-linux-arm64": "${{ needs.release.outputs.version }}",
-              "patchy-darwin-x64": "${{ needs.release.outputs.version }}",
-              "patchy-darwin-arm64": "${{ needs.release.outputs.version }}",
-              "patchy-windows-x64": "${{ needs.release.outputs.version }}"
-            },
-            "license": "MIT",
-            "repository": {
-              "url": "https://github.com/richardgill/patchy"
-            },
-            "keywords": ["git", "patches", "patch", "fork"],
-            "author": "Richard Gill"
-          }
-          EOF
-
-          echo "Publishing patchy-cli..."
-          cd dist/patchy-cli
-          npm publish --access public
-        env:
-          NPM_TOKEN: ${{ secrets.NPM_TOKEN }}
