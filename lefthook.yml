@@ -3,12 +3,12 @@ pre-commit:
   commands:
     biome:
       glob: "*.{js,ts,cjs,mjs,d.cts,d.mts,jsx,tsx,json,jsonc}"
-      run: bun run biome check --write --error-on-warnings --diagnostic-level=warn --no-errors-on-unmatched --files-ignore-unknown=true {staged_files}
+      run: pnpm exec biome check --write --error-on-warnings --diagnostic-level=warn --no-errors-on-unmatched --files-ignore-unknown=true {staged_files}
       stage_fixed: true
     typecheck:
-      run: bun run typecheck
+      run: pnpm typecheck
     test:
-      run: bun run test
+      run: pnpm test
 
 pre-push:
   commands:
@@ -25,4 +25,4 @@ pre-push:
         done
     biome:
       glob: "*.{js,ts,cjs,mjs,d.cts,d.mts,jsx,tsx,json,jsonc}"
-      run: bun run biome check --error-on-warnings --diagnostic-level=warn --no-errors-on-unmatched --files-ignore-unknown=true {push_files}
+      run: pnpm exec biome check --error-on-warnings --diagnostic-level=warn --no-errors-on-unmatched --files-ignore-unknown=true {push_files}

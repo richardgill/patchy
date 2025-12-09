@@ -131,7 +131,7 @@ describe("patchy init", () => {
 
       expect(result).toFail();
       expect(result.stderr).toMatchInlineSnapshot(
-        `"Repository URL is required"`,
+        `"Please enter a valid Git URL (https://github.com/owner/repo or git@github.com:owner/repo.git)"`,
       );
     });
   });

@@ -1,15 +1,7 @@
 import { randomUUID } from "node:crypto";
 import { mkdir, writeFile } from "node:fs/promises";
 import { join, resolve } from "node:path";
-import { run } from "@stricli/core";
-
-import { parse as parseShell } from "shell-quote";
-import { app } from "../app";
-import {
-  buildTestContext,
-  getTestOutput,
-  ProcessExitError,
-} from "./stricli-test-context";
+import { execa } from "execa";
 
 type TestDirContext = {
   testDir: string;
@@ -29,44 +21,50 @@ export type CLIResult = {
   signal?: NodeJS.Signals;
 };
 
+// Runtime to use for CLI execution - can be set via TEST_RUNTIME env var
+// Default to "node" for backwards compatibility
+type Runtime = "node" | "bun";
+const getRuntime = (): Runtime => {
+  const runtime = process.env["TEST_RUNTIME"];
+  if (runtime === "bun") return "bun";
+  return "node";
+};
+
+// Path to the CLI entry point
+const CLI_PATH = resolve(import.meta.dirname, "../cli.ts");
+
 export const runCli = async (
   command: string,
   cwd: string,
 ): Promise<CLIResult> => {
-  // Drop everything before the first space if there is one
-  // e.g., "patchy init" becomes "init"
-  const processedCommand = command.replace(/^\S+\s+/, "");
+  // Drop "patchy" prefix if present, e.g., "patchy init" becomes "init"
+  const processedCommand = command.replace(/^patchy\s+/, "");
+  const args = processedCommand.split(/\s+/).filter(Boolean);
 
-  const args = parseShell(processedCommand) as string[];
+  const runtime = getRuntime();
+  const execArgs =
+    runtime === "bun"
+      ? ["run", CLI_PATH, ...args]
+      : ["--import", "tsx", CLI_PATH, ...args];
 
-  const testContext = buildTestContext({ cwd });
-
-  try {
-    await run(app, args, testContext);
-  } catch (error) {
-    // In tests, process.exit() throws ProcessExitError - this is expected behavior.
-    // Any OTHER error is an unexpected failure from the command (e.g., git operation failed).
-    // We handle unexpected errors here so commands don't need try/catch boilerplate
-    // just to re-throw ProcessExitError.
-    if (!(error instanceof ProcessExitError)) {
-      const message = error instanceof Error ? error.message : String(error);
-      testContext.process.stderr.write(`Error: ${message}\n`);
-      testContext.process.exit(1);
-    }
-  } finally {
-    // Restore original process methods
-    testContext.cleanup();
-  }
-
-  const output = getTestOutput(testContext);
+  const result = await execa(runtime, execArgs, {
+    cwd,
+    reject: false,
+    env: {
+      ...process.env,
+      NO_COLOR: "1",
+      FORCE_COLOR: "0",
+    },
+  });
 
   return {
-    stdout: output.stdout,
-    stderr: output.stderr,
-    exitCode: output.exitCode,
-    failed: output.exitCode !== 0,
+    stdout: result.stdout.trim(),
+    stderr: result.stderr.trim(),
+    exitCode: result.exitCode ?? 0,
+    failed: result.exitCode !== 0,
     command,
     cwd,
+    signal: result.signal as NodeJS.Signals | undefined,
   };
 };
 
