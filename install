@@ -1,0 +1,203 @@
+#!/usr/bin/env bash
+# Inspired by opencode: https://github.com/sst/opencode/blob/main/install
+set -euo pipefail
+
+APP=patchy
+REPO="richardgill/patchy"
+
+RED='\033[0;31m'
+GREEN='\033[0;32m'
+MUTED='\033[0;2m'
+NC='\033[0m'
+
+requested_version=${VERSION:-}
+
+# Detect OS
+raw_os=$(uname -s)
+os=$(echo "$raw_os" | tr '[:upper:]' '[:lower:]')
+case "$raw_os" in
+  Darwin*) os="darwin" ;;
+  Linux*) os="linux" ;;
+  MINGW*|MSYS*|CYGWIN*) os="windows" ;;
+esac
+
+# Detect architecture
+arch=$(uname -m)
+if [[ "$arch" == "aarch64" ]]; then
+  arch="arm64"
+fi
+if [[ "$arch" == "x86_64" ]]; then
+  arch="x64"
+fi
+
+# Handle Rosetta 2 on macOS
+if [ "$os" = "darwin" ] && [ "$arch" = "x64" ]; then
+  rosetta_flag=$(sysctl -n sysctl.proc_translated 2>/dev/null || echo 0)
+  if [ "$rosetta_flag" = "1" ]; then
+    arch="arm64"
+  fi
+fi
+
+# Validate platform
+combo="$os-$arch"
+case "$combo" in
+  linux-x64|linux-arm64|darwin-x64|darwin-arm64|windows-x64)
+    ;;
+  *)
+    echo -e "${RED}Unsupported OS/Arch: $os/$arch${NC}"
+    exit 1
+    ;;
+esac
+
+# Determine archive extension
+archive_ext=".zip"
+if [ "$os" = "linux" ]; then
+  archive_ext=".tar.gz"
+fi
+
+target="$os-$arch"
+filename="$APP-$target$archive_ext"
+
+# Check for required tools
+if [ "$os" = "linux" ]; then
+  if ! command -v tar >/dev/null 2>&1; then
+    echo -e "${RED}Error: 'tar' is required but not installed.${NC}"
+    exit 1
+  fi
+else
+  if ! command -v unzip >/dev/null 2>&1; then
+    echo -e "${RED}Error: 'unzip' is required but not installed.${NC}"
+    exit 1
+  fi
+fi
+
+# Set install directory
+INSTALL_DIR=$HOME/.patchy/bin
+mkdir -p "$INSTALL_DIR"
+
+# Determine download URL
+if [ -z "$requested_version" ]; then
+  url="https://github.com/$REPO/releases/latest/download/$filename"
+  specific_version=$(curl -s "https://api.github.com/repos/$REPO/releases/latest" | sed -n 's/.*"tag_name": *"v\([^"]*\)".*/\1/p')
+
+  if [[ $? -ne 0 || -z "$specific_version" ]]; then
+    echo -e "${RED}Failed to fetch version information${NC}"
+    exit 1
+  fi
+else
+  url="https://github.com/$REPO/releases/download/v${requested_version}/$filename"
+  specific_version=$requested_version
+fi
+
+print_message() {
+  local level=$1
+  local message=$2
+  local color=""
+
+  case $level in
+    info) color="${NC}" ;;
+    success) color="${GREEN}" ;;
+    error) color="${RED}" ;;
+  esac
+
+  echo -e "${color}${message}${NC}"
+}
+
+download_and_install() {
+  print_message info "\n${MUTED}Installing ${NC}$APP ${MUTED}version: ${NC}$specific_version"
+
+  local tmp_dir=$(mktemp -d)
+  cd "$tmp_dir"
+
+  echo -e "${MUTED}Downloading from $url${NC}"
+  curl -fsSL -o "$filename" "$url"
+
+  if [ "$os" = "linux" ]; then
+    tar -xzf "$filename"
+  else
+    unzip -q "$filename"
+  fi
+
+  mv "$APP" "$INSTALL_DIR/" 2>/dev/null || mv "$APP.exe" "$INSTALL_DIR/" 2>/dev/null
+  chmod 755 "${INSTALL_DIR}/$APP" 2>/dev/null || true
+
+  cd - >/dev/null
+  rm -rf "$tmp_dir"
+
+  print_message success " Installed $APP to $INSTALL_DIR/$APP"
+}
+
+download_and_install
+
+# Add to PATH if needed
+add_to_path() {
+  local config_file=$1
+  local command=$2
+
+  if grep -Fxq "$command" "$config_file" 2>/dev/null; then
+    print_message info "${MUTED}PATH already configured in $config_file${NC}"
+  elif [[ -w $config_file ]]; then
+    echo -e "\n# patchy" >> "$config_file"
+    echo "$command" >> "$config_file"
+    print_message info "${MUTED}Added ${NC}$APP ${MUTED}to \$PATH in ${NC}$config_file"
+  else
+    print_message info "Manually add to your shell config:"
+    print_message info "  $command"
+  fi
+}
+
+XDG_CONFIG_HOME=${XDG_CONFIG_HOME:-$HOME/.config}
+
+current_shell=$(basename "$SHELL")
+case $current_shell in
+  fish)
+    config_files="$HOME/.config/fish/config.fish"
+    ;;
+  zsh)
+    config_files="$HOME/.zshrc $HOME/.zshenv $XDG_CONFIG_HOME/zsh/.zshrc"
+    ;;
+  bash)
+    config_files="$HOME/.bashrc $HOME/.bash_profile $HOME/.profile"
+    ;;
+  *)
+    config_files="$HOME/.bashrc $HOME/.profile"
+    ;;
+esac
+
+config_file=""
+for file in $config_files; do
+  if [[ -f $file ]]; then
+    config_file=$file
+    break
+  fi
+done
+
+if [[ -n $config_file ]] && [[ ":$PATH:" != *":$INSTALL_DIR:"* ]]; then
+  case $current_shell in
+    fish)
+      add_to_path "$config_file" "fish_add_path $INSTALL_DIR"
+      ;;
+    *)
+      add_to_path "$config_file" "export PATH=\"$INSTALL_DIR:\$PATH\""
+      ;;
+  esac
+fi
+
+# GitHub Actions support
+if [ -n "${GITHUB_ACTIONS-}" ] && [ "${GITHUB_ACTIONS}" == "true" ]; then
+  echo "$INSTALL_DIR" >> "$GITHUB_PATH"
+  print_message info "Added $INSTALL_DIR to \$GITHUB_PATH"
+fi
+
+echo ""
+print_message success "Installation complete!"
+echo ""
+echo -e "${MUTED}To get started:${NC}"
+echo ""
+echo -e "  ${GREEN}patchy --help${NC}"
+echo ""
+if [[ ":$PATH:" != *":$INSTALL_DIR:"* ]]; then
+  echo -e "${MUTED}Note: You may need to restart your shell or run:${NC}"
+  echo -e "  export PATH=\"$INSTALL_DIR:\$PATH\""
+  echo ""
+fi

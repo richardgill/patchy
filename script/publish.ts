@@ -6,8 +6,8 @@ import path from "node:path";
 import { fileURLToPath } from "node:url";
 import { $ } from "bun";
 
-const NPM_ORG = "richardgill";
 const CLI_NAME = "patchy";
+const WRAPPER_PACKAGE_NAME = "patchy-cli";
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -34,24 +34,19 @@ const { binaries, version } = await import("./build.ts");
   await $`./dist/${name}/bin/${CLI_NAME} --version`;
 }
 
-// Create main package directory
-const mainPackageName = pkg.name.replace(`@${NPM_ORG}/`, "") + "-ai";
-await $`mkdir -p ./dist/${mainPackageName}`;
-await $`cp -r ./bin ./dist/${mainPackageName}/bin`;
-await $`cp ./script/postinstall.mjs ./dist/${mainPackageName}/postinstall.mjs`;
+// Create wrapper package directory
+await $`mkdir -p ./dist/${WRAPPER_PACKAGE_NAME}`;
+await $`cp -r ./bin ./dist/${WRAPPER_PACKAGE_NAME}/bin`;
 
-// Write main package.json with optionalDependencies
-await Bun.file(`./dist/${mainPackageName}/package.json`).write(
+// Write wrapper package.json with optionalDependencies
+await Bun.file(`./dist/${WRAPPER_PACKAGE_NAME}/package.json`).write(
   JSON.stringify(
     {
-      name: mainPackageName,
+      name: WRAPPER_PACKAGE_NAME,
       version,
       description: pkg.description,
       bin: {
         [CLI_NAME]: `./bin/${CLI_NAME}`,
-      },
-      scripts: {
-        postinstall: "node ./postinstall.mjs",
       },
       optionalDependencies: binaries,
       license: "MIT",
@@ -82,9 +77,9 @@ for (const [name] of Object.entries(binaries)) {
   }
 }
 
-// Publish main package
-console.log(`\nPublishing ${mainPackageName}@${version}...`);
-await $`cd ./dist/${mainPackageName} && npm publish --access public`;
+// Publish wrapper package
+console.log(`\nPublishing ${WRAPPER_PACKAGE_NAME}@${version}...`);
+await $`cd ./dist/${WRAPPER_PACKAGE_NAME} && npm publish --access public`;
 
 console.log(`\n✓ Published all packages for version ${version}`);
 
