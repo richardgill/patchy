@@ -44,12 +44,14 @@ jobs:
         id: changesets
         uses: changesets/action@v1
         with:
-          publish: bun run changeset-publish
+          # We use 'true' as the publish command - it exits successfully when changesets
+          # have been consumed (version bumped), which triggers the binary publish job.
+          # The actual npm publishing happens in build-and-release for patchy-cli only.
+          publish: "true"
           title: "chore: release"
           commit: "chore: release"
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          NPM_TOKEN: ${{ secrets.NPM_TOKEN }}
 
       - name: Get published version
         id: version
@@ -123,14 +125,9 @@ jobs:
             curl -fsSL https://raw.githubusercontent.com/richardgill/patchy/main/install | bash
             ```
 
-            **npm (binary, no Node.js required at runtime):**
+            **npm:**
             ```bash
             npm install -g patchy-cli
-            ```
-
-            **npm (source, requires Node.js 22+):**
-            ```bash
-            npm install -g @richardgill/patchy
             ```
 
             **Manual download:**
