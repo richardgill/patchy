@@ -42,7 +42,6 @@
   "dependencies": {
     "@stricli/core": "^1.2.0",
     "chalk": "^5.4.1",
-    "dedent": "^1.6.0",
     "diff": "^8.0.2",
     "enquirer": "^2.4.1",
     "es-toolkit": "^1.39.8",
