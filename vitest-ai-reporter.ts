@@ -17,7 +17,7 @@ export class AIFriendlyReporter extends DefaultReporter {
       console.log(`  Failed snapshots: ${snapshotSummary.unmatched}`);
 
       console.log("\nTo update snapshots, run:");
-      console.log(`   pnpm run test -u`);
+      console.log(`   bun run test -u`);
     }
   }
 }

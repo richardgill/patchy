@@ -17,9 +17,9 @@
     "check-fix": "biome check --write --error-on-warnings --diagnostic-level=warn",
     "changeset": "changeset",
     "changeset-version": "changeset version",
-    "changeset-publish": "pnpm build && changeset publish",
+    "changeset-publish": "bun run build && changeset publish",
     "dev": "tsx src/cli.ts",
-    "local-ci": "concurrently --group -p none -n 'check,typecheck,test' 'pnpm run check-fix' 'pnpm run typecheck' 'pnpm run test'",
+    "local-ci": "concurrently --group -p none -n 'check,typecheck,test' 'bun run check-fix' 'bun run typecheck' 'bun run test'",
     "prepare": "lefthook install",
     "publish-binary": "bun run ./script/publish.ts",
     "typecheck": "tsgo --noEmit",
@@ -78,7 +78,7 @@
   "publishConfig": {
     "access": "public"
   },
-  "packageManager": "pnpm@10.13.1",
+  "packageManager": "bun@1.3.3",
   "engines": {
     "node": ">=22.0.0"
   },

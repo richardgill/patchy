@@ -8,7 +8,7 @@ This is a CLI tool for managing Git patch workflows. It helps maintain curated p
 
 ## Development Commands
 
-- `pnpm dev` - Run CLI in development with tsx
+- `bun run dev` - Run CLI in development with tsx
 
 ## Key Dependencies
 
@@ -21,6 +21,6 @@ This is a CLI tool for managing Git patch workflows. It helps maintain curated p
 ## Testing Preferences
 
 - Use parameterized tests, each one has an it(...) with shared functions, keep tests DRY and maintainable
-- `pnpm run test -- -u` to update inline snapshots
+- `bun run test -- -u` to update inline snapshots
 
 - Use `~/` imports instead of relative `../` imports
