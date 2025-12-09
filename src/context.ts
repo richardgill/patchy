@@ -1,11 +1,14 @@
 import type { CommandContext } from "@stricli/core";
 
-export interface LocalContext extends CommandContext {
+export type LocalContext = CommandContext & {
   readonly process: NodeJS.Process;
-}
+  readonly cwd: string;
+};
 
-export function buildContext(process: NodeJS.Process): LocalContext {
-  return {
-    process,
-  };
-}
+export const buildContext = (
+  proc: NodeJS.Process,
+  cwd?: string,
+): LocalContext => ({
+  process: proc,
+  cwd: cwd ?? proc.cwd(),
+});

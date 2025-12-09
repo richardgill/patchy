@@ -17,11 +17,13 @@ export default async function (
   const result = createMergedConfig({
     flags,
     requiredFields: ["repo_base_dir", "repo_dir"],
+    cwd: this.cwd,
   });
 
   if (!result.success) {
     this.process.stderr.write(result.error);
     this.process.exit(1);
+    return;
   }
 
   const config = result.mergedConfig;
@@ -33,6 +35,7 @@ export default async function (
       chalk.red(`Repository directory does not exist: ${repoDir}\n`),
     );
     this.process.exit(1);
+    return;
   }
 
   const git = createGitClient(repoDir);
@@ -40,6 +43,7 @@ export default async function (
   if (!isRepo) {
     this.process.stderr.write(chalk.red(`Not a Git repository: ${repoDir}\n`));
     this.process.exit(1);
+    return;
   }
 
   if (dryRun) {

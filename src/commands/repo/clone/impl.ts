@@ -16,6 +16,7 @@ export default async function (
   const result = createMergedConfig({
     flags,
     requiredFields: ["repo_url"],
+    cwd: this.cwd,
   });
 
   if (!result.success) {
@@ -40,7 +41,7 @@ export default async function (
     return;
   }
 
-  const repoBaseDir = resolve(config.repo_base_dir);
+  const repoBaseDir = resolve(this.cwd, config.repo_base_dir);
 
   if (!isValidGitUrl(repoUrl)) {
     this.process.stderr.write(
@@ -61,7 +62,7 @@ export default async function (
     return;
   }
 
-  const targetDir = resolve(join(repoBaseDir, repoName));
+  const targetDir = join(repoBaseDir, repoName);
 
   if (verbose) {
     this.process.stdout.write(`Repository URL: ${repoUrl}\n`);

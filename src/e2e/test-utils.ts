@@ -1,6 +1,9 @@
 import { randomUUID } from "node:crypto";
 import { mkdir, writeFile } from "node:fs/promises";
 import { join, resolve } from "node:path";
+import { run } from "@stricli/core";
+import { app } from "~/app";
+import type { LocalContext } from "~/context";
 
 type TestDirContext = {
   testDir: string;
@@ -17,11 +20,7 @@ export type CLIResult = {
   failed: boolean;
   command: string;
   cwd: string;
-  signal?: NodeJS.Signals;
 };
-
-// Path to the CLI entry point
-const CLI_PATH = resolve(import.meta.dirname, "../cli.ts");
 
 export const runCli = async (
   command: string,
@@ -31,25 +30,40 @@ export const runCli = async (
   const processedCommand = command.replace(/^patchy\s+/, "");
   const args = processedCommand.split(/\s+/).filter(Boolean);
 
-  const execArgs = ["run", CLI_PATH, ...args];
+  let stdout = "";
+  let stderr = "";
+  let exitCode = 0;
 
-  const proc = Bun.spawn(["bun", ...execArgs], {
-    cwd,
-    env: {
-      ...process.env,
-      NO_COLOR: "1",
-      FORCE_COLOR: "0",
+  const mockProcess = {
+    stdout: {
+      write: (s: string) => {
+        stdout += s;
+      },
     },
-    stdout: "pipe",
-    stderr: "pipe",
-  });
+    stderr: {
+      write: (s: string) => {
+        stderr += s;
+      },
+    },
+    env: { ...process.env, NO_COLOR: "1", FORCE_COLOR: "0" },
+    exit: (code: number) => {
+      exitCode = code;
+    },
+    cwd: () => cwd,
+  };
 
-  const [stdout, stderr] = await Promise.all([
-    new Response(proc.stdout).text(),
-    new Response(proc.stderr).text(),
-  ]);
+  const context: LocalContext = {
+    process: mockProcess as unknown as NodeJS.Process,
+    cwd,
+  };
 
-  const exitCode = await proc.exited;
+  try {
+    await run(app, args, context);
+  } catch {
+    if (exitCode === 0) {
+      exitCode = 1;
+    }
+  }
 
   return {
     stdout: stdout.trim(),
@@ -58,7 +72,6 @@ export const runCli = async (
     failed: exitCode !== 0,
     command,
     cwd,
-    signal: proc.signalCode ?? undefined,
   };
 };
 
