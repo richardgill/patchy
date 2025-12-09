@@ -1,10 +1,7 @@
-import { readFileSync } from "node:fs";
+import { existsSync, readFileSync } from "node:fs";
 import { join } from "node:path";
 import { beforeEach, describe, expect, it } from "vitest";
 import {
-  assertConfigFileExists,
-  assertFailedCommand,
-  assertSuccessfulCommand,
   generateTmpDir,
   runCli,
   setupTestWithConfig,
@@ -18,28 +15,21 @@ describe("patchy init", () => {
     tmpDir = generateTmpDir();
   });
 
-  const assertSuccessfulInit = async (command: string) => {
-    await assertSuccessfulCommand(command, tmpDir);
-
-    const configPath = join(tmpDir, "patchy.json");
-    assertConfigFileExists(configPath);
-
-    const jsonContent = readFileSync(configPath, "utf-8");
-    return jsonContent.trim();
-  };
-
-  const assertFailedInit = async (command: string) => {
-    return await assertFailedCommand(command, tmpDir);
-  };
-
   it("should initialize patchy with all flags", async () => {
     setupTestWithConfig({
       tmpDir,
       createDirectories: { repoBaseDir: "repoBaseDir1", repoDir: "main" },
     });
-    const jsonContent = await assertSuccessfulInit(
+
+    const result = await runCli(
       `patchy init --repo-url https://github.com/example/test-repo.git --repo-dir main --repo-base-dir repoBaseDir1 --patches-dir patches --ref main --config patchy.json --force`,
+      tmpDir,
     );
+
+    expect(result).toSucceed();
+    const configPath = join(tmpDir, "patchy.json");
+    expect(existsSync(configPath)).toBe(true);
+    const jsonContent = readFileSync(configPath, "utf-8").trim();
 
     expect(stabilizeTempDir(jsonContent)).toMatchInlineSnapshot(`
       "{
@@ -58,10 +48,13 @@ describe("patchy init", () => {
         tmpDir,
         createDirectories: { repoBaseDir: "repoBaseDir1", repoDir: "main" },
       });
-      const result = await assertFailedInit(
+
+      const result = await runCli(
         `patchy init --repo-url github.com/example/repo --repo-dir main --repo-base-dir repoBaseDir1 --patches-dir patches --ref main --config patchy.json --force`,
+        tmpDir,
       );
 
+      expect(result).toFail();
       expect(result.stderr).toMatchInlineSnapshot(
         `"Please enter a valid Git URL (https://github.com/owner/repo or git@github.com:owner/repo.git)"`,
       );
@@ -73,9 +66,12 @@ describe("patchy init", () => {
         createDirectories: { repoBaseDir: "repoBaseDir1", repoDir: "main" },
       });
 
-      const result = await assertFailedInit(
+      const result = await runCli(
         `patchy init --repo-url https://invalid_domain/repo --repo-dir main --repo-base-dir repoBaseDir1 --patches-dir patches --ref main --config patchy.json --force`,
+        tmpDir,
       );
+
+      expect(result).toFail();
       expect(result.stderr).toMatchInlineSnapshot(
         `"Please enter a valid Git URL (https://github.com/owner/repo or git@github.com:owner/repo.git)"`,
       );
@@ -87,9 +83,12 @@ describe("patchy init", () => {
         createDirectories: { repoBaseDir: "repoBaseDir1", repoDir: "main" },
       });
 
-      const result = await assertFailedInit(
+      const result = await runCli(
         `patchy init --repo-url https://github.com/ --repo-dir main --repo-base-dir repoBaseDir1 --patches-dir patches --ref main --config patchy.json --force`,
+        tmpDir,
       );
+
+      expect(result).toFail();
       expect(result.stderr).toContain("valid Git URL");
     });
 
@@ -105,9 +104,12 @@ describe("patchy init", () => {
         tmpDir,
       );
 
-      const result = await assertFailedInit(
+      const result = await runCli(
         `patchy init --repo-url https://github.com/example/another-repo.git --repo-dir main --repo-base-dir repoBaseDir1 --patches-dir patches --ref main --config patchy.json`,
+        tmpDir,
       );
+
+      expect(result).toFail();
       expect(stabilizeTempDir(result.stderr)).toMatchInlineSnapshot(
         `
         "Configuration file already exists at <TEST_DIR>/patchy.json
@@ -121,9 +123,13 @@ describe("patchy init", () => {
         tmpDir,
         createDirectories: { repoBaseDir: "repoBaseDir1", repoDir: "main" },
       });
-      const result = await assertFailedInit(
+
+      const result = await runCli(
         `patchy init --repo-url "" --repo-dir main --repo-base-dir repoBaseDir1 --patches-dir patches --ref main --config patchy.json --force`,
+        tmpDir,
       );
+
+      expect(result).toFail();
       expect(result.stderr).toMatchInlineSnapshot(
         `"Repository URL is required"`,
       );
