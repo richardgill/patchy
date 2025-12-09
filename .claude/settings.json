@@ -1,6 +1,7 @@
 {
   "permissions": {
-    "allow": ["Bash(bd:*)"]
+    "allow": ["Bash(bd:*)"],
+    "additionalDirectories": ["/home/rich/code/reference-repos/opencode"]
   },
   "hooks": {
     "Stop": [
