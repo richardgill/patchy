@@ -1,7 +1,6 @@
 import { randomUUID } from "node:crypto";
 import { mkdir, writeFile } from "node:fs/promises";
 import { join, resolve } from "node:path";
-import { execa } from "execa";
 
 type TestDirContext = {
   testDir: string;
@@ -34,24 +33,32 @@ export const runCli = async (
 
   const execArgs = ["run", CLI_PATH, ...args];
 
-  const result = await execa("bun", execArgs, {
+  const proc = Bun.spawn(["bun", ...execArgs], {
     cwd,
-    reject: false,
     env: {
       ...process.env,
       NO_COLOR: "1",
       FORCE_COLOR: "0",
     },
+    stdout: "pipe",
+    stderr: "pipe",
   });
 
+  const [stdout, stderr] = await Promise.all([
+    new Response(proc.stdout).text(),
+    new Response(proc.stderr).text(),
+  ]);
+
+  const exitCode = await proc.exited;
+
   return {
-    stdout: result.stdout.trim(),
-    stderr: result.stderr.trim(),
-    exitCode: result.exitCode ?? 0,
-    failed: result.exitCode !== 0,
+    stdout: stdout.trim(),
+    stderr: stderr.trim(),
+    exitCode,
+    failed: exitCode !== 0,
     command,
     cwd,
-    signal: result.signal as NodeJS.Signals | undefined,
+    signal: proc.signalCode ?? undefined,
   };
 };
 
