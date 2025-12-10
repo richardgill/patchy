@@ -2,10 +2,60 @@
 
 An opinionated command-line tool for managing Git patch workflows.
 
-**patchy** helps you maintain a curated set of patches—both added files and diffs—against an upstream Git repository.
+**patchy** helps you manage patch files for a repository. 
 
-## Quick Start
 
+## How it works
+
+Clone a repo you want to apply patches to
+```
+/home/me/code/my-repo/
+└── path/in/repo/existingFile.txt
+```
+
+Set up a repo which contains your patches
+
+`patchy init`
+
+```
+my-patch-repo/
+├── patches/
+├── patchy.json                          # optional config
+```
+
+Make changes to your repo:
+
+```
+/home/me/code/my-repo/
+├── path/in/repo/existingFile.txt      # modify this file
+└── path/in/repo/newFile.txt           # create a new file
+```
+
+Generate patch files `patchy generate --repo-dir /home/me/code/my-repo`
+
+```
+my-patch-repo/
+├── patches/
+│   ├── path/in/repo/existingFile.txt.diff
+│   └── path/in/repo/newFile.txt
+└── patchy.json
+```
+
+Run `patchy apply --repo-dir /home/me/code/my-repo-2`
+```
+/home/me/code/my-repo-2/
+├── path/in/repo/newFile.txt           # copied from patches/
+└── path/in/repo/existingFile.txt      # patched file
+```
+
+
+## Installation
+
+```sh
+npm install -g patchy-cli
+```
+
+## Initialize patches
 Run this command to initialize a new patch project:
 
 ```sh
@@ -14,40 +64,20 @@ patchy init
 
 This will set up the necessary directory structure and configuration file for your patch workflow.
 
-## Directory Structure
 
-```
-my-patch-repo/
-├── patches/
-│   ├── path/in/repo/newFile.ts          # new file
-│   ├── path/in/repo/oldFile.ts.diff     # diff file
-├── patchy.json                          # optional config
 
-repo-dir/
-├── path/in/repo/newFile.ts              # will be copied from patches/
-├── path/in/repo/oldFile.ts              # original file, to be patched
-```
+## Shared Options
 
-File layout must mirror the structure of `repo_dir`.
+These options are accepted by **all commands**:
 
-## Installation
-
-```sh
-npm install -g patchy-cli
-```
-
-## Shared Flags
-
-These flags are accepted by **all commands**:
-
-| CLI Flag          | Env Variable           | Description                                      |
-| ----------------- | ---------------------- | ------------------------------------------------ |
-| `--repo-dir`      | `PATCHY_REPO_DIR`      | Path to the Git repo you're patching             |
-| `--repo-base-dir` | `PATCHY_REPO_BASE_DIR` | Parent directory where upstream repos are cloned |
-| `--patches-dir`   | `PATCHY_PATCHES_DIR`   | Path to your patch files (default: `./patches/`) |
-| `--config`        | `PATCHY_CONFIG`        | JSON config file (default: `patchy.json`)        |
-| `--verbose`       | `PATCHY_VERBOSE`       | Enable verbose log output                        |
-| `--dry-run`       | `PATCHY_DRY_RUN`       | Simulate the command without writing files       |
+| CLI Flag          | patchy.json      | Env Variable           | Description                                      |
+| ----------------- | ---------------- | ---------------------- | ------------------------------------------------ |
+| `--repo-dir`      | `repo_dir`       | `PATCHY_REPO_DIR`      | Path to the Git repo you're patching             |
+| `--repo-base-dir` | `repo_base_dir`  | `PATCHY_REPO_BASE_DIR` | Parent directory where upstream repos are cloned |
+| `--patches-dir`   | `patches_dir`    | `PATCHY_PATCHES_DIR`   | Path to your patch files (default: `./patches/`) |
+| `--config`        |                  | `PATCHY_CONFIG`        | JSON config file (default: `patchy.json`)        |
+| `--verbose`       | `verbose`        | `PATCHY_VERBOSE`       | Enable verbose log output                        |
+| `--dry-run`       | `dry_run`        | `PATCHY_DRY_RUN`       | Simulate the command without writing files       |
 
 > CLI flags override all values in `patchy.json`.
 
@@ -110,7 +140,7 @@ Optional file to set default values:
 All options may be set with environment variables as well e.g. `PATCHY_REPO_URL`.
 
 ### Precedence Order
-
+ todo :move these to shared options sectionoptions
 1. CLI flags
 2. Environment variables
 3. `--config` (defaults to `./patchy.json`)
@@ -118,11 +148,11 @@ All options may be set with environment variables as well e.g. `PATCHY_REPO_URL`
 ## Example Workflow
 
 ```sh
-# Clone the upstream repo
-patchy repo clone --repo-url https://github.com/richardgill/upstream.git --repo-base-dir ../clones
-
+# Clone the repo
+patchy repo clone --repo-url https://github.com/richardgill/my-repo.git --repo-base-dir ~/code/repos
+ todo: update the rest of these commands
 # Check out upstream repo at a specific version
-patchy repo checkout --ref v1.2.3 --repo-dir ../clones/upstream
+patchy repo checkout --ref v1.2.3 
 
 # Generate patches from current state of repo_dir
 patchy generate --repo-dir ../clones/upstream
