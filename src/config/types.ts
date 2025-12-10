@@ -1,3 +1,13 @@
+import {
+  PATCHY_DRY_RUN_ENV_VAR,
+  PATCHY_PATCHES_DIR_ENV_VAR,
+  PATCHY_REF_ENV_VAR,
+  PATCHY_REPO_BASE_DIR_ENV_VAR,
+  PATCHY_REPO_DIR_ENV_VAR,
+  PATCHY_REPO_URL_ENV_VAR,
+  PATCHY_VERBOSE_ENV_VAR,
+} from "~/constants";
+
 export type YesFlag = {
   yes?: boolean;
 };
@@ -76,49 +86,49 @@ export type PartialCamelCaseResolvedConfig = Partial<CamelCaseResolvedConfig>;
 export const CONFIG_FIELD_METADATA = {
   repo_url: {
     flag: "repo-url",
-    env: "PATCHY_REPO_URL",
+    env: PATCHY_REPO_URL_ENV_VAR,
     type: "string",
     name: "Repository URL",
     example: "https://github.com/user/repo.git",
   },
   repo_dir: {
     flag: "repo-dir",
-    env: "PATCHY_REPO_DIR",
+    env: PATCHY_REPO_DIR_ENV_VAR,
     type: "string",
     name: "Repository directory",
     example: "./repo",
   },
   repo_base_dir: {
     flag: "repo-base-dir",
-    env: "PATCHY_REPO_BASE_DIR",
+    env: PATCHY_REPO_BASE_DIR_ENV_VAR,
     type: "string",
     name: "Repository base directory",
     example: "./upstream",
   },
   patches_dir: {
     flag: "patches-dir",
-    env: "PATCHY_PATCHES_DIR",
+    env: PATCHY_PATCHES_DIR_ENV_VAR,
     type: "string",
     name: "Patches directory",
     example: "./patches",
   },
   ref: {
     flag: "ref",
-    env: "PATCHY_REF",
+    env: PATCHY_REF_ENV_VAR,
     type: "string",
     name: "Git reference",
     example: "main",
   },
   verbose: {
     flag: "verbose",
-    env: "PATCHY_VERBOSE",
+    env: PATCHY_VERBOSE_ENV_VAR,
     type: "boolean",
     name: "Verbose output",
     example: "true",
   },
   dry_run: {
     flag: "dry-run",
-    env: "PATCHY_DRY_RUN",
+    env: PATCHY_DRY_RUN_ENV_VAR,
     type: "boolean",
     name: "Dry run mode",
     example: "true",

@@ -4,6 +4,7 @@ import chalk from "chalk";
 import { createMergedConfig } from "~/config/resolver";
 import type { CloneCommandFlags } from "~/config/types";
 import { isValidGitUrl } from "~/config/validation";
+import { PATCHY_REPO_BASE_DIR_ENV_VAR } from "~/constants";
 import type { LocalContext } from "~/context";
 import { assertDefined } from "~/lib/assert";
 import { ensureDirExists } from "~/lib/fs";
@@ -34,7 +35,7 @@ export default async function (
   if (!config.repo_base_dir) {
     this.process.stderr.write(
       chalk.red(
-        "Missing required parameter: repo_base_dir\nSet --repo-base-dir flag, PATCHY_REPO_BASE_DIR env var, or repo_base_dir in config file.\n",
+        `Missing required parameter: repo_base_dir\nSet --repo-base-dir flag, ${PATCHY_REPO_BASE_DIR_ENV_VAR} env var, or repo_base_dir in config file.\n`,
       ),
     );
     this.process.exit(1);
