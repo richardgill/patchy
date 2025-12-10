@@ -52,6 +52,12 @@ Run `patchy apply --repo-dir /home/me/code/my-repo-2`
 ## Installation
 
 ```sh
+curl -fsSL https://raw.githubusercontent.com/richardgill/patchy/main/install | bash
+```
+
+Or via npm:
+
+```sh
 npm install -g patchy-cli
 ```
 
