@@ -13,13 +13,13 @@ pre-commit:
 post-merge:
   commands:
     bun-install:
-      files: git diff --name-only ORIG_HEAD HEAD | grep -E "^bun\.lock$"
+      files: git diff --name-only ORIG_HEAD HEAD | grep -E "^bun\.lock$" || true
       run: bun install
 
 post-checkout:
   commands:
     bun-install:
-      files: git diff --name-only {1} {2} | grep -E "^bun\.lock$"
+      files: git diff --name-only {1} {2} | grep -E "^bun\.lock$" || true
       run: bun install
 
 pre-push:
