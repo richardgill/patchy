@@ -15,6 +15,7 @@ export type RequiredConfigData = z.infer<typeof requiredConfigSchema>;
 
 export const jsonConfigSchema = z
   .object({
+    $schema: z.string().optional(),
     repo_url: baseConfigFields.repo_url.optional(),
     ref: baseConfigFields.ref.optional(),
     repo_base_dir: baseConfigFields.repo_base_dir.optional(),

@@ -14,6 +14,7 @@ import {
 } from "~/config/schemas";
 import { isValidGitUrl, validateGitUrl } from "~/config/validation";
 import type { LocalContext } from "~/context";
+import { getSchemaUrl } from "~/version";
 
 const { prompt } = enquirer;
 
@@ -124,7 +125,7 @@ export default async function (
     return;
   }
 
-  const jsonContent = generateJsonConfig(finalConfig);
+  const jsonContent = await generateJsonConfig(finalConfig);
 
   try {
     await writeFile(configPath, jsonContent, "utf8");
@@ -146,14 +147,21 @@ export default async function (
   this.process.stdout.write(`3. Generate patches: patchy generate\n`);
 }
 
-const generateJsonConfig = (config: RequiredConfigData): string => {
+const generateJsonConfig = async (
+  config: RequiredConfigData,
+): Promise<string> => {
   const validatedConfig = requiredConfigSchema.parse(config);
 
-  const jsonData = omitBy(
+  const cleanedConfig = omitBy(
     validatedConfig,
     (value, key) =>
       value === "" || value == null || (key === "verbose" && value === false),
   );
+
+  const jsonData = {
+    $schema: await getSchemaUrl(),
+    ...cleanedConfig,
+  };
 
   return `${JSON.stringify(jsonData, null, 2)}\n`;
 };
