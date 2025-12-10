@@ -31,3 +31,7 @@ The CLI uses Bun as its runtime:
 - `bun run test` - Run e2e tests with CLI executing on Bun
 
 The test suite uses bun:test and spawns the actual CLI as a subprocess using `bun`.
+
+## Releasing
+
+Run `bun run changeset-version` to bump version and generate CHANGELOG
