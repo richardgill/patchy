@@ -105,6 +105,18 @@ bun run build-single
 bun run build
 ```
 
+### Required Repository Settings
+
+The release workflow requires GitHub Actions to create pull requests. Enable this with:
+
+```sh
+gh api repos/OWNER/REPO/actions/permissions/workflow -X PUT \
+  -f default_workflow_permissions=read \
+  -F can_approve_pull_request_reviews=true
+```
+
+Or via GitHub UI: Settings → Actions → General → "Allow GitHub Actions to create and approve pull requests"
+
 ### Required Secrets
 
 The release workflow requires these GitHub repository secrets:
