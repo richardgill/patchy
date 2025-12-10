@@ -18,6 +18,11 @@
    bun run dev
    ```
 
+   **Tip:** You can run the dev CLI from any directory using `--cwd`:
+   ```sh
+   bun run --cwd /path/to/patchy dev init
+   ```
+
 ## Development Commands
 
 | Command | Description |
