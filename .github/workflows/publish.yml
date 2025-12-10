@@ -47,8 +47,7 @@ jobs:
         id: changesets
         uses: changesets/action@v1
         with:
-          # We don't publish to npm - we build binaries instead.
-          # When hasChangesets is false (release PR was merged), the binaries job runs.
+          # When hasChangesets is false (release PR was merged), the binaries and npm-publish jobs run.
           title: "chore: release"
           commit: "chore: release"
         env:
@@ -69,9 +68,71 @@ jobs:
     with:
       version: ${{ needs.release.outputs.version }}
 
+  npm-publish:
+    name: Publish to npm
+    needs: [release, build]
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Download npm packages
+        uses: actions/download-artifact@v4
+        with:
+          name: npm-packages
+          path: dist
+
+      - name: Setup npm auth
+        run: echo "//registry.npmjs.org/:_authToken=${{ secrets.NPM_TOKEN }}" > ~/.npmrc
+
+      - name: Publish platform packages
+        run: |
+          VERSION="${{ needs.release.outputs.version }}"
+
+          for dir in dist/patchy-*/; do
+            build_name=$(basename "$dir")
+            # Convert patchy-linux-x64 to patchy-cli-linux-x64
+            npm_name="patchy-cli-${build_name#patchy-}"
+            echo "Publishing $npm_name@$VERSION"
+
+            # Update package.json with npm name and version
+            cd "$dir"
+            node -e "
+              const pkg = require('./package.json');
+              pkg.name = '$npm_name';
+              pkg.version = '$VERSION';
+              require('fs').writeFileSync('package.json', JSON.stringify(pkg, null, 2) + '\n');
+            "
+            npm publish --access public --tag latest
+            cd -
+          done
+
+      - name: Publish main package
+        run: |
+          VERSION="${{ needs.release.outputs.version }}"
+
+          # Update package.json with version and optionalDependencies
+          node -e "
+            const pkg = require('./package.json');
+            pkg.version = '$VERSION';
+            pkg.optionalDependencies = {
+              'patchy-cli-linux-x64': '$VERSION',
+              'patchy-cli-linux-arm64': '$VERSION',
+              'patchy-cli-darwin-x64': '$VERSION',
+              'patchy-cli-darwin-arm64': '$VERSION',
+              'patchy-cli-windows-x64': '$VERSION'
+            };
+            require('fs').writeFileSync('package.json', JSON.stringify(pkg, null, 2) + '\n');
+          "
+
+          npm publish --access public --tag latest
+
   publish:
     name: Publish Release
-    needs: [release, build]
+    needs: [release, build, npm-publish]
     runs-on: ubuntu-latest
     permissions:
       contents: write
@@ -98,6 +159,16 @@ jobs:
             **Install script (recommended):**
             ```bash
             curl -fsSL https://raw.githubusercontent.com/richardgill/patchy/main/install | bash
+            ```
+
+            **Via npm:**
+            ```bash
+            npm install -g patchy-cli
+            ```
+
+            Or use directly:
+            ```bash
+            npx patchy-cli --version
             ```
 
             **Manual download:**

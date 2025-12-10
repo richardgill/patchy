@@ -93,6 +93,9 @@ for (const item of targets) {
           type: "git",
           url: "git+https://github.com/richardgill/patchy.git",
         },
+        publishConfig: {
+          access: "public",
+        },
       },
       null,
       2,

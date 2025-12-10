@@ -32,8 +32,22 @@ File layout must mirror the structure of `repo_dir`.
 
 ## Installation
 
+**Install script (recommended):**
+
+```sh
+curl -fsSL https://raw.githubusercontent.com/richardgill/patchy/main/install | bash
+```
+
+**Via npm:**
+
 ```sh
 npm install -g patchy-cli
+```
+
+Or use directly without installing:
+
+```sh
+npx patchy-cli --version
 ```
 
 ## Shared Flags

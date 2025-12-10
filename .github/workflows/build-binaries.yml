@@ -63,3 +63,10 @@ jobs:
           name: release-assets
           path: release/
           retention-days: 1
+
+      - name: Upload npm packages
+        uses: actions/upload-artifact@v4
+        with:
+          name: npm-packages
+          path: dist/patchy-*/
+          retention-days: 1
