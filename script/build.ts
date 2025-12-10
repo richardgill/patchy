@@ -5,6 +5,8 @@
 import path from "node:path";
 import { fileURLToPath } from "node:url";
 import { $ } from "bun";
+import { getVersion } from "../src/version";
+import { generateJsonSchema, SCHEMA_FILENAME } from "./generate-schema";
 
 const CLI_NAME = "patchy";
 const VERSION_ENV_VAR = "PATCHY_VERSION";
@@ -14,8 +16,6 @@ const __dirname = path.dirname(__filename);
 const projectDir = path.resolve(__dirname, "..");
 
 process.chdir(projectDir);
-
-const pkg = await Bun.file("./package.json").json();
 
 const singleFlag = process.argv.includes("--single");
 
@@ -38,13 +38,15 @@ const targets = singleFlag
     )
   : allTargets;
 
-const getVersion = (): string => {
-  return process.env[VERSION_ENV_VAR] ?? pkg.version ?? "0.0.0";
-};
-
-const version = getVersion();
+const version = await getVersion();
 
 await $`rm -rf dist`;
+await $`mkdir -p dist`;
+
+const jsonSchema = generateJsonSchema();
+const schemaPath = `dist/${SCHEMA_FILENAME}`;
+await Bun.write(schemaPath, `${JSON.stringify(jsonSchema, null, 2)}\n`);
+console.log(`Generated JSON Schema: ${schemaPath}`);
 
 const binaries: Record<string, string> = {};
 

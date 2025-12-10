@@ -3,6 +3,7 @@ import { applyCommand } from "./commands/apply/command";
 import { generateCommand } from "./commands/generate/command";
 import { initCommand } from "./commands/init/command";
 import { repoRoutes } from "./commands/repo/routes";
+import { VERSION } from "./version";
 
 const routes = buildRouteMap({
   routes: {
@@ -19,6 +20,6 @@ const routes = buildRouteMap({
 export const app = buildApplication(routes, {
   name: "patchy",
   versionInfo: {
-    currentVersion: "0.0.0",
+    currentVersion: VERSION,
   },
 });

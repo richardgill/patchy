@@ -1,6 +1,7 @@
 import { beforeEach, describe, expect, it } from "bun:test";
 import { existsSync, readFileSync } from "node:fs";
 import { join } from "node:path";
+import { getSchemaUrl } from "~/version";
 import {
   generateTmpDir,
   runCli,
@@ -31,15 +32,15 @@ describe("patchy init", () => {
     expect(existsSync(configPath)).toBe(true);
     const jsonContent = readFileSync(configPath, "utf-8").trim();
 
-    expect(stabilizeTempDir(jsonContent)).toMatchInlineSnapshot(`
-      "{
-        \"repo_url\": \"https://github.com/example/test-repo.git\",
-        \"ref\": \"main\",
-        \"repo_base_dir\": \"repoBaseDir1\",
-        \"repo_dir\": \"main\",
-        \"patches_dir\": \"patches\"
-      }"
-    `);
+    const config = JSON.parse(jsonContent);
+    expect(config).toEqual({
+      $schema: await getSchemaUrl(),
+      repo_url: "https://github.com/example/test-repo.git",
+      ref: "main",
+      repo_base_dir: "repoBaseDir1",
+      repo_dir: "main",
+      patches_dir: "patches",
+    });
   });
 
   describe("error cases", () => {
