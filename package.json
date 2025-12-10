@@ -4,8 +4,8 @@
   "description": "A CLI tool for managing Git patch workflows.",
   "type": "module",
   "scripts": {
-    "build": "bun run ./script/build.ts",
-    "build-single": "bun run ./script/build.ts --single",
+    "build": "bun run ./scripts/build.ts",
+    "build-single": "bun run ./scripts/build.ts --single",
     "check": "biome check --error-on-warnings --diagnostic-level=warn",
     "check-fix": "biome check --write --error-on-warnings --diagnostic-level=warn",
     "changeset": "changeset",
