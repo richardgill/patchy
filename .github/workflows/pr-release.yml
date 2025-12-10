@@ -17,21 +17,17 @@ jobs:
     uses: ./.github/workflows/pre-checks.yml
     secrets: inherit
 
-  build-and-release:
-    name: Build & Release
-    needs: checks
+  version:
+    name: Get Version
     runs-on: ubuntu-latest
+    outputs:
+      version: ${{ steps.version.outputs.version }}
+      short_sha: ${{ steps.version.outputs.short_sha }}
+      pr_number: ${{ steps.version.outputs.pr_number }}
+      tag: ${{ steps.version.outputs.tag }}
     steps:
       - name: Checkout
         uses: actions/checkout@v4
-
-      - name: Setup Bun
-        uses: oven-sh/setup-bun@v2
-        with:
-          bun-version: latest
-
-      - name: Install dependencies
-        run: bun install --frozen-lockfile
 
       - name: Get version info
         id: version
@@ -45,47 +41,43 @@ jobs:
           echo "pr_number=$PR_NUMBER" >> $GITHUB_OUTPUT
           echo "tag=pr-${PR_NUMBER}" >> $GITHUB_OUTPUT
 
-      - name: Build all binaries
-        run: bun run build
-        env:
-          PATCHY_VERSION: ${{ steps.version.outputs.version }}
+  build:
+    name: Build Binaries
+    needs: [checks, version]
+    uses: ./.github/workflows/build-binaries.yml
+    with:
+      version: ${{ needs.version.outputs.version }}
 
-      - name: Prepare release assets
-        run: |
-          mkdir -p release
+  release:
+    name: Publish PR Release
+    needs: [version, build]
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+      pull-requests: write
 
-          # Copy binaries to release folder
-          cp dist/patchy-linux-x64/bin/patchy release/patchy-linux-x64
-          cp dist/patchy-linux-arm64/bin/patchy release/patchy-linux-arm64
-          cp dist/patchy-darwin-x64/bin/patchy release/patchy-darwin-x64
-          cp dist/patchy-darwin-arm64/bin/patchy release/patchy-darwin-arm64
-          cp dist/patchy-windows-x64/bin/patchy.exe release/patchy-windows-x64.exe
-
-          # Create archives
-          cd release
-          tar -czf patchy-linux-x64.tar.gz patchy-linux-x64
-          tar -czf patchy-linux-arm64.tar.gz patchy-linux-arm64
-          zip patchy-darwin-x64.zip patchy-darwin-x64
-          zip patchy-darwin-arm64.zip patchy-darwin-arm64
-          zip patchy-windows-x64.zip patchy-windows-x64.exe
-
-          sha256sum *.tar.gz *.zip > checksums.txt
+    steps:
+      - name: Download release assets
+        uses: actions/download-artifact@v4
+        with:
+          name: release-assets
+          path: release
 
       - name: Delete existing release (if any)
-        run: gh release delete ${{ steps.version.outputs.tag }} --yes || true
+        run: gh release delete ${{ needs.version.outputs.tag }} --repo ${{ github.repository }} --yes || true
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Create PR release
         uses: softprops/action-gh-release@v2
         with:
-          tag_name: ${{ steps.version.outputs.tag }}
-          name: "PR #${{ steps.version.outputs.pr_number }} Preview"
+          tag_name: ${{ needs.version.outputs.tag }}
+          name: "PR #${{ needs.version.outputs.pr_number }} Preview"
           body: |
-            **Preview build for PR #${{ steps.version.outputs.pr_number }}**
+            **Preview build for PR #${{ needs.version.outputs.pr_number }}**
 
-            - Commit: `${{ steps.version.outputs.short_sha }}`
-            - Version: `${{ steps.version.outputs.version }}`
+            - Commit: `${{ needs.version.outputs.short_sha }}`
+            - Version: `${{ needs.version.outputs.version }}`
 
             This is an automated pre-release for testing. It will be deleted when the PR is merged or closed.
           prerelease: true
@@ -108,31 +100,31 @@ jobs:
 
             | | |
             |---|---|
-            | **Commit** | `${{ steps.version.outputs.short_sha }}` |
-            | **Version** | `${{ steps.version.outputs.version }}` |
+            | **Commit** | `${{ needs.version.outputs.short_sha }}` |
+            | **Version** | `${{ needs.version.outputs.version }}` |
 
             ### Quick Install
 
             ```bash
-            curl -fsSL https://raw.githubusercontent.com/richardgill/patchy/main/install | bash -s -- --pr ${{ steps.version.outputs.pr_number }}
+            curl -fsSL https://raw.githubusercontent.com/richardgill/patchy/main/install | bash -s -- --pr ${{ needs.version.outputs.pr_number }}
             ```
 
             ### Direct Downloads
 
             | Platform | Architecture | Download |
             |----------|--------------|----------|
-            | Linux | x64 | [patchy-linux-x64.tar.gz](https://github.com/richardgill/patchy/releases/download/${{ steps.version.outputs.tag }}/patchy-linux-x64.tar.gz) |
-            | Linux | arm64 | [patchy-linux-arm64.tar.gz](https://github.com/richardgill/patchy/releases/download/${{ steps.version.outputs.tag }}/patchy-linux-arm64.tar.gz) |
-            | macOS | Intel | [patchy-darwin-x64.zip](https://github.com/richardgill/patchy/releases/download/${{ steps.version.outputs.tag }}/patchy-darwin-x64.zip) |
-            | macOS | Apple Silicon | [patchy-darwin-arm64.zip](https://github.com/richardgill/patchy/releases/download/${{ steps.version.outputs.tag }}/patchy-darwin-arm64.zip) |
-            | Windows | x64 | [patchy-windows-x64.zip](https://github.com/richardgill/patchy/releases/download/${{ steps.version.outputs.tag }}/patchy-windows-x64.zip) |
+            | Linux | x64 | [patchy-linux-x64.tar.gz](https://github.com/richardgill/patchy/releases/download/${{ needs.version.outputs.tag }}/patchy-linux-x64.tar.gz) |
+            | Linux | arm64 | [patchy-linux-arm64.tar.gz](https://github.com/richardgill/patchy/releases/download/${{ needs.version.outputs.tag }}/patchy-linux-arm64.tar.gz) |
+            | macOS | Intel | [patchy-darwin-x64.zip](https://github.com/richardgill/patchy/releases/download/${{ needs.version.outputs.tag }}/patchy-darwin-x64.zip) |
+            | macOS | Apple Silicon | [patchy-darwin-arm64.zip](https://github.com/richardgill/patchy/releases/download/${{ needs.version.outputs.tag }}/patchy-darwin-arm64.zip) |
+            | Windows | x64 | [patchy-windows-x64.zip](https://github.com/richardgill/patchy/releases/download/${{ needs.version.outputs.tag }}/patchy-windows-x64.zip) |
 
             <details>
             <summary>Manual installation</summary>
 
             ```bash
             # Download (replace PLATFORM with: linux-x64, linux-arm64, darwin-x64, darwin-arm64, or windows-x64)
-            curl -fsSL https://github.com/richardgill/patchy/releases/download/${{ steps.version.outputs.tag }}/patchy-PLATFORM.tar.gz | tar -xz
+            curl -fsSL https://github.com/richardgill/patchy/releases/download/${{ needs.version.outputs.tag }}/patchy-PLATFORM.tar.gz | tar -xz
 
             # Make executable and run
             chmod +x patchy-*
@@ -142,4 +134,4 @@ jobs:
             </details>
 
             ---
-            <sub>🤖 This comment updates automatically with each push. [View release](https://github.com/richardgill/patchy/releases/tag/${{ steps.version.outputs.tag }})</sub>
+            <sub>🤖 This comment updates automatically with each push. [View release](https://github.com/richardgill/patchy/releases/tag/${{ needs.version.outputs.tag }})</sub>
