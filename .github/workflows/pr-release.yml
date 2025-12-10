@@ -87,7 +87,7 @@ jobs:
               pkg.version = '$VERSION';
               require('fs').writeFileSync('package.json', JSON.stringify(pkg, null, 2) + '\n');
             "
-            npm publish --access public --tag "$TAG"
+            npm publish --access public --tag "$TAG" --ignore-scripts
             cd -
           done
 
@@ -110,7 +110,7 @@ jobs:
             require('fs').writeFileSync('package.json', JSON.stringify(pkg, null, 2) + '\n');
           "
 
-          npm publish --access public --tag "$TAG"
+          npm publish --access public --tag "$TAG" --ignore-scripts
 
   release:
     name: Publish PR Release
