@@ -26,7 +26,7 @@ jobs:
       contents: write
       pull-requests: write
     outputs:
-      published: ${{ steps.changesets.outputs.published }}
+      hasChangesets: ${{ steps.changesets.outputs.hasChangesets }}
       version: ${{ steps.version.outputs.version }}
 
     steps:
@@ -47,17 +47,16 @@ jobs:
         id: changesets
         uses: changesets/action@v1
         with:
-          # We use 'true' as the publish command - it exits successfully when changesets
-          # have been consumed (version bumped), which triggers the binary build job.
-          publish: "true"
+          # We don't publish to npm - we build binaries instead.
+          # When hasChangesets is false (release PR was merged), the binaries job runs.
           title: "chore: release"
           commit: "chore: release"
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
-      - name: Get published version
+      - name: Get version for release
         id: version
-        if: steps.changesets.outputs.published == 'true'
+        if: steps.changesets.outputs.hasChangesets == 'false'
         run: |
           VERSION=$(node -p "require('./package.json').version")
           echo "version=$VERSION" >> $GITHUB_OUTPUT
@@ -65,7 +64,7 @@ jobs:
   binaries:
     name: Binaries
     needs: release
-    if: needs.release.outputs.published == 'true'
+    if: needs.release.outputs.hasChangesets == 'false'
     runs-on: ubuntu-latest
     permissions:
       contents: write
