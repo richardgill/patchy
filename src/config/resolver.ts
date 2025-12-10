@@ -3,6 +3,7 @@ import path, { resolve } from "node:path";
 import chalk from "chalk";
 import { isNil } from "es-toolkit";
 import type { MarkOptional } from "ts-essentials";
+import { PATCHY_CONFIG_ENV_VAR } from "~/constants";
 import {
   DEFAULT_CONFIG_PATH,
   DEFAULT_PATCHES_DIR,
@@ -150,9 +151,9 @@ export const createMergedConfig = ({
   | { mergedConfig: MergedConfig; success: true }
   | { success: false; error: string } => {
   const configPath =
-    flags.config ?? env["PATCHY_CONFIG"] ?? DEFAULT_CONFIG_PATH;
+    flags.config ?? env[PATCHY_CONFIG_ENV_VAR] ?? DEFAULT_CONFIG_PATH;
   const configExplicitlySet =
-    flags.config !== undefined || env["PATCHY_CONFIG"] !== undefined;
+    flags.config !== undefined || env[PATCHY_CONFIG_ENV_VAR] !== undefined;
   const absoluteConfigPath = resolve(cwd, configPath);
   let jsonString: string | undefined;
   if (!existsSync(absoluteConfigPath) && configExplicitlySet) {

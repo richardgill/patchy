@@ -1,15 +1,15 @@
 #!/usr/bin/env bun
 
-// Inspired by opencode: https://github.com/sst/opencode/blob/main/packages/opencode/script/build.ts
+// Inspired by opencode: https://github.com/sst/opencode/blob/main/packages/opencode/scripts/build.ts
 
 import path from "node:path";
 import { fileURLToPath } from "node:url";
 import { $ } from "bun";
+import { PATCHY_VERSION_ENV_VAR } from "../src/constants";
 import { getVersion } from "../src/version";
 import { generateJsonSchema, SCHEMA_FILENAME } from "./generate-schema";
 
 const CLI_NAME = "patchy";
-const VERSION_ENV_VAR = "PATCHY_VERSION";
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -75,7 +75,7 @@ for (const item of targets) {
       outfile: `dist/${name}/bin/${binaryName}`,
     },
     define: {
-      [`process.env.${VERSION_ENV_VAR}`]: JSON.stringify(version),
+      [`process.env.${PATCHY_VERSION_ENV_VAR}`]: JSON.stringify(version),
     },
   });
 

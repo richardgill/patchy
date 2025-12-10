@@ -1,5 +1,5 @@
 import { describe, expect, it } from "bun:test";
-import { generateJsonSchema } from "../../script/generate-schema";
+import { generateJsonSchema } from "../../scripts/generate-schema";
 
 describe("generateJsonSchema", () => {
   it("should generate expected JSON schema", () => {
