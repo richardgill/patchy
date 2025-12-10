@@ -34,4 +34,4 @@ The test suite uses bun:test and spawns the actual CLI as a subprocess using `bu
 
 ## Releasing
 
-Run `bun run changeset-version` to bump version and generate CHANGELOG
+Run `bun run changeset` to bump version and generate CHANGELOG
