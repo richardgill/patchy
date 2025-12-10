@@ -2,9 +2,6 @@
 
 An opinionated command-line tool for managing Git patch workflows.
 
-**patchy** helps you manage patch files for a repository. 
-
-
 ## How it works
 
 Clone a repo you want to apply patches to
@@ -12,10 +9,17 @@ Clone a repo you want to apply patches to
 /home/me/code/my-repo/
 └── path/in/repo/existingFile.txt
 ```
+Make patch changes to the repo:
+
+```
+/home/me/code/my-repo/
+├── path/in/repo/existingFile.txt      # modify this file
+└── path/in/repo/newFile.txt           # create a new file
+```
 
 Set up a repo which contains your patches
 
-`patchy init`
+Run: `patchy init`
 
 ```
 my-patch-repo/
@@ -23,13 +27,6 @@ my-patch-repo/
 ├── patchy.json                          # optional config
 ```
 
-Make changes to your repo:
-
-```
-/home/me/code/my-repo/
-├── path/in/repo/existingFile.txt      # modify this file
-└── path/in/repo/newFile.txt           # create a new file
-```
 
 Generate patch files `patchy generate --repo-dir /home/me/code/my-repo`
 
@@ -62,6 +59,7 @@ npm install -g patchy-cli
 ```
 
 ## Initialize patches
+
 Run this command to initialize a new patch project:
 
 ```sh
@@ -69,7 +67,6 @@ patchy init
 ```
 
 This will set up the necessary directory structure and configuration file for your patch workflow.
-
 
 
 ## Shared Options
