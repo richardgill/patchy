@@ -1,8 +1,8 @@
 import { existsSync } from "node:fs";
 import { mkdir, writeFile } from "node:fs/promises";
 import { resolve } from "node:path";
-import enquirer from "enquirer";
-import { compact, omitBy } from "es-toolkit";
+import * as prompts from "@clack/prompts";
+import { omitBy } from "es-toolkit";
 import {
   DEFAULT_CONFIG_PATH,
   DEFAULT_PATCHES_DIR,
@@ -15,8 +15,6 @@ import {
 import { isValidGitUrl, validateGitUrl } from "~/config/validation";
 import type { LocalContext } from "~/context";
 import { getSchemaUrl } from "~/version";
-
-const { prompt } = enquirer;
 
 type InitCommandFlags = {
   "repo-url"?: string;
@@ -68,38 +66,52 @@ export default async function (
 
   this.process.stdout.write("\n🔧 Let's set up your Patchy project\n\n");
 
-  const questions = compact([
-    flags["repo-url"] === undefined && {
-      type: "input",
-      name: "repoUrl",
-      message: "Upstream repository URL:",
-      hint: "e.g. https://github.com/owner/repo",
-      validate: validateGitUrl,
-    },
-    flags.ref === undefined && {
-      type: "input",
-      name: "ref",
-      message: "Git ref to track:",
-      hint: "Branch, tag, or commit to compare against",
-      initial: DEFAULT_REF,
-    },
-    flags["patches-dir"] === undefined && {
-      type: "input",
-      name: "patchesDir",
-      message: "Path for patch files:",
-      hint: "Where generated patch files will be stored",
-      initial: DEFAULT_PATCHES_DIR,
-    },
-  ]);
+  const answers: PromptAnswers = {};
 
-  const answers: PromptAnswers =
-    questions.length > 0
-      ? await prompt<PromptAnswers>(questions).catch(() => {
-          this.process.stderr.write("Initialization cancelled\n");
-          this.process.exit?.(1);
-          return {} as PromptAnswers;
-        })
-      : {};
+  if (flags["repo-url"] === undefined) {
+    const repoUrl = await prompts.text({
+      message: "Upstream repository URL:",
+      placeholder: "e.g. https://github.com/owner/repo",
+      validate: (url) => {
+        const result = validateGitUrl(url);
+        return result === true ? undefined : result;
+      },
+    });
+    if (prompts.isCancel(repoUrl)) {
+      this.process.stderr.write("Initialization cancelled\n");
+      this.process.exit?.(1);
+      return;
+    }
+    answers.repoUrl = repoUrl;
+  }
+
+  if (flags.ref === undefined) {
+    const ref = await prompts.text({
+      message: "Git ref to track:",
+      placeholder: "Branch, tag, or commit to compare against",
+      initialValue: DEFAULT_REF,
+    });
+    if (prompts.isCancel(ref)) {
+      this.process.stderr.write("Initialization cancelled\n");
+      this.process.exit?.(1);
+      return;
+    }
+    answers.ref = ref;
+  }
+
+  if (flags["patches-dir"] === undefined) {
+    const patchesDir = await prompts.text({
+      message: "Path for patch files:",
+      placeholder: "Where generated patch files will be stored",
+      initialValue: DEFAULT_PATCHES_DIR,
+    });
+    if (prompts.isCancel(patchesDir)) {
+      this.process.stderr.write("Initialization cancelled\n");
+      this.process.exit?.(1);
+      return;
+    }
+    answers.patchesDir = patchesDir;
+  }
 
   const repoUrl = flags["repo-url"] ?? answers.repoUrl ?? "";
 
