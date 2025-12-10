@@ -70,16 +70,19 @@ This will set up the necessary directory structure and configuration file for yo
 
 These options are accepted by **all commands**:
 
-| CLI Flag          | patchy.json      | Env Variable           | Description                                      |
-| ----------------- | ---------------- | ---------------------- | ------------------------------------------------ |
-| `--repo-dir`      | `repo_dir`       | `PATCHY_REPO_DIR`      | Path to the Git repo you're patching             |
-| `--repo-base-dir` | `repo_base_dir`  | `PATCHY_REPO_BASE_DIR` | Parent directory where upstream repos are cloned |
-| `--patches-dir`   | `patches_dir`    | `PATCHY_PATCHES_DIR`   | Path to your patch files (default: `./patches/`) |
-| `--config`        |                  | `PATCHY_CONFIG`        | JSON config file (default: `patchy.json`)        |
-| `--verbose`       | `verbose`        | `PATCHY_VERBOSE`       | Enable verbose log output                        |
-| `--dry-run`       | `dry_run`        | `PATCHY_DRY_RUN`       | Simulate the command without writing files       |
+| patchy.json      | CLI Flag          | Env Variable           | Description                                      |
+| ---------------- | ----------------- | ---------------------- | ------------------------------------------------ |
+| `repo_dir`       | `--repo-dir`      | `PATCHY_REPO_DIR`      | Path to the Git repo you're patching             |
+| `repo_base_dir`  | `--repo-base-dir` | `PATCHY_REPO_BASE_DIR` | Parent directory where upstream repos are cloned |
+| `patches_dir`    | `--patches-dir`   | `PATCHY_PATCHES_DIR`   | Path to your patch files (default: `./patches/`) |
+|                  | `--config`        | `PATCHY_CONFIG`        | JSON config file (default: `patchy.json`)        |
+| `verbose`        | `--verbose`       | `PATCHY_VERBOSE`       | Enable verbose log output                        |
+| `dry_run`        | `--dry-run`       | `PATCHY_DRY_RUN`       | Simulate the command without writing files       |
 
-> CLI flags override all values in `patchy.json`.
+Precedence order (highest to lowest):
+1. CLI flags
+2. Environment variables
+3. `patchy.json`
 
 ## Commands
 
@@ -139,28 +142,23 @@ Optional file to set default values:
 
 All options may be set with environment variables as well e.g. `PATCHY_REPO_URL`.
 
-### Precedence Order
- todo :move these to shared options sectionoptions
-1. CLI flags
-2. Environment variables
-3. `--config` (defaults to `./patchy.json`)
-
 ## Example Workflow
+
 
 ```sh
 # Clone the repo
 patchy repo clone --repo-url https://github.com/richardgill/my-repo.git --repo-base-dir ~/code/repos
- todo: update the rest of these commands
-# Check out upstream repo at a specific version
-patchy repo checkout --ref v1.2.3 
 
-# Generate patches from current state of repo_dir
-patchy generate --repo-dir ../clones/upstream
+# Check out at a specific version
+patchy repo checkout --ref v1.2.3 --repo-dir ~/code/repos/my-repo
 
-# Later, apply patches cleanly to fresh repo
-patchy repo reset --repo-dir ../clones/upstream
-patchy repo checkout --ref main --repo-dir upstream
-patchy apply --repo-dir ../clones/upstream
+# Make changes to the repo, then generate patches
+patchy generate --repo-dir ~/code/repos/my-repo
+
+# Later, apply patches to a fresh clone
+patchy repo reset --repo-dir ~/code/repos/my-repo
+patchy repo checkout --ref main --repo-dir ~/code/repos/my-repo
+patchy apply --repo-dir ~/code/repos/my-repo
 ```
 
 ## License
