@@ -10,7 +10,40 @@ GREEN='\033[0;32m'
 MUTED='\033[0;2m'
 NC='\033[0m'
 
+print_message() {
+  local level=$1
+  local message=$2
+  local color=""
+
+  case $level in
+    info) color="${NC}" ;;
+    success) color="${GREEN}" ;;
+    error) color="${RED}" ;;
+  esac
+
+  echo -e "${color}${message}${NC}"
+}
+
 requested_version=${VERSION:-}
+requested_pr=${PR:-}
+
+# Parse command line arguments
+while [[ $# -gt 0 ]]; do
+  case $1 in
+    --pr)
+      requested_pr="$2"
+      shift 2
+      ;;
+    --version)
+      requested_version="$2"
+      shift 2
+      ;;
+    *)
+      echo -e "${RED}Unknown option: $1${NC}"
+      exit 1
+      ;;
+  esac
+done
 
 # Detect OS
 raw_os=$(uname -s)
@@ -76,7 +109,12 @@ INSTALL_DIR=$HOME/.patchy/bin
 mkdir -p "$INSTALL_DIR"
 
 # Determine download URL
-if [ -z "$requested_version" ]; then
+if [ -n "$requested_pr" ]; then
+  # PR build - uses pr-<number> tag format
+  url="https://github.com/$REPO/releases/download/pr-${requested_pr}/$filename"
+  specific_version="pr-${requested_pr}"
+  print_message info "${MUTED}Installing PR #${requested_pr} preview build${NC}"
+elif [ -z "$requested_version" ]; then
   url="https://github.com/$REPO/releases/latest/download/$filename"
   specific_version=$(curl -s "https://api.github.com/repos/$REPO/releases/latest" | sed -n 's/.*"tag_name": *"v\([^"]*\)".*/\1/p')
 
@@ -88,20 +126,6 @@ else
   url="https://github.com/$REPO/releases/download/v${requested_version}/$filename"
   specific_version=$requested_version
 fi
-
-print_message() {
-  local level=$1
-  local message=$2
-  local color=""
-
-  case $level in
-    info) color="${NC}" ;;
-    success) color="${GREEN}" ;;
-    error) color="${RED}" ;;
-  esac
-
-  echo -e "${color}${message}${NC}"
-}
 
 download_and_install() {
   print_message info "\n${MUTED}Installing ${NC}$APP ${MUTED}version: ${NC}$specific_version"
@@ -192,6 +216,11 @@ fi
 echo ""
 print_message success "Installation complete!"
 echo ""
+if [ -n "$requested_pr" ]; then
+  echo -e "${MUTED}Installed PR #${requested_pr} preview build${NC}"
+  echo -e "${MUTED}Note: This is a pre-release build for testing.${NC}"
+  echo ""
+fi
 echo -e "${MUTED}To get started:${NC}"
 echo ""
 echo -e "  ${GREEN}patchy --help${NC}"

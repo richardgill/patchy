@@ -1,0 +1,65 @@
+name: Build Binaries
+
+on:
+  workflow_call:
+    inputs:
+      version:
+        description: "Version string to embed in binaries"
+        required: true
+        type: string
+    outputs:
+      artifacts_name:
+        description: "Name of the uploaded artifacts"
+        value: release-assets
+
+jobs:
+  build:
+    name: Build
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Bun
+        uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: latest
+
+      - name: Install dependencies
+        run: bun install --frozen-lockfile
+
+      - name: Build all binaries
+        run: bun run build
+        env:
+          PATCHY_VERSION: ${{ inputs.version }}
+
+      - name: Prepare release assets
+        run: |
+          mkdir -p release
+
+          # Copy binaries to release folder
+          cp dist/patchy-linux-x64/bin/patchy release/patchy-linux-x64
+          cp dist/patchy-linux-arm64/bin/patchy release/patchy-linux-arm64
+          cp dist/patchy-darwin-x64/bin/patchy release/patchy-darwin-x64
+          cp dist/patchy-darwin-arm64/bin/patchy release/patchy-darwin-arm64
+          cp dist/patchy-windows-x64/bin/patchy.exe release/patchy-windows-x64.exe
+
+          # Create archives
+          cd release
+          tar -czf patchy-linux-x64.tar.gz patchy-linux-x64
+          tar -czf patchy-linux-arm64.tar.gz patchy-linux-arm64
+          zip patchy-darwin-x64.zip patchy-darwin-x64
+          zip patchy-darwin-arm64.zip patchy-darwin-arm64
+          zip patchy-windows-x64.zip patchy-windows-x64.exe
+
+          sha256sum *.tar.gz *.zip > checksums.txt
+
+          # Clean up raw binaries
+          rm -f patchy-linux-x64 patchy-linux-arm64 patchy-darwin-x64 patchy-darwin-arm64 patchy-windows-x64.exe
+
+      - name: Upload release assets
+        uses: actions/upload-artifact@v4
+        with:
+          name: release-assets
+          path: release/
+          retention-days: 1

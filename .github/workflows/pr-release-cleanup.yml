@@ -1,0 +1,30 @@
+name: PR Release Cleanup
+
+on:
+  pull_request:
+    types: [closed]
+
+permissions:
+  contents: write
+
+jobs:
+  cleanup:
+    name: Delete PR Release
+    runs-on: ubuntu-latest
+    steps:
+      - name: Delete PR release and tag
+        run: |
+          PR_NUMBER=${{ github.event.pull_request.number }}
+          TAG="pr-${PR_NUMBER}"
+
+          echo "Cleaning up release for PR #${PR_NUMBER}..."
+
+          # Delete the release (if exists)
+          gh release delete "$TAG" --repo "${{ github.repository }}" --yes || echo "No release to delete"
+
+          # Delete the tag (if exists)
+          gh api --method DELETE "/repos/${{ github.repository }}/git/refs/tags/${TAG}" || echo "No tag to delete"
+
+          echo "Cleanup complete"
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
