@@ -1,14 +1,11 @@
 import { existsSync } from "node:fs";
+import * as prompts from "@clack/prompts";
 import chalk from "chalk";
-import enquirer from "enquirer";
 import { CheckRepoActions } from "simple-git";
 import { createMergedConfig } from "~/config/resolver";
 import type { ResetCommandFlags } from "~/config/types";
 import type { LocalContext } from "~/context";
 import { createGitClient } from "~/lib/git";
-
-// enquirer is CJS, so we destructure prompt from the default export
-const { prompt } = enquirer;
 
 export default async function (
   this: LocalContext,
@@ -54,16 +51,15 @@ export default async function (
   }
 
   if (!flags.yes) {
-    const { confirmed } = await prompt<{ confirmed: boolean }>({
-      type: "confirm",
-      name: "confirmed",
+    const confirmed = await prompts.confirm({
       message: `This will discard all uncommitted changes in ${repoDir}. Continue?`,
-      initial: false,
-    }).catch(() => ({ confirmed: false }));
+      initialValue: false,
+    });
 
-    if (!confirmed) {
+    if (prompts.isCancel(confirmed) || !confirmed) {
       this.process.stderr.write("Reset cancelled\n");
       this.process.exit(1);
+      return;
     }
   }
 
