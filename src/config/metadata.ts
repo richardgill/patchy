@@ -1,3 +1,4 @@
+import type { MarkOptional } from "ts-essentials";
 import type { SnakeToCamel } from "~/types/utils";
 
 // CONFIG_FIELD_METADATA is the single source of truth for config field definitions
@@ -102,7 +103,7 @@ export const CONFIG_FIELD_METADATA = {
   },
 } as const;
 
-// CONFIG_FLAG_METADATA for flags not in JSON config (e.g., config file path)
+// --config flag (not in JSON config)
 export const CONFIG_FLAG_METADATA = {
   env: "PATCHY_CONFIG",
   type: "string",
@@ -150,6 +151,16 @@ export type ResolvedConfig = CompleteJsonConfig & {
   absoluteRepoDir: string;
   absolutePatchesDir: string;
 };
+
+export type MergedConfig = MarkOptional<
+  ResolvedConfig,
+  | "repo_url"
+  | "repo_dir"
+  | "repo_base_dir"
+  | "absoluteRepoBaseDir"
+  | "absoluteRepoDir"
+  | "absolutePatchesDir"
+>;
 
 export type CamelCaseResolvedConfig = {
   [K in JsonKey as SnakeToCamel<K>]: CompleteJsonConfig[K];

@@ -2,7 +2,6 @@ import { existsSync, readFileSync } from "node:fs";
 import path, { resolve } from "node:path";
 import chalk from "chalk";
 import { isNil } from "es-toolkit";
-import type { MarkOptional } from "ts-essentials";
 import { parseJsonc } from "~/lib/jsonc";
 import { isValidGitUrl } from "~/lib/validation";
 import {
@@ -10,16 +9,16 @@ import {
   DEFAULT_PATCHES_DIR,
   DEFAULT_REF,
 } from "./defaults";
-import type { JsonConfig } from "./schemas";
-import { jsonConfigSchema } from "./schemas";
 import {
   CONFIG_FIELD_METADATA,
   CONFIG_FLAG_METADATA,
   getFlagName,
   type JsonKey,
-  type ResolvedConfig,
+  type MergedConfig,
   type SharedFlags,
-} from "./types";
+} from "./metadata";
+import type { JsonConfig } from "./schemas";
+import { jsonConfigSchema } from "./schemas";
 
 type ConfigSources = {
   flags: SharedFlags;
@@ -91,16 +90,6 @@ const formatSourceLocation = <K extends JsonKey>(
   }
   return metadata.name;
 };
-
-export type MergedConfig = MarkOptional<
-  ResolvedConfig,
-  | "repo_url"
-  | "repo_dir"
-  | "repo_base_dir"
-  | "absoluteRepoBaseDir"
-  | "absoluteRepoDir"
-  | "absolutePatchesDir"
->;
 
 type ConfigParseResult =
   | { success: true; data: JsonConfig }

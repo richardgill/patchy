@@ -1,5 +1,5 @@
 import { z } from "zod";
-import { CONFIG_FIELD_METADATA } from "./types";
+import { CONFIG_FIELD_METADATA } from "./metadata";
 
 const m = CONFIG_FIELD_METADATA;
 

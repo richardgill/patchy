@@ -1,4 +1,4 @@
-import { CONFIG_FIELD_METADATA, CONFIG_FLAG_METADATA } from "~/config/types";
+import { CONFIG_FIELD_METADATA, CONFIG_FLAG_METADATA } from "~/config/metadata";
 import type { ParsedFlags } from "~/types/utils";
 
 const m = CONFIG_FIELD_METADATA;
