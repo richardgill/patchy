@@ -1,6 +1,6 @@
 import { omit } from "es-toolkit";
 import { type ZodTypeAny, z } from "zod";
-import { CONFIG_FIELD_METADATA, type JsonKey } from "./config";
+import { CONFIG_FIELD_METADATA, type JsonConfigKey } from "./config";
 
 // Type-level mapping from metadata type strings to Zod schema types
 type ZodSchemaFor<T extends "string" | "boolean"> = T extends "boolean"
@@ -9,7 +9,7 @@ type ZodSchemaFor<T extends "string" | "boolean"> = T extends "boolean"
 
 // Strongly typed baseConfigFields shape (excludes dry_run which is JSON-only)
 type BaseConfigFields = {
-  [K in Exclude<JsonKey, "dry_run">]: ZodSchemaFor<
+  [K in Exclude<JsonConfigKey, "dry_run">]: ZodSchemaFor<
     (typeof CONFIG_FIELD_METADATA)[K]["type"]
   >;
 };

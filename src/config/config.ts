@@ -117,7 +117,7 @@ export const CONFIG_FLAG_METADATA = {
 } as const;
 
 // Derived types from CONFIG_FIELD_METADATA
-export type JsonKey = keyof typeof CONFIG_FIELD_METADATA;
+export type JsonConfigKey = keyof typeof CONFIG_FIELD_METADATA;
 
 // Maps type string literals to actual TypeScript types
 type TypeMap = {
@@ -128,17 +128,17 @@ type TypeMap = {
 // FlagName is the union of all flag keys (e.g., "repo-url", "dry-run", etc.)
 // We use a mapped type to extract each flag key, then index to get the union
 type FlagName = {
-  [K in JsonKey]: keyof (typeof CONFIG_FIELD_METADATA)[K]["stricliFlag"];
-}[JsonKey];
+  [K in JsonConfigKey]: keyof (typeof CONFIG_FIELD_METADATA)[K]["stricliFlag"];
+}[JsonConfigKey];
 
 // Maps a JsonKey to its corresponding flag name
-type FlagNameFor<K extends JsonKey> =
+type FlagNameFor<K extends JsonConfigKey> =
   keyof (typeof CONFIG_FIELD_METADATA)[K]["stricliFlag"];
 
 // Maps a flag name back to its JsonKey
 type JsonKeyForFlag<F extends FlagName> = {
-  [K in JsonKey]: F extends FlagNameFor<K> ? K : never;
-}[JsonKey];
+  [K in JsonConfigKey]: F extends FlagNameFor<K> ? K : never;
+}[JsonConfigKey];
 
 // Gets the TypeScript type for a flag based on metadata
 type FlagType<F extends FlagName> =
@@ -147,7 +147,7 @@ type FlagType<F extends FlagName> =
 type ConfigFlagName = keyof (typeof CONFIG_FLAG_METADATA)["stricliFlag"];
 
 // Helper to get the flag name (kebab-case) from a JSON key (snake_case)
-export const getFlagName = <K extends JsonKey>(jsonKey: K): FlagName => {
+export const getFlagName = <K extends JsonConfigKey>(jsonKey: K): FlagName => {
   const metadata = CONFIG_FIELD_METADATA[jsonKey];
   return Object.keys(metadata.stricliFlag)[0] as FlagName;
 };
@@ -159,7 +159,7 @@ export type SharedFlags = {
 };
 
 export type CompleteJsonConfig = {
-  [K in JsonKey]: TypeMap[(typeof CONFIG_FIELD_METADATA)[K]["type"]];
+  [K in JsonConfigKey]: TypeMap[(typeof CONFIG_FIELD_METADATA)[K]["type"]];
 };
 
 export type ResolvedConfig = CompleteJsonConfig & {
@@ -179,7 +179,7 @@ export type MergedConfig = MarkOptional<
 >;
 
 export type CamelCaseResolvedConfig = {
-  [K in JsonKey as CamelCase<K>]: CompleteJsonConfig[K];
+  [K in JsonConfigKey as CamelCase<K>]: CompleteJsonConfig[K];
 };
 
 export type PartialResolvedConfig = Partial<ResolvedConfig>;

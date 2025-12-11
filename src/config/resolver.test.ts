@@ -7,7 +7,7 @@ import {
   setupTestWithConfig,
   stabilizeTempDir,
 } from "~/e2e/test-utils";
-import type { JsonKey, MergedConfig, SharedFlags } from "./config";
+import type { JsonConfigKey, MergedConfig, SharedFlags } from "./config";
 import { createMergedConfig, parseOptionalJsonConfig } from "./resolver";
 
 const expectSuccessfulMerge: (
@@ -59,7 +59,11 @@ describe("createMergedConfig", () => {
       "dry-run": true,
     };
 
-    const requiredFields: JsonKey[] = ["repo_url", "repo_base_dir", "repo_dir"];
+    const requiredFields: JsonConfigKey[] = [
+      "repo_url",
+      "repo_base_dir",
+      "repo_dir",
+    ];
 
     const result = createMergedConfig({
       flags,
@@ -101,7 +105,11 @@ describe("createMergedConfig", () => {
       "dry-run": true,
     };
 
-    const requiredFields: JsonKey[] = ["repo_url", "repo_base_dir", "repo_dir"];
+    const requiredFields: JsonConfigKey[] = [
+      "repo_url",
+      "repo_base_dir",
+      "repo_dir",
+    ];
 
     const result = createMergedConfig({
       flags,
@@ -139,7 +147,11 @@ describe("createMergedConfig", () => {
     });
 
     const flags: SharedFlags = {};
-    const requiredFields: JsonKey[] = ["repo_url", "repo_base_dir", "repo_dir"];
+    const requiredFields: JsonConfigKey[] = [
+      "repo_url",
+      "repo_base_dir",
+      "repo_dir",
+    ];
 
     const result = createMergedConfig({
       flags,
@@ -171,7 +183,7 @@ describe("createMergedConfig", () => {
     const flags: SharedFlags = {
       config: "./non-existent-config.json",
     };
-    const requiredFields: JsonKey[] = ["repo_url"];
+    const requiredFields: JsonConfigKey[] = ["repo_url"];
 
     const result = createMergedConfig({
       flags,
@@ -193,7 +205,7 @@ describe("createMergedConfig", () => {
     const flags: SharedFlags = {
       config: invalidJsonPath,
     };
-    const requiredFields: JsonKey[] = ["repo_url"];
+    const requiredFields: JsonConfigKey[] = ["repo_url"];
 
     const result = createMergedConfig({
       flags,
@@ -225,7 +237,7 @@ describe("createMergedConfig", () => {
     });
 
     const flags: SharedFlags = {};
-    const requiredFields: JsonKey[] = [
+    const requiredFields: JsonConfigKey[] = [
       "repo_url",
       "repo_base_dir",
       "repo_dir",
@@ -275,7 +287,7 @@ describe("createMergedConfig", () => {
       ref: "flag-ref",
       verbose: true,
     };
-    const requiredFields: JsonKey[] = [
+    const requiredFields: JsonConfigKey[] = [
       "repo_url",
       "repo_base_dir",
       "repo_dir",
@@ -324,7 +336,7 @@ describe("createMergedConfig", () => {
     });
 
     const flags: SharedFlags = {};
-    const requiredFields: JsonKey[] = [
+    const requiredFields: JsonConfigKey[] = [
       "repo_url",
       "repo_base_dir",
       "repo_dir",
@@ -365,7 +377,7 @@ describe("createMergedConfig", () => {
       config: emptyJsonPath,
       "repo-url": "https://github.com/example/repo.git",
     };
-    const requiredFields: JsonKey[] = ["repo_url"];
+    const requiredFields: JsonConfigKey[] = ["repo_url"];
 
     const result = createMergedConfig({
       flags,
@@ -397,7 +409,7 @@ describe("createMergedConfig", () => {
       config: emptyJsonPath,
       "repo-url": "https://github.com/example/repo.git",
     };
-    const requiredFields: JsonKey[] = ["repo_url"];
+    const requiredFields: JsonConfigKey[] = ["repo_url"];
 
     const result = createMergedConfig({
       flags,
@@ -426,7 +438,7 @@ describe("createMergedConfig", () => {
     });
 
     const flags: SharedFlags = {};
-    const requiredFields: JsonKey[] = ["repo_base_dir", "patches_dir"];
+    const requiredFields: JsonConfigKey[] = ["repo_base_dir", "patches_dir"];
 
     const result = createMergedConfig({
       flags,
@@ -466,7 +478,11 @@ describe("createMergedConfig", () => {
       verbose: true,
       "dry-run": true,
     };
-    const requiredFields: JsonKey[] = ["repo_url", "repo_base_dir", "repo_dir"];
+    const requiredFields: JsonConfigKey[] = [
+      "repo_url",
+      "repo_base_dir",
+      "repo_dir",
+    ];
 
     const result = createMergedConfig({
       flags,
@@ -508,7 +524,11 @@ describe("createMergedConfig", () => {
     });
 
     const flags: SharedFlags = {};
-    const requiredFields: JsonKey[] = ["repo_url", "repo_base_dir", "repo_dir"];
+    const requiredFields: JsonConfigKey[] = [
+      "repo_url",
+      "repo_base_dir",
+      "repo_dir",
+    ];
 
     const result = createMergedConfig({
       flags,
@@ -571,7 +591,11 @@ describe("createMergedConfig", () => {
     const flags: SharedFlags = {
       config: customConfigPath,
     };
-    const requiredFields: JsonKey[] = ["repo_url", "repo_base_dir", "repo_dir"];
+    const requiredFields: JsonConfigKey[] = [
+      "repo_url",
+      "repo_base_dir",
+      "repo_dir",
+    ];
 
     const result = createMergedConfig({
       flags,
@@ -614,7 +638,11 @@ describe("createMergedConfig", () => {
     });
 
     const flags: SharedFlags = {};
-    const requiredFields: JsonKey[] = ["repo_url", "repo_base_dir", "repo_dir"];
+    const requiredFields: JsonConfigKey[] = [
+      "repo_url",
+      "repo_base_dir",
+      "repo_dir",
+    ];
 
     const originalCwd = process.cwd();
     const result = createMergedConfig({
@@ -658,7 +686,11 @@ describe("createMergedConfig", () => {
     });
 
     const flags: SharedFlags = {};
-    const requiredFields: JsonKey[] = ["repo_url", "repo_base_dir", "repo_dir"];
+    const requiredFields: JsonConfigKey[] = [
+      "repo_url",
+      "repo_base_dir",
+      "repo_dir",
+    ];
     let callbackConfig: object | null = null;
 
     const result = createMergedConfig({
@@ -705,7 +737,11 @@ describe("createMergedConfig", () => {
     });
 
     const flags: SharedFlags = {};
-    const requiredFields: JsonKey[] = ["repo_url", "repo_base_dir", "repo_dir"];
+    const requiredFields: JsonConfigKey[] = [
+      "repo_url",
+      "repo_base_dir",
+      "repo_dir",
+    ];
     const originalCwd = process.cwd();
 
     const result = createMergedConfig({
@@ -749,7 +785,7 @@ describe("createMergedConfig", () => {
     const flags: SharedFlags = {
       config: invalidJsonPath,
     };
-    const requiredFields: JsonKey[] = ["repo_url"];
+    const requiredFields: JsonConfigKey[] = ["repo_url"];
 
     const result = createMergedConfig({
       flags,
@@ -776,7 +812,11 @@ describe("createMergedConfig", () => {
     });
 
     const flags: SharedFlags = {};
-    const requiredFields: JsonKey[] = ["repo_url", "repo_base_dir", "repo_dir"];
+    const requiredFields: JsonConfigKey[] = [
+      "repo_url",
+      "repo_base_dir",
+      "repo_dir",
+    ];
 
     const result = createMergedConfig({
       flags,
@@ -809,7 +849,7 @@ describe("createMergedConfig", () => {
     const flags: SharedFlags = {
       config: jsonPath,
     };
-    const requiredFields: JsonKey[] = [];
+    const requiredFields: JsonConfigKey[] = [];
 
     const result = createMergedConfig({
       flags,
@@ -840,7 +880,7 @@ describe("createMergedConfig", () => {
     const flags: SharedFlags = {
       config: jsonPath,
     };
-    const requiredFields: JsonKey[] = [];
+    const requiredFields: JsonConfigKey[] = [];
 
     const result = createMergedConfig({
       flags,
@@ -871,7 +911,7 @@ describe("createMergedConfig", () => {
     const flags: SharedFlags = {
       config: jsonPath,
     };
-    const requiredFields: JsonKey[] = [];
+    const requiredFields: JsonConfigKey[] = [];
 
     const result = createMergedConfig({
       flags,
@@ -899,7 +939,7 @@ describe("createMergedConfig", () => {
     const flags: SharedFlags = {
       config: jsonPath,
     };
-    const requiredFields: JsonKey[] = [];
+    const requiredFields: JsonConfigKey[] = [];
 
     const result = createMergedConfig({
       flags,
@@ -929,7 +969,7 @@ describe("createMergedConfig", () => {
     const flags: SharedFlags = {
       config: jsonPath,
     };
-    const requiredFields: JsonKey[] = [];
+    const requiredFields: JsonConfigKey[] = [];
 
     const result = createMergedConfig({
       flags,
@@ -959,7 +999,7 @@ describe("createMergedConfig", () => {
     const flags: SharedFlags = {
       config: jsonPath,
     };
-    const requiredFields: JsonKey[] = [];
+    const requiredFields: JsonConfigKey[] = [];
 
     const result = createMergedConfig({
       flags,
@@ -993,7 +1033,7 @@ describe("createMergedConfig", () => {
     const flags: SharedFlags = {
       config: jsonPath,
     };
-    const requiredFields: JsonKey[] = [];
+    const requiredFields: JsonConfigKey[] = [];
 
     const result = createMergedConfig({
       flags,
@@ -1025,7 +1065,7 @@ describe("createMergedConfig", () => {
     });
 
     const flags: SharedFlags = {};
-    const requiredFields: JsonKey[] = [
+    const requiredFields: JsonConfigKey[] = [
       "repo_url",
       "repo_base_dir",
       "repo_dir",
@@ -1087,7 +1127,7 @@ describe("createMergedConfig", () => {
       verbose: true,
       "dry-run": true,
     };
-    const requiredFields: JsonKey[] = [
+    const requiredFields: JsonConfigKey[] = [
       "repo_url",
       "repo_base_dir",
       "repo_dir",
@@ -1148,7 +1188,7 @@ describe("createMergedConfig", () => {
     });
 
     const flags: SharedFlags = {};
-    const requiredFields: JsonKey[] = [
+    const requiredFields: JsonConfigKey[] = [
       "repo_url",
       "repo_base_dir",
       "repo_dir",
@@ -1218,7 +1258,11 @@ describe("createMergedConfig", () => {
     );
 
     const flags: SharedFlags = {};
-    const requiredFields: JsonKey[] = ["repo_url", "repo_base_dir", "repo_dir"];
+    const requiredFields: JsonConfigKey[] = [
+      "repo_url",
+      "repo_base_dir",
+      "repo_dir",
+    ];
     const env = {
       PATCHY_CONFIG: customConfigPath,
     };
@@ -1253,7 +1297,7 @@ describe("createMergedConfig", () => {
     mkdirSync(tmpDir, { recursive: true });
 
     const flags: SharedFlags = {};
-    const requiredFields: JsonKey[] = ["repo_url"];
+    const requiredFields: JsonConfigKey[] = ["repo_url"];
     const env = {
       PATCHY_CONFIG: "./non-existent-env-config.json",
     };
@@ -1347,7 +1391,11 @@ describe("createMergedConfig", () => {
     });
 
     const flags: SharedFlags = {};
-    const requiredFields: JsonKey[] = ["repo_url", "repo_base_dir", "repo_dir"];
+    const requiredFields: JsonConfigKey[] = [
+      "repo_url",
+      "repo_base_dir",
+      "repo_dir",
+    ];
     const env = {
       PATCHY_REPO_URL: "",
       PATCHY_REF: "",

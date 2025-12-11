@@ -8,7 +8,7 @@ import {
   CONFIG_FIELD_METADATA,
   CONFIG_FLAG_METADATA,
   getFlagName,
-  type JsonKey,
+  type JsonConfigKey,
   type MergedConfig,
   type SharedFlags,
 } from "./config";
@@ -26,13 +26,13 @@ type ConfigSources = {
   json: JsonConfig;
 };
 
-type ConfigValues<K extends JsonKey> = {
+type ConfigValues<K extends JsonConfigKey> = {
   flag: JsonConfig[K] | undefined;
   env: JsonConfig[K] | undefined;
   json: JsonConfig[K] | undefined;
 };
 
-const getEnvValue = <K extends JsonKey>(
+const getEnvValue = <K extends JsonConfigKey>(
   jsonKey: K,
   env: NodeJS.ProcessEnv,
 ): JsonConfig[K] | undefined => {
@@ -48,7 +48,7 @@ const getEnvValue = <K extends JsonKey>(
   return envValue as JsonConfig[K];
 };
 
-const getValuesByKey = <K extends JsonKey>(
+const getValuesByKey = <K extends JsonConfigKey>(
   jsonKey: K,
   sources: ConfigSources,
 ): ConfigValues<K> => {
@@ -62,7 +62,7 @@ const getValuesByKey = <K extends JsonKey>(
   };
 };
 
-const getValueByKey = <K extends JsonKey>(
+const getValueByKey = <K extends JsonConfigKey>(
   jsonKey: K,
   sources: ConfigSources,
 ): JsonConfig[K] | undefined => {
@@ -70,7 +70,7 @@ const getValueByKey = <K extends JsonKey>(
   return values.flag ?? values.env ?? values.json;
 };
 
-const formatSourceLocation = <K extends JsonKey>(
+const formatSourceLocation = <K extends JsonConfigKey>(
   jsonKey: K,
   sources: ConfigSources,
   configPath: string,
@@ -134,7 +134,7 @@ export const createMergedConfig = ({
   env = process.env,
 }: {
   flags: SharedFlags;
-  requiredFields: JsonKey[];
+  requiredFields: JsonConfigKey[];
   onConfigMerged?: (config: MergedConfig) => void;
   cwd: string;
   env?: NodeJS.ProcessEnv;
@@ -205,7 +205,7 @@ const calcError = ({
   sources,
 }: {
   mergedConfig: MergedConfig;
-  requiredFields: JsonKey[];
+  requiredFields: JsonConfigKey[];
   configPath: string;
   sources: ConfigSources;
 }): { success: true } | { success: false; error: string } => {
