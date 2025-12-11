@@ -107,7 +107,15 @@ bun run build
 
 ### Required Repository Settings
 
-The release workflow requires GitHub Actions to create pull requests. Enable this with:
+**Configure merge settings** (squash-only merges + auto-delete branches):
+
+```sh
+gh repo edit --enable-squash-merge --disable-merge-commit --disable-rebase-merge --delete-branch-on-merge
+```
+
+Or via GitHub UI: Settings → General → Pull Requests → Enable "Squash merging" only + "Automatically delete head branches"
+
+**Enable GitHub Actions to create PRs** (required for release workflow):
 
 ```sh
 gh api repos/OWNER/REPO/actions/permissions/workflow -X PUT \
