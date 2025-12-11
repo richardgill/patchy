@@ -5,18 +5,18 @@ import { isNil } from "es-toolkit";
 import { parseJsonc } from "~/lib/jsonc";
 import { isValidGitUrl } from "~/lib/validation";
 import {
-  DEFAULT_CONFIG_PATH,
-  DEFAULT_PATCHES_DIR,
-  DEFAULT_REF,
-} from "./defaults";
-import {
   CONFIG_FIELD_METADATA,
   CONFIG_FLAG_METADATA,
   getFlagName,
   type JsonKey,
   type MergedConfig,
   type SharedFlags,
-} from "./metadata";
+} from "./config";
+import {
+  DEFAULT_CONFIG_PATH,
+  DEFAULT_PATCHES_DIR,
+  DEFAULT_REF,
+} from "./defaults";
 import type { JsonConfig } from "./schemas";
 import { jsonConfigSchema } from "./schemas";
 

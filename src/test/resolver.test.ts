@@ -1,7 +1,7 @@
 import { beforeEach, describe, expect, it } from "bun:test";
 import { mkdirSync, writeFileSync } from "node:fs";
 import path from "node:path";
-import type { JsonKey, MergedConfig, SharedFlags } from "~/config/metadata";
+import type { JsonKey, MergedConfig, SharedFlags } from "~/config/config";
 import { createMergedConfig } from "~/config/resolver";
 import {
   generateTmpDir,

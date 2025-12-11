@@ -1,6 +1,6 @@
 import { omit } from "es-toolkit";
 import { type ZodTypeAny, z } from "zod";
-import { CONFIG_FIELD_METADATA, type JsonKey } from "./metadata";
+import { CONFIG_FIELD_METADATA, type JsonKey } from "./config";
 
 // Type-level mapping from metadata type strings to Zod schema types
 type ZodSchemaFor<T extends "string" | "boolean"> = T extends "boolean"
