@@ -6,13 +6,13 @@ An opinionated command-line tool for managing Git patch workflows.
 
 Clone a repo you want to apply patches to
 ```
-/home/me/code/my-repo/
+~/code/my-repo/
 └── path/in/repo/existingFile.txt
 ```
 Make patch changes to the repo:
 
 ```
-/home/me/code/my-repo/
+~/code/my-repo/
 ├── path/in/repo/existingFile.txt      # modify this file
 └── path/in/repo/newFile.txt           # create a new file
 ```
@@ -28,7 +28,7 @@ my-patch-repo/
 ```
 
 
-Generate patch files `patchy generate --repo-dir /home/me/code/my-repo`
+Generate patch files `patchy generate --repo-dir ~/code/my-repo`
 
 ```
 my-patch-repo/
@@ -38,9 +38,9 @@ my-patch-repo/
 └── patchy.json
 ```
 
-Run `patchy apply --repo-dir /home/me/code/my-repo-2`
+Run `patchy apply --repo-dir ~/code/my-repo-2`
 ```
-/home/me/code/my-repo-2/
+~/code/my-repo-2/
 ├── path/in/repo/newFile.txt           # copied from patches/
 └── path/in/repo/existingFile.txt      # patched file
 ```
