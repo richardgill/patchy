@@ -4,8 +4,10 @@ An opinionated command-line tool for managing Git patch workflows.
 
 1. Clone repo → `~/target-repo-1`
 2. Make some edits (the patches!)
-3. `patchy generate` → `patches/*.diff`
-4. `patchy apply` → `~/target-repo-2` (edits applied)
+3. `patchy generate --repo ~/target-repo-1` → `patches/*.diff`
+
+Then later reapply your changes at any time:
+4. `patchy apply --repo ~/target-repo-1` → `~/target-repo-2` (edits applied)
 
 ## How it works
 
