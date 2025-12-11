@@ -3,12 +3,12 @@ import { join, resolve } from "node:path";
 import chalk from "chalk";
 import { createMergedConfig } from "~/config/resolver";
 import type { CloneCommandFlags } from "~/config/types";
-import { isValidGitUrl } from "~/config/validation";
 import { PATCHY_REPO_BASE_DIR_ENV_VAR } from "~/constants";
 import type { LocalContext } from "~/context";
 import { assertDefined } from "~/lib/assert";
 import { ensureDirExists } from "~/lib/fs";
 import { createGitClient, extractRepoName } from "~/lib/git";
+import { isValidGitUrl } from "~/lib/validation";
 
 export default async function (
   this: LocalContext,
