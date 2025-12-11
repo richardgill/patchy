@@ -1,5 +1,5 @@
 import { buildCommand } from "@stricli/core";
-import { applyFlags } from "~/commands/shared-parameters";
+import { applyFlags } from "./flags";
 
 export const applyCommand = buildCommand({
   loader: async () => import("./impl"),

@@ -3,13 +3,13 @@ import * as prompts from "@clack/prompts";
 import chalk from "chalk";
 import { CheckRepoActions } from "simple-git";
 import { createMergedConfig } from "~/config/resolver";
-import type { ResetCommandFlags } from "~/config/types";
 import type { LocalContext } from "~/context";
 import { createGitClient } from "~/lib/git";
+import type { ResetFlags } from "./flags";
 
 export default async function (
   this: LocalContext,
-  flags: ResetCommandFlags,
+  flags: ResetFlags,
 ): Promise<void> {
   const result = createMergedConfig({
     flags,

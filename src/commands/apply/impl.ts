@@ -3,10 +3,10 @@ import { copyFile, mkdir, readFile, writeFile } from "node:fs/promises";
 import path from "node:path";
 import { DEFAULT_FUZZ_FACTOR } from "~/config/defaults";
 import { createMergedConfig } from "~/config/resolver";
-import type { ApplyCommandFlags } from "~/config/types";
 import type { LocalContext } from "~/context";
 import { getAllFiles } from "~/lib/fs";
 import { applyDiff } from "./apply-diff";
+import type { ApplyFlags } from "./flags";
 
 type PatchToApply = {
   relativePath: string;
@@ -85,7 +85,7 @@ const applyPatch = async (
 
 export default async function (
   this: LocalContext,
-  flags: ApplyCommandFlags,
+  flags: ApplyFlags,
 ): Promise<void> {
   try {
     const result = createMergedConfig({

@@ -133,43 +133,11 @@ export const getFlagName = <K extends JsonKey>(jsonKey: K): FlagName => {
   return Object.keys(metadata.stricliFlag)[0] as FlagName;
 };
 
-export type YesFlag = {
-  yes?: boolean;
-};
-
 export type SharedFlags = {
   [K in FlagName]?: K extends "verbose" | "dry-run" ? boolean : string;
 } & {
   [K in ConfigFlagName]?: string;
 };
-
-export type InitCommandFlags = SharedFlags & {
-  force?: boolean;
-};
-
-export type ApplyCommandFlags = SharedFlags & {
-  "fuzz-factor"?: number;
-};
-
-export type GenerateCommandFlags = SharedFlags;
-
-export type CheckoutCommandFlags = Pick<
-  SharedFlags,
-  "repo-dir" | "repo-base-dir" | "config" | "verbose" | "dry-run"
-> & {
-  ref: string;
-};
-
-export type CloneCommandFlags = Pick<
-  SharedFlags,
-  "repo-url" | "repo-base-dir" | "ref" | "config" | "verbose" | "dry-run"
->;
-
-export type ResetCommandFlags = Pick<
-  SharedFlags,
-  "repo-base-dir" | "repo-dir" | "config" | "verbose" | "dry-run"
-> &
-  YesFlag;
 
 export type CompleteJsonConfig = {
   [K in JsonKey]: (typeof CONFIG_FIELD_METADATA)[K]["type"] extends "boolean"

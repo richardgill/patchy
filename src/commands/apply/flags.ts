@@ -1,4 +1,5 @@
 import { CONFIG_FIELD_METADATA, CONFIG_FLAG_METADATA } from "~/config/types";
+import type { ParsedFlags } from "~/types/utils";
 
 const m = CONFIG_FIELD_METADATA;
 const cm = CONFIG_FLAG_METADATA;
@@ -21,10 +22,4 @@ export const applyFlags = {
   },
 } as const;
 
-export const yesFlag = {
-  yes: {
-    kind: "boolean",
-    brief: "Skip confirmation prompts",
-    optional: true,
-  },
-} as const;
+export type ApplyFlags = ParsedFlags<typeof applyFlags>;

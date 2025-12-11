@@ -2,16 +2,17 @@ import { existsSync } from "node:fs";
 import { join, resolve } from "node:path";
 import chalk from "chalk";
 import { createMergedConfig } from "~/config/resolver";
-import { type CloneCommandFlags, CONFIG_FIELD_METADATA } from "~/config/types";
+import { CONFIG_FIELD_METADATA } from "~/config/types";
 import type { LocalContext } from "~/context";
 import { assertDefined } from "~/lib/assert";
 import { ensureDirExists } from "~/lib/fs";
 import { createGitClient, extractRepoName } from "~/lib/git";
 import { isValidGitUrl } from "~/lib/validation";
+import type { CloneFlags } from "./flags";
 
 export default async function (
   this: LocalContext,
-  flags: CloneCommandFlags,
+  flags: CloneFlags,
 ): Promise<void> {
   const result = createMergedConfig({
     flags,
