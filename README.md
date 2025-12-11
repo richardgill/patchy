@@ -2,35 +2,70 @@
 
 An opinionated command-line tool for managing Git patch workflows.
 
-**patchy** helps you maintain a curated set of patches—both added files and diffs—against an upstream Git repository.
+## How it works
 
-## Quick Start
+1. Clone repo → `~/target-1`
+2. Make some edits (the patches!)
+3. Create a repo for your patches → `~/my-patches`
+3. `patchy generate --repo ~/target-1` → Creates `~/my-patches/patches/*.diff`
 
-Run this command to initialize a new patch project:
+Then reapply your changes later with:
 
-```sh
-patchy init
+5. `patchy apply --repo ~/target-1` → `~/target-1` (patches applied)
+
+
+### `patches/` folder structure
+
+Patch files are stored in the same folder structure as the target repo:
+
 ```
-
-This will set up the necessary directory structure and configuration file for your patch workflow.
-
-## Directory Structure
+~/target-1/
+└── path/in/repo/existingFile.txt
+```
 
 ```
 my-patch-repo/
 ├── patches/
-│   ├── path/in/repo/newFile.ts          # new file
-│   ├── path/in/repo/oldFile.ts.diff     # diff file
-├── patchy.json                          # optional config
-
-repo-dir/
-├── path/in/repo/newFile.ts              # will be copied from patches/
-├── path/in/repo/oldFile.ts              # original file, to be patched
+│   ├── path/in/repo/existingFile.txt.diff
+│   └── path/in/repo/newFile.txt
+└── patchy.json
 ```
 
-File layout must mirror the structure of `repo_dir`.
+- **Edits** are stored as `.diff` files e.g. `existingFile.txt.diff`.
+- **New files** are stored as regular files e.g. `newFile.txt`. 
 
-## Installation
+### `patchy.json`
+
+```jsonc
+{
+  // Git URL to clone from.
+  "repo_url": "https://github.com/example/repo.git", // Override: --repo-url | env: PATCHY_REPO_URL
+
+  // Path to repo you're generating patches from or applying patches to.
+  "repo_dir": "~/repos/repo", // Override: --repo-dir | env: PATCHY_REPO_DIR
+
+  // Directory containing patch files.
+  "patches_dir": "./patches/", // Override: --patches-dir | env: PATCHY_PATCHES_DIR
+
+  // Parent directory for cloning repos. You can easily clone more repos here from repo_url.
+  "repo_base_dir": "~/repos", // Override: --repo-base-dir | env: PATCHY_REPO_BASE_DIR
+
+  // Git ref to checkout (branch, tag, SHA).
+  "ref": "main" // Override: --ref | env: PATCHY_REF
+}
+```
+
+Precedence: CLI flags > Environment variables > `patchy.json`
+
+## Getting started 
+
+### Installation
+
+```sh
+curl -fsSL https://raw.githubusercontent.com/richardgill/patchy/main/install | bash
+```
+
+Or via npm:
 
 **Install script (recommended):**
 
@@ -50,22 +85,23 @@ Or use directly without installing:
 npx patchy-cli --version
 ```
 
-## Shared Flags
+### Initialize patchy
 
-These flags are accepted by **all commands**:
+Run this command to initialize patchy in your project:
 
-| CLI Flag          | Env Variable           | Description                                      |
-| ----------------- | ---------------------- | ------------------------------------------------ |
-| `--repo-dir`      | `PATCHY_REPO_DIR`      | Path to the Git repo you're patching             |
-| `--repo-base-dir` | `PATCHY_REPO_BASE_DIR` | Parent directory where upstream repos are cloned |
-| `--patches-dir`   | `PATCHY_PATCHES_DIR`   | Path to your patch files (default: `./patches/`) |
-| `--config`        | `PATCHY_CONFIG`        | JSON config file (default: `patchy.json`)        |
-| `--verbose`       | `PATCHY_VERBOSE`       | Enable verbose log output                        |
-| `--dry-run`       | `PATCHY_DRY_RUN`       | Simulate the command without writing files       |
-
-> CLI flags override all values in `patchy.json`.
+```sh
+patchy init
+```
 
 ## Commands
+
+### `patchy generate`
+
+Generate `.diff` files and new files into `./patches/` based on current `git diff` in `repo_dir`.
+
+```sh
+patchy generate [--repo-dir] [--patches-dir] [--dry-run]
+```
 
 ### `patchy apply`
 
@@ -73,14 +109,6 @@ Apply patch files from `patches/` into `repo_dir`.
 
 ```sh
 patchy apply [--repo-dir] [--patches-dir] [--dry-run]
-```
-
-### `patchy generate`
-
-Generate `.diff` files and new full files into `./patches/` based on current `git diff` in `repo_dir`.
-
-```sh
-patchy generate [--repo-dir] [--patches-dir] [--dry-run]
 ```
 
 ### `patchy repo reset`
@@ -105,46 +133,6 @@ Clone a repository into a subdirectory of `repo_base_dir`. The target directory 
 
 ```sh
 patchy repo clone [--repo-base-dir] [--ref] [--repo-url] 
-```
-
-## Configuration (`patchy.json`)
-
-Optional file to set default values:
-
-```json
-{
-  "repo_url": "https://github.com/richardgill/upstream.git",
-  "repo_dir": "upstream-repo",
-  "repo_base_dir": "../clones",
-  "patches_dir": "patches/",
-  "ref": "main"
-}
-```
-
-All options may be set with environment variables as well e.g. `PATCHY_REPO_URL`.
-
-### Precedence Order
-
-1. CLI flags
-2. Environment variables
-3. `--config` (defaults to `./patchy.json`)
-
-## Example Workflow
-
-```sh
-# Clone the upstream repo
-patchy repo clone --repo-url https://github.com/richardgill/upstream.git --repo-base-dir ../clones
-
-# Check out upstream repo at a specific version
-patchy repo checkout --ref v1.2.3 --repo-dir ../clones/upstream
-
-# Generate patches from current state of repo_dir
-patchy generate --repo-dir ../clones/upstream
-
-# Later, apply patches cleanly to fresh repo
-patchy repo reset --repo-dir ../clones/upstream
-patchy repo checkout --ref main --repo-dir upstream
-patchy apply --repo-dir ../clones/upstream
 ```
 
 ## License
