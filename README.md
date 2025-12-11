@@ -34,7 +34,9 @@ my-patch-repo/
 - **Edits** are stored as `.diff` files e.g. `existingFile.txt.diff`.
 - **New files** are stored as regular files e.g. `newFile.txt`. 
 
-## Installation
+## Getting started 
+
+### Installation
 
 ```sh
 curl -fsSL https://raw.githubusercontent.com/richardgill/patchy/main/install | bash
@@ -46,7 +48,7 @@ Or via npm:
 npm install -g patchy-cli
 ```
 
-## Initialize patches
+### Initialize patches
 
 Run this command to initialize patchy in your project:
 
