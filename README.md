@@ -7,6 +7,7 @@ An opinionated command-line tool for managing Git patch workflows.
 3. `patchy generate --repo ~/target-repo-1` → `patches/*.diff`
 
 Then later reapply your changes at any time:
+
 4. `patchy apply --repo ~/target-repo-1` → `~/target-repo-2` (edits applied)
 
 ## How it works
