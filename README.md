@@ -24,7 +24,9 @@ Make patch changes to the repo:
 
 Set up a repo which contains your patches
 
-Run: `cd my-patch-repo && patchy init`
+```bash
+cd my-patch-repo && patchy init
+```
 
 ```
 my-patch-repo/
