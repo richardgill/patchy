@@ -2,10 +2,16 @@ import { existsSync, readFileSync } from "node:fs";
 import path, { resolve } from "node:path";
 import chalk from "chalk";
 import { isNil } from "es-toolkit";
-import type { MarkOptional } from "ts-essentials";
-import { PATCHY_CONFIG_ENV_VAR } from "~/constants";
 import { parseJsonc } from "~/lib/jsonc";
 import { isValidGitUrl } from "~/lib/validation";
+import {
+  CONFIG_FIELD_METADATA,
+  CONFIG_FLAG_METADATA,
+  getFlagName,
+  type JsonKey,
+  type MergedConfig,
+  type SharedFlags,
+} from "./config";
 import {
   DEFAULT_CONFIG_PATH,
   DEFAULT_PATCHES_DIR,
@@ -13,12 +19,6 @@ import {
 } from "./defaults";
 import type { JsonConfig } from "./schemas";
 import { jsonConfigSchema } from "./schemas";
-import {
-  CONFIG_FIELD_METADATA,
-  type JsonKey,
-  type ResolvedConfig,
-  type SharedFlags,
-} from "./types";
 
 type ConfigSources = {
   flags: SharedFlags;
@@ -52,9 +52,9 @@ const getValuesByKey = <K extends JsonKey>(
   jsonKey: K,
   sources: ConfigSources,
 ): ConfigValues<K> => {
-  const metadata = CONFIG_FIELD_METADATA[jsonKey];
+  const flagName = getFlagName(jsonKey);
   return {
-    flag: sources.flags[metadata.flag as keyof SharedFlags] as
+    flag: sources.flags[flagName as keyof SharedFlags] as
       | JsonConfig[K]
       | undefined,
     env: getEnvValue(jsonKey, sources.env),
@@ -76,10 +76,11 @@ const formatSourceLocation = <K extends JsonKey>(
   configPath: string,
 ): string => {
   const metadata = CONFIG_FIELD_METADATA[jsonKey];
+  const flagName = getFlagName(jsonKey);
   const values = getValuesByKey(jsonKey, sources);
 
   if (values.flag) {
-    return `--${metadata.flag} ${values.flag}`;
+    return `--${flagName} ${values.flag}`;
   }
   if (values.env !== undefined) {
     return `${metadata.env}=${sources.env[metadata.env]}`;
@@ -89,16 +90,6 @@ const formatSourceLocation = <K extends JsonKey>(
   }
   return metadata.name;
 };
-
-export type MergedConfig = MarkOptional<
-  ResolvedConfig,
-  | "repo_url"
-  | "repo_dir"
-  | "repo_base_dir"
-  | "absoluteRepoBaseDir"
-  | "absoluteRepoDir"
-  | "absolutePatchesDir"
->;
 
 type ConfigParseResult =
   | { success: true; data: JsonConfig }
@@ -150,10 +141,10 @@ export const createMergedConfig = ({
 }):
   | { mergedConfig: MergedConfig; success: true }
   | { success: false; error: string } => {
-  const configPath =
-    flags.config ?? env[PATCHY_CONFIG_ENV_VAR] ?? DEFAULT_CONFIG_PATH;
+  const configEnvVar = CONFIG_FLAG_METADATA.env;
+  const configPath = flags.config ?? env[configEnvVar] ?? DEFAULT_CONFIG_PATH;
   const configExplicitlySet =
-    flags.config !== undefined || env[PATCHY_CONFIG_ENV_VAR] !== undefined;
+    flags.config !== undefined || env[configEnvVar] !== undefined;
   const absoluteConfigPath = resolve(cwd, configPath);
   let jsonString: string | undefined;
   if (!existsSync(absoluteConfigPath) && configExplicitlySet) {
@@ -224,7 +215,8 @@ const calcError = ({
   if (missingFields.length > 0) {
     const missingFieldLines = missingFields.map((fieldKey) => {
       const field = CONFIG_FIELD_METADATA[fieldKey];
-      return `  Missing ${chalk.bold(field.name)}: set ${chalk.cyan(fieldKey)} in ${chalk.blue(configPath)}, ${chalk.cyan(field.env)} env var, or ${chalk.cyan(`--${field.flag}`)} flag`;
+      const flagName = getFlagName(fieldKey);
+      return `  Missing ${chalk.bold(field.name)}: set ${chalk.cyan(fieldKey)} in ${chalk.blue(configPath)}, ${chalk.cyan(field.env)} env var, or ${chalk.cyan(`--${flagName}`)} flag`;
     });
 
     const missingFieldsError = `${[

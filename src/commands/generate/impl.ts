@@ -2,10 +2,10 @@ import { writeFileSync } from "node:fs";
 import { copyFile } from "node:fs/promises";
 import { dirname, join } from "node:path";
 import { createMergedConfig } from "~/config/resolver";
-import type { GenerateCommandFlags } from "~/config/types";
 import type { LocalContext } from "~/context";
 import { ensureDirExists } from "~/lib/fs";
 import { createGitClient } from "~/lib/git";
+import type { GenerateFlags } from "./flags";
 
 type GitChange = {
   type: "modified" | "new";
@@ -68,7 +68,7 @@ const toPatchToGenerates = (
 
 export default async function (
   this: LocalContext,
-  flags: GenerateCommandFlags,
+  flags: GenerateFlags,
 ): Promise<void> {
   const result = createMergedConfig({
     flags,
