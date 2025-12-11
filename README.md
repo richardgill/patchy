@@ -1,15 +1,14 @@
 # patchy
 
-An opinionated command-line tool for managing Git patch workflows.
-
-## How it works
-
-**TL;DR:** Make edits to a repo, use `patchy generate` to export them as patches, then `patchy apply` to restore those edits on a fresh clone.
+Make edits to a repo, use `patchy generate` to export them as patches, then `patchy apply` to restore those edits on a fresh clone.
 
 ```
 Generate patches:  ~/my-repo-1 (with edits)  ──▶  patchy generate  ──▶  patches/my-change.diff
 Apply patches:     patches/                  ──▶  patchy apply     ──▶  ~/my-repo-2 (edits applied)
 ```
+
+## How it works
+
 
 Clone a repo you want to apply patches to
 
