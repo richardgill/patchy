@@ -55,27 +55,6 @@ Run this command to initialize patchy in your project:
 patchy init
 ```
 
-This will set up the necessary directory structure and configuration file for your patch workflow.
-
-
-## Shared Options
-
-These options are accepted by **all commands**:
-
-| patchy.json      | CLI Flag          | Env Variable           | Description                                      |
-| ---------------- | ----------------- | ---------------------- | ------------------------------------------------ |
-| `repo_dir`       | `--repo-dir`      | `PATCHY_REPO_DIR`      | Path to the Git repo you're patching             |
-| `repo_base_dir`  | `--repo-base-dir` | `PATCHY_REPO_BASE_DIR` | Parent directory where upstream repos are cloned |
-| `patches_dir`    | `--patches-dir`   | `PATCHY_PATCHES_DIR`   | Path to your patch files (default: `./patches/`) |
-|                  | `--config`        | `PATCHY_CONFIG`        | JSON config file (default: `patchy.json`)        |
-| `verbose`        | `--verbose`       | `PATCHY_VERBOSE`       | Enable verbose log output                        |
-| `dry_run`        | `--dry-run`       | `PATCHY_DRY_RUN`       | Simulate the command without writing files       |
-
-Precedence order (highest to lowest):
-1. CLI flags
-2. Environment variables
-3. `patchy.json`
-
 ## Commands
 
 ### `patchy apply`
@@ -133,6 +112,25 @@ Optional file to set default values:
 ```
 
 All options may be set with environment variables as well e.g. `PATCHY_REPO_URL`.
+
+## Shared Options
+
+These options are accepted by **all commands**:
+
+| patchy.json      | CLI Flag          | Env Variable           | Description                                      |
+| ---------------- | ----------------- | ---------------------- | ------------------------------------------------ |
+| `repo_dir`       | `--repo-dir`      | `PATCHY_REPO_DIR`      | Path to the Git repo you're patching             |
+| `repo_base_dir`  | `--repo-base-dir` | `PATCHY_REPO_BASE_DIR` | Parent directory where upstream repos are cloned |
+| `patches_dir`    | `--patches-dir`   | `PATCHY_PATCHES_DIR`   | Path to your patch files (default: `./patches/`) |
+|                  | `--config`        | `PATCHY_CONFIG`        | JSON config file (default: `patchy.json`)        |
+| `verbose`        | `--verbose`       | `PATCHY_VERBOSE`       | Enable verbose log output                        |
+| `dry_run`        | `--dry-run`       | `PATCHY_DRY_RUN`       | Simulate the command without writing files       |
+
+Precedence order (highest to lowest):
+1. CLI flags
+2. Environment variables
+3. `patchy.json`
+
 
 ## Example Workflow
 
