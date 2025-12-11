@@ -1,11 +1,14 @@
 import { z } from "zod";
+import { CONFIG_FIELD_METADATA } from "./types";
+
+const m = CONFIG_FIELD_METADATA;
 
 const baseConfigFields = {
-  repo_url: z.string().min(1, "Repository URL is required"),
-  ref: z.string().min(1, "Git ref is required"),
-  repo_base_dir: z.string().min(1, "Repository base directory is required"),
-  repo_dir: z.string().min(1, "Repository directory is required"),
-  patches_dir: z.string().min(1, "Patches directory is required"),
+  repo_url: z.string().min(1, `${m.repo_url.name} is required`),
+  ref: z.string().min(1, `${m.ref.name} is required`),
+  repo_base_dir: z.string().min(1, `${m.repo_base_dir.name} is required`),
+  repo_dir: z.string().min(1, `${m.repo_dir.name} is required`),
+  patches_dir: z.string().min(1, `${m.patches_dir.name} is required`),
   verbose: z.boolean().default(false),
 };
 

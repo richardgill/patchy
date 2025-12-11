@@ -1,16 +1,16 @@
 import { buildCommand } from "@stricli/core";
-import { pick } from "es-toolkit";
-import { sharedFlags } from "~/commands/shared-parameters";
+import { CONFIG_FIELD_METADATA, CONFIG_FLAG_METADATA } from "~/config/types";
+
+const m = CONFIG_FIELD_METADATA;
+const cm = CONFIG_FLAG_METADATA;
 
 const cloneFlags = {
-  ...pick(sharedFlags, [
-    "repo-url",
-    "repo-base-dir",
-    "ref",
-    "config",
-    "verbose",
-    "dry-run",
-  ]),
+  ...m.repo_url.stricliFlag,
+  ...m.repo_base_dir.stricliFlag,
+  ...m.ref.stricliFlag,
+  ...cm.stricliFlag,
+  ...m.verbose.stricliFlag,
+  ...m.dry_run.stricliFlag,
 } as const;
 
 export const cloneCommand = buildCommand({

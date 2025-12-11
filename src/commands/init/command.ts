@@ -1,9 +1,17 @@
 import { buildCommand } from "@stricli/core";
-import { omit } from "es-toolkit";
-import { sharedFlags } from "~/commands/shared-parameters";
+import { CONFIG_FIELD_METADATA, CONFIG_FLAG_METADATA } from "~/config/types";
+
+const m = CONFIG_FIELD_METADATA;
+const cm = CONFIG_FLAG_METADATA;
 
 const initFlags = {
-  ...omit(sharedFlags, ["dry-run"]),
+  ...m.repo_base_dir.stricliFlag,
+  ...m.repo_dir.stricliFlag,
+  ...m.patches_dir.stricliFlag,
+  ...m.repo_url.stricliFlag,
+  ...m.ref.stricliFlag,
+  ...cm.stricliFlag,
+  ...m.verbose.stricliFlag,
   force: {
     kind: "boolean",
     brief: "Overwrite existing configuration",

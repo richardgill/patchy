@@ -1,22 +1,16 @@
 import { buildCommand } from "@stricli/core";
-import { pick } from "es-toolkit";
-import { sharedFlags } from "~/commands/shared-parameters";
-import { PATCHY_REF_ENV_VAR } from "~/constants";
+import { CONFIG_FIELD_METADATA, CONFIG_FLAG_METADATA } from "~/config/types";
+
+const m = CONFIG_FIELD_METADATA;
+const cm = CONFIG_FLAG_METADATA;
 
 const checkoutFlags = {
-  ...pick(sharedFlags, [
-    "repo-dir",
-    "repo-base-dir",
-    "config",
-    "verbose",
-    "dry-run",
-  ]),
-  ref: {
-    kind: "parsed",
-    parse: String,
-    brief: `Git ref to use [env: ${PATCHY_REF_ENV_VAR}]`,
-    optional: false,
-  },
+  ...m.repo_dir.stricliFlag,
+  ...m.repo_base_dir.stricliFlag,
+  ...cm.stricliFlag,
+  ...m.verbose.stricliFlag,
+  ...m.dry_run.stricliFlag,
+  ref: { ...m.ref.stricliFlag.ref, optional: false },
 } as const;
 
 export const checkoutCommand = buildCommand({
