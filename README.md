@@ -6,13 +6,13 @@ An opinionated command-line tool for managing Git patch workflows.
 
 Clone a repo you want to apply patches to
 ```
-~/code/my-repo/
+~/my-repo/
 └── path/in/repo/existingFile.txt
 ```
 Make patch changes to the repo:
 
 ```
-~/code/my-repo/
+~/my-repo/
 ├── path/in/repo/existingFile.txt      # modify this file
 └── path/in/repo/newFile.txt           # create a new file
 ```
@@ -28,7 +28,7 @@ my-patch-repo/
 ```
 
 
-Generate patch files `patchy generate --repo-dir ~/code/my-repo`
+Generate patch files `patchy generate --repo-dir ~/my-repo`
 
 ```
 my-patch-repo/
@@ -38,9 +38,9 @@ my-patch-repo/
 └── patchy.json
 ```
 
-Run `patchy apply --repo-dir ~/code/my-repo-2`
+Run `patchy apply --repo-dir ~/my-repo-2`
 ```
-~/code/my-repo-2/
+~/my-repo-2/
 ├── path/in/repo/newFile.txt           # copied from patches/
 └── path/in/repo/existingFile.txt      # patched file
 ```
@@ -150,18 +150,18 @@ All options may be set with environment variables as well e.g. `PATCHY_REPO_URL`
 
 ```sh
 # Clone the repo
-patchy repo clone --repo-url https://github.com/richardgill/my-repo.git --repo-base-dir ~/code/repos
+patchy repo clone --repo-url https://github.com/richardgill/my-repo.git --repo-base-dir ~/repos
 
 # Check out at a specific version
-patchy repo checkout --ref v1.2.3 --repo-dir ~/code/repos/my-repo
+patchy repo checkout --ref v1.2.3 --repo-dir ~/repos/my-repo
 
 # Make changes to the repo, then generate patches
-patchy generate --repo-dir ~/code/repos/my-repo
+patchy generate --repo-dir ~/repos/my-repo
 
 # Later, apply patches to a fresh clone
-patchy repo reset --repo-dir ~/code/repos/my-repo
-patchy repo checkout --ref main --repo-dir ~/code/repos/my-repo
-patchy apply --repo-dir ~/code/repos/my-repo
+patchy repo reset --repo-dir ~/repos/my-repo
+patchy repo checkout --ref main --repo-dir ~/repos/my-repo
+patchy apply --repo-dir ~/repos/my-repo
 ```
 
 ## License
