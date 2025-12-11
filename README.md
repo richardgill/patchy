@@ -26,8 +26,9 @@ Patch files are stored in the same folder structure as the target repo:
 ```
 my-patch-repo/
 ├── patches/
-│   ├── path/in/repo/existingFile.txt.diff
-│   └── path/in/repo/newFile.txt
+│   └── path/in/repo/
+│       ├── existingFile.txt.diff
+│       └── newFile.txt
 └── patchy.json
 ```
 
