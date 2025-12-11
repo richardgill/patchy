@@ -12,8 +12,8 @@ import {
   type RequiredConfigData,
   requiredConfigSchema,
 } from "~/config/schemas";
-import { isValidGitUrl, validateGitUrl } from "~/config/validation";
 import type { LocalContext } from "~/context";
+import { isValidGitUrl, validateGitUrl } from "~/lib/validation";
 import { getSchemaUrl } from "~/version";
 
 type InitCommandFlags = {
