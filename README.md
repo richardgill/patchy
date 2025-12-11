@@ -31,9 +31,8 @@ my-patch-repo/
 └── patchy.json
 ```
 
-Edits to files are stored as `.diff` files e.g. `existingFile.txt.diff`.
-
-New files are stored as regular files e.g. `newFile.txt`. 
+**Edits** are stored as `.diff` files e.g. `existingFile.txt.diff`.
+**New files** are stored as regular files e.g. `newFile.txt`. 
 
 ## Installation
 
