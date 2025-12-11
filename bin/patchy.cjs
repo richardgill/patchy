@@ -1,5 +1,14 @@
 #!/usr/bin/env node
 
+// Node.js shim for patchy-cli npm package
+// Inspired by opencode: https://github.com/sst/opencode/blob/main/packages/opencode/bin/opencode
+//
+// This script locates and executes the platform-specific binary (patchy-cli-{platform}-{arch})
+// that gets installed as an optionalDependency. It searches up the directory tree for
+// node_modules containing the correct binary for the current OS and architecture.
+//
+// Set PATCHY_BIN_PATH to override binary location.
+
 const childProcess = require("child_process");
 const fs = require("fs");
 const path = require("path");
