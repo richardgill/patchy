@@ -7,6 +7,7 @@ import {
   PATCHY_REPO_URL_ENV_VAR,
   PATCHY_VERBOSE_ENV_VAR,
 } from "~/constants";
+import type { SnakeToCamel } from "~/types/utils";
 
 export type YesFlag = {
   yes?: boolean;
@@ -51,38 +52,7 @@ export type ResetCommandFlags = Pick<
 > &
   YesFlag;
 
-// Note: underscore_case property names match JSON config keys
-export type CompleteJsonConfig = {
-  repo_url: string;
-  ref: string;
-  repo_base_dir: string;
-  repo_dir: string;
-  patches_dir: string;
-  verbose: boolean;
-  dry_run: boolean;
-};
-
-export type JsonKey = keyof CompleteJsonConfig;
-
-export type ResolvedConfig = CompleteJsonConfig & {
-  absoluteRepoBaseDir: string;
-  absoluteRepoDir: string;
-  absolutePatchesDir: string;
-};
-
-export type CamelCaseResolvedConfig = {
-  repoUrl: string;
-  repoDir: string;
-  repoBaseDir: string;
-  patchesDir: string;
-  ref: string;
-  verbose: boolean;
-  dryRun: boolean;
-};
-
-export type PartialResolvedConfig = Partial<ResolvedConfig>;
-export type PartialCamelCaseResolvedConfig = Partial<CamelCaseResolvedConfig>;
-
+// CONFIG_FIELD_METADATA is defined first so types can be derived from it
 export const CONFIG_FIELD_METADATA = {
   repo_url: {
     flag: "repo-url",
@@ -134,12 +104,34 @@ export const CONFIG_FIELD_METADATA = {
     example: "true",
   },
 } as const satisfies Record<
-  JsonKey,
+  string,
   {
-    flag: keyof SharedFlags;
+    flag: Exclude<keyof SharedFlags, "config">;
     env: string;
     type: "boolean" | "string";
     name: string;
     example: string;
   }
 >;
+
+// Derived types from CONFIG_FIELD_METADATA
+export type JsonKey = keyof typeof CONFIG_FIELD_METADATA;
+
+export type CompleteJsonConfig = {
+  [K in JsonKey]: (typeof CONFIG_FIELD_METADATA)[K]["type"] extends "boolean"
+    ? boolean
+    : string;
+};
+
+export type ResolvedConfig = CompleteJsonConfig & {
+  absoluteRepoBaseDir: string;
+  absoluteRepoDir: string;
+  absolutePatchesDir: string;
+};
+
+export type CamelCaseResolvedConfig = {
+  [K in JsonKey as SnakeToCamel<K>]: CompleteJsonConfig[K];
+};
+
+export type PartialResolvedConfig = Partial<ResolvedConfig>;
+export type PartialCamelCaseResolvedConfig = Partial<CamelCaseResolvedConfig>;
