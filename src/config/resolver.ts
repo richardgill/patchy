@@ -4,12 +4,13 @@ import chalk from "chalk";
 import { isNil } from "es-toolkit";
 import type { MarkOptional } from "ts-essentials";
 import { PATCHY_CONFIG_ENV_VAR } from "~/constants";
+import { parseJsonc } from "~/lib/jsonc";
+import { isValidGitUrl } from "~/lib/validation";
 import {
   DEFAULT_CONFIG_PATH,
   DEFAULT_PATCHES_DIR,
   DEFAULT_REF,
 } from "./defaults";
-import { parseJsonc } from "./jsonc";
 import type { JsonConfig } from "./schemas";
 import { jsonConfigSchema } from "./schemas";
 import {
@@ -18,7 +19,6 @@ import {
   type ResolvedConfig,
   type SharedFlags,
 } from "./types";
-import { isValidGitUrl } from "./validation";
 
 type ConfigSources = {
   flags: SharedFlags;
