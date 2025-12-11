@@ -55,6 +55,12 @@ my-patch-repo/
 }
 ```
 
+Precedence order (highest to lowest):
+
+1. CLI flags
+2. Environment variables
+3. `patchy.json`
+
 ## Getting started 
 
 ### Installation
@@ -81,7 +87,7 @@ patchy init
 
 ### `patchy generate`
 
-Generate `.diff` files and new full files into `./patches/` based on current `git diff` in `repo_dir`.
+Generate `.diff` files and new files into `./patches/` based on current `git diff` in `repo_dir`.
 
 ```sh
 patchy generate [--repo-dir] [--patches-dir] [--dry-run]
@@ -117,60 +123,6 @@ Clone a repository into a subdirectory of `repo_base_dir`. The target directory 
 
 ```sh
 patchy repo clone [--repo-base-dir] [--ref] [--repo-url] 
-```
-
-## Configuration (`patchy.json`)
-
-Optional file to set default values:
-
-```json
-{
-  "repo_url": "https://github.com/richardgill/upstream.git",
-  "repo_dir": "upstream-repo",
-  "repo_base_dir": "../clones",
-  "patches_dir": "patches/",
-  "ref": "main"
-}
-```
-
-All options may be set with environment variables as well e.g. `PATCHY_REPO_URL`.
-
-## Shared Options
-
-These options are accepted by **all commands**:
-
-| patchy.json      | CLI Flag          | Env Variable           | Description                                      |
-| ---------------- | ----------------- | ---------------------- | ------------------------------------------------ |
-| `repo_dir`       | `--repo-dir`      | `PATCHY_REPO_DIR`      | Path to the Git repo you're patching             |
-| `repo_base_dir`  | `--repo-base-dir` | `PATCHY_REPO_BASE_DIR` | Parent directory where upstream repos are cloned |
-| `patches_dir`    | `--patches-dir`   | `PATCHY_PATCHES_DIR`   | Path to your patch files (default: `./patches/`) |
-|                  | `--config`        | `PATCHY_CONFIG`        | JSON config file (default: `patchy.json`)        |
-| `verbose`        | `--verbose`       | `PATCHY_VERBOSE`       | Enable verbose log output                        |
-| `dry_run`        | `--dry-run`       | `PATCHY_DRY_RUN`       | Simulate the command without writing files       |
-
-Precedence order (highest to lowest):
-1. CLI flags
-2. Environment variables
-3. `patchy.json`
-
-
-## Example Workflow
-
-
-```sh
-# Clone the repo
-patchy repo clone --repo-url https://github.com/richardgill/my-repo.git --repo-base-dir ~/repos
-
-# Check out at a specific version
-patchy repo checkout --ref v1.2.3 --repo-dir ~/repos/my-repo
-
-# Make changes to the repo, then generate patches
-patchy generate --repo-dir ~/repos/my-repo
-
-# Later, apply patches to a fresh clone
-patchy repo reset --repo-dir ~/repos/my-repo
-patchy repo checkout --ref main --repo-dir ~/repos/my-repo
-patchy apply --repo-dir ~/repos/my-repo
 ```
 
 ## License
