@@ -55,11 +55,7 @@ my-patch-repo/
 }
 ```
 
-Precedence order (highest to lowest):
-
-1. CLI flags
-2. Environment variables
-3. `patchy.json`
+Precedence: CLI flags > Environment variables > `patchy.json`
 
 ## Getting started 
 
