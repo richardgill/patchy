@@ -4,6 +4,7 @@ import chalk from "chalk";
 import { isNil } from "es-toolkit";
 import { parseJsonc } from "~/lib/jsonc";
 import { isValidGitUrl } from "~/lib/validation";
+import { formatZodErrorHuman } from "~/lib/zod";
 import {
   CONFIG_FIELD_METADATA,
   CONFIG_FLAG_METADATA,
@@ -49,24 +50,24 @@ const getEnvValue = <K extends JsonConfigKey>(
 };
 
 const getValuesByKey = <K extends JsonConfigKey>(
-  jsonKey: K,
+  jsonConfigKey: K,
   sources: ConfigSources,
 ): ConfigValues<K> => {
-  const flagName = getFlagName(jsonKey);
+  const flagName = getFlagName(jsonConfigKey);
   return {
     flag: sources.flags[flagName as keyof SharedFlags] as
       | JsonConfig[K]
       | undefined,
-    env: getEnvValue(jsonKey, sources.env),
-    json: sources.json[jsonKey],
+    env: getEnvValue(jsonConfigKey, sources.env),
+    json: sources.json[jsonConfigKey],
   };
 };
 
 const getValueByKey = <K extends JsonConfigKey>(
-  jsonKey: K,
+  jsonConfigKey: K,
   sources: ConfigSources,
 ): JsonConfig[K] | undefined => {
-  const values = getValuesByKey(jsonKey, sources);
+  const values = getValuesByKey(jsonConfigKey, sources);
   return values.flag ?? values.env ?? values.json;
 };
 
@@ -113,17 +114,7 @@ export const parseOptionalJsonConfig = (
     return { success: true, data };
   }
 
-  // Format zod errors in a human-readable way
-  if (error.issues && error.issues.length > 0) {
-    const zodErrors = error.issues
-      .map((issue) => {
-        const path = issue.path.length > 0 ? `${issue.path.join(".")}: ` : "";
-        return `  ${path}${issue.message}`;
-      })
-      .join("\n");
-    return { success: false, error: zodErrors.trim() };
-  }
-  return { success: false, error: error.message };
+  return { success: false, error: formatZodErrorHuman(error) };
 };
 
 export const createMergedConfig = ({
