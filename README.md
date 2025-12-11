@@ -38,20 +38,19 @@ my-patch-repo/
 
 ```jsonc
 {
-  // Git URL to clone from. 
+  // Git URL to clone from.
   "repo_url": "https://github.com/example/repo.git", //Override: --repo-url or PATCHY_REPO_URL
 
-  // Path to repo you're generating patches from or applying patches to. 
+  // Path to repo you're generating patches from or applying patches to.
   "repo_dir": "~/repos/repo",   // Override: --repo-dir or PATCHY_REPO_DIR
 
-
-  // Parent directory for cloning repos. 
-  "repo_base_dir": "~/repos", // Override: --repo-base-dir or PATCHY_REPO_BASE_DIR
-
-  // Directory containing patch files. 
+  // Directory containing patch files.
   "patches_dir": "./patches/", //Override: --patches-dir or PATCHY_PATCHES_DIR
 
-  // Git ref to checkout (branch, tag, SHA). 
+  // Parent directory for cloning repos. You can easily clone more repos here from repo_url.
+  "repo_base_dir": "~/repos", // Override: --repo-base-dir or PATCHY_REPO_BASE_DIR
+
+  // Git ref to checkout (branch, tag, SHA).
   "ref": "main" // Override: --ref or PATCHY_REF
 }
 ```
