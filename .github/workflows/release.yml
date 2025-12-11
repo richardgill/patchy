@@ -105,68 +105,11 @@ jobs:
         env:
           PATCHY_VERSION: ${{ needs.create-release-pr.outputs.version }}
 
-      - name: Prepare release assets
-        run: |
-          mkdir -p release
-
-          cp dist/patchy-linux-x64/bin/patchy release/patchy-linux-x64
-          cp dist/patchy-linux-arm64/bin/patchy release/patchy-linux-arm64
-          cp dist/patchy-darwin-x64/bin/patchy release/patchy-darwin-x64
-          cp dist/patchy-darwin-arm64/bin/patchy release/patchy-darwin-arm64
-          cp dist/patchy-windows-x64/bin/patchy.exe release/patchy-windows-x64.exe
-
-          cd release
-          tar -czf patchy-linux-x64.tar.gz patchy-linux-x64
-          tar -czf patchy-linux-arm64.tar.gz patchy-linux-arm64
-          zip patchy-darwin-x64.zip patchy-darwin-x64
-          zip patchy-darwin-arm64.zip patchy-darwin-arm64
-          zip patchy-windows-x64.zip patchy-windows-x64.exe
-
-          sha256sum *.tar.gz *.zip > checksums.txt
-
-          rm -f patchy-linux-x64 patchy-linux-arm64 patchy-darwin-x64 patchy-darwin-arm64 patchy-windows-x64.exe
-
       - name: Setup npm auth
         run: echo "//registry.npmjs.org/:_authToken=${{ secrets.NPM_TOKEN }}" > ~/.npmrc
 
-      - name: Publish platform packages to npm
-        run: |
-          VERSION="${{ needs.create-release-pr.outputs.version }}"
-
-          for dir in dist/patchy-*/; do
-            build_name=$(basename "$dir")
-            npm_name="patchy-cli-${build_name#patchy-}"
-            echo "Publishing $npm_name@$VERSION"
-
-            cd "$dir"
-            node -e "
-              const pkg = require('./package.json');
-              pkg.name = '$npm_name';
-              pkg.version = '$VERSION';
-              require('fs').writeFileSync('package.json', JSON.stringify(pkg, null, 2) + '\n');
-            "
-            npm publish --access public --tag latest
-            cd -
-          done
-
-      - name: Publish main package to npm
-        run: |
-          VERSION="${{ needs.create-release-pr.outputs.version }}"
-
-          node -e "
-            const pkg = require('./package.json');
-            pkg.version = '$VERSION';
-            pkg.optionalDependencies = {
-              'patchy-cli-linux-x64': '$VERSION',
-              'patchy-cli-linux-arm64': '$VERSION',
-              'patchy-cli-darwin-x64': '$VERSION',
-              'patchy-cli-darwin-arm64': '$VERSION',
-              'patchy-cli-windows-x64': '$VERSION'
-            };
-            require('fs').writeFileSync('package.json', JSON.stringify(pkg, null, 2) + '\n');
-          "
-
-          npm publish --access public --tag latest
+      - name: Publish to npm and prepare assets
+        run: bun run scripts/publish.ts --mode=release --version=${{ needs.create-release-pr.outputs.version }}
 
       - name: Create GitHub Release
         uses: softprops/action-gh-release@v2
