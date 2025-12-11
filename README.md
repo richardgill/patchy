@@ -34,6 +34,28 @@ my-patch-repo/
 - **Edits** are stored as `.diff` files e.g. `existingFile.txt.diff`.
 - **New files** are stored as regular files e.g. `newFile.txt`. 
 
+### `patchy.json`
+
+```jsonc
+{
+  // Git URL to clone from. 
+  "repo_url": "https://github.com/example/repo.git", //Override: --repo-url or PATCHY_REPO_URL
+
+  // Path to repo you're generating patches from or applying patches to. 
+  "repo_dir": "~/repos/repo",   // Override: --repo-dir or PATCHY_REPO_DIR
+
+
+  // Parent directory for cloning repos. 
+  "repo_base_dir": "~/repos", // Override: --repo-base-dir or PATCHY_REPO_BASE_DIR
+
+  // Directory containing patch files. 
+  "patches_dir": "./patches/", //Override: --patches-dir or PATCHY_PATCHES_DIR
+
+  // Git ref to checkout (branch, tag, SHA). 
+  "ref": "main" // Override: --ref or PATCHY_REF
+}
+```
+
 ## Getting started 
 
 ### Installation
