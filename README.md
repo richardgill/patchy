@@ -79,20 +79,20 @@ patchy init
 
 ## Commands
 
-### `patchy apply`
-
-Apply patch files from `patches/` into `repo_dir`.
-
-```sh
-patchy apply [--repo-dir] [--patches-dir] [--dry-run]
-```
-
 ### `patchy generate`
 
 Generate `.diff` files and new full files into `./patches/` based on current `git diff` in `repo_dir`.
 
 ```sh
 patchy generate [--repo-dir] [--patches-dir] [--dry-run]
+```
+
+### `patchy apply`
+
+Apply patch files from `patches/` into `repo_dir`.
+
+```sh
+patchy apply [--repo-dir] [--patches-dir] [--dry-run]
 ```
 
 ### `patchy repo reset`
