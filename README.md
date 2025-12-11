@@ -4,6 +4,8 @@ An opinionated command-line tool for managing Git patch workflows.
 
 ## How it works
 
+**TL;DR:** Make edits to a repo, use `patchy generate` to export them as patches, then `patchy apply` to restore those edits on a fresh clone.
+
 Clone a repo you want to apply patches to
 
 ```bash
