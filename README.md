@@ -61,7 +61,6 @@ patchy apply --repo-dir ~/my-repo-2
 └── path/in/repo/existingFile.txt      # patched file
 ```
 
-
 ## Installation
 
 ```sh
