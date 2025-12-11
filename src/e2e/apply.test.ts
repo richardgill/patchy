@@ -487,8 +487,8 @@ describe("patchy apply", () => {
     expect(result).toFail();
     expect(result.stderr).toMatchInlineSnapshot(`
       "repo_url: Repository URL is required
-        ref: Git ref is required
-        repo_base_dir: Repository base directory is required"
+        repo_base_dir: Repository base directory is required
+        ref: Git reference is required"
     `);
   });
 
@@ -583,8 +583,8 @@ describe("patchy apply", () => {
     expect(result).toFail();
     expect(result.stderr).toMatchInlineSnapshot(`
       "repo_url: Invalid input: expected string, received array
-        ref: Invalid input: expected string, received array
-        patches_dir: Invalid input: expected string, received array"
+        patches_dir: Invalid input: expected string, received array
+        ref: Invalid input: expected string, received array"
     `);
   });
 
@@ -635,10 +635,10 @@ describe("patchy apply", () => {
     expect(result).toFail();
     expect(result.stderr).toMatchInlineSnapshot(`
       "repo_url: Invalid input: expected string, received number
-        ref: Invalid input: expected string, received boolean
-        repo_base_dir: Invalid input: expected string, received array
         repo_dir: Invalid input: expected string, received null
+        repo_base_dir: Invalid input: expected string, received array
         patches_dir: Invalid input: expected string, received object
+        ref: Invalid input: expected string, received boolean
         verbose: Invalid input: expected boolean, received string
         dry_run: Invalid input: expected boolean, received number"
     `);

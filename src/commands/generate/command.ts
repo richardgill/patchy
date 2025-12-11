@@ -1,10 +1,10 @@
 import { buildCommand } from "@stricli/core";
-import { sharedFlags } from "~/commands/shared-parameters";
+import { generateFlags } from "./flags";
 
 export const generateCommand = buildCommand({
   loader: async () => import("./impl"),
   parameters: {
-    flags: sharedFlags,
+    flags: generateFlags,
     positional: {
       kind: "tuple",
       parameters: [],

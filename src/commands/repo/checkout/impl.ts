@@ -2,9 +2,9 @@ import { existsSync } from "node:fs";
 import chalk from "chalk";
 import { CheckRepoActions } from "simple-git";
 import { createMergedConfig } from "~/config/resolver";
-import type { CheckoutCommandFlags } from "~/config/types";
 import type { LocalContext } from "~/context";
 import { createGitClient } from "~/lib/git";
+import type { CheckoutFlags } from "./flags";
 
 const isWorkingTreeDirty = async (repoDir: string): Promise<boolean> => {
   const git = createGitClient(repoDir);
@@ -27,7 +27,7 @@ const isValidGitRef = async (
 
 export default async function (
   this: LocalContext,
-  flags: CheckoutCommandFlags,
+  flags: CheckoutFlags,
 ): Promise<void> {
   const result = createMergedConfig({
     flags,

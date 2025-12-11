@@ -1,8 +1,8 @@
 import { beforeEach, describe, expect, it } from "bun:test";
 import { mkdirSync, writeFileSync } from "node:fs";
 import path from "node:path";
-import { createMergedConfig, type MergedConfig } from "~/config/resolver";
-import type { JsonKey, SharedFlags } from "~/config/types";
+import type { JsonKey, MergedConfig, SharedFlags } from "~/config/config";
+import { createMergedConfig } from "~/config/resolver";
 import {
   generateTmpDir,
   getStabilizedJson,
@@ -820,8 +820,8 @@ describe("createMergedConfig", () => {
     expectFailedMerge(result);
     expect(result.error).toMatchInlineSnapshot(`
       "repo_url: Repository URL is required
-        ref: Git ref is required
-        repo_base_dir: Repository base directory is required"
+        repo_base_dir: Repository base directory is required
+        ref: Git reference is required"
     `);
   });
 
@@ -940,8 +940,8 @@ describe("createMergedConfig", () => {
     expectFailedMerge(result);
     expect(result.error).toMatchInlineSnapshot(`
       "repo_url: Invalid input: expected string, received array
-        ref: Invalid input: expected string, received array
-        patches_dir: Invalid input: expected string, received array"
+        patches_dir: Invalid input: expected string, received array
+        ref: Invalid input: expected string, received array"
     `);
   });
 
@@ -1004,10 +1004,10 @@ describe("createMergedConfig", () => {
     expectFailedMerge(result);
     expect(result.error).toMatchInlineSnapshot(`
       "repo_url: Invalid input: expected string, received number
-        ref: Invalid input: expected string, received boolean
-        repo_base_dir: Invalid input: expected string, received array
         repo_dir: Invalid input: expected string, received null
+        repo_base_dir: Invalid input: expected string, received array
         patches_dir: Invalid input: expected string, received object
+        ref: Invalid input: expected string, received boolean
         verbose: Invalid input: expected boolean, received string
         dry_run: Invalid input: expected boolean, received number"
     `);

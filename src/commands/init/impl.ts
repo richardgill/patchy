@@ -15,16 +15,7 @@ import {
 import type { LocalContext } from "~/context";
 import { isValidGitUrl, validateGitUrl } from "~/lib/validation";
 import { getSchemaUrl } from "~/version";
-
-type InitCommandFlags = {
-  "repo-url"?: string;
-  "repo-dir"?: string;
-  "repo-base-dir"?: string;
-  "patches-dir"?: string;
-  ref?: string;
-  config?: string;
-  force?: boolean;
-};
+import type { InitFlags } from "./flags";
 
 type PromptAnswers = {
   repoUrl?: string;
@@ -36,7 +27,7 @@ type PromptAnswers = {
 
 export default async function (
   this: LocalContext,
-  flags: InitCommandFlags,
+  flags: InitFlags,
 ): Promise<void> {
   const configPath = resolve(this.cwd, flags.config ?? DEFAULT_CONFIG_PATH);
 
