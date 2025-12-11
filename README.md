@@ -29,7 +29,7 @@ Run: `cd my-patch-repo && patchy init`
 ```
 my-patch-repo/
 ├── patches/
-├── patchy.json                          # optional config
+├── patchy.json
 ```
 
 
