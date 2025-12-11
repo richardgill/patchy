@@ -67,8 +67,22 @@ curl -fsSL https://raw.githubusercontent.com/richardgill/patchy/main/install | b
 
 Or via npm:
 
+**Install script (recommended):**
+
+```sh
+curl -fsSL https://raw.githubusercontent.com/richardgill/patchy/main/install | bash
+```
+
+**Via npm:**
+
 ```sh
 npm install -g patchy-cli
+```
+
+Or use directly without installing:
+
+```sh
+npx patchy-cli --version
 ```
 
 ### Initialize patchy

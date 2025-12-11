@@ -121,6 +121,12 @@ Or via GitHub UI: Settings → Actions → General → "Allow GitHub Actions to 
 
 The release workflow requires these GitHub repository secrets:
 - `GITHUB_TOKEN`: Automatically provided by GitHub Actions
+- `NPM_TOKEN`: Required for publishing to npm. To set this up:
+  1. Go to https://www.npmjs.com/settings/YOUR_USERNAME/tokens
+  2. Click "Generate New Token" → "Classic Token"
+  3. Select "Automation" type (for CI/CD)
+  4. Copy the token
+  5. Set the secret: `gh secret set NPM_TOKEN` (paste token when prompted)
 
 ## Code Style
 

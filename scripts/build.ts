@@ -39,6 +39,7 @@ const targets = singleFlag
   : allTargets;
 
 const version = await getVersion();
+const mainPkg = await Bun.file("package.json").json();
 
 await $`rm -rf dist`;
 await $`mkdir -p dist`;
@@ -88,11 +89,9 @@ for (const item of targets) {
         description: `${CLI_NAME} CLI binary for ${item.os} ${item.arch}`,
         os: [item.os],
         cpu: [item.arch],
-        license: "MIT",
-        repository: {
-          type: "git",
-          url: "git+https://github.com/richardgill/patchy.git",
-        },
+        license: mainPkg.license,
+        repository: mainPkg.repository,
+        publishConfig: mainPkg.publishConfig,
       },
       null,
       2,
