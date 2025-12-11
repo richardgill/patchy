@@ -120,11 +120,30 @@ export const CONFIG_FLAG_METADATA = {
 // Derived types from CONFIG_FIELD_METADATA
 export type JsonKey = keyof typeof CONFIG_FIELD_METADATA;
 
+// Maps type string literals to actual TypeScript types
+type TypeMap = {
+  string: string;
+  boolean: boolean;
+};
+
 // FlagName is the union of all flag keys (e.g., "repo-url", "dry-run", etc.)
 // We use a mapped type to extract each flag key, then index to get the union
 type FlagName = {
   [K in JsonKey]: keyof (typeof CONFIG_FIELD_METADATA)[K]["stricliFlag"];
 }[JsonKey];
+
+// Maps a JsonKey to its corresponding flag name
+type FlagNameFor<K extends JsonKey> =
+  keyof (typeof CONFIG_FIELD_METADATA)[K]["stricliFlag"];
+
+// Maps a flag name back to its JsonKey
+type JsonKeyForFlag<F extends FlagName> = {
+  [K in JsonKey]: F extends FlagNameFor<K> ? K : never;
+}[JsonKey];
+
+// Gets the TypeScript type for a flag based on metadata
+type FlagType<F extends FlagName> =
+  TypeMap[(typeof CONFIG_FIELD_METADATA)[JsonKeyForFlag<F>]["type"]];
 
 type ConfigFlagName = keyof (typeof CONFIG_FLAG_METADATA)["stricliFlag"];
 
@@ -135,15 +154,13 @@ export const getFlagName = <K extends JsonKey>(jsonKey: K): FlagName => {
 };
 
 export type SharedFlags = {
-  [K in FlagName]?: K extends "verbose" | "dry-run" ? boolean : string;
+  [K in FlagName]?: FlagType<K>;
 } & {
   [K in ConfigFlagName]?: string;
 };
 
 export type CompleteJsonConfig = {
-  [K in JsonKey]: (typeof CONFIG_FIELD_METADATA)[K]["type"] extends "boolean"
-    ? boolean
-    : string;
+  [K in JsonKey]: TypeMap[(typeof CONFIG_FIELD_METADATA)[K]["type"]];
 };
 
 export type ResolvedConfig = CompleteJsonConfig & {
