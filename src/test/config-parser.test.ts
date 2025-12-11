@@ -43,8 +43,8 @@ describe("parseOptionalJsonConfig", () => {
     if (!result.success) {
       expect(result.error).toMatchInlineSnapshot(`
         "repo_url: Repository URL is required
-          ref: Git reference is required
-          repo_base_dir: Repository base directory is required"
+          repo_base_dir: Repository base directory is required
+          ref: Git reference is required"
       `);
     }
   });

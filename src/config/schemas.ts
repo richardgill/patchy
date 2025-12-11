@@ -1,30 +1,44 @@
-import { z } from "zod";
-import { CONFIG_FIELD_METADATA } from "./metadata";
+import { omit } from "es-toolkit";
+import { type ZodTypeAny, z } from "zod";
+import { CONFIG_FIELD_METADATA, type JsonKey } from "./metadata";
 
-const m = CONFIG_FIELD_METADATA;
+// Type-level mapping from metadata type strings to Zod schema types
+type ZodSchemaFor<T extends "string" | "boolean"> = T extends "boolean"
+  ? z.ZodDefault<z.ZodBoolean>
+  : z.ZodString;
 
-const baseConfigFields = {
-  repo_url: z.string().min(1, `${m.repo_url.name} is required`),
-  ref: z.string().min(1, `${m.ref.name} is required`),
-  repo_base_dir: z.string().min(1, `${m.repo_base_dir.name} is required`),
-  repo_dir: z.string().min(1, `${m.repo_dir.name} is required`),
-  patches_dir: z.string().min(1, `${m.patches_dir.name} is required`),
-  verbose: z.boolean().default(false),
+// Strongly typed baseConfigFields shape (excludes dry_run which is JSON-only)
+type BaseConfigFields = {
+  [K in Exclude<JsonKey, "dry_run">]: ZodSchemaFor<
+    (typeof CONFIG_FIELD_METADATA)[K]["type"]
+  >;
 };
+
+// Build Zod schemas from metadata at runtime (dry_run excluded - it's JSON-only)
+const buildBaseConfigFields = (): BaseConfigFields => {
+  const fields: Record<string, ZodTypeAny> = {};
+  for (const [key, meta] of Object.entries(
+    omit(CONFIG_FIELD_METADATA, ["dry_run"]),
+  )) {
+    fields[key] =
+      meta.type === "boolean"
+        ? z.boolean().default(false)
+        : z.string().min(1, `${meta.name} is required`);
+  }
+  return fields as BaseConfigFields;
+};
+
+const baseConfigFields = buildBaseConfigFields();
 
 export const requiredConfigSchema = z.object(baseConfigFields).strict();
 
 export type RequiredConfigData = z.infer<typeof requiredConfigSchema>;
 
 export const jsonConfigSchema = z
-  .object({
+  .object(baseConfigFields)
+  .partial()
+  .extend({
     $schema: z.string().optional(),
-    repo_url: baseConfigFields.repo_url.optional(),
-    ref: baseConfigFields.ref.optional(),
-    repo_base_dir: baseConfigFields.repo_base_dir.optional(),
-    repo_dir: baseConfigFields.repo_dir.optional(),
-    patches_dir: baseConfigFields.patches_dir.optional(),
-    verbose: baseConfigFields.verbose.optional(),
     dry_run: z.boolean().optional(),
   })
   .strict();
