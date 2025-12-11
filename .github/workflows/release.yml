@@ -14,19 +14,42 @@ concurrency:
   cancel-in-progress: true
 
 jobs:
-  checks:
-    uses: ./.github/workflows/pre-checks.yml
-    secrets: inherit
-
-  release:
-    name: Release
-    needs: checks
+  lint:
+    name: Lint
     runs-on: ubuntu-latest
-    permissions:
-      contents: write
-      pull-requests: write
+    steps:
+      - uses: actions/checkout@v4
+      - uses: ./.github/actions/setup
+
+      - name: Lint
+        run: bun run check
+
+  typecheck:
+    name: Typecheck
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: ./.github/actions/setup
+
+      - name: Typecheck
+        run: bun run typecheck
+
+  test:
+    name: Test
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: ./.github/actions/setup
+
+      - name: Test
+        run: bun run test
+
+  create-release-pr:
+    name: Create Release PR
+    needs: [lint, typecheck, test]
+    runs-on: ubuntu-latest
     outputs:
-      hasChangesets: ${{ steps.changesets.outputs.hasChangesets }}
+      should_publish: ${{ steps.changesets.outputs.hasChangesets == 'false' }}
       version: ${{ steps.version.outputs.version }}
 
     steps:
@@ -43,11 +66,10 @@ jobs:
       - name: Install dependencies
         run: bun install --frozen-lockfile
 
-      - name: Create Release Pull Request or Publish
+      - name: Create Release Pull Request
         id: changesets
         uses: changesets/action@v1
         with:
-          # When hasChangesets is false (release PR was merged), the binaries and npm-publish jobs run.
           title: "chore: release"
           commit: "chore: release"
         env:
@@ -60,45 +82,62 @@ jobs:
           VERSION=$(node -p "require('./package.json').version")
           echo "version=$VERSION" >> $GITHUB_OUTPUT
 
-  build:
-    name: Build Binaries
-    needs: release
-    if: needs.release.outputs.hasChangesets == 'false'
-    uses: ./.github/workflows/build-binaries.yml
-    with:
-      version: ${{ needs.release.outputs.version }}
-
-  npm-publish:
-    name: Publish to npm
-    needs: [release, build]
+  publish:
+    name: Publish
+    needs: create-release-pr
+    if: needs.create-release-pr.outputs.should_publish == 'true'
     runs-on: ubuntu-latest
-    permissions:
-      contents: read
 
     steps:
       - name: Checkout
         uses: actions/checkout@v4
 
-      - name: Download npm packages
-        uses: actions/download-artifact@v4
+      - name: Setup Bun
+        uses: oven-sh/setup-bun@v2
         with:
-          name: npm-packages
-          path: dist
+          bun-version: latest
+
+      - name: Install dependencies
+        run: bun install --frozen-lockfile
+
+      - name: Build all binaries
+        run: bun run build
+        env:
+          PATCHY_VERSION: ${{ needs.create-release-pr.outputs.version }}
+
+      - name: Prepare release assets
+        run: |
+          mkdir -p release
+
+          cp dist/patchy-linux-x64/bin/patchy release/patchy-linux-x64
+          cp dist/patchy-linux-arm64/bin/patchy release/patchy-linux-arm64
+          cp dist/patchy-darwin-x64/bin/patchy release/patchy-darwin-x64
+          cp dist/patchy-darwin-arm64/bin/patchy release/patchy-darwin-arm64
+          cp dist/patchy-windows-x64/bin/patchy.exe release/patchy-windows-x64.exe
+
+          cd release
+          tar -czf patchy-linux-x64.tar.gz patchy-linux-x64
+          tar -czf patchy-linux-arm64.tar.gz patchy-linux-arm64
+          zip patchy-darwin-x64.zip patchy-darwin-x64
+          zip patchy-darwin-arm64.zip patchy-darwin-arm64
+          zip patchy-windows-x64.zip patchy-windows-x64.exe
+
+          sha256sum *.tar.gz *.zip > checksums.txt
+
+          rm -f patchy-linux-x64 patchy-linux-arm64 patchy-darwin-x64 patchy-darwin-arm64 patchy-windows-x64.exe
 
       - name: Setup npm auth
         run: echo "//registry.npmjs.org/:_authToken=${{ secrets.NPM_TOKEN }}" > ~/.npmrc
 
-      - name: Publish platform packages
+      - name: Publish platform packages to npm
         run: |
-          VERSION="${{ needs.release.outputs.version }}"
+          VERSION="${{ needs.create-release-pr.outputs.version }}"
 
           for dir in dist/patchy-*/; do
             build_name=$(basename "$dir")
-            # Convert patchy-linux-x64 to patchy-cli-linux-x64
             npm_name="patchy-cli-${build_name#patchy-}"
             echo "Publishing $npm_name@$VERSION"
 
-            # Update package.json with npm name and version
             cd "$dir"
             node -e "
               const pkg = require('./package.json');
@@ -110,11 +149,10 @@ jobs:
             cd -
           done
 
-      - name: Publish main package
+      - name: Publish main package to npm
         run: |
-          VERSION="${{ needs.release.outputs.version }}"
+          VERSION="${{ needs.create-release-pr.outputs.version }}"
 
-          # Update package.json with version and optionalDependencies
           node -e "
             const pkg = require('./package.json');
             pkg.version = '$VERSION';
@@ -130,27 +168,13 @@ jobs:
 
           npm publish --access public --tag latest
 
-  publish:
-    name: Publish Release
-    needs: [release, build, npm-publish]
-    runs-on: ubuntu-latest
-    permissions:
-      contents: write
-
-    steps:
-      - name: Download release assets
-        uses: actions/download-artifact@v4
-        with:
-          name: release-assets
-          path: release
-
       - name: Create GitHub Release
         uses: softprops/action-gh-release@v2
         with:
-          tag_name: v${{ needs.release.outputs.version }}
-          name: patchy v${{ needs.release.outputs.version }}
+          tag_name: v${{ needs.create-release-pr.outputs.version }}
+          name: patchy v${{ needs.create-release-pr.outputs.version }}
           body: |
-            ## patchy v${{ needs.release.outputs.version }}
+            ## patchy v${{ needs.create-release-pr.outputs.version }}
 
             See [CHANGELOG](https://github.com/richardgill/patchy/blob/main/CHANGELOG.md) for details.
 
@@ -187,6 +211,6 @@ jobs:
             release/patchy-windows-x64.zip
             release/checksums.txt
           draft: false
-          prerelease: ${{ contains(needs.release.outputs.version, '-') }}
+          prerelease: ${{ contains(needs.create-release-pr.outputs.version, '-') }}
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
