@@ -26,6 +26,13 @@
         "lefthook": "^1.12.2",
         "typescript": "^5.9.2",
       },
+      "optionalDependencies": {
+        "patchy-cli-darwin-arm64": "0.0.2",
+        "patchy-cli-darwin-x64": "0.0.2",
+        "patchy-cli-linux-arm64": "0.0.2",
+        "patchy-cli-linux-x64": "0.0.2",
+        "patchy-cli-windows-x64": "0.0.2",
+      },
       "peerDependencies": {
         "typescript": ">=5.0.4",
       },
@@ -284,6 +291,16 @@
     "p-try": ["p-try@2.2.0", "", {}, "sha512-R4nPAVTAU0B9D35/Gk3uJf/7XYbQcyohSKdvAxIRSNghFl4e71hVoGnBNQz9cWaXxO2I10KTC+3jMdvvoKw6dQ=="],
 
     "package-manager-detector": ["package-manager-detector@0.2.11", "", { "dependencies": { "quansync": "^0.2.7" } }, "sha512-BEnLolu+yuz22S56CU1SUKq3XC3PkwD5wv4ikR4MfGvnRVcmzXR9DwSlW2fEamyTPyXHomBJRzgapeuBvRNzJQ=="],
+
+    "patchy-cli-darwin-arm64": ["patchy-cli-darwin-arm64@0.0.2", "", { "os": "darwin", "cpu": "arm64" }, "sha512-Hmr3fxreY41AV1I4Wh5M2TMJkTtuh9A9T1npIYdJSF6A6cvYoQxoAdIyuPa/xH9j2DPprWxAclJMjcNqQ91fZQ=="],
+
+    "patchy-cli-darwin-x64": ["patchy-cli-darwin-x64@0.0.2", "", { "os": "darwin", "cpu": "x64" }, "sha512-mXMsPnRpXcWe1+h0puiF1xfF1xoicnWWP9B39JeVobsc4Dwc+ge7cP271q71LyWD6MNsE1Fbw4ctXOMPoNC7+w=="],
+
+    "patchy-cli-linux-arm64": ["patchy-cli-linux-arm64@0.0.2", "", { "os": "linux", "cpu": "arm64" }, "sha512-W569+6351XeL4jAFtgoJGlJyP9bIELtUHQq9cX85lgPnwS6JdVWfkiEjzH6CbDEE50QTzX/GHaa9qlUuyYUMfA=="],
+
+    "patchy-cli-linux-x64": ["patchy-cli-linux-x64@0.0.2", "", { "os": "linux", "cpu": "x64" }, "sha512-swiGUsBd7RVNw77imTK52JGuiPHJAMuLj4yr33cd0JCXAZw36uprq/9oyeb+uwVjMjlJFF3hDkHDiwPTfW3jeg=="],
+
+    "patchy-cli-windows-x64": ["patchy-cli-windows-x64@0.0.2", "", { "os": "win32", "cpu": "x64" }, "sha512-vnXwBt5h114DHweG37mU71Gjyw2ye0gh5E1J6LeITTY3D0SxgmHTQmU/7Xzz9AvpGXpRkwu2qpk7WkA6jHLJZQ=="],
 
     "path-exists": ["path-exists@4.0.0", "", {}, "sha512-ak9Qy5Q7jYb2Wwcey5Fpvg2KoAc/ZIhLSLOSBmRmygPsGwkVVt0fZa0qrtMz+m6tJTAHfZQ8FnmB4MG4LWy7/w=="],
 
