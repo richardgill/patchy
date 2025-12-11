@@ -35,7 +35,11 @@ my-patch-repo/
 ```
 
 
-Generate patch files `patchy generate --repo-dir ~/my-repo`
+Generate patch files 
+
+```bash
+patchy generate --repo-dir ~/my-repo
+```
 
 ```
 my-patch-repo/
@@ -45,7 +49,12 @@ my-patch-repo/
 └── patchy.json
 ```
 
-Run `patchy apply --repo-dir ~/my-repo-2`
+Apply the patches to the repo
+
+```bash
+patchy apply --repo-dir ~/my-repo-2
+```
+
 ```
 ~/my-repo-2/
 ├── path/in/repo/newFile.txt           # copied from patches/
