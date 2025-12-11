@@ -1,5 +1,4 @@
-import type { MarkOptional } from "ts-essentials";
-import type { SnakeToCamel } from "~/types/utils";
+import type { CamelCase, MarkOptional } from "ts-essentials";
 
 // CONFIG_FIELD_METADATA is the single source of truth for config field definitions
 export const CONFIG_FIELD_METADATA = {
@@ -180,7 +179,7 @@ export type MergedConfig = MarkOptional<
 >;
 
 export type CamelCaseResolvedConfig = {
-  [K in JsonKey as SnakeToCamel<K>]: CompleteJsonConfig[K];
+  [K in JsonKey as CamelCase<K>]: CompleteJsonConfig[K];
 };
 
 export type PartialResolvedConfig = Partial<ResolvedConfig>;

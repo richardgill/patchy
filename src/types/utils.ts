@@ -1,8 +1,3 @@
-/** Converts snake_case string literal type to camelCase */
-export type SnakeToCamel<S extends string> = S extends `${infer H}_${infer T}`
-  ? `${H}${Capitalize<SnakeToCamel<T>>}`
-  : S;
-
 /** Infer the parsed value type from a stricli flag definition */
 type InferFlagValue<F> = F extends { kind: "boolean" }
   ? boolean
