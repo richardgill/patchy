@@ -5,6 +5,11 @@ An opinionated command-line tool for managing Git patch workflows.
 ## How it works
 
 Clone a repo you want to apply patches to
+
+```bash
+git clone https://github.com/example/my-repo.git ~/my-repo
+```
+
 ```
 ~/my-repo/
 └── path/in/repo/existingFile.txt
