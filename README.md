@@ -2,52 +2,25 @@
 
 An opinionated command-line tool for managing Git patch workflows.
 
-1. Clone repo → `~/target-repo-1`
-2. Make some edits (the patches!)
-3. `patchy generate --repo ~/target-repo-1` → `patches/*.diff`
-
-Then later reapply your changes at any time:
-
-4. `patchy apply --repo ~/target-repo-1` → `~/target-repo-2` (edits applied)
-
 ## How it works
 
+1. Clone repo → `~/target-1`
+2. Make some edits (the patches!)
+3. Create a repo for your patches -> `~/my-patches`
+3. `patchy generate --repo ~/target-1` → Creates `~/my-patches/patches/*.diff`
 
-Clone a repo you want to apply patches to
+Then reapply your changes later with:
 
-```bash
-git clone https://github.com/example/my-repo.git ~/my-repo
+4. `patchy apply --repo ~/target-1` → `~/target-1` (patches applied)
+
+
+### Patches file structure
+
+Patch files are stored in the same folder structure as the target repo:
+
 ```
-
-```
-~/my-repo/
+~/target-1/
 └── path/in/repo/existingFile.txt
-```
-Make patch changes to the repo:
-
-```
-~/my-repo/
-├── path/in/repo/existingFile.txt      # modify this file
-└── path/in/repo/newFile.txt           # create a new file
-```
-
-Set up a repo which contains your patches
-
-```bash
-cd my-patch-repo && patchy init
-```
-
-```
-my-patch-repo/
-├── patches/
-├── patchy.json
-```
-
-
-Generate patch files 
-
-```bash
-patchy generate --repo-dir ~/my-repo
 ```
 
 ```
@@ -58,17 +31,9 @@ my-patch-repo/
 └── patchy.json
 ```
 
-Apply the patches to the repo
+Edits to files are stored as `.diff` files e.g. `existingFile.txt.diff`.
 
-```bash
-patchy apply --repo-dir ~/my-repo-2
-```
-
-```
-~/my-repo-2/
-├── path/in/repo/newFile.txt           # copied from patches/
-└── path/in/repo/existingFile.txt      # patched file
-```
+New files are stored as regular files e.g. `newFile.txt`. 
 
 ## Installation
 
