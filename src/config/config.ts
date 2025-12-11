@@ -50,6 +50,7 @@ export const CONFIG_FIELD_METADATA = {
     type: "string",
     name: "Patches directory",
     example: "./patches",
+    defaultValue: "./patches/",
     stricliFlag: {
       "patches-dir": {
         kind: "parsed",
@@ -64,6 +65,7 @@ export const CONFIG_FIELD_METADATA = {
     type: "string",
     name: "Git reference",
     example: "main",
+    defaultValue: "main",
     stricliFlag: {
       ref: {
         kind: "parsed",
@@ -78,6 +80,7 @@ export const CONFIG_FIELD_METADATA = {
     type: "boolean",
     name: "Verbose output",
     example: "true",
+    defaultValue: false,
     stricliFlag: {
       verbose: {
         kind: "boolean",
@@ -91,6 +94,7 @@ export const CONFIG_FIELD_METADATA = {
     type: "boolean",
     name: "Dry run mode",
     example: "true",
+    defaultValue: false,
     stricliFlag: {
       "dry-run": {
         kind: "boolean",
@@ -150,6 +154,21 @@ type ConfigFlagName = keyof (typeof CONFIG_FLAG_METADATA)["stricliFlag"];
 export const getFlagName = <K extends JsonConfigKey>(jsonKey: K): FlagName => {
   const metadata = CONFIG_FIELD_METADATA[jsonKey];
   return Object.keys(metadata.stricliFlag)[0] as FlagName;
+};
+
+// Keys that have default values defined
+type KeysWithDefaults = {
+  [K in JsonConfigKey]: "defaultValue" extends keyof (typeof CONFIG_FIELD_METADATA)[K]
+    ? K
+    : never;
+}[JsonConfigKey];
+
+// Helper to get the default value for a JSON key (only for keys with defaults)
+export const getDefaultValue = <K extends KeysWithDefaults>(
+  jsonKey: K,
+): TypeMap[(typeof CONFIG_FIELD_METADATA)[K]["type"]] => {
+  const metadata = CONFIG_FIELD_METADATA[jsonKey];
+  return metadata.defaultValue as TypeMap[(typeof CONFIG_FIELD_METADATA)[K]["type"]];
 };
 
 export type SharedFlags = {

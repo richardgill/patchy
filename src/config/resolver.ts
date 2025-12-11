@@ -8,16 +8,13 @@ import { formatZodErrorHuman } from "~/lib/zod";
 import {
   CONFIG_FIELD_METADATA,
   CONFIG_FLAG_METADATA,
+  getDefaultValue,
   getFlagName,
   type JsonConfigKey,
   type MergedConfig,
   type SharedFlags,
 } from "./config";
-import {
-  DEFAULT_CONFIG_PATH,
-  DEFAULT_PATCHES_DIR,
-  DEFAULT_REF,
-} from "./defaults";
+import { DEFAULT_CONFIG_PATH } from "./defaults";
 import type { JsonConfig } from "./schemas";
 import { jsonConfigSchema } from "./schemas";
 
@@ -159,10 +156,10 @@ export const createMergedConfig = ({
   const repoBaseDir = getValueByKey("repo_base_dir", sources);
   const repoDir = getValueByKey("repo_dir", sources);
   const patchesDir =
-    getValueByKey("patches_dir", sources) ?? DEFAULT_PATCHES_DIR;
+    getValueByKey("patches_dir", sources) ?? getDefaultValue("patches_dir");
   const mergedConfig: MergedConfig = {
     repo_url: getValueByKey("repo_url", sources),
-    ref: getValueByKey("ref", sources) ?? DEFAULT_REF,
+    ref: getValueByKey("ref", sources) ?? getDefaultValue("ref"),
     repo_base_dir: repoBaseDir,
     absoluteRepoBaseDir: repoBaseDir ? resolve(cwd, repoBaseDir) : undefined,
     repo_dir: repoDir,
@@ -172,8 +169,8 @@ export const createMergedConfig = ({
         : undefined,
     patches_dir: patchesDir,
     absolutePatchesDir: patchesDir ? resolve(cwd, patchesDir) : undefined,
-    verbose: getValueByKey("verbose", sources) ?? false,
-    dry_run: getValueByKey("dry_run", sources) ?? false,
+    verbose: getValueByKey("verbose", sources) ?? getDefaultValue("verbose"),
+    dry_run: getValueByKey("dry_run", sources) ?? getDefaultValue("dry_run"),
   };
 
   onConfigMerged(mergedConfig);
