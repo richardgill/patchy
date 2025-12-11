@@ -6,12 +6,12 @@ An opinionated command-line tool for managing Git patch workflows.
 
 1. Clone repo → `~/target-1`
 2. Make some edits (the patches!)
-3. Create a repo for your patches -> `~/my-patches`
+3. Create a repo for your patches → `~/my-patches`
 3. `patchy generate --repo ~/target-1` → Creates `~/my-patches/patches/*.diff`
 
 Then reapply your changes later with:
 
-4. `patchy apply --repo ~/target-1` → `~/target-1` (patches applied)
+5. `patchy apply --repo ~/target-1` → `~/target-1` (patches applied)
 
 
 ### Patches file structure
