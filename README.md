@@ -48,7 +48,7 @@ Or via npm:
 npm install -g patchy-cli
 ```
 
-### Initialize patches
+### Initialize patchy
 
 Run this command to initialize patchy in your project:
 
