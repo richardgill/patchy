@@ -14,7 +14,7 @@ Then reapply your changes later with:
 5. `patchy apply --repo ~/target-1` → `~/target-1` (patches applied)
 
 
-### Patches file structure
+### `patches/` folder structure
 
 Patch files are stored in the same folder structure as the target repo:
 
