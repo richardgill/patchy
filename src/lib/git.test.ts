@@ -1,5 +1,5 @@
 import { describe, expect, it } from "bun:test";
-import { extractRepoName } from "~/lib/git";
+import { extractRepoName } from "./git";
 
 describe("extractRepoName", () => {
   const cases: { url: string; expected: string | undefined }[] = [

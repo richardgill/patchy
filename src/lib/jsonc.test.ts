@@ -1,5 +1,5 @@
 import { describe, expect, it } from "bun:test";
-import { parseJsonc } from "~/lib/jsonc";
+import { parseJsonc } from "./jsonc";
 
 describe("parseJsonc", () => {
   it("should parse valid JSON successfully", () => {
