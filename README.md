@@ -2,16 +2,10 @@
 
 An opinionated command-line tool for managing Git patch workflows.
 
-```
-Target Repo: ~/target-repo-1
-Patches Repo: ~/my-patches
-```
-
-```
-Make edits directly:  ~/target-repo-1
-Generate patches:     patchy generate --repo ~/target-repo-1  ──▶  ~/my-patches/patches/*.diff
-Apply patches:        patchy apply --repo ~/target-repo-2     ──▶  ~/target-repo-2 (diffs applied)
-```
+1. Clone repo → `~/target-repo-1`
+2. Make edits
+3. `patchy generate` → `patches/*.diff`
+4. `patchy apply` → `~/target-repo-2` (edits applied)
 
 ## How it works
 
