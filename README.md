@@ -49,7 +49,7 @@ npm install -g patchy-cli
 
 ## Initialize patches
 
-Run this command to initialize a new patch project:
+Run this command to initialize patchy in your project:
 
 ```sh
 patchy init
