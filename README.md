@@ -7,8 +7,6 @@ Target Repo: ~/target-repo-1
 Patches Repo: ~/my-patches
 ```
 
-Make edits directly to your target repo, use `patchy generate` to export edits as patches, then `patchy apply` to restore those edits on a fresh clone.
-
 ```
 Make edits directly:  ~/target-repo-1
 Generate patches:     patchy generate --repo ~/target-repo-1  ──▶  ~/my-patches/patches/*.diff
