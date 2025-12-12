@@ -2,7 +2,7 @@ import { describe, expect, it } from "bun:test";
 import { mkdtempSync, readFileSync, rmSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
-import { stabilizeTempDir, writeTestConfig } from "./test-utils";
+import { stabilizeTempDir, writeTestConfig } from "~/testing/test-utils";
 
 describe("test-utils", () => {
   describe("writeTestConfig", () => {

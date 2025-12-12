@@ -2,13 +2,13 @@ import { beforeEach, describe, expect, it } from "bun:test";
 import { existsSync, readFileSync } from "node:fs";
 import path from "node:path";
 import { assertDefined } from "~/lib/assert";
-import { initGitRepoWithCommit, writeRepoFile } from "./git-helpers";
+import { initGitRepoWithCommit, writeRepoFile } from "~/testing/git-helpers";
 import {
   generateTmpDir,
   runCli,
   setupTestWithConfig,
   stabilizeTempDir,
-} from "./test-utils";
+} from "~/testing/test-utils";
 
 describe("patchy generate", () => {
   let tmpDir: string;

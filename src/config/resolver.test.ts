@@ -6,7 +6,7 @@ import {
   getStabilizedJson,
   setupTestWithConfig,
   stabilizeTempDir,
-} from "~/e2e/test-utils";
+} from "~/testing/test-utils";
 import type {
   EnrichedMergedConfig,
   JsonConfigKey,
