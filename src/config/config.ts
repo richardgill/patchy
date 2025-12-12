@@ -4,6 +4,7 @@ import type { CamelCase, MarkOptional } from "ts-essentials";
 export const FLAG_METADATA = {
   repo_url: {
     configField: true,
+    optional: true,
     env: "PATCHY_REPO_URL",
     type: "string",
     name: "Repository URL",
@@ -19,6 +20,7 @@ export const FLAG_METADATA = {
   },
   repo_dir: {
     configField: true,
+    optional: true,
     env: "PATCHY_REPO_DIR",
     type: "string",
     name: "Repository directory",
@@ -34,6 +36,7 @@ export const FLAG_METADATA = {
   },
   repo_base_dir: {
     configField: true,
+    optional: true,
     env: "PATCHY_REPO_BASE_DIR",
     type: "string",
     name: "Repository base directory",
@@ -126,7 +129,6 @@ export const FLAG_METADATA = {
   },
 } as const;
 
-// Derived types
 export type FlagKey = keyof typeof FLAG_METADATA;
 
 // JSON config keys (configField: true)
@@ -209,10 +211,17 @@ export type CompleteJsonConfig = {
   [K in JsonConfigKey]: TypeMap[(typeof FLAG_METADATA)[K]["type"]];
 };
 
+// Config keys marked as optional in FLAG_METADATA
+type OptionalConfigKeys = {
+  [K in JsonConfigKey]: (typeof FLAG_METADATA)[K] extends { optional: true }
+    ? K
+    : never;
+}[JsonConfigKey];
+
 // Merged config includes JSON config + runtime flags
 export type MergedConfig = MarkOptional<
   CompleteJsonConfig,
-  "repo_url" | "repo_dir" | "repo_base_dir"
+  OptionalConfigKeys
 > & {
   [K in RuntimeFlagKeys]: TypeMap[(typeof FLAG_METADATA)[K]["type"]];
 };
