@@ -1,5 +1,5 @@
 import { expect } from "bun:test";
-import type { CLIResult } from "./test-utils";
+import type { CLIResult } from "~/testing/test-utils";
 
 export const cliMatchers = {
   toSucceed(expected: unknown) {

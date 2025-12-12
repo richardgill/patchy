@@ -7,13 +7,13 @@ import {
   getCurrentBranch,
   getCurrentCommit,
   initGitRepoWithCommit,
-} from "./git-helpers";
+} from "~/testing/git-helpers";
 import {
   generateTmpDir,
   runCli,
   setupTestWithConfig,
   stabilizeTempDir,
-} from "./test-utils";
+} from "~/testing/test-utils";
 
 describe("patchy repo checkout", () => {
   let tmpDir: string;

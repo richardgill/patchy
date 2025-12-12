@@ -1,13 +1,13 @@
 import { beforeEach, describe, expect, it } from "bun:test";
 import { existsSync, readFileSync } from "node:fs";
 import { join } from "node:path";
-import { getSchemaUrl } from "~/version";
 import {
   generateTmpDir,
   runCli,
   setupTestWithConfig,
   stabilizeTempDir,
-} from "./test-utils";
+} from "~/testing/test-utils";
+import { getSchemaUrl } from "~/version";
 
 describe("patchy init", () => {
   let tmpDir: string;
