@@ -6,7 +6,7 @@ import {
   runCli,
   setupTestWithConfig,
   stabilizeTempDir,
-} from "./test-utils";
+} from "~/testing/test-utils";
 
 describe("patchy apply", () => {
   let tmpDir: string;

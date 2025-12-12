@@ -2,13 +2,17 @@ import { beforeEach, describe, expect, it } from "bun:test";
 import { readFileSync } from "node:fs";
 import { join } from "node:path";
 import { assertDefined } from "~/lib/assert";
-import { commitFile, initGitRepo, writeRepoFileAsync } from "./git-helpers";
+import {
+  commitFile,
+  initGitRepo,
+  writeRepoFileAsync,
+} from "~/testing/git-helpers";
 import {
   generateTmpDir,
   runCli,
   setupTestWithConfig,
   stabilizeTempDir,
-} from "./test-utils";
+} from "~/testing/test-utils";
 
 describe("patchy repo reset", () => {
   let tmpDir: string;
