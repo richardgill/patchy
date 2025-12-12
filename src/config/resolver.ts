@@ -197,10 +197,7 @@ const createMergedConfig = ({
 
   // Add runtime-only flags
   const runtimeFlags = Object.fromEntries(
-    RUNTIME_FLAG_KEYS.filter((key) => key !== "config").map((key) => [
-      key,
-      getRuntimeFlagValue(key, flags, env),
-    ]),
+    RUNTIME_FLAG_KEYS.map((key) => [key, getRuntimeFlagValue(key, flags, env)]),
   );
 
   const mergedConfig: MergedConfig = {

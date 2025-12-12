@@ -1,4 +1,4 @@
-import type { CamelCase, MarkOptional } from "ts-essentials";
+import type { CamelCase } from "ts-essentials";
 
 // Stricli flag types
 type StricliFlagParsed = {
@@ -22,8 +22,8 @@ type BaseFlagMetadataEntry = {
   type: "string" | "boolean";
   name: string;
   stricliFlag: Record<string, StricliFlag>;
-  example?: string;
-  defaultValue?: string | boolean;
+  example: string;
+  defaultValue: string | boolean | undefined;
 };
 
 // Entry for flags that appear in the config file
@@ -50,6 +50,7 @@ export const FLAG_METADATA = {
     type: "string",
     name: "Repository URL",
     example: "https://github.com/user/repo.git",
+    defaultValue: undefined,
     stricliFlag: {
       "repo-url": {
         kind: "parsed",
@@ -66,6 +67,7 @@ export const FLAG_METADATA = {
     type: "string",
     name: "Repository directory",
     example: "./repo",
+    defaultValue: undefined,
     stricliFlag: {
       "repo-dir": {
         kind: "parsed",
@@ -82,6 +84,7 @@ export const FLAG_METADATA = {
     type: "string",
     name: "Repository base directory",
     example: "./upstream",
+    defaultValue: undefined,
     stricliFlag: {
       "repo-base-dir": {
         kind: "parsed",
@@ -147,6 +150,7 @@ export const FLAG_METADATA = {
     env: "PATCHY_DRY_RUN",
     type: "boolean",
     name: "Dry run mode",
+    example: "true/false",
     defaultValue: false,
     stricliFlag: {
       "dry-run": {
@@ -162,6 +166,8 @@ export const FLAG_METADATA = {
     env: "PATCHY_CONFIG",
     type: "string",
     name: "Config file path",
+    example: "./patches/",
+    defaultValue: "./patches/",
     stricliFlag: {
       config: {
         kind: "parsed",
@@ -255,21 +261,11 @@ export type CompleteJsonConfig = {
   [K in JsonConfigKey]: TypeMap[(typeof FLAG_METADATA)[K]["type"]];
 };
 
-// Config keys NOT marked as requiredInConfig in FLAG_METADATA
-type OptionalConfigKeys = {
-  [K in JsonConfigKey]: (typeof FLAG_METADATA)[K] extends {
-    requiredInConfig: true;
-  }
-    ? never
-    : K;
-}[JsonConfigKey];
-
 // Merged config includes JSON config + runtime flags
-export type MergedConfig = MarkOptional<
-  CompleteJsonConfig,
-  OptionalConfigKeys
-> & {
-  [K in RuntimeFlagKeys]: TypeMap[(typeof FLAG_METADATA)[K]["type"]];
+export type MergedConfig = {
+  [K in FlagKey]: (typeof FLAG_METADATA)[K]["defaultValue"] extends undefined
+    ? TypeMap[(typeof FLAG_METADATA)[K]["type"]] | undefined
+    : TypeMap[(typeof FLAG_METADATA)[K]["type"]];
 };
 
 export type EnrichedMergedConfig = MergedConfig & {

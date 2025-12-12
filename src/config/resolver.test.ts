@@ -89,6 +89,7 @@ describe("createEnrichedMergedConfig", () => {
         "ref": "main",
         "verbose": true,
         "dry_run": true,
+        "config": "./patches/",
         "absoluteRepoBaseDir": "<TEST_DIR>/repoBaseDir1",
         "absoluteRepoDir": "<TEST_DIR>/repoBaseDir1/repoDir1",
         "absolutePatchesDir": "<TEST_DIR>/patches"
@@ -177,6 +178,7 @@ describe("createEnrichedMergedConfig", () => {
         "ref": "main",
         "verbose": false,
         "dry_run": false,
+        "config": "./patches/",
         "absoluteRepoBaseDir": "<TEST_DIR>/repoBaseDir1",
         "absoluteRepoDir": "<TEST_DIR>/repoBaseDir1/repoDir1",
         "absolutePatchesDir": "<TEST_DIR>/patches"
@@ -318,6 +320,7 @@ describe("createEnrichedMergedConfig", () => {
         "ref": "flag-ref",
         "verbose": true,
         "dry_run": false,
+        "config": "./patches/",
         "absoluteRepoBaseDir": "<TEST_DIR>/flag-base",
         "absoluteRepoDir": "<TEST_DIR>/flag-base/flag-repo",
         "absolutePatchesDir": "<TEST_DIR>/flag-patches"
@@ -367,6 +370,7 @@ describe("createEnrichedMergedConfig", () => {
         "ref": "main",
         "verbose": false,
         "dry_run": false,
+        "config": "./patches/",
         "absoluteRepoBaseDir": "<TEST_DIR>/base",
         "absoluteRepoDir": "<TEST_DIR>/base/repo",
         "absolutePatchesDir": "<TEST_DIR>/patches"
@@ -401,6 +405,7 @@ describe("createEnrichedMergedConfig", () => {
         "ref": "main",
         "verbose": false,
         "dry_run": false,
+        "config": "<TEST_DIR>/empty.json",
         "absolutePatchesDir": "<TEST_DIR>/patches"
       }"
     `,
@@ -508,6 +513,7 @@ describe("createEnrichedMergedConfig", () => {
         "ref": "main",
         "verbose": true,
         "dry_run": true,
+        "config": "./patches/",
         "absoluteRepoBaseDir": "<TEST_DIR>/base",
         "absoluteRepoDir": "<TEST_DIR>/base/repo",
         "absolutePatchesDir": "<TEST_DIR>/patches"
@@ -554,6 +560,7 @@ describe("createEnrichedMergedConfig", () => {
         "ref": "main",
         "verbose": false,
         "dry_run": false,
+        "config": "./patches/",
         "absoluteRepoBaseDir": "<TEST_DIR>/my-base/nested",
         "absoluteRepoDir": "<TEST_DIR>/my-base/nested/my-repo/nested-repo",
         "absolutePatchesDir": "<TEST_DIR>/patches"
@@ -621,6 +628,7 @@ describe("createEnrichedMergedConfig", () => {
         "ref": "custom-branch",
         "verbose": false,
         "dry_run": false,
+        "config": "<TEST_DIR>/custom/config.json",
         "absoluteRepoBaseDir": "<TEST_DIR>/base",
         "absoluteRepoDir": "<TEST_DIR>/base/repo",
         "absolutePatchesDir": "<TEST_DIR>/patches"
@@ -670,6 +678,7 @@ describe("createEnrichedMergedConfig", () => {
         "ref": "main",
         "verbose": false,
         "dry_run": false,
+        "config": "./patches/",
         "absoluteRepoBaseDir": "<TEST_DIR>/subdir/base",
         "absoluteRepoDir": "<TEST_DIR>/subdir/base/repo",
         "absolutePatchesDir": "<TEST_DIR>/subdir/patches"
@@ -718,6 +727,7 @@ describe("createEnrichedMergedConfig", () => {
         "ref": "main",
         "verbose": false,
         "dry_run": false,
+        "config": "./patches/",
         "absoluteRepoBaseDir": "<TEST_DIR>/base",
         "absoluteRepoDir": "<TEST_DIR>/base/repo",
         "absolutePatchesDir": "<TEST_DIR>/patches"
@@ -1055,6 +1065,7 @@ describe("createEnrichedMergedConfig", () => {
         "ref": "env-branch",
         "verbose": true,
         "dry_run": true,
+        "config": "./patches/",
         "absoluteRepoBaseDir": "<TEST_DIR>/env-base",
         "absoluteRepoDir": "<TEST_DIR>/env-base/env-repo",
         "absolutePatchesDir": "<TEST_DIR>/env-patches"
@@ -1117,6 +1128,7 @@ describe("createEnrichedMergedConfig", () => {
         "ref": "flag-ref",
         "verbose": true,
         "dry_run": true,
+        "config": "./patches/",
         "absoluteRepoBaseDir": "<TEST_DIR>/flag-base",
         "absoluteRepoDir": "<TEST_DIR>/flag-base/flag-repo",
         "absolutePatchesDir": "<TEST_DIR>/flag-patches"
@@ -1177,6 +1189,7 @@ describe("createEnrichedMergedConfig", () => {
         "ref": "env-branch",
         "verbose": true,
         "dry_run": false,
+        "config": "./patches/",
         "absoluteRepoBaseDir": "<TEST_DIR>/env-base",
         "absoluteRepoDir": "<TEST_DIR>/env-base/env-repo",
         "absolutePatchesDir": "<TEST_DIR>/env-patches"
@@ -1241,6 +1254,7 @@ describe("createEnrichedMergedConfig", () => {
         "ref": "env-config-branch",
         "verbose": false,
         "dry_run": false,
+        "config": "<TEST_DIR>/custom-env/env-config.json",
         "absoluteRepoBaseDir": "<TEST_DIR>/base",
         "absoluteRepoDir": "<TEST_DIR>/base/repo",
         "absolutePatchesDir": "<TEST_DIR>/patches"
