@@ -44,22 +44,6 @@ export const cliMatchers = {
     };
   },
 
-  toHaveError(expected: unknown, matchValue: string | RegExp) {
-    const result = expected as CLIResult;
-    const matches =
-      typeof matchValue === "string"
-        ? result.stderr.includes(matchValue)
-        : matchValue.test(result.stderr);
-
-    return {
-      pass: matches,
-      message: () =>
-        matches
-          ? `Expected stderr NOT to contain ${matchValue}\nActual stderr: ${result.stderr}`
-          : `Expected stderr to contain ${matchValue}\nActual stderr: ${result.stderr}`,
-    };
-  },
-
   toFailWith(expected: unknown, matchValue: string | RegExp) {
     const result = expected as CLIResult;
     const failed = result.exitCode !== 0;
@@ -93,7 +77,6 @@ declare module "bun:test" {
     toSucceed(): void;
     toFail(): void;
     toHaveOutput(expected: string | RegExp): void;
-    toHaveError(expected: string | RegExp): void;
     toFailWith(expected: string | RegExp): void;
   }
 }

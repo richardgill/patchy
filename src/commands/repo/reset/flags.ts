@@ -1,5 +1,5 @@
 import { FLAG_METADATA } from "~/cli-fields";
-import { COMMAND_FLAGS } from "~/lib/flags";
+
 import type { ParsedFlags } from "~/types/utils";
 
 export const resetFlags = {
@@ -8,7 +8,11 @@ export const resetFlags = {
   ...FLAG_METADATA.config.stricliFlag,
   ...FLAG_METADATA.verbose.stricliFlag,
   ...FLAG_METADATA.dry_run.stricliFlag,
-  ...COMMAND_FLAGS.yes.stricliFlag,
+  yes: {
+    kind: "boolean",
+    brief: "Skip confirmation prompts",
+    optional: true,
+  },
 } as const;
 
 export type ResetFlags = ParsedFlags<typeof resetFlags>;

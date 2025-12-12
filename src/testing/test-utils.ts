@@ -5,14 +5,6 @@ import { run } from "@stricli/core";
 import { app } from "~/app";
 import type { LocalContext } from "~/context";
 
-type TestDirContext = {
-  testDir: string;
-  originalCwd: string;
-  absolutePatchesDir: string | undefined;
-  absoluteRepoBaseDir: string | undefined;
-  absoluteRepoDir: string | undefined;
-};
-
 export type CLIResult = {
   stdout: string;
   stderr: string;
@@ -22,6 +14,7 @@ export type CLIResult = {
   cwd: string;
 };
 
+// This helper can run cli commands in-process which is much faster than spinning up a new runtime for each test
 export const runCli = async (
   command: string,
   cwd: string,
@@ -83,15 +76,18 @@ export const writeTestConfig = async (
   await writeFile(configPath, jsonContent);
 };
 
+export const generateTmpDir = (): string => {
+  const testId = randomUUID();
+  return join(process.cwd(), "e2e/tmp", `test-${testId}`);
+};
+
+// Replace paths up to and including tmp/test-UUID directory with <TEST_DIR>
+// e.g. "/home/user/project/e2e/tmp/test-abc123/repos" → "<TEST_DIR>/repos"
 export const stabilizeTempDir = (
-  output: string | undefined,
+  str: string | undefined,
 ): string | undefined => {
-  if (!output) return output;
-  // Replace paths up to and including tmp/test-UUID directory with <TEST_DIR>
-  return output.replace(
-    /\/[^\s]*\/(?:e2e\/)?tmp\/test-[a-f0-9-]+/g,
-    "<TEST_DIR>",
-  );
+  if (!str) return str;
+  return str.replace(/\/[^\s]*\/(?:e2e\/)?tmp\/test-[a-f0-9-]+/g, "<TEST_DIR>");
 };
 
 // biome-ignore lint/suspicious/noExplicitAny: Generic utility function needs to accept any JSON-serializable value
@@ -99,9 +95,12 @@ export const getStabilizedJson = (value: any): string | undefined => {
   return stabilizeTempDir(JSON.stringify(value, null, 2));
 };
 
-export const generateTmpDir = (): string => {
-  const testId = randomUUID();
-  return join(process.cwd(), "e2e/tmp", `test-${testId}`);
+type TestDirContext = {
+  testDir: string;
+  originalCwd: string;
+  absolutePatchesDir: string | undefined;
+  absoluteRepoBaseDir: string | undefined;
+  absoluteRepoDir: string | undefined;
 };
 
 const createTestDirStructure = async (

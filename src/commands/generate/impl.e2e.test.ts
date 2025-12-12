@@ -39,7 +39,7 @@ describe("patchy generate", () => {
     );
 
     await initGitRepoWithCommit(repoDir);
-    writeRepoFile(repoDir, "initial.txt", "modified content\n");
+    await writeRepoFile(repoDir, "initial.txt", "modified content\n");
 
     const result = await runCli(`patchy generate`, tmpDir);
 
@@ -80,7 +80,7 @@ describe("patchy generate", () => {
     );
 
     await initGitRepoWithCommit(repoDir);
-    writeRepoFile(repoDir, "newfile.txt", "new file content\n");
+    await writeRepoFile(repoDir, "newfile.txt", "new file content\n");
 
     const result = await runCli(`patchy generate`, tmpDir);
 
@@ -116,7 +116,7 @@ describe("patchy generate", () => {
     );
 
     await initGitRepoWithCommit(repoDir);
-    writeRepoFile(
+    await writeRepoFile(
       repoDir,
       "src/components/Button.tsx",
       "export const Button = () => <button />\n",
@@ -151,8 +151,8 @@ describe("patchy generate", () => {
     const repoDir = assertDefined(ctx.absoluteRepoDir, "absoluteRepoDir");
 
     await initGitRepoWithCommit(repoDir);
-    writeRepoFile(repoDir, "initial.txt", "modified content\n");
-    writeRepoFile(repoDir, "newfile.txt", "new file content\n");
+    await writeRepoFile(repoDir, "initial.txt", "modified content\n");
+    await writeRepoFile(repoDir, "newfile.txt", "new file content\n");
 
     const result = await runCli(`patchy generate`, tmpDir);
 
@@ -184,8 +184,8 @@ describe("patchy generate", () => {
     );
 
     await initGitRepoWithCommit(repoDir);
-    writeRepoFile(repoDir, "initial.txt", "modified content\n");
-    writeRepoFile(repoDir, "newfile.txt", "new file content\n");
+    await writeRepoFile(repoDir, "initial.txt", "modified content\n");
+    await writeRepoFile(repoDir, "newfile.txt", "new file content\n");
 
     const result = await runCli(`patchy generate --dry-run`, tmpDir);
 
@@ -292,7 +292,7 @@ describe("patchy generate", () => {
     const repoDir = assertDefined(ctx.absoluteRepoDir, "absoluteRepoDir");
 
     await initGitRepoWithCommit(repoDir);
-    writeRepoFile(repoDir, "initial.txt", "modified content\n");
+    await writeRepoFile(repoDir, "initial.txt", "modified content\n");
 
     const result = await runCli(`patchy generate`, tmpDir);
 
@@ -322,7 +322,7 @@ describe("patchy generate", () => {
     const repoDir = assertDefined(ctx.absoluteRepoDir, "absoluteRepoDir");
 
     await initGitRepoWithCommit(repoDir);
-    writeRepoFile(repoDir, "initial.txt", "modified content\n");
+    await writeRepoFile(repoDir, "initial.txt", "modified content\n");
 
     const result = await runCli(`patchy generate --verbose`, tmpDir);
 
