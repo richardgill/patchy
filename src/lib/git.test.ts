@@ -2,7 +2,7 @@ import { describe, expect, it } from "bun:test";
 import { extractRepoName } from "./git";
 
 describe("extractRepoName", () => {
-  const cases: { url: string; expected: string | undefined }[] = [
+  const testCases: { url: string; expected: string | undefined }[] = [
     { url: "https://github.com/user/repo.git", expected: "repo" },
     { url: "https://github.com/user/repo", expected: "repo" },
     { url: "https://github.com/org/my-repo.git", expected: "my-repo" },
@@ -17,7 +17,7 @@ describe("extractRepoName", () => {
     { url: "invalid", expected: undefined },
   ];
 
-  cases.forEach(({ url, expected }) => {
+  testCases.forEach(({ url, expected }) => {
     it(`extracts "${expected}" from "${url}"`, () => {
       expect(extractRepoName(url)).toBe(expected);
     });
