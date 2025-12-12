@@ -1,7 +1,7 @@
 #!/usr/bin/env bun
 
 import { z } from "zod";
-import { jsonConfigSchema } from "../src/config/schemas";
+import { jsonConfigSchema } from "../src/cli-fields";
 
 export const SCHEMA_FILENAME = "patchy.schema.json";
 

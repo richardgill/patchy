@@ -1,115 +1,27 @@
 import { existsSync, readFileSync } from "node:fs";
-import path, { resolve } from "node:path";
+import { join, resolve } from "node:path";
 import chalk from "chalk";
 import { isNil } from "es-toolkit";
+import {
+  type ConfigSources,
+  createMergedConfig,
+  getValuesByKey,
+} from "~/lib/cli-config";
 import { parseJsonc } from "~/lib/jsonc";
 import { formatZodErrorHuman } from "~/lib/zod";
+import { DEFAULT_CONFIG_PATH } from "./defaults";
+import { FLAG_METADATA } from "./metadata";
+import { type JsonConfig, jsonConfigSchema } from "./schema";
 import {
   type EnrichedMergedConfig,
-  FLAG_METADATA,
   type FlagKey,
   getFlagName,
-  JSON_CONFIG_KEYS,
   type JsonConfigKey,
   type MergedConfig,
-  RUNTIME_FLAG_KEYS,
   type SharedFlags,
-} from "./config";
+} from "./types";
 
-import { DEFAULT_CONFIG_PATH } from "./defaults";
-import type { JsonConfig } from "./schemas";
-import { jsonConfigSchema } from "./schemas";
-
-type ConfigSources = {
-  flags: SharedFlags;
-  env: NodeJS.ProcessEnv;
-  json: JsonConfig;
-};
-
-type ConfigValues<K extends JsonConfigKey> = {
-  flag: JsonConfig[K] | undefined;
-  env: JsonConfig[K] | undefined;
-  json: JsonConfig[K] | undefined;
-};
-
-// Get value from env var, converting to appropriate type
-const getEnvValue = <K extends FlagKey>(
-  key: K,
-  env: NodeJS.ProcessEnv,
-): unknown => {
-  const metadata = FLAG_METADATA[key];
-  const envValue = env[metadata.env];
-  if (envValue === undefined || envValue === "") {
-    return undefined;
-  }
-  if (metadata.type === "boolean") {
-    return envValue.toLowerCase() === "true" || envValue === "1";
-  }
-  return envValue;
-};
-
-// Get value for a JSON config key from flags, env, or JSON (in priority order)
-const getValuesByKey = <K extends JsonConfigKey>(
-  key: K,
-  sources: ConfigSources,
-): ConfigValues<K> => {
-  const flagName = getFlagName(key);
-  return {
-    flag: sources.flags[flagName as keyof SharedFlags] as
-      | JsonConfig[K]
-      | undefined,
-    env: getEnvValue(key, sources.env) as JsonConfig[K] | undefined,
-    json: sources.json[key],
-  };
-};
-
-const getValueByKey = <K extends JsonConfigKey>(
-  key: K,
-  sources: ConfigSources,
-): JsonConfig[K] | undefined => {
-  const values = getValuesByKey(key, sources);
-  return values.flag ?? values.env ?? values.json;
-};
-
-// Get value for a runtime-only flag from flags or env (no JSON source)
-const getRuntimeFlagValue = <K extends FlagKey>(
-  key: K,
-  flags: SharedFlags,
-  env: NodeJS.ProcessEnv,
-): unknown => {
-  const metadata = FLAG_METADATA[key];
-  const flagName = getFlagName(key);
-  const flagValue = flags[flagName as keyof SharedFlags];
-  if (flagValue !== undefined) {
-    return flagValue;
-  }
-  const envValue = getEnvValue(key, env);
-  if (envValue !== undefined) {
-    return envValue;
-  }
-  return "defaultValue" in metadata ? metadata.defaultValue : undefined;
-};
-
-const formatSourceLocation = <K extends JsonConfigKey>(
-  key: K,
-  sources: ConfigSources,
-  configPath: string,
-): string => {
-  const metadata = FLAG_METADATA[key];
-  const flagName = getFlagName(key);
-  const values = getValuesByKey(key, sources);
-
-  if (values.flag) {
-    return `--${flagName} ${values.flag}`;
-  }
-  if (values.env !== undefined) {
-    return `${metadata.env}=${sources.env[metadata.env]}`;
-  }
-  if (values.json) {
-    return `${key}: ${values.json} in ${configPath}`;
-  }
-  return metadata.name;
-};
+type PatchyConfigSources = ConfigSources<typeof FLAG_METADATA, JsonConfig>;
 
 type ConfigParseResult =
   | { success: true; data: JsonConfig }
@@ -146,7 +58,7 @@ type CreateEnrichedMergedConfigParams = CreateMergedConfigParams & {
   requiredFields: JsonConfigKey[];
 };
 
-const createMergedConfig = ({
+const createPatchyMergedConfig = ({
   flags,
   cwd,
   env = process.env,
@@ -154,7 +66,7 @@ const createMergedConfig = ({
   | {
       mergedConfig: MergedConfig;
       configPath: string;
-      sources: ConfigSources;
+      sources: PatchyConfigSources;
       success: true;
     }
   | { success: false; error: string } => {
@@ -163,6 +75,7 @@ const createMergedConfig = ({
   const configExplicitlySet =
     flags.config !== undefined || env[configMeta.env] !== undefined;
   const absoluteConfigPath = resolve(cwd, configPath);
+
   let jsonString: string | undefined;
   if (!existsSync(absoluteConfigPath) && configExplicitlySet) {
     return {
@@ -181,30 +94,20 @@ const createMergedConfig = ({
       error: parseResult.error,
     };
   }
-  const sources: ConfigSources = { flags, env, json: parseResult.data };
 
-  // Build config from JSON config fields
-  const jsonConfig = Object.fromEntries(
-    JSON_CONFIG_KEYS.map((key) => {
-      const value = getValueByKey(key, sources);
-      const metadata = FLAG_METADATA[key];
-      const defaultVal =
-        "defaultValue" in metadata ? metadata.defaultValue : undefined;
-      return [key, value ?? defaultVal];
-    }),
-  );
+  const { mergedConfig, sources } = createMergedConfig({
+    metadata: FLAG_METADATA,
+    flags,
+    env,
+    json: parseResult.data,
+  });
 
-  // Add runtime-only flags
-  const runtimeFlags = Object.fromEntries(
-    RUNTIME_FLAG_KEYS.map((key) => [key, getRuntimeFlagValue(key, flags, env)]),
-  );
-
-  const mergedConfig: MergedConfig = {
-    ...jsonConfig,
-    ...runtimeFlags,
-  } as MergedConfig;
-
-  return { mergedConfig, configPath, sources, success: true };
+  return {
+    mergedConfig: mergedConfig as MergedConfig,
+    configPath,
+    sources,
+    success: true,
+  };
 };
 
 export const createEnrichedMergedConfig = ({
@@ -215,7 +118,7 @@ export const createEnrichedMergedConfig = ({
 }: CreateEnrichedMergedConfigParams):
   | { mergedConfig: EnrichedMergedConfig; success: true }
   | { success: false; error: string } => {
-  const result = createMergedConfig({ flags, cwd, env });
+  const result = createPatchyMergedConfig({ flags, cwd, env });
   if (!result.success) {
     return result;
   }
@@ -232,7 +135,7 @@ export const createEnrichedMergedConfig = ({
     absoluteRepoBaseDir: repoBaseDir ? resolve(cwd, repoBaseDir) : undefined,
     absoluteRepoDir:
       repoBaseDir && repoDir
-        ? resolve(cwd, path.join(repoBaseDir, repoDir))
+        ? resolve(cwd, join(repoBaseDir, repoDir))
         : undefined,
     absolutePatchesDir: patchesDir ? resolve(cwd, patchesDir) : undefined,
   };
@@ -247,6 +150,27 @@ export const createEnrichedMergedConfig = ({
     return { success: false, error: errors.error };
   }
   return { mergedConfig: enrichedConfig, success: true };
+};
+
+const formatSourceLocation = (
+  key: JsonConfigKey,
+  sources: PatchyConfigSources,
+  configPath: string,
+): string => {
+  const metadata = FLAG_METADATA[key];
+  const flagName = getFlagName(key);
+  const values = getValuesByKey(FLAG_METADATA, key, sources);
+
+  if (values.flag) {
+    return `--${flagName} ${values.flag}`;
+  }
+  if (values.env !== undefined) {
+    return `${metadata.env}=${sources.env[metadata.env]}`;
+  }
+  if (values.json) {
+    return `${key}: ${values.json} in ${configPath}`;
+  }
+  return metadata.name;
 };
 
 const getValueToValidate = (
@@ -274,7 +198,7 @@ const calcError = ({
   mergedConfig: EnrichedMergedConfig;
   requiredFields: JsonConfigKey[];
   configPath: string;
-  sources: ConfigSources;
+  sources: PatchyConfigSources;
 }): { success: true } | { success: false; error: string } => {
   const missingFields = requiredFields.filter((field) => {
     return isNil(mergedConfig[field]);

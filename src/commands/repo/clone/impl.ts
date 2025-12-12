@@ -1,8 +1,7 @@
 import { existsSync } from "node:fs";
 import { join, resolve } from "node:path";
 import chalk from "chalk";
-import { FLAG_METADATA } from "~/config/config";
-import { createEnrichedMergedConfig } from "~/config/resolver";
+import { createEnrichedMergedConfig, FLAG_METADATA } from "~/cli-fields";
 import type { LocalContext } from "~/context";
 import { assertDefined } from "~/lib/assert";
 import { ensureDirExists } from "~/lib/fs";

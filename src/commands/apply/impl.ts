@@ -1,8 +1,7 @@
 import { existsSync } from "node:fs";
 import { copyFile, mkdir, readFile, writeFile } from "node:fs/promises";
 import path from "node:path";
-import { DEFAULT_FUZZ_FACTOR } from "~/config/defaults";
-import { createEnrichedMergedConfig } from "~/config/resolver";
+import { createEnrichedMergedConfig, DEFAULT_FUZZ_FACTOR } from "~/cli-fields";
 import type { LocalContext } from "~/context";
 import { getAllFiles } from "~/lib/fs";
 import { applyDiff } from "./apply-diff";

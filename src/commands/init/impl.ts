@@ -3,12 +3,12 @@ import { mkdir, writeFile } from "node:fs/promises";
 import { resolve } from "node:path";
 import * as prompts from "@clack/prompts";
 import { omitBy } from "es-toolkit";
-import { getDefaultValue } from "~/config/config";
-import { DEFAULT_CONFIG_PATH } from "~/config/defaults";
 import {
+  DEFAULT_CONFIG_PATH,
+  getDefaultValue,
   type RequiredConfigData,
   requiredConfigSchema,
-} from "~/config/schemas";
+} from "~/cli-fields";
 import type { LocalContext } from "~/context";
 import { isValidGitUrl, validateGitUrl } from "~/lib/validation";
 import { getSchemaUrl } from "~/version";

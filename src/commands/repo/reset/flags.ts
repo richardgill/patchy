@@ -1,4 +1,5 @@
-import { FLAG_METADATA } from "~/config/config";
+import { FLAG_METADATA } from "~/cli-fields";
+
 import type { ParsedFlags } from "~/types/utils";
 
 export const resetFlags = {
