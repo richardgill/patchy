@@ -1,7 +1,7 @@
 import { existsSync } from "node:fs";
 import chalk from "chalk";
 import { CheckRepoActions } from "simple-git";
-import { createEnrichedMergedConfig } from "~/config/resolver";
+import { createEnrichedMergedConfig } from "~/cli-fields";
 import type { LocalContext } from "~/context";
 import { createGitClient } from "~/lib/git";
 import type { CheckoutFlags } from "./flags";

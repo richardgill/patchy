@@ -1,7 +1,7 @@
 import { writeFileSync } from "node:fs";
 import { copyFile } from "node:fs/promises";
 import { dirname, join } from "node:path";
-import { createEnrichedMergedConfig } from "~/config/resolver";
+import { createEnrichedMergedConfig } from "~/cli-fields";
 import type { LocalContext } from "~/context";
 import { ensureDirExists } from "~/lib/fs";
 import { createGitClient } from "~/lib/git";

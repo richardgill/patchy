@@ -1,5 +1,6 @@
 import { type ZodTypeAny, z } from "zod";
-import { FLAG_METADATA, JSON_CONFIG_KEYS, type JsonConfigKey } from "./config";
+import { FLAG_METADATA } from "./metadata";
+import { JSON_CONFIG_KEYS, type JsonConfigKey } from "./types";
 
 // Type-level mapping from metadata type strings to Zod schema types
 type ZodSchemaFor<T extends "string" | "boolean"> = T extends "boolean"
@@ -37,4 +38,5 @@ export const jsonConfigSchema = z
     $schema: z.string().optional(),
   })
   .strict();
+
 export type JsonConfig = z.infer<typeof jsonConfigSchema>;
