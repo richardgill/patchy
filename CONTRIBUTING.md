@@ -110,10 +110,15 @@ bun run build
 **Configure merge settings** (squash-only merges + auto-delete branches):
 
 ```sh
-gh repo edit --enable-squash-merge --disable-merge-commit --disable-rebase-merge --delete-branch-on-merge
+gh repo edit --enable-squash-merge --delete-branch-on-merge
 ```
 
-Or via GitHub UI: Settings → General → Pull Requests → Enable "Squash merging" only + "Automatically delete head branches"
+Then disable merge commit and rebase merge via GitHub UI:
+```sh
+open "$(gh repo view --json url -q .url)/settings#merge-button-settings"
+```
+
+Or manually: Settings → General → Pull Requests → Enable "Squash merging" only + "Automatically delete head branches"
 
 **Enable GitHub Actions to create PRs** (required for release workflow):
 
