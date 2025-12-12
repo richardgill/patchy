@@ -2,11 +2,7 @@ import { beforeEach, describe, expect, it } from "bun:test";
 import { readFileSync } from "node:fs";
 import { join } from "node:path";
 import { assertDefined } from "~/lib/assert";
-import {
-  commitFile,
-  initGitRepo,
-  writeRepoFileAsync,
-} from "~/testing/git-helpers";
+import { commitFile, initGitRepo, writeRepoFile } from "~/testing/git-helpers";
 import {
   generateTmpDir,
   runCli,
@@ -30,7 +26,7 @@ describe("patchy repo reset", () => {
     const repoPath = assertDefined(ctx.absoluteRepoDir, "absoluteRepoDir");
     await initGitRepo(repoPath);
     await commitFile(repoPath, "test.txt", "original content");
-    await writeRepoFileAsync(repoPath, "test.txt", "modified content");
+    await writeRepoFile(repoPath, "test.txt", "modified content");
 
     expect(readFileSync(join(repoPath, "test.txt"), "utf-8")).toBe(
       "modified content",
@@ -136,7 +132,7 @@ describe("patchy repo reset", () => {
       const repoPath = assertDefined(ctx.absoluteRepoDir, "absoluteRepoDir");
       await initGitRepo(repoPath);
       await commitFile(repoPath, "test.txt", "original content");
-      await writeRepoFileAsync(repoPath, "test.txt", "modified content");
+      await writeRepoFile(repoPath, "test.txt", "modified content");
 
       const result = await runCli(
         `patchy repo reset --repo-base-dir repos --repo-dir test-repo --dry-run`,
