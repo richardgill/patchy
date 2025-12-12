@@ -1,10 +1,51 @@
 import type { CamelCase, MarkOptional } from "ts-essentials";
 
+// Stricli flag types
+type StricliFlagParsed = {
+  kind: "parsed";
+  parse: StringConstructor;
+  brief: string;
+  optional: true;
+};
+
+type StricliFlagBoolean = {
+  kind: "boolean";
+  brief: string;
+  optional: true;
+};
+
+type StricliFlag = StricliFlagParsed | StricliFlagBoolean;
+
+// Base properties shared by all flag metadata entries
+type BaseFlagMetadataEntry = {
+  env: `PATCHY_${string}`;
+  type: "string" | "boolean";
+  name: string;
+  stricliFlag: Record<string, StricliFlag>;
+  example?: string;
+  defaultValue?: string | boolean;
+};
+
+// Entry for flags that appear in the config file
+type ConfigFieldEntry = BaseFlagMetadataEntry & {
+  configField: true;
+  requiredInConfig: boolean;
+};
+
+// Entry for runtime-only flags (not in config file)
+type RuntimeFieldEntry = BaseFlagMetadataEntry & {
+  configField: false;
+};
+
+type FlagMetadataEntry = ConfigFieldEntry | RuntimeFieldEntry;
+
+type FlagMetadataMap = Record<string, FlagMetadataEntry>;
+
 // FLAG_METADATA is the single source of truth for all flag/config definitions
 export const FLAG_METADATA = {
   repo_url: {
     configField: true,
-    optional: true,
+    requiredInConfig: false,
     env: "PATCHY_REPO_URL",
     type: "string",
     name: "Repository URL",
@@ -20,7 +61,7 @@ export const FLAG_METADATA = {
   },
   repo_dir: {
     configField: true,
-    optional: true,
+    requiredInConfig: false,
     env: "PATCHY_REPO_DIR",
     type: "string",
     name: "Repository directory",
@@ -36,7 +77,7 @@ export const FLAG_METADATA = {
   },
   repo_base_dir: {
     configField: true,
-    optional: true,
+    requiredInConfig: false,
     env: "PATCHY_REPO_BASE_DIR",
     type: "string",
     name: "Repository base directory",
@@ -53,6 +94,7 @@ export const FLAG_METADATA = {
   },
   patches_dir: {
     configField: true,
+    requiredInConfig: false,
     env: "PATCHY_PATCHES_DIR",
     type: "string",
     name: "Patches directory",
@@ -69,6 +111,7 @@ export const FLAG_METADATA = {
   },
   ref: {
     configField: true,
+    requiredInConfig: false,
     env: "PATCHY_REF",
     type: "string",
     name: "Git reference",
@@ -85,6 +128,7 @@ export const FLAG_METADATA = {
   },
   verbose: {
     configField: true,
+    requiredInConfig: false,
     env: "PATCHY_VERBOSE",
     type: "boolean",
     name: "Verbose output",
@@ -127,7 +171,7 @@ export const FLAG_METADATA = {
       },
     },
   },
-} as const;
+} as const satisfies FlagMetadataMap;
 
 export type FlagKey = keyof typeof FLAG_METADATA;
 
@@ -211,11 +255,13 @@ export type CompleteJsonConfig = {
   [K in JsonConfigKey]: TypeMap[(typeof FLAG_METADATA)[K]["type"]];
 };
 
-// Config keys marked as optional in FLAG_METADATA
+// Config keys NOT marked as requiredInConfig in FLAG_METADATA
 type OptionalConfigKeys = {
-  [K in JsonConfigKey]: (typeof FLAG_METADATA)[K] extends { optional: true }
-    ? K
-    : never;
+  [K in JsonConfigKey]: (typeof FLAG_METADATA)[K] extends {
+    requiredInConfig: true;
+  }
+    ? never
+    : K;
 }[JsonConfigKey];
 
 // Merged config includes JSON config + runtime flags
