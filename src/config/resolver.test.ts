@@ -678,57 +678,6 @@ describe("createEnrichedMergedConfig", () => {
     );
   });
 
-  it("should call onConfigMerged callback with merged config", async () => {
-    await setupTestWithConfig({
-      tmpDir,
-      createDirectories: {
-        repoBaseDir: "base",
-        repoDir: "repo",
-      },
-      jsonConfig: {
-        repo_url: "https://github.com/example/repo.git",
-        repo_base_dir: "base",
-        repo_dir: "repo",
-      },
-    });
-
-    const flags: SharedFlags = {};
-    const requiredFields: JsonConfigKey[] = [
-      "repo_url",
-      "repo_base_dir",
-      "repo_dir",
-    ];
-    let callbackConfig: object | null = null;
-
-    const result = createEnrichedMergedConfig({
-      flags,
-      requiredFields,
-      cwd: tmpDir,
-      onConfigMerged: (config) => {
-        callbackConfig = config;
-      },
-    });
-
-    expectSuccessfulMerge(result);
-    expect(callbackConfig).not.toBeNull();
-    expect(getStabilizedJson(callbackConfig)).toMatchInlineSnapshot(
-      `
-      "{
-        "repo_url": "https://github.com/example/repo.git",
-        "repo_dir": "repo",
-        "repo_base_dir": "base",
-        "patches_dir": "./patches/",
-        "ref": "main",
-        "verbose": false,
-        "dry_run": false,
-        "absoluteRepoBaseDir": "<TEST_DIR>/base",
-        "absoluteRepoDir": "<TEST_DIR>/base/repo",
-        "absolutePatchesDir": "<TEST_DIR>/patches"
-      }"
-    `,
-    );
-  });
-
   it("should restore process working directory after execution", async () => {
     await setupTestWithConfig({
       tmpDir,

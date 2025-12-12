@@ -7,14 +7,14 @@ type ZodSchemaFor<T extends "string" | "boolean"> = T extends "boolean"
   ? z.ZodDefault<z.ZodBoolean>
   : z.ZodString;
 
-// Strongly typed baseConfigFields shape (excludes dry_run which is JSON-only)
+// Strongly typed baseConfigFields shape (excludes dry_run)
 type BaseConfigFields = {
   [K in Exclude<JsonConfigKey, "dry_run">]: ZodSchemaFor<
     (typeof CONFIG_FIELD_METADATA)[K]["type"]
   >;
 };
 
-// Build Zod schemas from metadata at runtime (dry_run excluded - it's JSON-only)
+// Build Zod schemas from metadata at runtime (dry_run excluded)
 const buildBaseConfigFields = (): BaseConfigFields => {
   const fields: Record<string, ZodTypeAny> = {};
   for (const [key, meta] of Object.entries(

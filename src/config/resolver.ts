@@ -125,7 +125,6 @@ type CreateMergedConfigParams = {
 
 type CreateEnrichedMergedConfigParams = CreateMergedConfigParams & {
   requiredFields: JsonConfigKey[];
-  onConfigMerged?: (config: EnrichedMergedConfig) => void;
 };
 
 const createMergedConfig = ({
@@ -180,7 +179,6 @@ const createMergedConfig = ({
 export const createEnrichedMergedConfig = ({
   flags,
   requiredFields,
-  onConfigMerged = () => null,
   cwd,
   env = process.env,
 }: CreateEnrichedMergedConfigParams):
@@ -208,7 +206,6 @@ export const createEnrichedMergedConfig = ({
     absolutePatchesDir: patchesDir ? resolve(cwd, patchesDir) : undefined,
   };
 
-  onConfigMerged(enrichedConfig);
   const errors = calcError({
     mergedConfig: enrichedConfig,
     requiredFields,
