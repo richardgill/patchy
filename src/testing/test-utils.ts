@@ -5,7 +5,7 @@ import { run } from "@stricli/core";
 import { app } from "~/app";
 import type { LocalContext } from "~/context";
 
-export type CLIResult = {
+type CLIResult = {
   stdout: string;
   stderr: string;
   exitCode: number;

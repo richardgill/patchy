@@ -1,5 +1,13 @@
 import { expect } from "bun:test";
-import type { CLIResult } from "~/testing/test-utils";
+
+type CLIResult = {
+  stdout: string;
+  stderr: string;
+  exitCode: number;
+  failed: boolean;
+  command: string;
+  cwd: string;
+};
 
 export const cliMatchers = {
   toSucceed(expected: unknown) {

@@ -1,4 +1,4 @@
-name: CI
+name: Release
 
 on:
   push:
@@ -14,39 +14,13 @@ concurrency:
   cancel-in-progress: true
 
 jobs:
-  lint:
-    name: Lint
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v4
-      - uses: ./.github/actions/setup
-
-      - name: Lint
-        run: bun run check
-
-  typecheck:
-    name: Typecheck
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v4
-      - uses: ./.github/actions/setup
-
-      - name: Typecheck
-        run: bun run typecheck
-
-  test:
-    name: Test
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v4
-      - uses: ./.github/actions/setup
-
-      - name: Test
-        run: bun run test
+  ci:
+    name: CI
+    uses: ./.github/workflows/ci.yml
 
   create-release-pr:
     name: Create Release PR
-    needs: [lint, typecheck, test]
+    needs: [ci]
     runs-on: ubuntu-latest
     outputs:
       should_publish: ${{ steps.changesets.outputs.hasChangesets == 'false' }}
