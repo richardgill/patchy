@@ -1,13 +1,13 @@
 import { existsSync } from "node:fs";
 import chalk from "chalk";
 import { isValidGitUrl } from "~/lib/validation";
-import type { EnrichedMergedConfig, FlagKey } from "./config";
+import type { EnrichedFields } from "./enriched-fields";
 
 // Returns error message or null if valid
 export type ValidatorFn = (
   value: string | undefined,
-  key: FlagKey,
-  config: EnrichedMergedConfig,
+  key: string,
+  config: EnrichedFields,
 ) => string | null;
 
 export const directoryExists: ValidatorFn = (path) => {

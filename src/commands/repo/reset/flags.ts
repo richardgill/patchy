@@ -1,4 +1,4 @@
-import { FLAG_METADATA } from "~/config/config";
+import { FLAG_METADATA } from "~/cli-fields";
 import { COMMAND_FLAGS } from "~/lib/flags";
 import type { ParsedFlags } from "~/types/utils";
 
