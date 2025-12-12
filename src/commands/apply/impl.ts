@@ -2,7 +2,7 @@ import { existsSync } from "node:fs";
 import { copyFile, mkdir, readFile, writeFile } from "node:fs/promises";
 import path from "node:path";
 import { DEFAULT_FUZZ_FACTOR } from "~/config/defaults";
-import { createMergedConfig } from "~/config/resolver";
+import { createEnrichedMergedConfig } from "~/config/resolver";
 import type { LocalContext } from "~/context";
 import { getAllFiles } from "~/lib/fs";
 import { applyDiff } from "./apply-diff";
@@ -88,7 +88,7 @@ export default async function (
   flags: ApplyFlags,
 ): Promise<void> {
   try {
-    const result = createMergedConfig({
+    const result = createEnrichedMergedConfig({
       flags,
       requiredFields: ["repo_base_dir", "repo_dir", "patches_dir"],
       cwd: this.cwd,

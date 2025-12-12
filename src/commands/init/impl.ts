@@ -3,11 +3,8 @@ import { mkdir, writeFile } from "node:fs/promises";
 import { resolve } from "node:path";
 import * as prompts from "@clack/prompts";
 import { omitBy } from "es-toolkit";
-import {
-  DEFAULT_CONFIG_PATH,
-  DEFAULT_PATCHES_DIR,
-  DEFAULT_REF,
-} from "~/config/defaults";
+import { getDefaultValue } from "~/config/config";
+import { DEFAULT_CONFIG_PATH } from "~/config/defaults";
 import {
   type RequiredConfigData,
   requiredConfigSchema,
@@ -80,7 +77,7 @@ export default async function (
     const ref = await prompts.text({
       message: "Git ref to track:",
       placeholder: "Branch, tag, or commit to compare against",
-      initialValue: DEFAULT_REF,
+      initialValue: getDefaultValue("ref"),
     });
     if (prompts.isCancel(ref)) {
       this.process.stderr.write("Initialization cancelled\n");
@@ -94,7 +91,7 @@ export default async function (
     const patchesDir = await prompts.text({
       message: "Path for patch files:",
       placeholder: "Where generated patch files will be stored",
-      initialValue: DEFAULT_PATCHES_DIR,
+      initialValue: getDefaultValue("patches_dir"),
     });
     if (prompts.isCancel(patchesDir)) {
       this.process.stderr.write("Initialization cancelled\n");
@@ -111,8 +108,11 @@ export default async function (
     repo_dir: flags["repo-dir"] ?? "",
     repo_base_dir: flags["repo-base-dir"] ?? "",
     patches_dir:
-      flags["patches-dir"] ?? answers.patchesDir ?? DEFAULT_PATCHES_DIR,
-    ref: flags.ref ?? answers.ref ?? DEFAULT_REF,
+      flags["patches-dir"] ??
+      answers.patchesDir ??
+      getDefaultValue("patches_dir") ??
+      "",
+    ref: flags.ref ?? answers.ref ?? getDefaultValue("ref") ?? "",
     verbose: false,
   };
 

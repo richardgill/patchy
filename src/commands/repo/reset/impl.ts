@@ -2,7 +2,7 @@ import { existsSync } from "node:fs";
 import * as prompts from "@clack/prompts";
 import chalk from "chalk";
 import { CheckRepoActions } from "simple-git";
-import { createMergedConfig } from "~/config/resolver";
+import { createEnrichedMergedConfig } from "~/config/resolver";
 import type { LocalContext } from "~/context";
 import { createGitClient } from "~/lib/git";
 import type { ResetFlags } from "./flags";
@@ -11,7 +11,7 @@ export default async function (
   this: LocalContext,
   flags: ResetFlags,
 ): Promise<void> {
-  const result = createMergedConfig({
+  const result = createEnrichedMergedConfig({
     flags,
     requiredFields: ["repo_base_dir", "repo_dir"],
     cwd: this.cwd,

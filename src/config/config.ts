@@ -1,12 +1,64 @@
-import type { CamelCase, MarkOptional } from "ts-essentials";
+import type { CamelCase } from "ts-essentials";
+import {
+  directoryExists,
+  gitUrl,
+  repoDirExists,
+  type ValidatorFn,
+} from "./validators";
 
-// CONFIG_FIELD_METADATA is the single source of truth for config field definitions
-export const CONFIG_FIELD_METADATA = {
+// Stricli flag types
+type StricliFlagParsed = {
+  kind: "parsed";
+  parse: StringConstructor;
+  brief: string;
+  optional: true;
+};
+
+type StricliFlagBoolean = {
+  kind: "boolean";
+  brief: string;
+  optional: true;
+};
+
+type StricliFlag = StricliFlagParsed | StricliFlagBoolean;
+
+// Base properties shared by all flag metadata entries
+type BaseFlagMetadataEntry = {
+  env: `PATCHY_${string}`;
+  type: "string" | "boolean";
+  name: string;
+  stricliFlag: Record<string, StricliFlag>;
+  example: string;
+  defaultValue: string | boolean | undefined;
+  validate?: ValidatorFn;
+};
+
+// Entry for flags that appear in the config file
+type ConfigFieldEntry = BaseFlagMetadataEntry & {
+  configField: true;
+  requiredInConfig: boolean;
+};
+
+// Entry for runtime-only flags (not in config file)
+type RuntimeFieldEntry = BaseFlagMetadataEntry & {
+  configField: false;
+};
+
+type FlagMetadataEntry = ConfigFieldEntry | RuntimeFieldEntry;
+
+type FlagMetadataMap = Record<string, FlagMetadataEntry>;
+
+// FLAG_METADATA is the single source of truth for all flag/config definitions
+export const FLAG_METADATA = {
   repo_url: {
+    configField: true,
+    requiredInConfig: false,
     env: "PATCHY_REPO_URL",
     type: "string",
     name: "Repository URL",
     example: "https://github.com/user/repo.git",
+    defaultValue: undefined,
+    validate: gitUrl,
     stricliFlag: {
       "repo-url": {
         kind: "parsed",
@@ -17,10 +69,14 @@ export const CONFIG_FIELD_METADATA = {
     },
   },
   repo_dir: {
+    configField: true,
+    requiredInConfig: false,
     env: "PATCHY_REPO_DIR",
     type: "string",
     name: "Repository directory",
     example: "./repo",
+    defaultValue: undefined,
+    validate: repoDirExists,
     stricliFlag: {
       "repo-dir": {
         kind: "parsed",
@@ -31,10 +87,14 @@ export const CONFIG_FIELD_METADATA = {
     },
   },
   repo_base_dir: {
+    configField: true,
+    requiredInConfig: false,
     env: "PATCHY_REPO_BASE_DIR",
     type: "string",
     name: "Repository base directory",
     example: "./upstream",
+    defaultValue: undefined,
+    validate: directoryExists,
     stricliFlag: {
       "repo-base-dir": {
         kind: "parsed",
@@ -46,10 +106,14 @@ export const CONFIG_FIELD_METADATA = {
     },
   },
   patches_dir: {
+    configField: true,
+    requiredInConfig: false,
     env: "PATCHY_PATCHES_DIR",
     type: "string",
     name: "Patches directory",
     example: "./patches",
+    defaultValue: "./patches/",
+    validate: directoryExists,
     stricliFlag: {
       "patches-dir": {
         kind: "parsed",
@@ -60,10 +124,13 @@ export const CONFIG_FIELD_METADATA = {
     },
   },
   ref: {
+    configField: true,
+    requiredInConfig: false,
     env: "PATCHY_REF",
     type: "string",
     name: "Git reference",
     example: "main",
+    defaultValue: "main",
     stricliFlag: {
       ref: {
         kind: "parsed",
@@ -74,10 +141,13 @@ export const CONFIG_FIELD_METADATA = {
     },
   },
   verbose: {
+    configField: true,
+    requiredInConfig: false,
     env: "PATCHY_VERBOSE",
     type: "boolean",
     name: "Verbose output",
     example: "true",
+    defaultValue: false,
     stricliFlag: {
       verbose: {
         kind: "boolean",
@@ -87,10 +157,12 @@ export const CONFIG_FIELD_METADATA = {
     },
   },
   dry_run: {
+    configField: false,
     env: "PATCHY_DRY_RUN",
     type: "boolean",
     name: "Dry run mode",
-    example: "true",
+    example: "true/false",
+    defaultValue: false,
     stricliFlag: {
       "dry-run": {
         kind: "boolean",
@@ -100,24 +172,51 @@ export const CONFIG_FIELD_METADATA = {
       },
     },
   },
-} as const;
-
-// --config flag (not in JSON config)
-export const CONFIG_FLAG_METADATA = {
-  env: "PATCHY_CONFIG",
-  type: "string",
-  stricliFlag: {
-    config: {
-      kind: "parsed",
-      parse: String,
-      brief: "Path for the config file [env: PATCHY_CONFIG]",
-      optional: true,
+  config: {
+    configField: false,
+    env: "PATCHY_CONFIG",
+    type: "string",
+    name: "Config file path",
+    example: "./patches/",
+    defaultValue: "./patches/",
+    stricliFlag: {
+      config: {
+        kind: "parsed",
+        parse: String,
+        brief: "Path for the config file [env: PATCHY_CONFIG]",
+        optional: true,
+      },
     },
   },
-} as const;
+} as const satisfies FlagMetadataMap;
 
-// Derived types from CONFIG_FIELD_METADATA
-export type JsonKey = keyof typeof CONFIG_FIELD_METADATA;
+export type FlagKey = keyof typeof FLAG_METADATA;
+
+// JSON config keys (configField: true)
+export type JsonConfigKey = {
+  [K in FlagKey]: (typeof FLAG_METADATA)[K]["configField"] extends true
+    ? K
+    : never;
+}[FlagKey];
+
+type RuntimeFlagKeys = {
+  [K in FlagKey]: (typeof FLAG_METADATA)[K]["configField"] extends false
+    ? K
+    : never;
+}[FlagKey];
+
+// Runtime-only keys derived at runtime
+export const JSON_CONFIG_KEYS = (
+  Object.entries(FLAG_METADATA) as [FlagKey, (typeof FLAG_METADATA)[FlagKey]][]
+)
+  .filter(([, meta]) => meta.configField)
+  .map(([key]) => key) as JsonConfigKey[];
+
+export const RUNTIME_FLAG_KEYS = (
+  Object.entries(FLAG_METADATA) as [FlagKey, (typeof FLAG_METADATA)[FlagKey]][]
+)
+  .filter(([, meta]) => !meta.configField)
+  .map(([key]) => key) as RuntimeFlagKeys[];
 
 // Maps type string literals to actual TypeScript types
 type TypeMap = {
@@ -126,40 +225,64 @@ type TypeMap = {
 };
 
 // FlagName is the union of all flag keys (e.g., "repo-url", "dry-run", etc.)
-// We use a mapped type to extract each flag key, then index to get the union
 type FlagName = {
-  [K in JsonKey]: keyof (typeof CONFIG_FIELD_METADATA)[K]["stricliFlag"];
-}[JsonKey];
+  [K in FlagKey]: keyof (typeof FLAG_METADATA)[K]["stricliFlag"];
+}[FlagKey];
 
-// Maps a JsonKey to its corresponding flag name
-type FlagNameFor<K extends JsonKey> =
-  keyof (typeof CONFIG_FIELD_METADATA)[K]["stricliFlag"];
+// Maps a FlagKey to its corresponding CLI flag name
+type FlagNameFor<K extends FlagKey> =
+  keyof (typeof FLAG_METADATA)[K]["stricliFlag"];
 
-// Maps a flag name back to its JsonKey
-type JsonKeyForFlag<F extends FlagName> = {
-  [K in JsonKey]: F extends FlagNameFor<K> ? K : never;
-}[JsonKey];
+// Maps a CLI flag name back to its FlagKey
+type FlagKeyForFlag<F extends FlagName> = {
+  [K in FlagKey]: F extends FlagNameFor<K> ? K : never;
+}[FlagKey];
 
 // Gets the TypeScript type for a flag based on metadata
 type FlagType<F extends FlagName> =
-  TypeMap[(typeof CONFIG_FIELD_METADATA)[JsonKeyForFlag<F>]["type"]];
+  TypeMap[(typeof FLAG_METADATA)[FlagKeyForFlag<F>]["type"]];
 
-type ConfigFlagName = keyof (typeof CONFIG_FLAG_METADATA)["stricliFlag"];
-
-// Helper to get the flag name (kebab-case) from a JSON key (snake_case)
-export const getFlagName = <K extends JsonKey>(jsonKey: K): FlagName => {
-  const metadata = CONFIG_FIELD_METADATA[jsonKey];
+// Helper to get the CLI flag name (kebab-case) from a key (snake_case)
+export const getFlagName = <K extends FlagKey>(key: K): FlagName => {
+  const metadata = FLAG_METADATA[key];
   return Object.keys(metadata.stricliFlag)[0] as FlagName;
+};
+
+// Keys that have default values defined
+type KeysWithDefaults = {
+  [K in FlagKey]: "defaultValue" extends keyof (typeof FLAG_METADATA)[K]
+    ? K
+    : never;
+}[FlagKey];
+
+// Helper to get the default value for a key (only for keys with defaults)
+export const getDefaultValue = <K extends KeysWithDefaults>(
+  key: K,
+): TypeMap[(typeof FLAG_METADATA)[K]["type"]] => {
+  const metadata = FLAG_METADATA[key];
+  return metadata.defaultValue as TypeMap[(typeof FLAG_METADATA)[K]["type"]];
 };
 
 export type SharedFlags = {
   [K in FlagName]?: FlagType<K>;
-} & {
-  [K in ConfigFlagName]?: string;
 };
 
+// JSON config types (only configField: true keys)
 export type CompleteJsonConfig = {
-  [K in JsonKey]: TypeMap[(typeof CONFIG_FIELD_METADATA)[K]["type"]];
+  [K in JsonConfigKey]: TypeMap[(typeof FLAG_METADATA)[K]["type"]];
+};
+
+// Merged config includes JSON config + runtime flags
+export type MergedConfig = {
+  [K in FlagKey]: (typeof FLAG_METADATA)[K]["defaultValue"] extends undefined
+    ? TypeMap[(typeof FLAG_METADATA)[K]["type"]] | undefined
+    : TypeMap[(typeof FLAG_METADATA)[K]["type"]];
+};
+
+export type EnrichedMergedConfig = MergedConfig & {
+  absoluteRepoBaseDir: string | undefined;
+  absoluteRepoDir: string | undefined;
+  absolutePatchesDir: string | undefined;
 };
 
 export type ResolvedConfig = CompleteJsonConfig & {
@@ -168,18 +291,8 @@ export type ResolvedConfig = CompleteJsonConfig & {
   absolutePatchesDir: string;
 };
 
-export type MergedConfig = MarkOptional<
-  ResolvedConfig,
-  | "repo_url"
-  | "repo_dir"
-  | "repo_base_dir"
-  | "absoluteRepoBaseDir"
-  | "absoluteRepoDir"
-  | "absolutePatchesDir"
->;
-
 export type CamelCaseResolvedConfig = {
-  [K in JsonKey as CamelCase<K>]: CompleteJsonConfig[K];
+  [K in JsonConfigKey as CamelCase<K>]: CompleteJsonConfig[K];
 };
 
 export type PartialResolvedConfig = Partial<ResolvedConfig>;

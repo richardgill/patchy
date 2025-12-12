@@ -3,20 +3,20 @@ import path, { resolve } from "node:path";
 import chalk from "chalk";
 import { isNil } from "es-toolkit";
 import { parseJsonc } from "~/lib/jsonc";
-import { isValidGitUrl } from "~/lib/validation";
+import { formatZodErrorHuman } from "~/lib/zod";
 import {
-  CONFIG_FIELD_METADATA,
-  CONFIG_FLAG_METADATA,
+  type EnrichedMergedConfig,
+  FLAG_METADATA,
+  type FlagKey,
   getFlagName,
-  type JsonKey,
+  JSON_CONFIG_KEYS,
+  type JsonConfigKey,
   type MergedConfig,
+  RUNTIME_FLAG_KEYS,
   type SharedFlags,
 } from "./config";
-import {
-  DEFAULT_CONFIG_PATH,
-  DEFAULT_PATCHES_DIR,
-  DEFAULT_REF,
-} from "./defaults";
+
+import { DEFAULT_CONFIG_PATH } from "./defaults";
 import type { JsonConfig } from "./schemas";
 import { jsonConfigSchema } from "./schemas";
 
@@ -26,58 +26,78 @@ type ConfigSources = {
   json: JsonConfig;
 };
 
-type ConfigValues<K extends JsonKey> = {
+type ConfigValues<K extends JsonConfigKey> = {
   flag: JsonConfig[K] | undefined;
   env: JsonConfig[K] | undefined;
   json: JsonConfig[K] | undefined;
 };
 
-const getEnvValue = <K extends JsonKey>(
-  jsonKey: K,
+// Get value from env var, converting to appropriate type
+const getEnvValue = <K extends FlagKey>(
+  key: K,
   env: NodeJS.ProcessEnv,
-): JsonConfig[K] | undefined => {
-  const metadata = CONFIG_FIELD_METADATA[jsonKey];
+): unknown => {
+  const metadata = FLAG_METADATA[key];
   const envValue = env[metadata.env];
   if (envValue === undefined || envValue === "") {
     return undefined;
   }
   if (metadata.type === "boolean") {
-    return (envValue.toLowerCase() === "true" ||
-      envValue === "1") as JsonConfig[K];
+    return envValue.toLowerCase() === "true" || envValue === "1";
   }
-  return envValue as JsonConfig[K];
+  return envValue;
 };
 
-const getValuesByKey = <K extends JsonKey>(
-  jsonKey: K,
+// Get value for a JSON config key from flags, env, or JSON (in priority order)
+const getValuesByKey = <K extends JsonConfigKey>(
+  key: K,
   sources: ConfigSources,
 ): ConfigValues<K> => {
-  const flagName = getFlagName(jsonKey);
+  const flagName = getFlagName(key);
   return {
     flag: sources.flags[flagName as keyof SharedFlags] as
       | JsonConfig[K]
       | undefined,
-    env: getEnvValue(jsonKey, sources.env),
-    json: sources.json[jsonKey],
+    env: getEnvValue(key, sources.env) as JsonConfig[K] | undefined,
+    json: sources.json[key],
   };
 };
 
-const getValueByKey = <K extends JsonKey>(
-  jsonKey: K,
+const getValueByKey = <K extends JsonConfigKey>(
+  key: K,
   sources: ConfigSources,
 ): JsonConfig[K] | undefined => {
-  const values = getValuesByKey(jsonKey, sources);
+  const values = getValuesByKey(key, sources);
   return values.flag ?? values.env ?? values.json;
 };
 
-const formatSourceLocation = <K extends JsonKey>(
-  jsonKey: K,
+// Get value for a runtime-only flag from flags or env (no JSON source)
+const getRuntimeFlagValue = <K extends FlagKey>(
+  key: K,
+  flags: SharedFlags,
+  env: NodeJS.ProcessEnv,
+): unknown => {
+  const metadata = FLAG_METADATA[key];
+  const flagName = getFlagName(key);
+  const flagValue = flags[flagName as keyof SharedFlags];
+  if (flagValue !== undefined) {
+    return flagValue;
+  }
+  const envValue = getEnvValue(key, env);
+  if (envValue !== undefined) {
+    return envValue;
+  }
+  return "defaultValue" in metadata ? metadata.defaultValue : undefined;
+};
+
+const formatSourceLocation = <K extends JsonConfigKey>(
+  key: K,
   sources: ConfigSources,
   configPath: string,
 ): string => {
-  const metadata = CONFIG_FIELD_METADATA[jsonKey];
-  const flagName = getFlagName(jsonKey);
-  const values = getValuesByKey(jsonKey, sources);
+  const metadata = FLAG_METADATA[key];
+  const flagName = getFlagName(key);
+  const values = getValuesByKey(key, sources);
 
   if (values.flag) {
     return `--${flagName} ${values.flag}`;
@@ -86,7 +106,7 @@ const formatSourceLocation = <K extends JsonKey>(
     return `${metadata.env}=${sources.env[metadata.env]}`;
   }
   if (values.json) {
-    return `${jsonKey}: ${values.json} in ${configPath}`;
+    return `${key}: ${values.json} in ${configPath}`;
   }
   return metadata.name;
 };
@@ -113,38 +133,35 @@ export const parseOptionalJsonConfig = (
     return { success: true, data };
   }
 
-  // Format zod errors in a human-readable way
-  if (error.issues && error.issues.length > 0) {
-    const zodErrors = error.issues
-      .map((issue) => {
-        const path = issue.path.length > 0 ? `${issue.path.join(".")}: ` : "";
-        return `  ${path}${issue.message}`;
-      })
-      .join("\n");
-    return { success: false, error: zodErrors.trim() };
-  }
-  return { success: false, error: error.message };
+  return { success: false, error: formatZodErrorHuman(error) };
 };
 
-export const createMergedConfig = ({
-  flags,
-  requiredFields,
-  onConfigMerged = () => null,
-  cwd,
-  env = process.env,
-}: {
+type CreateMergedConfigParams = {
   flags: SharedFlags;
-  requiredFields: JsonKey[];
-  onConfigMerged?: (config: MergedConfig) => void;
   cwd: string;
   env?: NodeJS.ProcessEnv;
-}):
-  | { mergedConfig: MergedConfig; success: true }
+};
+
+type CreateEnrichedMergedConfigParams = CreateMergedConfigParams & {
+  requiredFields: JsonConfigKey[];
+};
+
+const createMergedConfig = ({
+  flags,
+  cwd,
+  env = process.env,
+}: CreateMergedConfigParams):
+  | {
+      mergedConfig: MergedConfig;
+      configPath: string;
+      sources: ConfigSources;
+      success: true;
+    }
   | { success: false; error: string } => {
-  const configEnvVar = CONFIG_FLAG_METADATA.env;
-  const configPath = flags.config ?? env[configEnvVar] ?? DEFAULT_CONFIG_PATH;
+  const configMeta = FLAG_METADATA.config;
+  const configPath = flags.config ?? env[configMeta.env] ?? DEFAULT_CONFIG_PATH;
   const configExplicitlySet =
-    flags.config !== undefined || env[configEnvVar] !== undefined;
+    flags.config !== undefined || env[configMeta.env] !== undefined;
   const absoluteConfigPath = resolve(cwd, configPath);
   let jsonString: string | undefined;
   if (!existsSync(absoluteConfigPath) && configExplicitlySet) {
@@ -165,29 +182,63 @@ export const createMergedConfig = ({
     };
   }
   const sources: ConfigSources = { flags, env, json: parseResult.data };
-  const repoBaseDir = getValueByKey("repo_base_dir", sources);
-  const repoDir = getValueByKey("repo_dir", sources);
-  const patchesDir =
-    getValueByKey("patches_dir", sources) ?? DEFAULT_PATCHES_DIR;
+
+  // Build config from JSON config fields
+  const jsonConfig = Object.fromEntries(
+    JSON_CONFIG_KEYS.map((key) => {
+      const value = getValueByKey(key, sources);
+      const metadata = FLAG_METADATA[key];
+      const defaultVal =
+        "defaultValue" in metadata ? metadata.defaultValue : undefined;
+      return [key, value ?? defaultVal];
+    }),
+  );
+
+  // Add runtime-only flags
+  const runtimeFlags = Object.fromEntries(
+    RUNTIME_FLAG_KEYS.map((key) => [key, getRuntimeFlagValue(key, flags, env)]),
+  );
+
   const mergedConfig: MergedConfig = {
-    repo_url: getValueByKey("repo_url", sources),
-    ref: getValueByKey("ref", sources) ?? DEFAULT_REF,
+    ...jsonConfig,
+    ...runtimeFlags,
+  } as MergedConfig;
+
+  return { mergedConfig, configPath, sources, success: true };
+};
+
+export const createEnrichedMergedConfig = ({
+  flags,
+  requiredFields,
+  cwd,
+  env = process.env,
+}: CreateEnrichedMergedConfigParams):
+  | { mergedConfig: EnrichedMergedConfig; success: true }
+  | { success: false; error: string } => {
+  const result = createMergedConfig({ flags, cwd, env });
+  if (!result.success) {
+    return result;
+  }
+
+  const { mergedConfig, configPath, sources } = result;
+  const {
     repo_base_dir: repoBaseDir,
-    absoluteRepoBaseDir: repoBaseDir ? resolve(cwd, repoBaseDir) : undefined,
     repo_dir: repoDir,
+    patches_dir: patchesDir,
+  } = mergedConfig;
+
+  const enrichedConfig: EnrichedMergedConfig = {
+    ...mergedConfig,
+    absoluteRepoBaseDir: repoBaseDir ? resolve(cwd, repoBaseDir) : undefined,
     absoluteRepoDir:
       repoBaseDir && repoDir
         ? resolve(cwd, path.join(repoBaseDir, repoDir))
         : undefined,
-    patches_dir: patchesDir,
     absolutePatchesDir: patchesDir ? resolve(cwd, patchesDir) : undefined,
-    verbose: getValueByKey("verbose", sources) ?? false,
-    dry_run: getValueByKey("dry_run", sources) ?? false,
   };
 
-  onConfigMerged(mergedConfig);
   const errors = calcError({
-    mergedConfig,
+    mergedConfig: enrichedConfig,
     requiredFields,
     configPath,
     sources,
@@ -195,7 +246,23 @@ export const createMergedConfig = ({
   if (!errors.success) {
     return { success: false, error: errors.error };
   }
-  return { mergedConfig, success: true };
+  return { mergedConfig: enrichedConfig, success: true };
+};
+
+const getValueToValidate = (
+  key: FlagKey,
+  config: EnrichedMergedConfig,
+): string | undefined => {
+  const absoluteKeyMap: Partial<Record<FlagKey, keyof EnrichedMergedConfig>> = {
+    repo_base_dir: "absoluteRepoBaseDir",
+    repo_dir: "absoluteRepoDir",
+    patches_dir: "absolutePatchesDir",
+  };
+  const absoluteKey = absoluteKeyMap[key];
+  if (absoluteKey) {
+    return config[absoluteKey] as string | undefined;
+  }
+  return config[key] as string | undefined;
 };
 
 const calcError = ({
@@ -204,8 +271,8 @@ const calcError = ({
   configPath,
   sources,
 }: {
-  mergedConfig: MergedConfig;
-  requiredFields: JsonKey[];
+  mergedConfig: EnrichedMergedConfig;
+  requiredFields: JsonConfigKey[];
   configPath: string;
   sources: ConfigSources;
 }): { success: true } | { success: false; error: string } => {
@@ -214,7 +281,7 @@ const calcError = ({
   });
   if (missingFields.length > 0) {
     const missingFieldLines = missingFields.map((fieldKey) => {
-      const field = CONFIG_FIELD_METADATA[fieldKey];
+      const field = FLAG_METADATA[fieldKey];
       const flagName = getFlagName(fieldKey);
       return `  Missing ${chalk.bold(field.name)}: set ${chalk.cyan(fieldKey)} in ${chalk.blue(configPath)}, ${chalk.cyan(field.env)} env var, or ${chalk.cyan(`--${flagName}`)} flag`;
     });
@@ -231,45 +298,20 @@ const calcError = ({
     return { success: false, error: missingFieldsError };
   }
 
-  const validationErrors = [];
-  const isRepoBaseDirValid =
-    !requiredFields.includes("repo_base_dir") ||
-    !mergedConfig.absoluteRepoBaseDir ||
-    existsSync(mergedConfig.absoluteRepoBaseDir);
-  if (!isRepoBaseDirValid) {
-    validationErrors.push(
-      `${formatSourceLocation("repo_base_dir", sources, configPath)} does not exist: ${chalk.blue(mergedConfig.absoluteRepoBaseDir)}`,
-    );
-  }
-  if (
-    isRepoBaseDirValid &&
-    requiredFields.includes("repo_dir") &&
-    mergedConfig.absoluteRepoDir &&
-    !existsSync(mergedConfig.absoluteRepoDir)
-  ) {
-    validationErrors.push(
-      `${formatSourceLocation("repo_dir", sources, configPath)} does not exist: ${chalk.blue(mergedConfig.absoluteRepoDir)}`,
-    );
-  }
+  const validationErrors: string[] = [];
 
-  if (
-    requiredFields.includes("patches_dir") &&
-    mergedConfig.absolutePatchesDir &&
-    !existsSync(mergedConfig.absolutePatchesDir)
-  ) {
-    validationErrors.push(
-      `${formatSourceLocation("patches_dir", sources, configPath)} does not exist: ${chalk.blue(mergedConfig.absolutePatchesDir)}`,
-    );
-  }
+  for (const key of requiredFields) {
+    const metadata = FLAG_METADATA[key];
+    if (!("validate" in metadata) || !metadata.validate) continue;
 
-  if (
-    requiredFields.includes("repo_url") &&
-    mergedConfig.repo_url &&
-    !isValidGitUrl(mergedConfig.repo_url)
-  ) {
-    validationErrors.push(
-      `${formatSourceLocation("repo_url", sources, configPath)} is invalid.  Example repo: ${CONFIG_FIELD_METADATA.repo_url.example}`,
-    );
+    const value = getValueToValidate(key, mergedConfig);
+    const error = metadata.validate(value, key, mergedConfig);
+
+    if (error) {
+      validationErrors.push(
+        `${formatSourceLocation(key, sources, configPath)} ${error}`,
+      );
+    }
   }
 
   if (validationErrors.length > 0) {
