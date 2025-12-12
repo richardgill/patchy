@@ -1,7 +1,7 @@
 import { existsSync } from "node:fs";
 import { join, resolve } from "node:path";
 import chalk from "chalk";
-import { CONFIG_FIELD_METADATA } from "~/config/config";
+import { FLAG_METADATA } from "~/config/config";
 import { createEnrichedMergedConfig } from "~/config/resolver";
 import type { LocalContext } from "~/context";
 import { assertDefined } from "~/lib/assert";
@@ -35,7 +35,7 @@ export default async function (
   if (!config.repo_base_dir) {
     this.process.stderr.write(
       chalk.red(
-        `Missing required parameter: repo_base_dir\nSet --repo-base-dir flag, ${CONFIG_FIELD_METADATA.repo_base_dir.env} env var, or repo_base_dir in config file.\n`,
+        `Missing required parameter: repo_base_dir\nSet --repo-base-dir flag, ${FLAG_METADATA.repo_base_dir.env} env var, or repo_base_dir in config file.\n`,
       ),
     );
     this.process.exit(1);

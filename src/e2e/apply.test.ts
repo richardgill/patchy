@@ -241,7 +241,6 @@ describe("patchy apply", () => {
         repo_base_dir: "base",
         repo_dir: "repo",
         verbose: false,
-        dry_run: false,
       },
     });
 
@@ -559,7 +558,7 @@ describe("patchy apply", () => {
     expect(result).toFail();
     expect(result.stderr).toMatchInlineSnapshot(`
       "verbose: Invalid input: expected boolean, received string
-      dry_run: Invalid input: expected boolean, received string"
+      Unrecognized key: "dry_run""
     `);
   });
 
@@ -640,7 +639,7 @@ describe("patchy apply", () => {
       patches_dir: Invalid input: expected string, received object
       ref: Invalid input: expected string, received boolean
       verbose: Invalid input: expected boolean, received string
-      dry_run: Invalid input: expected boolean, received number"
+      Unrecognized key: "dry_run""
     `);
   });
 

@@ -1,25 +1,21 @@
-import { omit } from "es-toolkit";
 import { type ZodTypeAny, z } from "zod";
-import { CONFIG_FIELD_METADATA, type JsonConfigKey } from "./config";
+import { FLAG_METADATA, JSON_CONFIG_KEYS, type JsonConfigKey } from "./config";
 
 // Type-level mapping from metadata type strings to Zod schema types
 type ZodSchemaFor<T extends "string" | "boolean"> = T extends "boolean"
   ? z.ZodDefault<z.ZodBoolean>
   : z.ZodString;
 
-// Strongly typed baseConfigFields shape (excludes dry_run)
+// Strongly typed baseConfigFields shape
 type BaseConfigFields = {
-  [K in Exclude<JsonConfigKey, "dry_run">]: ZodSchemaFor<
-    (typeof CONFIG_FIELD_METADATA)[K]["type"]
-  >;
+  [K in JsonConfigKey]: ZodSchemaFor<(typeof FLAG_METADATA)[K]["type"]>;
 };
 
-// Build Zod schemas from metadata at runtime (dry_run excluded)
+// Build Zod schemas from metadata at runtime (only configField: true)
 const buildBaseConfigFields = (): BaseConfigFields => {
   const fields: Record<string, ZodTypeAny> = {};
-  for (const [key, meta] of Object.entries(
-    omit(CONFIG_FIELD_METADATA, ["dry_run"]),
-  )) {
+  for (const key of JSON_CONFIG_KEYS) {
+    const meta = FLAG_METADATA[key];
     fields[key] =
       meta.type === "boolean"
         ? z.boolean().default(false)
@@ -39,7 +35,6 @@ export const jsonConfigSchema = z
   .partial()
   .extend({
     $schema: z.string().optional(),
-    dry_run: z.boolean().optional(),
   })
   .strict();
 export type JsonConfig = z.infer<typeof jsonConfigSchema>;

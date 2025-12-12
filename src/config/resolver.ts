@@ -6,20 +6,20 @@ import { parseJsonc } from "~/lib/jsonc";
 import { isValidGitUrl } from "~/lib/validation";
 import { formatZodErrorHuman } from "~/lib/zod";
 import {
-  CONFIG_FIELD_METADATA,
-  CONFIG_FLAG_METADATA,
   type EnrichedMergedConfig,
+  FLAG_METADATA,
+  type FlagKey,
   getFlagName,
+  JSON_CONFIG_KEYS,
   type JsonConfigKey,
   type MergedConfig,
+  RUNTIME_FLAG_KEYS,
   type SharedFlags,
 } from "./config";
 
 import { DEFAULT_CONFIG_PATH } from "./defaults";
 import type { JsonConfig } from "./schemas";
 import { jsonConfigSchema } from "./schemas";
-
-const JSON_CONFIG_KEYS = Object.keys(CONFIG_FIELD_METADATA) as JsonConfigKey[];
 
 type ConfigSources = {
   flags: SharedFlags;
@@ -33,52 +33,72 @@ type ConfigValues<K extends JsonConfigKey> = {
   json: JsonConfig[K] | undefined;
 };
 
-const getEnvValue = <K extends JsonConfigKey>(
-  jsonKey: K,
+// Get value from env var, converting to appropriate type
+const getEnvValue = <K extends FlagKey>(
+  key: K,
   env: NodeJS.ProcessEnv,
-): JsonConfig[K] | undefined => {
-  const metadata = CONFIG_FIELD_METADATA[jsonKey];
+): unknown => {
+  const metadata = FLAG_METADATA[key];
   const envValue = env[metadata.env];
   if (envValue === undefined || envValue === "") {
     return undefined;
   }
   if (metadata.type === "boolean") {
-    return (envValue.toLowerCase() === "true" ||
-      envValue === "1") as JsonConfig[K];
+    return envValue.toLowerCase() === "true" || envValue === "1";
   }
-  return envValue as JsonConfig[K];
+  return envValue;
 };
 
+// Get value for a JSON config key from flags, env, or JSON (in priority order)
 const getValuesByKey = <K extends JsonConfigKey>(
-  jsonConfigKey: K,
+  key: K,
   sources: ConfigSources,
 ): ConfigValues<K> => {
-  const flagName = getFlagName(jsonConfigKey);
+  const flagName = getFlagName(key);
   return {
     flag: sources.flags[flagName as keyof SharedFlags] as
       | JsonConfig[K]
       | undefined,
-    env: getEnvValue(jsonConfigKey, sources.env),
-    json: sources.json[jsonConfigKey],
+    env: getEnvValue(key, sources.env) as JsonConfig[K] | undefined,
+    json: sources.json[key],
   };
 };
 
 const getValueByKey = <K extends JsonConfigKey>(
-  jsonConfigKey: K,
+  key: K,
   sources: ConfigSources,
 ): JsonConfig[K] | undefined => {
-  const values = getValuesByKey(jsonConfigKey, sources);
+  const values = getValuesByKey(key, sources);
   return values.flag ?? values.env ?? values.json;
 };
 
+// Get value for a runtime-only flag from flags or env (no JSON source)
+const getRuntimeFlagValue = <K extends FlagKey>(
+  key: K,
+  flags: SharedFlags,
+  env: NodeJS.ProcessEnv,
+): unknown => {
+  const metadata = FLAG_METADATA[key];
+  const flagName = getFlagName(key);
+  const flagValue = flags[flagName as keyof SharedFlags];
+  if (flagValue !== undefined) {
+    return flagValue;
+  }
+  const envValue = getEnvValue(key, env);
+  if (envValue !== undefined) {
+    return envValue;
+  }
+  return "defaultValue" in metadata ? metadata.defaultValue : undefined;
+};
+
 const formatSourceLocation = <K extends JsonConfigKey>(
-  jsonKey: K,
+  key: K,
   sources: ConfigSources,
   configPath: string,
 ): string => {
-  const metadata = CONFIG_FIELD_METADATA[jsonKey];
-  const flagName = getFlagName(jsonKey);
-  const values = getValuesByKey(jsonKey, sources);
+  const metadata = FLAG_METADATA[key];
+  const flagName = getFlagName(key);
+  const values = getValuesByKey(key, sources);
 
   if (values.flag) {
     return `--${flagName} ${values.flag}`;
@@ -87,7 +107,7 @@ const formatSourceLocation = <K extends JsonConfigKey>(
     return `${metadata.env}=${sources.env[metadata.env]}`;
   }
   if (values.json) {
-    return `${jsonKey}: ${values.json} in ${configPath}`;
+    return `${key}: ${values.json} in ${configPath}`;
   }
   return metadata.name;
 };
@@ -139,10 +159,10 @@ const createMergedConfig = ({
       success: true;
     }
   | { success: false; error: string } => {
-  const configEnvVar = CONFIG_FLAG_METADATA.env;
-  const configPath = flags.config ?? env[configEnvVar] ?? DEFAULT_CONFIG_PATH;
+  const configMeta = FLAG_METADATA.config;
+  const configPath = flags.config ?? env[configMeta.env] ?? DEFAULT_CONFIG_PATH;
   const configExplicitlySet =
-    flags.config !== undefined || env[configEnvVar] !== undefined;
+    flags.config !== undefined || env[configMeta.env] !== undefined;
   const absoluteConfigPath = resolve(cwd, configPath);
   let jsonString: string | undefined;
   if (!existsSync(absoluteConfigPath) && configExplicitlySet) {
@@ -163,15 +183,30 @@ const createMergedConfig = ({
     };
   }
   const sources: ConfigSources = { flags, env, json: parseResult.data };
-  const mergedConfig = Object.fromEntries(
+
+  // Build config from JSON config fields
+  const jsonConfig = Object.fromEntries(
     JSON_CONFIG_KEYS.map((key) => {
       const value = getValueByKey(key, sources);
-      const metadata = CONFIG_FIELD_METADATA[key];
+      const metadata = FLAG_METADATA[key];
       const defaultVal =
         "defaultValue" in metadata ? metadata.defaultValue : undefined;
       return [key, value ?? defaultVal];
     }),
-  ) as MergedConfig;
+  );
+
+  // Add runtime-only flags
+  const runtimeFlags = Object.fromEntries(
+    RUNTIME_FLAG_KEYS.filter((key) => key !== "config").map((key) => [
+      key,
+      getRuntimeFlagValue(key, flags, env),
+    ]),
+  );
+
+  const mergedConfig: MergedConfig = {
+    ...jsonConfig,
+    ...runtimeFlags,
+  } as MergedConfig;
 
   return { mergedConfig, configPath, sources, success: true };
 };
@@ -234,7 +269,7 @@ const calcError = ({
   });
   if (missingFields.length > 0) {
     const missingFieldLines = missingFields.map((fieldKey) => {
-      const field = CONFIG_FIELD_METADATA[fieldKey];
+      const field = FLAG_METADATA[fieldKey];
       const flagName = getFlagName(fieldKey);
       return `  Missing ${chalk.bold(field.name)}: set ${chalk.cyan(fieldKey)} in ${chalk.blue(configPath)}, ${chalk.cyan(field.env)} env var, or ${chalk.cyan(`--${flagName}`)} flag`;
     });
@@ -288,7 +323,7 @@ const calcError = ({
     !isValidGitUrl(mergedConfig.repo_url)
   ) {
     validationErrors.push(
-      `${formatSourceLocation("repo_url", sources, configPath)} is invalid.  Example repo: ${CONFIG_FIELD_METADATA.repo_url.example}`,
+      `${formatSourceLocation("repo_url", sources, configPath)} is invalid.  Example repo: ${FLAG_METADATA.repo_url.example}`,
     );
   }
 

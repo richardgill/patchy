@@ -12,9 +12,6 @@ describe("generateJsonSchema", () => {
           "$schema": {
             "type": "string",
           },
-          "dry_run": {
-            "type": "boolean",
-          },
           "patches_dir": {
             "minLength": 1,
             "type": "string",

@@ -906,7 +906,7 @@ describe("createEnrichedMergedConfig", () => {
     expectFailedMerge(result);
     expect(result.error).toMatchInlineSnapshot(`
       "verbose: Invalid input: expected boolean, received string
-      dry_run: Invalid input: expected boolean, received string"
+      Unrecognized key: "dry_run""
     `);
   });
 
@@ -1005,7 +1005,7 @@ describe("createEnrichedMergedConfig", () => {
       patches_dir: Invalid input: expected string, received object
       ref: Invalid input: expected string, received boolean
       verbose: Invalid input: expected boolean, received string
-      dry_run: Invalid input: expected boolean, received number"
+      Unrecognized key: "dry_run""
     `);
   });
 
@@ -1454,31 +1454,16 @@ describe("parseOptionalJsonConfig", () => {
     }
   });
 
-  it("should handle dry_run field correctly", () => {
+  it("should reject dry_run in JSON config (runtime-only flag)", () => {
     const result = parseOptionalJsonConfig(
       JSON.stringify({
         dry_run: true,
       }),
     );
 
-    expect(result.success).toBe(true);
-    if (result.success) {
-      expect(result.data).toEqual({ verbose: false, dry_run: true });
-    }
-  });
-
-  it("should fail for dry_run with wrong type", () => {
-    const result = parseOptionalJsonConfig(
-      JSON.stringify({
-        dry_run: "yes",
-      }),
-    );
-
     expect(result.success).toBe(false);
     if (!result.success) {
-      expect(result.error).toContain(
-        "dry_run: Invalid input: expected boolean, received string",
-      );
+      expect(result.error).toContain('Unrecognized key: "dry_run"');
     }
   });
 
@@ -1491,7 +1476,6 @@ describe("parseOptionalJsonConfig", () => {
         repo_dir: "my-repo",
         patches_dir: "./patches",
         verbose: false,
-        dry_run: false,
       }),
     );
 
@@ -1504,7 +1488,6 @@ describe("parseOptionalJsonConfig", () => {
         repo_dir: "my-repo",
         patches_dir: "./patches",
         verbose: false,
-        dry_run: false,
       });
     }
   });
