@@ -83,10 +83,10 @@ describe("createEnrichedMergedConfig", () => {
       `
       "{
         "repo_url": "https://github.com/example/flag-repo.git",
-        "ref": "main",
-        "repo_base_dir": "repoBaseDir1",
         "repo_dir": "repoDir1",
+        "repo_base_dir": "repoBaseDir1",
         "patches_dir": "./patches/",
+        "ref": "main",
         "verbose": true,
         "dry_run": true,
         "absoluteRepoBaseDir": "<TEST_DIR>/repoBaseDir1",
@@ -171,10 +171,10 @@ describe("createEnrichedMergedConfig", () => {
       `
       "{
         "repo_url": "https://github.com/example/repo.git",
-        "ref": "main",
-        "repo_base_dir": "repoBaseDir1",
         "repo_dir": "repoDir1",
+        "repo_base_dir": "repoBaseDir1",
         "patches_dir": "./patches/",
+        "ref": "main",
         "verbose": false,
         "dry_run": false,
         "absoluteRepoBaseDir": "<TEST_DIR>/repoBaseDir1",
@@ -312,10 +312,10 @@ describe("createEnrichedMergedConfig", () => {
       `
       "{
         "repo_url": "https://github.com/example/flag-repo.git",
-        "ref": "flag-ref",
-        "repo_base_dir": "flag-base",
         "repo_dir": "flag-repo",
+        "repo_base_dir": "flag-base",
         "patches_dir": "flag-patches",
+        "ref": "flag-ref",
         "verbose": true,
         "dry_run": false,
         "absoluteRepoBaseDir": "<TEST_DIR>/flag-base",
@@ -361,10 +361,10 @@ describe("createEnrichedMergedConfig", () => {
       `
       "{
         "repo_url": "https://github.com/example/repo.git",
-        "ref": "main",
-        "repo_base_dir": "base",
         "repo_dir": "repo",
+        "repo_base_dir": "base",
         "patches_dir": "patches",
+        "ref": "main",
         "verbose": false,
         "dry_run": false,
         "absoluteRepoBaseDir": "<TEST_DIR>/base",
@@ -397,8 +397,8 @@ describe("createEnrichedMergedConfig", () => {
       `
       "{
         "repo_url": "https://github.com/example/repo.git",
-        "ref": "main",
         "patches_dir": "./patches/",
+        "ref": "main",
         "verbose": false,
         "dry_run": false,
         "absolutePatchesDir": "<TEST_DIR>/patches"
@@ -502,10 +502,10 @@ describe("createEnrichedMergedConfig", () => {
       `
       "{
         "repo_url": "https://github.com/example/repo.git",
-        "ref": "main",
-        "repo_base_dir": "base",
         "repo_dir": "repo",
+        "repo_base_dir": "base",
         "patches_dir": "./patches/",
+        "ref": "main",
         "verbose": true,
         "dry_run": true,
         "absoluteRepoBaseDir": "<TEST_DIR>/base",
@@ -548,10 +548,10 @@ describe("createEnrichedMergedConfig", () => {
       `
       "{
         "repo_url": "https://github.com/example/repo.git",
-        "ref": "main",
-        "repo_base_dir": "my-base/nested",
         "repo_dir": "my-repo/nested-repo",
+        "repo_base_dir": "my-base/nested",
         "patches_dir": "./patches/",
+        "ref": "main",
         "verbose": false,
         "dry_run": false,
         "absoluteRepoBaseDir": "<TEST_DIR>/my-base/nested",
@@ -615,10 +615,10 @@ describe("createEnrichedMergedConfig", () => {
       `
       "{
         "repo_url": "https://github.com/example/custom.git",
-        "ref": "custom-branch",
-        "repo_base_dir": "base",
         "repo_dir": "repo",
+        "repo_base_dir": "base",
         "patches_dir": "./patches/",
+        "ref": "custom-branch",
         "verbose": false,
         "dry_run": false,
         "absoluteRepoBaseDir": "<TEST_DIR>/base",
@@ -664,10 +664,10 @@ describe("createEnrichedMergedConfig", () => {
       `
       "{
         "repo_url": "https://github.com/example/repo.git",
-        "ref": "main",
-        "repo_base_dir": "base",
         "repo_dir": "repo",
+        "repo_base_dir": "base",
         "patches_dir": "./patches/",
+        "ref": "main",
         "verbose": false,
         "dry_run": false,
         "absoluteRepoBaseDir": "<TEST_DIR>/subdir/base",
@@ -715,10 +715,10 @@ describe("createEnrichedMergedConfig", () => {
       `
       "{
         "repo_url": "https://github.com/example/repo.git",
-        "ref": "main",
-        "repo_base_dir": "base",
         "repo_dir": "repo",
+        "repo_base_dir": "base",
         "patches_dir": "./patches/",
+        "ref": "main",
         "verbose": false,
         "dry_run": false,
         "absoluteRepoBaseDir": "<TEST_DIR>/base",
@@ -763,10 +763,10 @@ describe("createEnrichedMergedConfig", () => {
       `
       "{
         "repo_url": "https://github.com/example/repo.git",
-        "ref": "main",
-        "repo_base_dir": "base",
         "repo_dir": "repo",
+        "repo_base_dir": "base",
         "patches_dir": "./patches/",
+        "ref": "main",
         "verbose": false,
         "dry_run": false,
         "absoluteRepoBaseDir": "<TEST_DIR>/base",
@@ -1100,10 +1100,10 @@ describe("createEnrichedMergedConfig", () => {
       `
       "{
         "repo_url": "https://github.com/example/env-repo.git",
-        "ref": "env-branch",
-        "repo_base_dir": "env-base",
         "repo_dir": "env-repo",
+        "repo_base_dir": "env-base",
         "patches_dir": "env-patches",
+        "ref": "env-branch",
         "verbose": true,
         "dry_run": true,
         "absoluteRepoBaseDir": "<TEST_DIR>/env-base",
@@ -1162,10 +1162,10 @@ describe("createEnrichedMergedConfig", () => {
       `
       "{
         "repo_url": "https://github.com/example/flag-repo.git",
-        "ref": "flag-ref",
-        "repo_base_dir": "flag-base",
         "repo_dir": "flag-repo",
+        "repo_base_dir": "flag-base",
         "patches_dir": "flag-patches",
+        "ref": "flag-ref",
         "verbose": true,
         "dry_run": true,
         "absoluteRepoBaseDir": "<TEST_DIR>/flag-base",
@@ -1222,10 +1222,10 @@ describe("createEnrichedMergedConfig", () => {
       `
       "{
         "repo_url": "https://github.com/example/env-repo.git",
-        "ref": "env-branch",
-        "repo_base_dir": "env-base",
         "repo_dir": "env-repo",
+        "repo_base_dir": "env-base",
         "patches_dir": "env-patches",
+        "ref": "env-branch",
         "verbose": true,
         "dry_run": false,
         "absoluteRepoBaseDir": "<TEST_DIR>/env-base",
@@ -1286,10 +1286,10 @@ describe("createEnrichedMergedConfig", () => {
       `
       "{
         "repo_url": "https://github.com/example/env-config.git",
-        "ref": "env-config-branch",
-        "repo_base_dir": "base",
         "repo_dir": "repo",
+        "repo_base_dir": "base",
         "patches_dir": "./patches/",
+        "ref": "env-config-branch",
         "verbose": false,
         "dry_run": false,
         "absoluteRepoBaseDir": "<TEST_DIR>/base",

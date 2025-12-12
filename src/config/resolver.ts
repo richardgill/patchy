@@ -9,15 +9,17 @@ import {
   CONFIG_FIELD_METADATA,
   CONFIG_FLAG_METADATA,
   type EnrichedMergedConfig,
-  getDefaultValue,
   getFlagName,
   type JsonConfigKey,
   type MergedConfig,
   type SharedFlags,
 } from "./config";
+
 import { DEFAULT_CONFIG_PATH } from "./defaults";
 import type { JsonConfig } from "./schemas";
 import { jsonConfigSchema } from "./schemas";
+
+const JSON_CONFIG_KEYS = Object.keys(CONFIG_FIELD_METADATA) as JsonConfigKey[];
 
 type ConfigSources = {
   flags: SharedFlags;
@@ -162,16 +164,15 @@ const createMergedConfig = ({
     };
   }
   const sources: ConfigSources = { flags, env, json: parseResult.data };
-  const mergedConfig: MergedConfig = {
-    repo_url: getValueByKey("repo_url", sources),
-    ref: getValueByKey("ref", sources) ?? getDefaultValue("ref"),
-    repo_base_dir: getValueByKey("repo_base_dir", sources),
-    repo_dir: getValueByKey("repo_dir", sources),
-    patches_dir:
-      getValueByKey("patches_dir", sources) ?? getDefaultValue("patches_dir"),
-    verbose: getValueByKey("verbose", sources) ?? getDefaultValue("verbose"),
-    dry_run: getValueByKey("dry_run", sources) ?? getDefaultValue("dry_run"),
-  };
+  const mergedConfig = Object.fromEntries(
+    JSON_CONFIG_KEYS.map((key) => {
+      const value = getValueByKey(key, sources);
+      const metadata = CONFIG_FIELD_METADATA[key];
+      const defaultVal =
+        "defaultValue" in metadata ? metadata.defaultValue : undefined;
+      return [key, value ?? defaultVal];
+    }),
+  ) as MergedConfig;
 
   return { mergedConfig, configPath, sources, success: true };
 };
