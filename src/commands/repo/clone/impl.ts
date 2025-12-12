@@ -2,7 +2,7 @@ import { existsSync } from "node:fs";
 import { join, resolve } from "node:path";
 import chalk from "chalk";
 import { CONFIG_FIELD_METADATA } from "~/config/config";
-import { createMergedConfig } from "~/config/resolver";
+import { createEnrichedMergedConfig } from "~/config/resolver";
 import type { LocalContext } from "~/context";
 import { assertDefined } from "~/lib/assert";
 import { ensureDirExists } from "~/lib/fs";
@@ -14,7 +14,7 @@ export default async function (
   this: LocalContext,
   flags: CloneFlags,
 ): Promise<void> {
-  const result = createMergedConfig({
+  const result = createEnrichedMergedConfig({
     flags,
     requiredFields: ["repo_url"],
     cwd: this.cwd,

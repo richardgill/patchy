@@ -181,21 +181,22 @@ export type CompleteJsonConfig = {
   [K in JsonConfigKey]: TypeMap[(typeof CONFIG_FIELD_METADATA)[K]["type"]];
 };
 
+export type MergedConfig = MarkOptional<
+  CompleteJsonConfig,
+  "repo_url" | "repo_dir" | "repo_base_dir"
+>;
+
+export type EnrichedMergedConfig = MergedConfig & {
+  absoluteRepoBaseDir: string | undefined;
+  absoluteRepoDir: string | undefined;
+  absolutePatchesDir: string | undefined;
+};
+
 export type ResolvedConfig = CompleteJsonConfig & {
   absoluteRepoBaseDir: string;
   absoluteRepoDir: string;
   absolutePatchesDir: string;
 };
-
-export type MergedConfig = MarkOptional<
-  ResolvedConfig,
-  | "repo_url"
-  | "repo_dir"
-  | "repo_base_dir"
-  | "absoluteRepoBaseDir"
-  | "absoluteRepoDir"
-  | "absolutePatchesDir"
->;
 
 export type CamelCaseResolvedConfig = {
   [K in JsonConfigKey as CamelCase<K>]: CompleteJsonConfig[K];

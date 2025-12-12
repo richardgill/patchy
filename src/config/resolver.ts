@@ -8,6 +8,7 @@ import { formatZodErrorHuman } from "~/lib/zod";
 import {
   CONFIG_FIELD_METADATA,
   CONFIG_FLAG_METADATA,
+  type EnrichedMergedConfig,
   getDefaultValue,
   getFlagName,
   type JsonConfigKey,
@@ -114,20 +115,28 @@ export const parseOptionalJsonConfig = (
   return { success: false, error: formatZodErrorHuman(error) };
 };
 
-export const createMergedConfig = ({
-  flags,
-  requiredFields,
-  onConfigMerged = () => null,
-  cwd,
-  env = process.env,
-}: {
+type CreateMergedConfigParams = {
   flags: SharedFlags;
-  requiredFields: JsonConfigKey[];
-  onConfigMerged?: (config: MergedConfig) => void;
   cwd: string;
   env?: NodeJS.ProcessEnv;
-}):
-  | { mergedConfig: MergedConfig; success: true }
+};
+
+type CreateEnrichedMergedConfigParams = CreateMergedConfigParams & {
+  requiredFields: JsonConfigKey[];
+  onConfigMerged?: (config: EnrichedMergedConfig) => void;
+};
+
+const createMergedConfig = ({
+  flags,
+  cwd,
+  env = process.env,
+}: CreateMergedConfigParams):
+  | {
+      mergedConfig: MergedConfig;
+      configPath: string;
+      sources: ConfigSources;
+      success: true;
+    }
   | { success: false; error: string } => {
   const configEnvVar = CONFIG_FLAG_METADATA.env;
   const configPath = flags.config ?? env[configEnvVar] ?? DEFAULT_CONFIG_PATH;
@@ -153,29 +162,54 @@ export const createMergedConfig = ({
     };
   }
   const sources: ConfigSources = { flags, env, json: parseResult.data };
-  const repoBaseDir = getValueByKey("repo_base_dir", sources);
-  const repoDir = getValueByKey("repo_dir", sources);
-  const patchesDir =
-    getValueByKey("patches_dir", sources) ?? getDefaultValue("patches_dir");
   const mergedConfig: MergedConfig = {
     repo_url: getValueByKey("repo_url", sources),
     ref: getValueByKey("ref", sources) ?? getDefaultValue("ref"),
-    repo_base_dir: repoBaseDir,
-    absoluteRepoBaseDir: repoBaseDir ? resolve(cwd, repoBaseDir) : undefined,
-    repo_dir: repoDir,
-    absoluteRepoDir:
-      repoBaseDir && repoDir
-        ? resolve(cwd, path.join(repoBaseDir, repoDir))
-        : undefined,
-    patches_dir: patchesDir,
-    absolutePatchesDir: patchesDir ? resolve(cwd, patchesDir) : undefined,
+    repo_base_dir: getValueByKey("repo_base_dir", sources),
+    repo_dir: getValueByKey("repo_dir", sources),
+    patches_dir:
+      getValueByKey("patches_dir", sources) ?? getDefaultValue("patches_dir"),
     verbose: getValueByKey("verbose", sources) ?? getDefaultValue("verbose"),
     dry_run: getValueByKey("dry_run", sources) ?? getDefaultValue("dry_run"),
   };
 
-  onConfigMerged(mergedConfig);
+  return { mergedConfig, configPath, sources, success: true };
+};
+
+export const createEnrichedMergedConfig = ({
+  flags,
+  requiredFields,
+  onConfigMerged = () => null,
+  cwd,
+  env = process.env,
+}: CreateEnrichedMergedConfigParams):
+  | { mergedConfig: EnrichedMergedConfig; success: true }
+  | { success: false; error: string } => {
+  const result = createMergedConfig({ flags, cwd, env });
+  if (!result.success) {
+    return result;
+  }
+
+  const { mergedConfig, configPath, sources } = result;
+  const {
+    repo_base_dir: repoBaseDir,
+    repo_dir: repoDir,
+    patches_dir: patchesDir,
+  } = mergedConfig;
+
+  const enrichedConfig: EnrichedMergedConfig = {
+    ...mergedConfig,
+    absoluteRepoBaseDir: repoBaseDir ? resolve(cwd, repoBaseDir) : undefined,
+    absoluteRepoDir:
+      repoBaseDir && repoDir
+        ? resolve(cwd, path.join(repoBaseDir, repoDir))
+        : undefined,
+    absolutePatchesDir: patchesDir ? resolve(cwd, patchesDir) : undefined,
+  };
+
+  onConfigMerged(enrichedConfig);
   const errors = calcError({
-    mergedConfig,
+    mergedConfig: enrichedConfig,
     requiredFields,
     configPath,
     sources,
@@ -183,7 +217,7 @@ export const createMergedConfig = ({
   if (!errors.success) {
     return { success: false, error: errors.error };
   }
-  return { mergedConfig, success: true };
+  return { mergedConfig: enrichedConfig, success: true };
 };
 
 const calcError = ({
@@ -192,7 +226,7 @@ const calcError = ({
   configPath,
   sources,
 }: {
-  mergedConfig: MergedConfig;
+  mergedConfig: EnrichedMergedConfig;
   requiredFields: JsonConfigKey[];
   configPath: string;
   sources: ConfigSources;

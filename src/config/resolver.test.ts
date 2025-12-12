@@ -7,12 +7,19 @@ import {
   setupTestWithConfig,
   stabilizeTempDir,
 } from "~/e2e/test-utils";
-import type { JsonConfigKey, MergedConfig, SharedFlags } from "./config";
-import { createMergedConfig, parseOptionalJsonConfig } from "./resolver";
+import type {
+  EnrichedMergedConfig,
+  JsonConfigKey,
+  SharedFlags,
+} from "./config";
+import {
+  createEnrichedMergedConfig,
+  parseOptionalJsonConfig,
+} from "./resolver";
 
 const expectSuccessfulMerge: (
-  result: ReturnType<typeof createMergedConfig>,
-) => asserts result is { success: true; mergedConfig: MergedConfig } = (
+  result: ReturnType<typeof createEnrichedMergedConfig>,
+) => asserts result is { success: true; mergedConfig: EnrichedMergedConfig } = (
   result,
 ) => {
   expect(result.success).toBe(true);
@@ -22,7 +29,7 @@ const expectSuccessfulMerge: (
 };
 
 const expectFailedMerge: (
-  result: ReturnType<typeof createMergedConfig>,
+  result: ReturnType<typeof createEnrichedMergedConfig>,
 ) => asserts result is { success: false; error: string } = (result) => {
   expect(result.success).toBe(false);
   if (!result.success) {
@@ -30,7 +37,7 @@ const expectFailedMerge: (
   }
 };
 
-describe("createMergedConfig", () => {
+describe("createEnrichedMergedConfig", () => {
   let tmpDir: string;
 
   beforeEach(() => {
@@ -65,7 +72,7 @@ describe("createMergedConfig", () => {
       "repo_dir",
     ];
 
-    const result = createMergedConfig({
+    const result = createEnrichedMergedConfig({
       flags,
       requiredFields,
       cwd: tmpDir,
@@ -78,13 +85,13 @@ describe("createMergedConfig", () => {
         "repo_url": "https://github.com/example/flag-repo.git",
         "ref": "main",
         "repo_base_dir": "repoBaseDir1",
-        "absoluteRepoBaseDir": "<TEST_DIR>/repoBaseDir1",
         "repo_dir": "repoDir1",
-        "absoluteRepoDir": "<TEST_DIR>/repoBaseDir1/repoDir1",
         "patches_dir": "./patches/",
-        "absolutePatchesDir": "<TEST_DIR>/patches",
         "verbose": true,
-        "dry_run": true
+        "dry_run": true,
+        "absoluteRepoBaseDir": "<TEST_DIR>/repoBaseDir1",
+        "absoluteRepoDir": "<TEST_DIR>/repoBaseDir1/repoDir1",
+        "absolutePatchesDir": "<TEST_DIR>/patches"
       }"
     `,
     );
@@ -111,7 +118,7 @@ describe("createMergedConfig", () => {
       "repo_dir",
     ];
 
-    const result = createMergedConfig({
+    const result = createEnrichedMergedConfig({
       flags,
       requiredFields,
       cwd: tmpDir,
@@ -153,7 +160,7 @@ describe("createMergedConfig", () => {
       "repo_dir",
     ];
 
-    const result = createMergedConfig({
+    const result = createEnrichedMergedConfig({
       flags,
       requiredFields,
       cwd: tmpDir,
@@ -166,13 +173,13 @@ describe("createMergedConfig", () => {
         "repo_url": "https://github.com/example/repo.git",
         "ref": "main",
         "repo_base_dir": "repoBaseDir1",
-        "absoluteRepoBaseDir": "<TEST_DIR>/repoBaseDir1",
         "repo_dir": "repoDir1",
-        "absoluteRepoDir": "<TEST_DIR>/repoBaseDir1/repoDir1",
         "patches_dir": "./patches/",
-        "absolutePatchesDir": "<TEST_DIR>/patches",
         "verbose": false,
-        "dry_run": false
+        "dry_run": false,
+        "absoluteRepoBaseDir": "<TEST_DIR>/repoBaseDir1",
+        "absoluteRepoDir": "<TEST_DIR>/repoBaseDir1/repoDir1",
+        "absolutePatchesDir": "<TEST_DIR>/patches"
       }"
     `,
     );
@@ -185,7 +192,7 @@ describe("createMergedConfig", () => {
     };
     const requiredFields: JsonConfigKey[] = ["repo_url"];
 
-    const result = createMergedConfig({
+    const result = createEnrichedMergedConfig({
       flags,
       requiredFields,
       cwd: tmpDir,
@@ -207,7 +214,7 @@ describe("createMergedConfig", () => {
     };
     const requiredFields: JsonConfigKey[] = ["repo_url"];
 
-    const result = createMergedConfig({
+    const result = createEnrichedMergedConfig({
       flags,
       requiredFields,
       cwd: tmpDir,
@@ -244,7 +251,7 @@ describe("createMergedConfig", () => {
       "patches_dir",
     ];
 
-    const result = createMergedConfig({
+    const result = createEnrichedMergedConfig({
       flags,
       requiredFields,
       cwd: tmpDir,
@@ -294,7 +301,7 @@ describe("createMergedConfig", () => {
       "patches_dir",
     ];
 
-    const result = createMergedConfig({
+    const result = createEnrichedMergedConfig({
       flags,
       requiredFields,
       cwd: tmpDir,
@@ -307,13 +314,13 @@ describe("createMergedConfig", () => {
         "repo_url": "https://github.com/example/flag-repo.git",
         "ref": "flag-ref",
         "repo_base_dir": "flag-base",
-        "absoluteRepoBaseDir": "<TEST_DIR>/flag-base",
         "repo_dir": "flag-repo",
-        "absoluteRepoDir": "<TEST_DIR>/flag-base/flag-repo",
         "patches_dir": "flag-patches",
-        "absolutePatchesDir": "<TEST_DIR>/flag-patches",
         "verbose": true,
-        "dry_run": false
+        "dry_run": false,
+        "absoluteRepoBaseDir": "<TEST_DIR>/flag-base",
+        "absoluteRepoDir": "<TEST_DIR>/flag-base/flag-repo",
+        "absolutePatchesDir": "<TEST_DIR>/flag-patches"
       }"
     `,
     );
@@ -343,7 +350,7 @@ describe("createMergedConfig", () => {
       "patches_dir",
     ];
 
-    const result = createMergedConfig({
+    const result = createEnrichedMergedConfig({
       flags,
       requiredFields,
       cwd: tmpDir,
@@ -356,13 +363,13 @@ describe("createMergedConfig", () => {
         "repo_url": "https://github.com/example/repo.git",
         "ref": "main",
         "repo_base_dir": "base",
-        "absoluteRepoBaseDir": "<TEST_DIR>/base",
         "repo_dir": "repo",
-        "absoluteRepoDir": "<TEST_DIR>/base/repo",
         "patches_dir": "patches",
-        "absolutePatchesDir": "<TEST_DIR>/patches",
         "verbose": false,
-        "dry_run": false
+        "dry_run": false,
+        "absoluteRepoBaseDir": "<TEST_DIR>/base",
+        "absoluteRepoDir": "<TEST_DIR>/base/repo",
+        "absolutePatchesDir": "<TEST_DIR>/patches"
       }"
     `,
     );
@@ -379,7 +386,7 @@ describe("createMergedConfig", () => {
     };
     const requiredFields: JsonConfigKey[] = ["repo_url"];
 
-    const result = createMergedConfig({
+    const result = createEnrichedMergedConfig({
       flags,
       requiredFields,
       cwd: tmpDir,
@@ -392,9 +399,9 @@ describe("createMergedConfig", () => {
         "repo_url": "https://github.com/example/repo.git",
         "ref": "main",
         "patches_dir": "./patches/",
-        "absolutePatchesDir": "<TEST_DIR>/patches",
         "verbose": false,
-        "dry_run": false
+        "dry_run": false,
+        "absolutePatchesDir": "<TEST_DIR>/patches"
       }"
     `,
     );
@@ -411,7 +418,7 @@ describe("createMergedConfig", () => {
     };
     const requiredFields: JsonConfigKey[] = ["repo_url"];
 
-    const result = createMergedConfig({
+    const result = createEnrichedMergedConfig({
       flags,
       requiredFields,
       cwd: tmpDir,
@@ -440,7 +447,7 @@ describe("createMergedConfig", () => {
     const flags: SharedFlags = {};
     const requiredFields: JsonConfigKey[] = ["repo_base_dir", "patches_dir"];
 
-    const result = createMergedConfig({
+    const result = createEnrichedMergedConfig({
       flags,
       requiredFields,
       cwd: tmpDir,
@@ -484,7 +491,7 @@ describe("createMergedConfig", () => {
       "repo_dir",
     ];
 
-    const result = createMergedConfig({
+    const result = createEnrichedMergedConfig({
       flags,
       requiredFields,
       cwd: tmpDir,
@@ -497,13 +504,13 @@ describe("createMergedConfig", () => {
         "repo_url": "https://github.com/example/repo.git",
         "ref": "main",
         "repo_base_dir": "base",
-        "absoluteRepoBaseDir": "<TEST_DIR>/base",
         "repo_dir": "repo",
-        "absoluteRepoDir": "<TEST_DIR>/base/repo",
         "patches_dir": "./patches/",
-        "absolutePatchesDir": "<TEST_DIR>/patches",
         "verbose": true,
-        "dry_run": true
+        "dry_run": true,
+        "absoluteRepoBaseDir": "<TEST_DIR>/base",
+        "absoluteRepoDir": "<TEST_DIR>/base/repo",
+        "absolutePatchesDir": "<TEST_DIR>/patches"
       }"
     `,
     );
@@ -530,7 +537,7 @@ describe("createMergedConfig", () => {
       "repo_dir",
     ];
 
-    const result = createMergedConfig({
+    const result = createEnrichedMergedConfig({
       flags,
       requiredFields,
       cwd: tmpDir,
@@ -543,13 +550,13 @@ describe("createMergedConfig", () => {
         "repo_url": "https://github.com/example/repo.git",
         "ref": "main",
         "repo_base_dir": "my-base/nested",
-        "absoluteRepoBaseDir": "<TEST_DIR>/my-base/nested",
         "repo_dir": "my-repo/nested-repo",
-        "absoluteRepoDir": "<TEST_DIR>/my-base/nested/my-repo/nested-repo",
         "patches_dir": "./patches/",
-        "absolutePatchesDir": "<TEST_DIR>/patches",
         "verbose": false,
-        "dry_run": false
+        "dry_run": false,
+        "absoluteRepoBaseDir": "<TEST_DIR>/my-base/nested",
+        "absoluteRepoDir": "<TEST_DIR>/my-base/nested/my-repo/nested-repo",
+        "absolutePatchesDir": "<TEST_DIR>/patches"
       }"
     `,
     );
@@ -597,7 +604,7 @@ describe("createMergedConfig", () => {
       "repo_dir",
     ];
 
-    const result = createMergedConfig({
+    const result = createEnrichedMergedConfig({
       flags,
       requiredFields,
       cwd: tmpDir,
@@ -610,13 +617,13 @@ describe("createMergedConfig", () => {
         "repo_url": "https://github.com/example/custom.git",
         "ref": "custom-branch",
         "repo_base_dir": "base",
-        "absoluteRepoBaseDir": "<TEST_DIR>/base",
         "repo_dir": "repo",
-        "absoluteRepoDir": "<TEST_DIR>/base/repo",
         "patches_dir": "./patches/",
-        "absolutePatchesDir": "<TEST_DIR>/patches",
         "verbose": false,
-        "dry_run": false
+        "dry_run": false,
+        "absoluteRepoBaseDir": "<TEST_DIR>/base",
+        "absoluteRepoDir": "<TEST_DIR>/base/repo",
+        "absolutePatchesDir": "<TEST_DIR>/patches"
       }"
     `,
     );
@@ -645,7 +652,7 @@ describe("createMergedConfig", () => {
     ];
 
     const originalCwd = process.cwd();
-    const result = createMergedConfig({
+    const result = createEnrichedMergedConfig({
       flags,
       requiredFields,
       cwd: subDir,
@@ -659,13 +666,13 @@ describe("createMergedConfig", () => {
         "repo_url": "https://github.com/example/repo.git",
         "ref": "main",
         "repo_base_dir": "base",
-        "absoluteRepoBaseDir": "<TEST_DIR>/subdir/base",
         "repo_dir": "repo",
-        "absoluteRepoDir": "<TEST_DIR>/subdir/base/repo",
         "patches_dir": "./patches/",
-        "absolutePatchesDir": "<TEST_DIR>/subdir/patches",
         "verbose": false,
-        "dry_run": false
+        "dry_run": false,
+        "absoluteRepoBaseDir": "<TEST_DIR>/subdir/base",
+        "absoluteRepoDir": "<TEST_DIR>/subdir/base/repo",
+        "absolutePatchesDir": "<TEST_DIR>/subdir/patches"
       }"
     `,
     );
@@ -693,7 +700,7 @@ describe("createMergedConfig", () => {
     ];
     let callbackConfig: object | null = null;
 
-    const result = createMergedConfig({
+    const result = createEnrichedMergedConfig({
       flags,
       requiredFields,
       cwd: tmpDir,
@@ -710,13 +717,13 @@ describe("createMergedConfig", () => {
         "repo_url": "https://github.com/example/repo.git",
         "ref": "main",
         "repo_base_dir": "base",
-        "absoluteRepoBaseDir": "<TEST_DIR>/base",
         "repo_dir": "repo",
-        "absoluteRepoDir": "<TEST_DIR>/base/repo",
         "patches_dir": "./patches/",
-        "absolutePatchesDir": "<TEST_DIR>/patches",
         "verbose": false,
-        "dry_run": false
+        "dry_run": false,
+        "absoluteRepoBaseDir": "<TEST_DIR>/base",
+        "absoluteRepoDir": "<TEST_DIR>/base/repo",
+        "absolutePatchesDir": "<TEST_DIR>/patches"
       }"
     `,
     );
@@ -744,7 +751,7 @@ describe("createMergedConfig", () => {
     ];
     const originalCwd = process.cwd();
 
-    const result = createMergedConfig({
+    const result = createEnrichedMergedConfig({
       flags,
       requiredFields,
       cwd: tmpDir,
@@ -758,13 +765,13 @@ describe("createMergedConfig", () => {
         "repo_url": "https://github.com/example/repo.git",
         "ref": "main",
         "repo_base_dir": "base",
-        "absoluteRepoBaseDir": "<TEST_DIR>/base",
         "repo_dir": "repo",
-        "absoluteRepoDir": "<TEST_DIR>/base/repo",
         "patches_dir": "./patches/",
-        "absolutePatchesDir": "<TEST_DIR>/patches",
         "verbose": false,
-        "dry_run": false
+        "dry_run": false,
+        "absoluteRepoBaseDir": "<TEST_DIR>/base",
+        "absoluteRepoDir": "<TEST_DIR>/base/repo",
+        "absolutePatchesDir": "<TEST_DIR>/patches"
       }"
     `,
     );
@@ -787,7 +794,7 @@ describe("createMergedConfig", () => {
     };
     const requiredFields: JsonConfigKey[] = ["repo_url"];
 
-    const result = createMergedConfig({
+    const result = createEnrichedMergedConfig({
       flags,
       requiredFields,
       cwd: tmpDir,
@@ -818,7 +825,7 @@ describe("createMergedConfig", () => {
       "repo_dir",
     ];
 
-    const result = createMergedConfig({
+    const result = createEnrichedMergedConfig({
       flags,
       requiredFields,
       cwd: tmpDir,
@@ -851,7 +858,7 @@ describe("createMergedConfig", () => {
     };
     const requiredFields: JsonConfigKey[] = [];
 
-    const result = createMergedConfig({
+    const result = createEnrichedMergedConfig({
       flags,
       requiredFields,
       cwd: tmpDir,
@@ -882,7 +889,7 @@ describe("createMergedConfig", () => {
     };
     const requiredFields: JsonConfigKey[] = [];
 
-    const result = createMergedConfig({
+    const result = createEnrichedMergedConfig({
       flags,
       requiredFields,
       cwd: tmpDir,
@@ -913,7 +920,7 @@ describe("createMergedConfig", () => {
     };
     const requiredFields: JsonConfigKey[] = [];
 
-    const result = createMergedConfig({
+    const result = createEnrichedMergedConfig({
       flags,
       requiredFields,
       cwd: tmpDir,
@@ -941,7 +948,7 @@ describe("createMergedConfig", () => {
     };
     const requiredFields: JsonConfigKey[] = [];
 
-    const result = createMergedConfig({
+    const result = createEnrichedMergedConfig({
       flags,
       requiredFields,
       cwd: tmpDir,
@@ -971,7 +978,7 @@ describe("createMergedConfig", () => {
     };
     const requiredFields: JsonConfigKey[] = [];
 
-    const result = createMergedConfig({
+    const result = createEnrichedMergedConfig({
       flags,
       requiredFields,
       cwd: tmpDir,
@@ -1001,7 +1008,7 @@ describe("createMergedConfig", () => {
     };
     const requiredFields: JsonConfigKey[] = [];
 
-    const result = createMergedConfig({
+    const result = createEnrichedMergedConfig({
       flags,
       requiredFields,
       cwd: tmpDir,
@@ -1035,7 +1042,7 @@ describe("createMergedConfig", () => {
     };
     const requiredFields: JsonConfigKey[] = [];
 
-    const result = createMergedConfig({
+    const result = createEnrichedMergedConfig({
       flags,
       requiredFields,
       cwd: tmpDir,
@@ -1081,7 +1088,7 @@ describe("createMergedConfig", () => {
       PATCHY_DRY_RUN: "1",
     };
 
-    const result = createMergedConfig({
+    const result = createEnrichedMergedConfig({
       flags,
       requiredFields,
       cwd: tmpDir,
@@ -1095,13 +1102,13 @@ describe("createMergedConfig", () => {
         "repo_url": "https://github.com/example/env-repo.git",
         "ref": "env-branch",
         "repo_base_dir": "env-base",
-        "absoluteRepoBaseDir": "<TEST_DIR>/env-base",
         "repo_dir": "env-repo",
-        "absoluteRepoDir": "<TEST_DIR>/env-base/env-repo",
         "patches_dir": "env-patches",
-        "absolutePatchesDir": "<TEST_DIR>/env-patches",
         "verbose": true,
-        "dry_run": true
+        "dry_run": true,
+        "absoluteRepoBaseDir": "<TEST_DIR>/env-base",
+        "absoluteRepoDir": "<TEST_DIR>/env-base/env-repo",
+        "absolutePatchesDir": "<TEST_DIR>/env-patches"
       }"
     `,
     );
@@ -1143,7 +1150,7 @@ describe("createMergedConfig", () => {
       PATCHY_DRY_RUN: "false",
     };
 
-    const result = createMergedConfig({
+    const result = createEnrichedMergedConfig({
       flags,
       requiredFields,
       cwd: tmpDir,
@@ -1157,13 +1164,13 @@ describe("createMergedConfig", () => {
         "repo_url": "https://github.com/example/flag-repo.git",
         "ref": "flag-ref",
         "repo_base_dir": "flag-base",
-        "absoluteRepoBaseDir": "<TEST_DIR>/flag-base",
         "repo_dir": "flag-repo",
-        "absoluteRepoDir": "<TEST_DIR>/flag-base/flag-repo",
         "patches_dir": "flag-patches",
-        "absolutePatchesDir": "<TEST_DIR>/flag-patches",
         "verbose": true,
-        "dry_run": true
+        "dry_run": true,
+        "absoluteRepoBaseDir": "<TEST_DIR>/flag-base",
+        "absoluteRepoDir": "<TEST_DIR>/flag-base/flag-repo",
+        "absolutePatchesDir": "<TEST_DIR>/flag-patches"
       }"
     `,
     );
@@ -1203,7 +1210,7 @@ describe("createMergedConfig", () => {
       PATCHY_VERBOSE: "true",
     };
 
-    const result = createMergedConfig({
+    const result = createEnrichedMergedConfig({
       flags,
       requiredFields,
       cwd: tmpDir,
@@ -1217,13 +1224,13 @@ describe("createMergedConfig", () => {
         "repo_url": "https://github.com/example/env-repo.git",
         "ref": "env-branch",
         "repo_base_dir": "env-base",
-        "absoluteRepoBaseDir": "<TEST_DIR>/env-base",
         "repo_dir": "env-repo",
-        "absoluteRepoDir": "<TEST_DIR>/env-base/env-repo",
         "patches_dir": "env-patches",
-        "absolutePatchesDir": "<TEST_DIR>/env-patches",
         "verbose": true,
-        "dry_run": false
+        "dry_run": false,
+        "absoluteRepoBaseDir": "<TEST_DIR>/env-base",
+        "absoluteRepoDir": "<TEST_DIR>/env-base/env-repo",
+        "absolutePatchesDir": "<TEST_DIR>/env-patches"
       }"
     `,
     );
@@ -1267,7 +1274,7 @@ describe("createMergedConfig", () => {
       PATCHY_CONFIG: customConfigPath,
     };
 
-    const result = createMergedConfig({
+    const result = createEnrichedMergedConfig({
       flags,
       requiredFields,
       cwd: tmpDir,
@@ -1281,13 +1288,13 @@ describe("createMergedConfig", () => {
         "repo_url": "https://github.com/example/env-config.git",
         "ref": "env-config-branch",
         "repo_base_dir": "base",
-        "absoluteRepoBaseDir": "<TEST_DIR>/base",
         "repo_dir": "repo",
-        "absoluteRepoDir": "<TEST_DIR>/base/repo",
         "patches_dir": "./patches/",
-        "absolutePatchesDir": "<TEST_DIR>/patches",
         "verbose": false,
-        "dry_run": false
+        "dry_run": false,
+        "absoluteRepoBaseDir": "<TEST_DIR>/base",
+        "absoluteRepoDir": "<TEST_DIR>/base/repo",
+        "absolutePatchesDir": "<TEST_DIR>/patches"
       }"
     `,
     );
@@ -1302,7 +1309,7 @@ describe("createMergedConfig", () => {
       PATCHY_CONFIG: "./non-existent-env-config.json",
     };
 
-    const result = createMergedConfig({
+    const result = createEnrichedMergedConfig({
       flags,
       requiredFields,
       cwd: tmpDir,
@@ -1362,7 +1369,7 @@ describe("createMergedConfig", () => {
       expectedVerbose,
       expectedDryRun,
     } of testCases) {
-      const result = createMergedConfig({
+      const result = createEnrichedMergedConfig({
         flags: {},
         requiredFields: ["repo_url", "repo_base_dir", "repo_dir"],
         cwd: tmpDir,
@@ -1401,7 +1408,7 @@ describe("createMergedConfig", () => {
       PATCHY_REF: "",
     };
 
-    const result = createMergedConfig({
+    const result = createEnrichedMergedConfig({
       flags,
       requiredFields,
       cwd: tmpDir,

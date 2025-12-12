@@ -1,7 +1,7 @@
 import { writeFileSync } from "node:fs";
 import { copyFile } from "node:fs/promises";
 import { dirname, join } from "node:path";
-import { createMergedConfig } from "~/config/resolver";
+import { createEnrichedMergedConfig } from "~/config/resolver";
 import type { LocalContext } from "~/context";
 import { ensureDirExists } from "~/lib/fs";
 import { createGitClient } from "~/lib/git";
@@ -70,7 +70,7 @@ export default async function (
   this: LocalContext,
   flags: GenerateFlags,
 ): Promise<void> {
-  const result = createMergedConfig({
+  const result = createEnrichedMergedConfig({
     flags,
     requiredFields: ["repo_base_dir", "repo_dir"],
     cwd: this.cwd,
