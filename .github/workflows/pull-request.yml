@@ -1,4 +1,4 @@
-name: Pull Request
+name: Publish Preview
 
 on:
   pull_request:
@@ -9,13 +9,8 @@ concurrency:
   cancel-in-progress: true
 
 jobs:
-  ci:
-    name: CI
-    uses: ./.github/workflows/ci.yml
-
   publish-preview:
     name: Publish preview
-    needs: [ci]
     runs-on: ubuntu-latest
     permissions:
       contents: write
