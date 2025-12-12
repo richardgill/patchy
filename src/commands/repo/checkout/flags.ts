@@ -1,15 +1,13 @@
 import { FLAG_METADATA } from "~/config/config";
 import type { ParsedFlags } from "~/types/utils";
 
-const m = FLAG_METADATA;
-
 export const checkoutFlags = {
-  ...m.repo_dir.stricliFlag,
-  ...m.repo_base_dir.stricliFlag,
-  ...m.config.stricliFlag,
-  ...m.verbose.stricliFlag,
-  ...m.dry_run.stricliFlag,
-  ref: { ...m.ref.stricliFlag.ref, optional: false },
+  ...FLAG_METADATA.repo_dir.stricliFlag,
+  ...FLAG_METADATA.repo_base_dir.stricliFlag,
+  ...FLAG_METADATA.config.stricliFlag,
+  ...FLAG_METADATA.verbose.stricliFlag,
+  ...FLAG_METADATA.dry_run.stricliFlag,
+  ref: { ...FLAG_METADATA.ref.stricliFlag.ref, optional: false },
 } as const;
 
 export type CheckoutFlags = ParsedFlags<typeof checkoutFlags>;

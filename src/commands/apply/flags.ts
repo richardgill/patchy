@@ -1,17 +1,15 @@
 import { FLAG_METADATA } from "~/config/config";
 import type { ParsedFlags } from "~/types/utils";
 
-const m = FLAG_METADATA;
-
 export const applyFlags = {
-  ...m.repo_base_dir.stricliFlag,
-  ...m.repo_dir.stricliFlag,
-  ...m.patches_dir.stricliFlag,
-  ...m.repo_url.stricliFlag,
-  ...m.ref.stricliFlag,
-  ...m.config.stricliFlag,
-  ...m.verbose.stricliFlag,
-  ...m.dry_run.stricliFlag,
+  ...FLAG_METADATA.repo_base_dir.stricliFlag,
+  ...FLAG_METADATA.repo_dir.stricliFlag,
+  ...FLAG_METADATA.patches_dir.stricliFlag,
+  ...FLAG_METADATA.repo_url.stricliFlag,
+  ...FLAG_METADATA.ref.stricliFlag,
+  ...FLAG_METADATA.config.stricliFlag,
+  ...FLAG_METADATA.verbose.stricliFlag,
+  ...FLAG_METADATA.dry_run.stricliFlag,
   "fuzz-factor": {
     kind: "parsed",
     parse: Number,
