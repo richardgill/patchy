@@ -1,4 +1,10 @@
 import type { CamelCase } from "ts-essentials";
+import {
+  directoryExists,
+  gitUrl,
+  repoDirExists,
+  type ValidatorFn,
+} from "./validators";
 
 // Stricli flag types
 type StricliFlagParsed = {
@@ -24,6 +30,7 @@ type BaseFlagMetadataEntry = {
   stricliFlag: Record<string, StricliFlag>;
   example: string;
   defaultValue: string | boolean | undefined;
+  validate?: ValidatorFn;
 };
 
 // Entry for flags that appear in the config file
@@ -51,6 +58,7 @@ export const FLAG_METADATA = {
     name: "Repository URL",
     example: "https://github.com/user/repo.git",
     defaultValue: undefined,
+    validate: gitUrl,
     stricliFlag: {
       "repo-url": {
         kind: "parsed",
@@ -68,6 +76,7 @@ export const FLAG_METADATA = {
     name: "Repository directory",
     example: "./repo",
     defaultValue: undefined,
+    validate: repoDirExists,
     stricliFlag: {
       "repo-dir": {
         kind: "parsed",
@@ -85,6 +94,7 @@ export const FLAG_METADATA = {
     name: "Repository base directory",
     example: "./upstream",
     defaultValue: undefined,
+    validate: directoryExists,
     stricliFlag: {
       "repo-base-dir": {
         kind: "parsed",
@@ -103,6 +113,7 @@ export const FLAG_METADATA = {
     name: "Patches directory",
     example: "./patches",
     defaultValue: "./patches/",
+    validate: directoryExists,
     stricliFlag: {
       "patches-dir": {
         kind: "parsed",

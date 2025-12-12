@@ -3,7 +3,6 @@ import path, { resolve } from "node:path";
 import chalk from "chalk";
 import { isNil } from "es-toolkit";
 import { parseJsonc } from "~/lib/jsonc";
-import { isValidGitUrl } from "~/lib/validation";
 import { formatZodErrorHuman } from "~/lib/zod";
 import {
   type EnrichedMergedConfig,
@@ -250,6 +249,22 @@ export const createEnrichedMergedConfig = ({
   return { mergedConfig: enrichedConfig, success: true };
 };
 
+const getValueToValidate = (
+  key: FlagKey,
+  config: EnrichedMergedConfig,
+): string | undefined => {
+  const absoluteKeyMap: Partial<Record<FlagKey, keyof EnrichedMergedConfig>> = {
+    repo_base_dir: "absoluteRepoBaseDir",
+    repo_dir: "absoluteRepoDir",
+    patches_dir: "absolutePatchesDir",
+  };
+  const absoluteKey = absoluteKeyMap[key];
+  if (absoluteKey) {
+    return config[absoluteKey] as string | undefined;
+  }
+  return config[key] as string | undefined;
+};
+
 const calcError = ({
   mergedConfig,
   requiredFields,
@@ -283,45 +298,20 @@ const calcError = ({
     return { success: false, error: missingFieldsError };
   }
 
-  const validationErrors = [];
-  const isRepoBaseDirValid =
-    !requiredFields.includes("repo_base_dir") ||
-    !mergedConfig.absoluteRepoBaseDir ||
-    existsSync(mergedConfig.absoluteRepoBaseDir);
-  if (!isRepoBaseDirValid) {
-    validationErrors.push(
-      `${formatSourceLocation("repo_base_dir", sources, configPath)} does not exist: ${chalk.blue(mergedConfig.absoluteRepoBaseDir)}`,
-    );
-  }
-  if (
-    isRepoBaseDirValid &&
-    requiredFields.includes("repo_dir") &&
-    mergedConfig.absoluteRepoDir &&
-    !existsSync(mergedConfig.absoluteRepoDir)
-  ) {
-    validationErrors.push(
-      `${formatSourceLocation("repo_dir", sources, configPath)} does not exist: ${chalk.blue(mergedConfig.absoluteRepoDir)}`,
-    );
-  }
+  const validationErrors: string[] = [];
 
-  if (
-    requiredFields.includes("patches_dir") &&
-    mergedConfig.absolutePatchesDir &&
-    !existsSync(mergedConfig.absolutePatchesDir)
-  ) {
-    validationErrors.push(
-      `${formatSourceLocation("patches_dir", sources, configPath)} does not exist: ${chalk.blue(mergedConfig.absolutePatchesDir)}`,
-    );
-  }
+  for (const key of requiredFields) {
+    const metadata = FLAG_METADATA[key];
+    if (!("validate" in metadata) || !metadata.validate) continue;
 
-  if (
-    requiredFields.includes("repo_url") &&
-    mergedConfig.repo_url &&
-    !isValidGitUrl(mergedConfig.repo_url)
-  ) {
-    validationErrors.push(
-      `${formatSourceLocation("repo_url", sources, configPath)} is invalid.  Example repo: ${FLAG_METADATA.repo_url.example}`,
-    );
+    const value = getValueToValidate(key, mergedConfig);
+    const error = metadata.validate(value, key, mergedConfig);
+
+    if (error) {
+      validationErrors.push(
+        `${formatSourceLocation(key, sources, configPath)} ${error}`,
+      );
+    }
   }
 
   if (validationErrors.length > 0) {
