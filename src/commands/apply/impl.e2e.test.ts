@@ -5,7 +5,6 @@ import {
   generateTmpDir,
   runCli,
   setupTestWithConfig,
-  stabilizeTempDir,
 } from "~/testing/test-utils";
 
 describe("patchy apply", () => {
@@ -35,7 +34,7 @@ describe("patchy apply", () => {
     );
 
     expect(result).toSucceed();
-    expect(stabilizeTempDir(result.stdout)).toMatchInlineSnapshot(`
+    expect(result.stdout).toMatchInlineSnapshot(`
       "[DRY RUN] Would apply patches from patches to main
       No patch files found."
     `);
@@ -64,7 +63,7 @@ describe("patchy apply", () => {
     );
 
     expect(result).toSucceed();
-    expect(stabilizeTempDir(result.stdout)).toMatchInlineSnapshot(`
+    expect(result.stdout).toMatchInlineSnapshot(`
       "[DRY RUN] Would apply patches from my-patches to upstream
       No patch files found."
     `);
@@ -93,7 +92,7 @@ describe("patchy apply", () => {
     );
 
     expect(result).toSucceed();
-    expect(stabilizeTempDir(result.stdout)).toMatchInlineSnapshot(`
+    expect(result.stdout).toMatchInlineSnapshot(`
       "[DRY RUN] Would apply patches from cli-patches to cli-repo
       No patch files found."
     `);
@@ -113,7 +112,7 @@ describe("patchy apply", () => {
     const result = await runCli(`patchy apply --dry-run`, tmpDir);
 
     expect(result).toFail();
-    expect(stabilizeTempDir(result.stderr)).toMatchInlineSnapshot(`
+    expect(result.stderr).toMatchInlineSnapshot(`
       "Missing required parameters:
 
         Missing Repository base directory: set repo_base_dir in ./patchy.json, PATCHY_REPO_BASE_DIR env var, or --repo-base-dir flag
@@ -133,7 +132,7 @@ describe("patchy apply", () => {
     );
 
     expect(result).toFail();
-    expect(stabilizeTempDir(result.stderr)).toMatchInlineSnapshot(
+    expect(result.stderr).toMatchInlineSnapshot(
       `"Configuration file not found: <TEST_DIR>/non-existent-config.json"`,
     );
   });
@@ -169,7 +168,7 @@ describe("patchy apply", () => {
     const result = await runCli(`patchy apply`, tmpDir);
 
     expect(result).toFail();
-    expect(stabilizeTempDir(result.stderr)).toMatchInlineSnapshot(`
+    expect(result.stderr).toMatchInlineSnapshot(`
       "Validation errors:
 
       repo_base_dir: non-existent-base in ./patchy.json does not exist: <TEST_DIR>/non-existent-base
@@ -195,7 +194,7 @@ describe("patchy apply", () => {
     const result = await runCli(`patchy apply --dry-run --verbose`, tmpDir);
 
     expect(result).toSucceed();
-    expect(stabilizeTempDir(result.stdout)).toMatchInlineSnapshot(`
+    expect(result.stdout).toMatchInlineSnapshot(`
       "[DRY RUN] Would apply patches from ./patches/ to repo
       No patch files found."
     `);
@@ -222,7 +221,7 @@ describe("patchy apply", () => {
     );
 
     expect(result).toSucceed();
-    expect(stabilizeTempDir(result.stdout)).toMatchInlineSnapshot(`
+    expect(result.stdout).toMatchInlineSnapshot(`
       "[DRY RUN] Would apply patches from ./patches/ to repo
       No patch files found."
     `);
@@ -247,7 +246,7 @@ describe("patchy apply", () => {
     const result = await runCli(`patchy apply --verbose --dry-run`, tmpDir);
 
     expect(result).toSucceed();
-    expect(stabilizeTempDir(result.stdout)).toMatchInlineSnapshot(`
+    expect(result.stdout).toMatchInlineSnapshot(`
       "[DRY RUN] Would apply patches from ./patches/ to repo
       No patch files found."
     `);
@@ -293,7 +292,7 @@ describe("patchy apply", () => {
     );
 
     expect(result).toSucceed();
-    expect(stabilizeTempDir(result.stdout)).toMatchInlineSnapshot(`
+    expect(result.stdout).toMatchInlineSnapshot(`
       "[DRY RUN] Would apply patches from ./patches/ to repo
       No patch files found."
     `);
@@ -317,7 +316,7 @@ describe("patchy apply", () => {
     const result = await runCli(`patchy apply --dry-run --verbose`, tmpDir);
 
     expect(result).toSucceed();
-    expect(stabilizeTempDir(result.stdout)).toMatchInlineSnapshot(`
+    expect(result.stdout).toMatchInlineSnapshot(`
       "[DRY RUN] Would apply patches from ./patches/ to my-repo/nested-repo
       No patch files found."
     `);
@@ -341,7 +340,7 @@ describe("patchy apply", () => {
     const result = await runCli(`patchy apply --dry-run --verbose`, tmpDir);
 
     expect(result).toSucceed();
-    expect(stabilizeTempDir(result.stdout)).toMatchInlineSnapshot(`
+    expect(result.stdout).toMatchInlineSnapshot(`
       "[DRY RUN] Would apply patches from ./patches/ to repoDir1
       No patch files found."
     `);
@@ -359,7 +358,7 @@ describe("patchy apply", () => {
     const result = await runCli(`patchy apply`, tmpDir);
 
     expect(result).toFail();
-    expect(stabilizeTempDir(result.stderr)).toMatchInlineSnapshot(`
+    expect(result.stderr).toMatchInlineSnapshot(`
       "Missing required parameters:
 
         Missing Repository base directory: set repo_base_dir in ./patchy.json, PATCHY_REPO_BASE_DIR env var, or --repo-base-dir flag
@@ -392,7 +391,7 @@ describe("patchy apply", () => {
     );
 
     expect(result).toSucceed();
-    expect(stabilizeTempDir(result.stdout)).toMatchInlineSnapshot(`
+    expect(result.stdout).toMatchInlineSnapshot(`
       "[DRY RUN] Would apply patches from ./patches/ to repo
       No patch files found."
     `);
@@ -420,7 +419,7 @@ describe("patchy apply", () => {
     const result = await runCli(`patchy apply --dry-run --verbose`, tmpDir);
 
     expect(result).toSucceed();
-    expect(stabilizeTempDir(result.stdout)).toMatchInlineSnapshot(`
+    expect(result.stdout).toMatchInlineSnapshot(`
       "[DRY RUN] Would apply patches from <TEST_DIR>/absolute-patches to repo
       No patch files found."
     `);

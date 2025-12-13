@@ -5,7 +5,6 @@ import {
   generateTmpDir,
   runCli,
   setupTestWithConfig,
-  stabilizeTempDir,
 } from "~/testing/test-utils";
 import { getSchemaUrl } from "~/version";
 
@@ -111,7 +110,7 @@ describe("patchy init", () => {
       );
 
       expect(result).toFail();
-      expect(stabilizeTempDir(result.stderr)).toMatchInlineSnapshot(
+      expect(result.stderr).toMatchInlineSnapshot(
         `
         "Configuration file already exists at <TEST_DIR>/patchy.json
         Use --force to overwrite"

@@ -7,7 +7,6 @@ import {
   generateTmpDir,
   runCli,
   setupTestWithConfig,
-  stabilizeTempDir,
 } from "~/testing/test-utils";
 
 describe("patchy repo reset", () => {
@@ -59,7 +58,7 @@ describe("patchy repo reset", () => {
     );
 
     expect(result).toSucceed();
-    expect(stabilizeTempDir(result.stdout)).toMatchInlineSnapshot(
+    expect(result.stdout).toMatchInlineSnapshot(
       `"Successfully reset repository: <TEST_DIR>/repos/test-repo"`,
     );
   });
@@ -91,7 +90,7 @@ describe("patchy repo reset", () => {
       );
 
       expect(result).toFail();
-      expect(stabilizeTempDir(result.stderr)).toMatchInlineSnapshot(
+      expect(result.stderr).toMatchInlineSnapshot(
         `"Not a Git repository: <TEST_DIR>/repos/not-a-repo"`,
       );
     });

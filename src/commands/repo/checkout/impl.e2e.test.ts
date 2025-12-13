@@ -12,7 +12,6 @@ import {
   generateTmpDir,
   runCli,
   setupTestWithConfig,
-  stabilizeTempDir,
 } from "~/testing/test-utils";
 
 describe("patchy repo checkout", () => {
@@ -158,9 +157,7 @@ describe("patchy repo checkout", () => {
     );
 
     expect(result).toFail();
-    expect(stabilizeTempDir(result.stderr)).toContain(
-      "has uncommitted changes",
-    );
+    expect(result.stderr).toContain("has uncommitted changes");
     expect(result.stderr).toContain("Please commit or stash your changes");
   });
 
@@ -187,8 +184,8 @@ describe("patchy repo checkout", () => {
     );
 
     expect(result).toSucceed();
-    expect(stabilizeTempDir(result.stdout)).toContain("Checking out ref");
-    expect(stabilizeTempDir(result.stdout)).toContain("feature-branch");
+    expect(result.stdout).toContain("Checking out ref");
+    expect(result.stdout).toContain("feature-branch");
   });
 
   it("should use repo-dir from CLI flag", async () => {
@@ -227,9 +224,7 @@ describe("patchy repo checkout", () => {
     const result = await runCli(`patchy repo checkout --ref main`, tmpDir);
 
     expect(result).toFail();
-    expect(stabilizeTempDir(result.stderr)).toContain(
-      "Missing required parameters",
-    );
+    expect(result.stderr).toContain("Missing required parameters");
     expect(result.stderr).toContain("repo_base_dir");
     expect(result.stderr).toContain("repo_dir");
   });

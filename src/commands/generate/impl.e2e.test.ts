@@ -7,7 +7,6 @@ import {
   generateTmpDir,
   runCli,
   setupTestWithConfig,
-  stabilizeTempDir,
 } from "~/testing/test-utils";
 
 describe("patchy generate", () => {
@@ -240,7 +239,7 @@ describe("patchy generate", () => {
     const result = await runCli(`patchy generate`, tmpDir);
 
     expect(result).toFail();
-    expect(stabilizeTempDir(result.stderr)).toMatchInlineSnapshot(`
+    expect(result.stderr).toMatchInlineSnapshot(`
       "Missing required parameters:
 
         Missing Repository base directory: set repo_base_dir in ./patchy.json, PATCHY_REPO_BASE_DIR env var, or --repo-base-dir flag
@@ -268,7 +267,7 @@ describe("patchy generate", () => {
     const result = await runCli(`patchy generate`, tmpDir);
 
     expect(result).toFail();
-    expect(stabilizeTempDir(result.stderr)).toMatchInlineSnapshot(`
+    expect(result.stderr).toMatchInlineSnapshot(`
       "Validation errors:
 
       repo_dir: non-existent-repo in ./patchy.json does not exist: <TEST_DIR>/repos/non-existent-repo"

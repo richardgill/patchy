@@ -58,9 +58,10 @@ export const runCli = async (
     }
   }
 
+  // Stabilize output by replacing temp dir paths with <TEST_DIR> for snapshot consistency
   return {
-    stdout: stdout.trim(),
-    stderr: stderr.trim(),
+    stdout: stabilizeTempDir(stdout.trim()) ?? "",
+    stderr: stabilizeTempDir(stderr.trim()) ?? "",
     exitCode,
     failed: exitCode !== 0,
     command,
