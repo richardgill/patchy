@@ -5,7 +5,9 @@ import { isValidGitUrl } from "~/lib/validation";
 import type { EnrichedFields } from "./enriched-fields";
 
 // Patchy validators use EnrichedFields as the config type
-export type PatchyValidatorFn = ValidatorFn<EnrichedFields>;
+export type PatchyValidatorFn = ValidatorFn<
+  EnrichedFields & { [key: string]: unknown } // Allow access to other config fields (e.g., repo_url, repo_dir)
+>;
 
 // Helper to check if a path exists
 const checkPathExists = (value: string | undefined): string | null => {
