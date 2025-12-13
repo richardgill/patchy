@@ -217,7 +217,6 @@ describe("patchy repo checkout", () => {
     const result = await runCli(`patchy repo checkout --ref main`, tmpDir);
 
     expect(result).toFailWith("Missing required parameters");
-    expect(result.stderr).toContain("repo_base_dir");
     expect(result.stderr).toContain("repo_dir");
   });
 

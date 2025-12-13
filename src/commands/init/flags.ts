@@ -3,7 +3,6 @@ import type { ParsedFlags } from "~/types/utils";
 
 export const initFlags = {
   ...FLAG_METADATA.repo_base_dir.stricliFlag,
-  ...FLAG_METADATA.repo_dir.stricliFlag,
   ...FLAG_METADATA.patches_dir.stricliFlag,
   ...FLAG_METADATA.repo_url.stricliFlag,
   ...FLAG_METADATA.ref.stricliFlag,
@@ -12,6 +11,11 @@ export const initFlags = {
   force: {
     kind: "boolean",
     brief: "Overwrite existing configuration",
+    optional: true,
+  },
+  gitignore: {
+    kind: "boolean",
+    brief: "Add upstream directory to .gitignore",
     optional: true,
   },
 } as const;

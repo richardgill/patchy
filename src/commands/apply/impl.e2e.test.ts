@@ -118,7 +118,6 @@ describe("patchy apply", () => {
     expect(result.stderr).toMatchInlineSnapshot(`
       "Missing required parameters:
 
-        Missing Repository base directory: set repo_base_dir in ./patchy.json, PATCHY_REPO_BASE_DIR env var, or --repo-base-dir flag
         Missing Repository directory: set repo_dir in ./patchy.json, PATCHY_REPO_DIR env var, or --repo-dir flag
 
       You can set up ./patchy.json by running:
@@ -345,7 +344,6 @@ describe("patchy apply", () => {
     expect(result.stderr).toMatchInlineSnapshot(`
       "Missing required parameters:
 
-        Missing Repository base directory: set repo_base_dir in ./patchy.json, PATCHY_REPO_BASE_DIR env var, or --repo-base-dir flag
         Missing Repository directory: set repo_dir in ./patchy.json, PATCHY_REPO_DIR env var, or --repo-dir flag
 
       You can set up ./patchy.json by running:
@@ -455,9 +453,12 @@ describe("patchy apply", () => {
 
     expect(result).toFail();
     expect(result.stderr).toMatchInlineSnapshot(`
-      "repo_url: Repository URL is required
-      repo_base_dir: Repository base directory is required
-      ref: Git reference is required"
+      "Missing required parameters:
+
+        Missing Repository directory: set repo_dir in empty-strings.json, PATCHY_REPO_DIR env var, or --repo-dir flag
+
+      You can set up empty-strings.json by running:
+        patchy init --config empty-strings.json"
     `);
   });
 

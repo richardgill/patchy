@@ -153,7 +153,7 @@ describe("patchy repo clone", () => {
       expect(result).toFailWith("is invalid");
     });
 
-    it("should fail when repo_base_dir is missing", async () => {
+    it("should use default repo_base_dir when not specified", async () => {
       await writeTestFile(tmpDir, "patchy.json", "{}");
 
       const result = await runCli(
@@ -161,7 +161,8 @@ describe("patchy repo clone", () => {
         tmpDir,
       );
 
-      expect(result).toFailWith("Missing required parameter: repo_base_dir");
+      // Uses default ./upstream/ dir, but clone still fails because it's a non-existent repo
+      expect(result).toFailWith("Failed to clone repository");
     });
 
     it("should fail when target directory already exists", async () => {

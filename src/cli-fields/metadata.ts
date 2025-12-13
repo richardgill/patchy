@@ -81,7 +81,7 @@ export const FLAG_METADATA = {
     type: "string",
     name: "Repository base directory",
     example: "./upstream",
-    defaultValue: undefined,
+    defaultValue: "./upstream/",
     validate: (config, _key) => directoryExists(config, "absoluteRepoBaseDir"),
     stricliFlag: {
       "repo-base-dir": {

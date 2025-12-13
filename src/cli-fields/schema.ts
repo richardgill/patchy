@@ -17,19 +17,18 @@ const buildBaseConfigFields = (): BaseConfigFields => {
   const fields: Record<string, ZodTypeAny> = {};
   for (const key of JSON_CONFIG_KEYS) {
     const meta = FLAG_METADATA[key];
-    fields[key] =
-      meta.type === "boolean"
-        ? z.boolean().default(false)
-        : z.string().min(1, `${meta.name} is required`);
+    if (meta.type === "boolean") {
+      fields[key] = z.boolean().default(false);
+    } else if (meta.requiredInConfig) {
+      fields[key] = z.string().min(1, `${meta.name} is required`);
+    } else {
+      fields[key] = z.string();
+    }
   }
   return fields as BaseConfigFields;
 };
 
 const baseConfigFields = buildBaseConfigFields();
-
-export const requiredConfigSchema = z.object(baseConfigFields).strict();
-
-export type RequiredConfigData = z.infer<typeof requiredConfigSchema>;
 
 export const jsonConfigSchema = z
   .object(baseConfigFields)
