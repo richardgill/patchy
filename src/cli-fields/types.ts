@@ -1,27 +1,20 @@
 import {
-  type DeriveFlagName,
   type DeriveJsonConfigKey,
   type DeriveMergedConfig,
   type DeriveSharedFlags,
   deriveJsonConfigKeys,
   getDefaultValue as genericGetDefaultValue,
-  getFlagName as genericGetFlagName,
   type TypeMap,
 } from "~/lib/cli-config";
 import type { EnrichedFields } from "./enriched-fields";
 import { FLAG_METADATA } from "./metadata";
 
 // Core key types
-export type FlagKey = keyof typeof FLAG_METADATA;
+type FlagKey = keyof typeof FLAG_METADATA;
 export type JsonConfigKey = DeriveJsonConfigKey<typeof FLAG_METADATA>;
-type FlagName = DeriveFlagName<typeof FLAG_METADATA>;
 
 // Runtime array for iterating JSON config keys
 export const JSON_CONFIG_KEYS = deriveJsonConfigKeys(FLAG_METADATA);
-
-// Helper functions bound to FLAG_METADATA
-export const getFlagName = <K extends FlagKey>(key: K): FlagName =>
-  genericGetFlagName(FLAG_METADATA, key) as FlagName;
 
 export const getDefaultValue = <K extends FlagKey>(
   key: K,
