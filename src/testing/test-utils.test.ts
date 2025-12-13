@@ -24,13 +24,13 @@ describe("test-utils", () => {
 
       expect(jsonContent).toMatchInlineSnapshot(`
         "{
-          \"repo_url\": \"https://github.com/example/repo.git\",
-          \"repo_dir\": \"main\",
-          \"repo_base_dir\": \"/tmp/repos\",
-          \"patches_dir\": \"patches\",
-          \"ref\": \"main\",
-          \"verbose\": true,
-          \"dry_run\": false
+          "repo_url": "https://github.com/example/repo.git",
+          "repo_dir": "main",
+          "repo_base_dir": "/tmp/repos",
+          "patches_dir": "patches",
+          "ref": "main",
+          "verbose": true,
+          "dry_run": false
         }"
       `);
 
