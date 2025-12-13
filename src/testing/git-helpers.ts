@@ -1,6 +1,6 @@
-import { existsSync, writeFileSync } from "node:fs";
-import { mkdir, writeFile } from "node:fs/promises";
-import { dirname, join } from "node:path";
+import { writeFileSync } from "node:fs";
+import { writeFile } from "node:fs/promises";
+import { join } from "node:path";
 import { createTestGitClient } from "~/lib/git";
 
 export const initGitRepo = async (repoDir: string): Promise<void> => {
@@ -33,19 +33,6 @@ export const commitFile = async (
   const git = createTestGitClient(repoDir);
   await git.add(filename);
   await git.commit(message);
-};
-
-export const writeRepoFile = async (
-  repoDir: string,
-  filePath: string,
-  content: string,
-): Promise<void> => {
-  const fullPath = join(repoDir, filePath);
-  const dir = dirname(fullPath);
-  if (!existsSync(dir)) {
-    await mkdir(dir, { recursive: true });
-  }
-  await writeFile(fullPath, content);
 };
 
 export const createBranch = async (

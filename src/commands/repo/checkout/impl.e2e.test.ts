@@ -1,5 +1,5 @@
 import { beforeEach, describe, expect, it } from "bun:test";
-import { mkdirSync, writeFileSync } from "node:fs";
+import { mkdirSync } from "node:fs";
 import path from "node:path";
 import {
   createBranch,
@@ -12,7 +12,8 @@ import {
   generateTmpDir,
   runCli,
   setupTestWithConfig,
-  stabilizeTempDir,
+  writeFileIn,
+  writeTestFile,
 } from "~/testing/test-utils";
 
 describe("patchy repo checkout", () => {
@@ -150,7 +151,7 @@ describe("patchy repo checkout", () => {
     await initGitRepoWithCommit(repoDir, "file.txt", "initial content");
     await createBranch(repoDir, "feature-branch");
 
-    writeFileSync(path.join(repoDir, "uncommitted.txt"), "dirty content");
+    await writeFileIn(repoDir, "uncommitted.txt", "dirty content");
 
     const result = await runCli(
       `patchy repo checkout --ref feature-branch`,
@@ -158,9 +159,7 @@ describe("patchy repo checkout", () => {
     );
 
     expect(result).toFail();
-    expect(stabilizeTempDir(result.stderr)).toContain(
-      "has uncommitted changes",
-    );
+    expect(result.stderr).toContain("has uncommitted changes");
     expect(result.stderr).toContain("Please commit or stash your changes");
   });
 
@@ -187,8 +186,8 @@ describe("patchy repo checkout", () => {
     );
 
     expect(result).toSucceed();
-    expect(stabilizeTempDir(result.stdout)).toContain("Checking out ref");
-    expect(stabilizeTempDir(result.stdout)).toContain("feature-branch");
+    expect(result.stdout).toContain("Checking out ref");
+    expect(result.stdout).toContain("feature-branch");
   });
 
   it("should use repo-dir from CLI flag", async () => {
@@ -221,15 +220,12 @@ describe("patchy repo checkout", () => {
   });
 
   it("should fail when repo_dir is missing", async () => {
-    mkdirSync(tmpDir, { recursive: true });
-    writeFileSync(path.join(tmpDir, "patchy.json"), "{}");
+    await writeTestFile(tmpDir, "patchy.json", "{}");
 
     const result = await runCli(`patchy repo checkout --ref main`, tmpDir);
 
     expect(result).toFail();
-    expect(stabilizeTempDir(result.stderr)).toContain(
-      "Missing required parameters",
-    );
+    expect(result.stderr).toContain("Missing required parameters");
     expect(result.stderr).toContain("repo_base_dir");
     expect(result.stderr).toContain("repo_dir");
   });

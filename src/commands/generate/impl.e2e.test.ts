@@ -1,13 +1,13 @@
 import { beforeEach, describe, expect, it } from "bun:test";
-import { existsSync, readFileSync } from "node:fs";
+import { readFileSync } from "node:fs";
 import path from "node:path";
 import { assertDefined } from "~/lib/assert";
-import { initGitRepoWithCommit, writeRepoFile } from "~/testing/git-helpers";
+import { initGitRepoWithCommit } from "~/testing/git-helpers";
 import {
   generateTmpDir,
   runCli,
   setupTestWithConfig,
-  stabilizeTempDir,
+  writeFileIn,
 } from "~/testing/test-utils";
 
 describe("patchy generate", () => {
@@ -39,7 +39,7 @@ describe("patchy generate", () => {
     );
 
     await initGitRepoWithCommit(repoDir);
-    await writeRepoFile(repoDir, "initial.txt", "modified content\n");
+    await writeFileIn(repoDir, "initial.txt", "modified content\n");
 
     const result = await runCli(`patchy generate`, tmpDir);
 
@@ -51,7 +51,7 @@ describe("patchy generate", () => {
     expect(result.stdout).toContain("Generated 1 patch(es) successfully");
 
     const diffPath = path.join(patchesDir, "initial.txt.diff");
-    expect(existsSync(diffPath)).toBe(true);
+    expect(diffPath).toExist();
 
     const diffContent = readFileSync(diffPath, "utf-8");
     expect(diffContent).toContain("-initial content");
@@ -80,18 +80,16 @@ describe("patchy generate", () => {
     );
 
     await initGitRepoWithCommit(repoDir);
-    await writeRepoFile(repoDir, "newfile.txt", "new file content\n");
+    await writeFileIn(repoDir, "newfile.txt", "new file content\n");
 
     const result = await runCli(`patchy generate`, tmpDir);
 
     expect(result).toSucceed();
     expect(result.stdout).toContain("Copied new file: newfile.txt");
 
-    const newFilePath = path.join(patchesDir, "newfile.txt");
-    expect(existsSync(newFilePath)).toBe(true);
-
-    const content = readFileSync(newFilePath, "utf-8");
-    expect(content).toBe("new file content\n");
+    expect(path.join(patchesDir, "newfile.txt")).toHaveFileContent(
+      "new file content\n",
+    );
   });
 
   it("should handle nested directory structure", async () => {
@@ -116,7 +114,7 @@ describe("patchy generate", () => {
     );
 
     await initGitRepoWithCommit(repoDir);
-    await writeRepoFile(
+    await writeFileIn(
       repoDir,
       "src/components/Button.tsx",
       "export const Button = () => <button />\n",
@@ -129,8 +127,7 @@ describe("patchy generate", () => {
       "Copied new file: src/components/Button.tsx",
     );
 
-    const newFilePath = path.join(patchesDir, "src/components/Button.tsx");
-    expect(existsSync(newFilePath)).toBe(true);
+    expect(path.join(patchesDir, "src/components/Button.tsx")).toExist();
   });
 
   it("should handle both modified and new files", async () => {
@@ -151,8 +148,8 @@ describe("patchy generate", () => {
     const repoDir = assertDefined(ctx.absoluteRepoDir, "absoluteRepoDir");
 
     await initGitRepoWithCommit(repoDir);
-    await writeRepoFile(repoDir, "initial.txt", "modified content\n");
-    await writeRepoFile(repoDir, "newfile.txt", "new file content\n");
+    await writeFileIn(repoDir, "initial.txt", "modified content\n");
+    await writeFileIn(repoDir, "newfile.txt", "new file content\n");
 
     const result = await runCli(`patchy generate`, tmpDir);
 
@@ -184,8 +181,8 @@ describe("patchy generate", () => {
     );
 
     await initGitRepoWithCommit(repoDir);
-    await writeRepoFile(repoDir, "initial.txt", "modified content\n");
-    await writeRepoFile(repoDir, "newfile.txt", "new file content\n");
+    await writeFileIn(repoDir, "initial.txt", "modified content\n");
+    await writeFileIn(repoDir, "newfile.txt", "new file content\n");
 
     const result = await runCli(`patchy generate --dry-run`, tmpDir);
 
@@ -197,8 +194,8 @@ describe("patchy generate", () => {
     expect(result.stdout).toContain("diff: initial.txt");
     expect(result.stdout).toContain("copy: newfile.txt");
 
-    expect(existsSync(path.join(patchesDir, "initial.txt.diff"))).toBe(false);
-    expect(existsSync(path.join(patchesDir, "newfile.txt"))).toBe(false);
+    expect(path.join(patchesDir, "initial.txt.diff")).not.toExist();
+    expect(path.join(patchesDir, "newfile.txt")).not.toExist();
   });
 
   it("should report no changes when repository is clean", async () => {
@@ -240,7 +237,7 @@ describe("patchy generate", () => {
     const result = await runCli(`patchy generate`, tmpDir);
 
     expect(result).toFail();
-    expect(stabilizeTempDir(result.stderr)).toMatchInlineSnapshot(`
+    expect(result.stderr).toMatchInlineSnapshot(`
       "Missing required parameters:
 
         Missing Repository base directory: set repo_base_dir in ./patchy.json, PATCHY_REPO_BASE_DIR env var, or --repo-base-dir flag
@@ -268,7 +265,7 @@ describe("patchy generate", () => {
     const result = await runCli(`patchy generate`, tmpDir);
 
     expect(result).toFail();
-    expect(stabilizeTempDir(result.stderr)).toMatchInlineSnapshot(`
+    expect(result.stderr).toMatchInlineSnapshot(`
       "Validation errors:
 
       repo_dir: non-existent-repo in ./patchy.json does not exist: <TEST_DIR>/repos/non-existent-repo"
@@ -292,7 +289,7 @@ describe("patchy generate", () => {
     const repoDir = assertDefined(ctx.absoluteRepoDir, "absoluteRepoDir");
 
     await initGitRepoWithCommit(repoDir);
-    await writeRepoFile(repoDir, "initial.txt", "modified content\n");
+    await writeFileIn(repoDir, "initial.txt", "modified content\n");
 
     const result = await runCli(`patchy generate`, tmpDir);
 
@@ -300,8 +297,8 @@ describe("patchy generate", () => {
     expect(result.stdout).toContain("Generated 1 patch(es) successfully");
 
     const patchesDir = path.join(tmpDir, "new-patches");
-    expect(existsSync(patchesDir)).toBe(true);
-    expect(existsSync(path.join(patchesDir, "initial.txt.diff"))).toBe(true);
+    expect(patchesDir).toExist();
+    expect(path.join(patchesDir, "initial.txt.diff")).toExist();
   });
 
   it("should handle verbose flag", async () => {
@@ -322,7 +319,7 @@ describe("patchy generate", () => {
     const repoDir = assertDefined(ctx.absoluteRepoDir, "absoluteRepoDir");
 
     await initGitRepoWithCommit(repoDir);
-    await writeRepoFile(repoDir, "initial.txt", "modified content\n");
+    await writeFileIn(repoDir, "initial.txt", "modified content\n");
 
     const result = await runCli(`patchy generate --verbose`, tmpDir);
 

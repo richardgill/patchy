@@ -1,6 +1,7 @@
 import { randomUUID } from "node:crypto";
+import { existsSync } from "node:fs";
 import { mkdir, writeFile } from "node:fs/promises";
-import { join, resolve } from "node:path";
+import { dirname, join, resolve } from "node:path";
 import { run } from "@stricli/core";
 import { app } from "~/app";
 import type { LocalContext } from "~/context";
@@ -58,9 +59,10 @@ export const runCli = async (
     }
   }
 
+  // Stabilize output by replacing temp dir paths with <TEST_DIR> for snapshot consistency
   return {
-    stdout: stdout.trim(),
-    stderr: stderr.trim(),
+    stdout: stabilizeTempDir(stdout.trim()) ?? "",
+    stderr: stabilizeTempDir(stderr.trim()) ?? "",
     exitCode,
     failed: exitCode !== 0,
     command,
@@ -76,9 +78,47 @@ export const writeTestConfig = async (
   await writeFile(configPath, jsonContent);
 };
 
+// Write a file to a directory, creating any necessary parent directories.
+// Supports nested paths like "config/settings.json".
+export const writeTestFile = async (
+  dir: string,
+  filename: string,
+  content: string,
+): Promise<string> => {
+  const fullPath = join(dir, filename);
+  await mkdir(dirname(fullPath), { recursive: true });
+  await writeFile(fullPath, content);
+  return filename;
+};
+
+// Write JSON to a file, creating any necessary parent directories.
+// Supports nested paths like "config/settings.json".
+export const writeJsonConfig = async (
+  dir: string,
+  filename: string,
+  // biome-ignore lint/suspicious/noExplicitAny: Test utility needs to accept invalid configs for error testing
+  content: any,
+): Promise<string> => {
+  return writeTestFile(dir, filename, JSON.stringify(content, null, 2));
+};
+
 export const generateTmpDir = (): string => {
   const testId = randomUUID();
   return join(process.cwd(), "e2e/tmp", `test-${testId}`);
+};
+
+// Write a file to a base directory, creating nested subdirectories as needed.
+export const writeFileIn = async (
+  baseDir: string,
+  relativePath: string,
+  content: string,
+): Promise<void> => {
+  const fullPath = join(baseDir, relativePath);
+  const dir = dirname(fullPath);
+  if (!existsSync(dir)) {
+    await mkdir(dir, { recursive: true });
+  }
+  await writeFile(fullPath, content);
 };
 
 // Replace paths up to and including tmp/test-UUID directory with <TEST_DIR>
@@ -143,6 +183,7 @@ export const setupTestWithConfig = async ({
   tmpDir,
   createDirectories = {},
   jsonConfig = {},
+  configPath,
 }: {
   tmpDir: string;
   createDirectories?: {
@@ -151,11 +192,13 @@ export const setupTestWithConfig = async ({
     repoDir?: string | undefined;
   };
   jsonConfig?: Record<string, string | boolean | number>;
+  configPath?: string;
 }): Promise<TestDirContext> => {
   const ctx = await createTestDirStructure(tmpDir, createDirectories);
 
-  const configPath = resolve(tmpDir, "patchy.json");
-  await writeTestConfig(configPath, jsonConfig);
+  const resolvedConfigPath = configPath ?? resolve(tmpDir, "patchy.json");
+  await mkdir(dirname(resolvedConfigPath), { recursive: true });
+  await writeTestConfig(resolvedConfigPath, jsonConfig);
 
   return ctx;
 };

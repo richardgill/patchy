@@ -1,13 +1,12 @@
 import { beforeEach, describe, expect, it } from "bun:test";
-import { readFileSync } from "node:fs";
 import { join } from "node:path";
 import { assertDefined } from "~/lib/assert";
-import { commitFile, initGitRepo, writeRepoFile } from "~/testing/git-helpers";
+import { commitFile, initGitRepo } from "~/testing/git-helpers";
 import {
   generateTmpDir,
   runCli,
   setupTestWithConfig,
-  stabilizeTempDir,
+  writeFileIn,
 } from "~/testing/test-utils";
 
 describe("patchy repo reset", () => {
@@ -26,11 +25,9 @@ describe("patchy repo reset", () => {
     const repoPath = assertDefined(ctx.absoluteRepoDir, "absoluteRepoDir");
     await initGitRepo(repoPath);
     await commitFile(repoPath, "test.txt", "original content");
-    await writeRepoFile(repoPath, "test.txt", "modified content");
+    await writeFileIn(repoPath, "test.txt", "modified content");
 
-    expect(readFileSync(join(repoPath, "test.txt"), "utf-8")).toBe(
-      "modified content",
-    );
+    expect(join(repoPath, "test.txt")).toHaveFileContent("modified content");
 
     const result = await runCli(
       `patchy repo reset --repo-base-dir repos --repo-dir test-repo --yes`,
@@ -38,9 +35,7 @@ describe("patchy repo reset", () => {
     );
     expect(result).toSucceed();
 
-    expect(readFileSync(join(repoPath, "test.txt"), "utf-8")).toBe(
-      "original content",
-    );
+    expect(join(repoPath, "test.txt")).toHaveFileContent("original content");
   });
 
   it("should show success message after reset", async () => {
@@ -59,7 +54,7 @@ describe("patchy repo reset", () => {
     );
 
     expect(result).toSucceed();
-    expect(stabilizeTempDir(result.stdout)).toMatchInlineSnapshot(
+    expect(result.stdout).toMatchInlineSnapshot(
       `"Successfully reset repository: <TEST_DIR>/repos/test-repo"`,
     );
   });
@@ -91,7 +86,7 @@ describe("patchy repo reset", () => {
       );
 
       expect(result).toFail();
-      expect(stabilizeTempDir(result.stderr)).toMatchInlineSnapshot(
+      expect(result.stderr).toMatchInlineSnapshot(
         `"Not a Git repository: <TEST_DIR>/repos/not-a-repo"`,
       );
     });
@@ -132,7 +127,7 @@ describe("patchy repo reset", () => {
       const repoPath = assertDefined(ctx.absoluteRepoDir, "absoluteRepoDir");
       await initGitRepo(repoPath);
       await commitFile(repoPath, "test.txt", "original content");
-      await writeRepoFile(repoPath, "test.txt", "modified content");
+      await writeFileIn(repoPath, "test.txt", "modified content");
 
       const result = await runCli(
         `patchy repo reset --repo-base-dir repos --repo-dir test-repo --dry-run`,
@@ -143,9 +138,7 @@ describe("patchy repo reset", () => {
       expect(result).toHaveOutput("[DRY RUN]");
       expect(result).toHaveOutput("Would hard reset");
 
-      expect(readFileSync(join(repoPath, "test.txt"), "utf-8")).toBe(
-        "modified content",
-      );
+      expect(join(repoPath, "test.txt")).toHaveFileContent("modified content");
     });
 
     it("should still validate repo exists in dry-run mode", async () => {
