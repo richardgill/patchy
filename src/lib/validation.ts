@@ -11,13 +11,3 @@ export const validateGitUrl = (url: string): string | true => {
     return "Please enter a valid Git URL (https://github.com/owner/repo or git@github.com:owner/repo.git)";
   return true;
 };
-
-export const validatePath = (path: string, name: string): string | true => {
-  if (!path.trim()) return `${name} is required`;
-  return true;
-};
-
-export const validateRef = (ref: string): string | true => {
-  if (!ref.trim()) return "Git ref is required";
-  return true;
-};

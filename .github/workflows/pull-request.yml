@@ -1,4 +1,4 @@
-name: CI
+name: Publish Preview
 
 on:
   pull_request:
@@ -9,39 +9,8 @@ concurrency:
   cancel-in-progress: true
 
 jobs:
-  lint:
-    name: Lint
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v4
-      - uses: ./.github/actions/setup
-
-      - name: Lint
-        run: bun run check
-
-  typecheck:
-    name: Typecheck
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v4
-      - uses: ./.github/actions/setup
-
-      - name: Typecheck
-        run: bun run typecheck
-
-  test:
-    name: Test
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v4
-      - uses: ./.github/actions/setup
-
-      - name: Test
-        run: bun run test
-
   publish-preview:
     name: Publish preview
-    needs: [lint, typecheck, test]
     runs-on: ubuntu-latest
     permissions:
       contents: write

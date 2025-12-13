@@ -73,7 +73,7 @@ const getRuntimeFlagValue = <M extends FlagMetadataMap>(
   return meta.defaultValue;
 };
 
-export type CreateMergedConfigParams<
+type CreateMergedConfigParams<
   M extends FlagMetadataMap,
   TJsonConfig extends Partial<Record<DeriveJsonConfigKey<M>, unknown>>,
 > = {
@@ -83,7 +83,7 @@ export type CreateMergedConfigParams<
   json: TJsonConfig;
 };
 
-export type MergedConfigResult<
+type MergedConfigResult<
   M extends FlagMetadataMap,
   TJsonConfig extends Partial<Record<DeriveJsonConfigKey<M>, unknown>>,
 > = {

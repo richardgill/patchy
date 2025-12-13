@@ -1,8 +1,5 @@
 import type { FlagMetadataMap, TypeMap } from "./types";
 
-// Derive FlagKey from metadata
-export type DeriveFlagKey<M extends FlagMetadataMap> = keyof M & string;
-
 // Derive JSON config keys (configField: true)
 export type DeriveJsonConfigKey<M extends FlagMetadataMap> = {
   [K in keyof M]: M[K]["configField"] extends true ? K : never;
@@ -10,7 +7,7 @@ export type DeriveJsonConfigKey<M extends FlagMetadataMap> = {
   string;
 
 // Derive runtime-only keys (configField: false)
-export type DeriveRuntimeFlagKey<M extends FlagMetadataMap> = {
+type DeriveRuntimeFlagKey<M extends FlagMetadataMap> = {
   [K in keyof M]: M[K]["configField"] extends false ? K : never;
 }[keyof M] &
   string;
@@ -22,13 +19,13 @@ export type DeriveFlagName<M extends FlagMetadataMap> = {
   string;
 
 // Maps a FlagKey to its corresponding CLI flag name
-export type DeriveFlagNameFor<
+type DeriveFlagNameFor<
   M extends FlagMetadataMap,
   K extends keyof M,
 > = keyof M[K]["stricliFlag"] & string;
 
 // Maps a CLI flag name back to its FlagKey
-export type DeriveFlagKeyForFlag<
+type DeriveFlagKeyForFlag<
   M extends FlagMetadataMap,
   F extends DeriveFlagName<M>,
 > = {
@@ -36,7 +33,7 @@ export type DeriveFlagKeyForFlag<
 }[keyof M];
 
 // Gets the TypeScript type for a flag based on metadata
-export type DeriveFlagType<
+type DeriveFlagType<
   M extends FlagMetadataMap,
   F extends DeriveFlagName<M>,
 > = TypeMap[M[DeriveFlagKeyForFlag<M, F>]["type"]];
