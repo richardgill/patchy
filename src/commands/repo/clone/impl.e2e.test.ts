@@ -186,8 +186,7 @@ describe("patchy repo clone", () => {
       expect(result).toFailWith("Target directory already exists");
     });
 
-    // TODO: Clone command doesn't handle git errors - fix impl to catch and report clone failures
-    it.skip("should fail when remote repository does not exist", async () => {
+    it("should fail when remote repository does not exist", async () => {
       await setupTestWithConfig({
         tmpDir,
         createDirectories: { repoBaseDir: "repos" },
@@ -199,7 +198,27 @@ describe("patchy repo clone", () => {
         tmpDir,
       );
 
-      expect(result).toFail();
+      expect(result).toFailWith("Failed to clone repository");
+    });
+
+    it("should fail when ref does not exist", async () => {
+      const bareRepoDir = path.join(tmpDir, "bare-repo.git");
+      mkdirSync(bareRepoDir, { recursive: true });
+      await initBareRepoWithCommit(bareRepoDir);
+      const bareRepoUrl = `file://${bareRepoDir}`;
+
+      await setupTestWithConfig({
+        tmpDir,
+        createDirectories: { repoBaseDir: "repos" },
+        jsonConfig: { repo_base_dir: "repos" },
+      });
+
+      const result = await runCli(
+        `patchy repo clone --repo-url ${bareRepoUrl} --ref non-existent-ref`,
+        tmpDir,
+      );
+
+      expect(result).toFailWith("Failed to checkout ref");
     });
   });
 });
