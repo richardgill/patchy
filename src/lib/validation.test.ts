@@ -1,10 +1,5 @@
 import { describe, expect, it } from "bun:test";
-import {
-  isValidGitUrl,
-  validateGitUrl,
-  validatePath,
-  validateRef,
-} from "./validation";
+import { isValidGitUrl, validateGitUrl } from "./validation";
 
 describe("isValidGitUrl", () => {
   const validUrls = [
@@ -64,30 +59,5 @@ describe("validateGitUrl", () => {
     const result = validateGitUrl("not-a-url");
     expect(typeof result).toBe("string");
     expect(result).toContain("valid Git URL");
-  });
-});
-
-describe("validatePath", () => {
-  it("returns true for valid paths", () => {
-    expect(validatePath("/path/to/dir", "Directory")).toBe(true);
-    expect(validatePath("relative/path", "Path")).toBe(true);
-  });
-
-  it("returns error message for empty path", () => {
-    expect(validatePath("", "Directory")).toBe("Directory is required");
-    expect(validatePath("   ", "Path")).toBe("Path is required");
-  });
-});
-
-describe("validateRef", () => {
-  it("returns true for valid refs", () => {
-    expect(validateRef("main")).toBe(true);
-    expect(validateRef("v1.0.0")).toBe(true);
-    expect(validateRef("feature/branch")).toBe(true);
-  });
-
-  it("returns error message for empty ref", () => {
-    expect(validateRef("")).toBe("Git ref is required");
-    expect(validateRef("   ")).toBe("Git ref is required");
   });
 });

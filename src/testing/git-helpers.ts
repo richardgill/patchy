@@ -35,11 +35,13 @@ export const initBareRepoWithCommit = async (
   await workGit.init();
   await workGit.addConfig("user.email", "test@test.com");
   await workGit.addConfig("user.name", "Test User");
+  await workGit.addConfig("init.defaultBranch", "main");
+  await workGit.checkout(["-b", "main"]);
   writeFileSync(join(tmpWorkDir, filename), content);
   await workGit.add(".");
   await workGit.commit("initial commit");
   await workGit.addRemote("origin", bareRepoDir);
-  await workGit.push(["-u", "origin", "HEAD"]);
+  await workGit.push(["-u", "origin", "main"]);
   rmSync(tmpWorkDir, { recursive: true, force: true });
 };
 
