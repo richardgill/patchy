@@ -1,4 +1,4 @@
-import { beforeEach, describe, expect, it } from "bun:test";
+import { describe, expect, it } from "bun:test";
 import { readFileSync } from "node:fs";
 import path from "node:path";
 import { assertDefined } from "~/lib/assert";
@@ -11,13 +11,8 @@ import {
 } from "~/testing/test-utils";
 
 describe("patchy generate", () => {
-  let tmpDir: string;
-
-  beforeEach(async () => {
-    tmpDir = generateTmpDir();
-  });
-
   it("should detect and generate diff for modified files", async () => {
+    const tmpDir = generateTmpDir();
     const ctx = await setupTestWithConfig({
       tmpDir,
       createDirectories: {
@@ -57,6 +52,7 @@ describe("patchy generate", () => {
   });
 
   it("should detect and copy new files", async () => {
+    const tmpDir = generateTmpDir();
     const ctx = await setupTestWithConfig({
       tmpDir,
       createDirectories: {
@@ -91,6 +87,7 @@ describe("patchy generate", () => {
   });
 
   it("should handle nested directory structure", async () => {
+    const tmpDir = generateTmpDir();
     const ctx = await setupTestWithConfig({
       tmpDir,
       createDirectories: {
@@ -127,6 +124,7 @@ describe("patchy generate", () => {
   });
 
   it("should handle both modified and new files", async () => {
+    const tmpDir = generateTmpDir();
     const ctx = await setupTestWithConfig({
       tmpDir,
       createDirectories: {
@@ -156,6 +154,7 @@ describe("patchy generate", () => {
   });
 
   it("should show dry-run output without making changes", async () => {
+    const tmpDir = generateTmpDir();
     const ctx = await setupTestWithConfig({
       tmpDir,
       createDirectories: {
@@ -195,6 +194,7 @@ describe("patchy generate", () => {
   });
 
   it("should report no changes when repository is clean", async () => {
+    const tmpDir = generateTmpDir();
     const ctx = await setupTestWithConfig({
       tmpDir,
       createDirectories: {
@@ -220,6 +220,7 @@ describe("patchy generate", () => {
   });
 
   it("should fail when required fields are missing", async () => {
+    const tmpDir = generateTmpDir();
     await setupTestWithConfig({
       tmpDir,
       createDirectories: {
@@ -244,6 +245,7 @@ describe("patchy generate", () => {
   });
 
   it("should fail when repo_dir does not exist", async () => {
+    const tmpDir = generateTmpDir();
     await setupTestWithConfig({
       tmpDir,
       createDirectories: {
@@ -268,6 +270,7 @@ describe("patchy generate", () => {
   });
 
   it("should create patches directory if it does not exist", async () => {
+    const tmpDir = generateTmpDir();
     const ctx = await setupTestWithConfig({
       tmpDir,
       createDirectories: {
@@ -297,6 +300,7 @@ describe("patchy generate", () => {
   });
 
   it("should handle verbose flag", async () => {
+    const tmpDir = generateTmpDir();
     const ctx = await setupTestWithConfig({
       tmpDir,
       createDirectories: {

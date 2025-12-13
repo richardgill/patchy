@@ -1,21 +1,17 @@
-import { beforeEach, describe, expect, it } from "bun:test";
+import { describe, expect, it } from "bun:test";
 import { existsSync, readFileSync } from "node:fs";
 import { join } from "node:path";
 import {
   generateTmpDir,
   runCli,
+  runCliWithPrompts,
   setupTestWithConfig,
 } from "~/testing/test-utils";
 import { getSchemaUrl } from "~/version";
 
 describe("patchy init", () => {
-  let tmpDir: string;
-
-  beforeEach(() => {
-    tmpDir = generateTmpDir();
-  });
-
   it("should initialize patchy with all flags", async () => {
+    const tmpDir = generateTmpDir();
     await setupTestWithConfig({
       tmpDir,
       createDirectories: { clonesDir: "clones" },
@@ -42,6 +38,7 @@ describe("patchy init", () => {
   });
 
   it("should not include repo_dir in config", async () => {
+    const tmpDir = generateTmpDir();
     await setupTestWithConfig({
       tmpDir,
       createDirectories: { clonesDir: "clones" },
@@ -60,6 +57,7 @@ describe("patchy init", () => {
 
   describe("gitignore", () => {
     it("should add to .gitignore with --gitignore flag", async () => {
+      const tmpDir = generateTmpDir();
       await setupTestWithConfig({
         tmpDir,
         createDirectories: { clonesDir: "clones" },
@@ -78,6 +76,7 @@ describe("patchy init", () => {
     });
 
     it("should not modify .gitignore with --no-gitignore flag", async () => {
+      const tmpDir = generateTmpDir();
       await setupTestWithConfig({
         tmpDir,
         createDirectories: { clonesDir: "clones" },
@@ -94,6 +93,7 @@ describe("patchy init", () => {
     });
 
     it("should not modify .gitignore without flag in non-interactive mode", async () => {
+      const tmpDir = generateTmpDir();
       await setupTestWithConfig({
         tmpDir,
         createDirectories: { clonesDir: "clones" },
@@ -112,6 +112,7 @@ describe("patchy init", () => {
 
   describe("error cases", () => {
     it("should fail with malformed repo url - missing protocol", async () => {
+      const tmpDir = generateTmpDir();
       await setupTestWithConfig({
         tmpDir,
         createDirectories: { clonesDir: "clones" },
@@ -129,6 +130,7 @@ describe("patchy init", () => {
     });
 
     it("should fail with malformed repo url - invalid domain", async () => {
+      const tmpDir = generateTmpDir();
       await setupTestWithConfig({
         tmpDir,
         createDirectories: { clonesDir: "clones" },
@@ -146,6 +148,7 @@ describe("patchy init", () => {
     });
 
     it("should fail with malformed repo url - incomplete path", async () => {
+      const tmpDir = generateTmpDir();
       await setupTestWithConfig({
         tmpDir,
         createDirectories: { clonesDir: "clones" },
@@ -161,6 +164,7 @@ describe("patchy init", () => {
     });
 
     it("should fail when config file exists without force flag", async () => {
+      const tmpDir = generateTmpDir();
       await setupTestWithConfig({
         tmpDir,
         createDirectories: { clonesDir: "clones" },
@@ -187,6 +191,7 @@ describe("patchy init", () => {
     });
 
     it("should fail with validation error for empty repo_url", async () => {
+      const tmpDir = generateTmpDir();
       await setupTestWithConfig({
         tmpDir,
         createDirectories: { clonesDir: "clones" },
@@ -201,6 +206,61 @@ describe("patchy init", () => {
       expect(result.stderr).toMatchInlineSnapshot(
         `"Please enter a valid Git URL (https://github.com/owner/repo or git@github.com:owner/repo.git)"`,
       );
+    });
+  });
+
+  describe("interactive prompts", () => {
+    it("should complete init with interactive prompts", async () => {
+      const tmpDir = generateTmpDir();
+      await setupTestWithConfig({
+        tmpDir,
+        createDirectories: {},
+        jsonConfig: {},
+      });
+
+      const { resultPromise, tester } = runCliWithPrompts(
+        "patchy init --force",
+        tmpDir,
+      );
+
+      // patches dir prompt - accept default
+      tester.press("return");
+      // clones dir prompt - accept default
+      tester.press("return");
+      // gitignore confirm - accept default (yes)
+      tester.press("return");
+      // repo url prompt
+      tester.type("https://github.com/example/repo.git");
+      tester.press("return");
+      // ref prompt - accept default
+      tester.press("return");
+
+      const result = await resultPromise;
+      expect(result).toSucceed();
+
+      const configPath = join(tmpDir, "patchy.json");
+      expect(configPath).toExist();
+    });
+
+    it("should handle cancel during prompts", async () => {
+      const tmpDir = generateTmpDir();
+      await setupTestWithConfig({
+        tmpDir,
+        createDirectories: {},
+        jsonConfig: {},
+      });
+
+      const { resultPromise, tester } = runCliWithPrompts(
+        "patchy init --force",
+        tmpDir,
+      );
+
+      // Cancel on first prompt
+      tester.press("escape");
+
+      const result = await resultPromise;
+      expect(result).toFail();
+      expect(result.stderr).toContain("cancelled");
     });
   });
 });

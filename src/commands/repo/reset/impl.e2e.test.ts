@@ -1,22 +1,22 @@
-import { beforeEach, describe, expect, it } from "bun:test";
+import { describe, expect, it } from "bun:test";
 import { join } from "node:path";
 import { assertDefined } from "~/lib/assert";
-import { commitFile, initGitRepo } from "~/testing/git-helpers";
+import {
+  commitFile,
+  initGitRepo,
+  initGitRepoWithCommit,
+} from "~/testing/git-helpers";
 import {
   generateTmpDir,
   runCli,
+  runCliWithPrompts,
   setupTestWithConfig,
   writeFileIn,
 } from "~/testing/test-utils";
 
 describe("patchy repo reset", () => {
-  let tmpDir: string;
-
-  beforeEach(() => {
-    tmpDir = generateTmpDir();
-  });
-
   it("should reset repository and discard local changes", async () => {
+    const tmpDir = generateTmpDir();
     const ctx = await setupTestWithConfig({
       tmpDir,
       createDirectories: { clonesDir: "repos", repoDir: "test-repo" },
@@ -39,6 +39,7 @@ describe("patchy repo reset", () => {
   });
 
   it("should show success message after reset", async () => {
+    const tmpDir = generateTmpDir();
     const ctx = await setupTestWithConfig({
       tmpDir,
       createDirectories: { clonesDir: "repos", repoDir: "test-repo" },
@@ -61,6 +62,7 @@ describe("patchy repo reset", () => {
 
   describe("error cases", () => {
     it("should fail when repo directory does not exist", async () => {
+      const tmpDir = generateTmpDir();
       await setupTestWithConfig({
         tmpDir,
         createDirectories: { clonesDir: "repos" },
@@ -75,6 +77,7 @@ describe("patchy repo reset", () => {
     });
 
     it("should fail when directory is not a git repository", async () => {
+      const tmpDir = generateTmpDir();
       await setupTestWithConfig({
         tmpDir,
         createDirectories: { clonesDir: "repos", repoDir: "not-a-repo" },
@@ -92,6 +95,7 @@ describe("patchy repo reset", () => {
     });
 
     it("should fail when clones-dir directory does not exist", async () => {
+      const tmpDir = generateTmpDir();
       await setupTestWithConfig({ tmpDir });
 
       const result = await runCli(
@@ -104,6 +108,7 @@ describe("patchy repo reset", () => {
     });
 
     it("should fail when repo-dir is missing", async () => {
+      const tmpDir = generateTmpDir();
       await setupTestWithConfig({
         tmpDir,
         createDirectories: { clonesDir: "repos" },
@@ -120,6 +125,7 @@ describe("patchy repo reset", () => {
 
   describe("dry-run", () => {
     it("should not reset when --dry-run is set", async () => {
+      const tmpDir = generateTmpDir();
       const ctx = await setupTestWithConfig({
         tmpDir,
         createDirectories: { clonesDir: "repos", repoDir: "test-repo" },
@@ -143,6 +149,7 @@ describe("patchy repo reset", () => {
     });
 
     it("should still validate repo exists in dry-run mode", async () => {
+      const tmpDir = generateTmpDir();
       await setupTestWithConfig({
         tmpDir,
         createDirectories: { clonesDir: "repos" },
@@ -154,6 +161,102 @@ describe("patchy repo reset", () => {
       );
 
       expect(result).toFailWith("does not exist");
+    });
+  });
+
+  describe("confirmation prompt", () => {
+    it("should reset when user confirms", async () => {
+      const tmpDir = generateTmpDir();
+      const ctx = await setupTestWithConfig({
+        tmpDir,
+        createDirectories: {
+          clonesDir: "repos",
+          repoDir: "my-repo",
+        },
+        jsonConfig: {
+          clones_dir: "repos",
+          repo_dir: "my-repo",
+        },
+      });
+
+      const repoDir = assertDefined(ctx.absoluteRepoDir, "absoluteRepoDir");
+      await initGitRepoWithCommit(repoDir);
+
+      // Make uncommitted changes
+      await writeFileIn(repoDir, "dirty.txt", "uncommitted changes");
+
+      const { resultPromise, tester } = runCliWithPrompts(
+        "patchy repo reset",
+        tmpDir,
+      );
+
+      // Confirm reset - move to "yes" and confirm
+      tester.press("left");
+      tester.press("return");
+
+      const result = await resultPromise;
+      expect(result).toSucceed();
+      expect(result).toHaveOutput("Successfully reset");
+    });
+
+    it("should cancel when user declines", async () => {
+      const tmpDir = generateTmpDir();
+      const ctx = await setupTestWithConfig({
+        tmpDir,
+        createDirectories: {
+          clonesDir: "repos",
+          repoDir: "my-repo",
+        },
+        jsonConfig: {
+          clones_dir: "repos",
+          repo_dir: "my-repo",
+        },
+      });
+
+      const repoDir = assertDefined(ctx.absoluteRepoDir, "absoluteRepoDir");
+      await initGitRepoWithCommit(repoDir);
+
+      const { resultPromise, tester } = runCliWithPrompts(
+        "patchy repo reset",
+        tmpDir,
+      );
+
+      // Decline reset - accept default (no)
+      tester.press("return");
+
+      const result = await resultPromise;
+      expect(result).toFail();
+      expect(result.stderr).toContain("cancelled");
+    });
+
+    it("should cancel when user presses escape", async () => {
+      const tmpDir = generateTmpDir();
+      const ctx = await setupTestWithConfig({
+        tmpDir,
+        createDirectories: {
+          clonesDir: "repos",
+          repoDir: "my-repo",
+        },
+        jsonConfig: {
+          clones_dir: "repos",
+          repo_dir: "my-repo",
+        },
+      });
+
+      const repoDir = assertDefined(ctx.absoluteRepoDir, "absoluteRepoDir");
+      await initGitRepoWithCommit(repoDir);
+
+      const { resultPromise, tester } = runCliWithPrompts(
+        "patchy repo reset",
+        tmpDir,
+      );
+
+      // Press escape to cancel
+      tester.press("escape");
+
+      const result = await resultPromise;
+      expect(result).toFail();
+      expect(result.stderr).toContain("cancelled");
     });
   });
 });

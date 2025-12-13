@@ -90,3 +90,28 @@ export const parseJsonc = <T = unknown>(jsonString: string): ParseResult<T> => {
     return { success: false, error: "Failed to parse JSON" };
   }
 };
+
+type UpdateResult =
+  | { success: true; content: string }
+  | { success: false; error: string };
+
+export const updateJsoncField = (
+  jsonString: string,
+  key: string,
+  value: string,
+): UpdateResult => {
+  const edits = JSONC.modify(jsonString, [key], value, {
+    formattingOptions: { insertSpaces: true, tabSize: 2 },
+  });
+
+  try {
+    const updated = JSONC.applyEdits(jsonString, edits);
+    return { success: true, content: updated };
+  } catch (error) {
+    const message = error instanceof Error ? error.message : String(error);
+    return {
+      success: false,
+      error: `Failed to update ${key} in config: ${message}`,
+    };
+  }
+};

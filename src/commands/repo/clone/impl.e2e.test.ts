@@ -1,5 +1,5 @@
-import { beforeEach, describe, expect, it } from "bun:test";
-import { mkdirSync } from "node:fs";
+import { describe, expect, it } from "bun:test";
+import { mkdirSync, readFileSync } from "node:fs";
 import path from "node:path";
 import {
   getCurrentBranch,
@@ -9,18 +9,14 @@ import {
 import {
   generateTmpDir,
   runCli,
+  runCliWithPrompts,
   setupTestWithConfig,
   writeTestFile,
 } from "~/testing/test-utils";
 
 describe("patchy repo clone", () => {
-  let tmpDir: string;
-
-  beforeEach(() => {
-    tmpDir = generateTmpDir();
-  });
-
   it("should clone a repository", async () => {
+    const tmpDir = generateTmpDir();
     const bareRepoDir = path.join(tmpDir, "bare-repo.git");
     mkdirSync(bareRepoDir, { recursive: true });
     await initBareRepoWithCommit(bareRepoDir);
@@ -43,6 +39,7 @@ describe("patchy repo clone", () => {
   });
 
   it("should clone a repository with ref checkout", async () => {
+    const tmpDir = generateTmpDir();
     const bareRepoDir = path.join(tmpDir, "bare-repo.git");
     mkdirSync(bareRepoDir, { recursive: true });
     await initBareRepoWithCommit(bareRepoDir);
@@ -70,6 +67,7 @@ describe("patchy repo clone", () => {
   });
 
   it("should use verbose output when --verbose is set", async () => {
+    const tmpDir = generateTmpDir();
     const bareRepoDir = path.join(tmpDir, "bare-repo.git");
     mkdirSync(bareRepoDir, { recursive: true });
     await initBareRepoWithCommit(bareRepoDir);
@@ -94,6 +92,7 @@ describe("patchy repo clone", () => {
 
   describe("dry-run", () => {
     it("should not clone when --dry-run is set", async () => {
+      const tmpDir = generateTmpDir();
       const bareRepoDir = path.join(tmpDir, "bare-repo.git");
       mkdirSync(bareRepoDir, { recursive: true });
       await initBareRepoWithCommit(bareRepoDir);
@@ -116,6 +115,7 @@ describe("patchy repo clone", () => {
     });
 
     it("should show ref in dry-run output when --ref is set", async () => {
+      const tmpDir = generateTmpDir();
       const bareRepoDir = path.join(tmpDir, "bare-repo.git");
       mkdirSync(bareRepoDir, { recursive: true });
       await initBareRepoWithCommit(bareRepoDir);
@@ -139,6 +139,7 @@ describe("patchy repo clone", () => {
 
   describe("error cases", () => {
     it("should fail with invalid git URL", async () => {
+      const tmpDir = generateTmpDir();
       await setupTestWithConfig({
         tmpDir,
         createDirectories: { clonesDir: "repos" },
@@ -154,6 +155,7 @@ describe("patchy repo clone", () => {
     });
 
     it("should use default clones_dir when not specified", async () => {
+      const tmpDir = generateTmpDir();
       await writeTestFile(tmpDir, "patchy.json", "{}");
 
       const result = await runCli(
@@ -166,6 +168,7 @@ describe("patchy repo clone", () => {
     });
 
     it("should fail when target directory already exists", async () => {
+      const tmpDir = generateTmpDir();
       const bareRepoDir = path.join(tmpDir, "bare-repo.git");
       mkdirSync(bareRepoDir, { recursive: true });
       await initBareRepoWithCommit(bareRepoDir);
@@ -188,6 +191,7 @@ describe("patchy repo clone", () => {
     });
 
     it("should fail when remote repository does not exist", async () => {
+      const tmpDir = generateTmpDir();
       await setupTestWithConfig({
         tmpDir,
         createDirectories: { clonesDir: "repos" },
@@ -203,6 +207,7 @@ describe("patchy repo clone", () => {
     });
 
     it("should fail when ref does not exist", async () => {
+      const tmpDir = generateTmpDir();
       const bareRepoDir = path.join(tmpDir, "bare-repo.git");
       mkdirSync(bareRepoDir, { recursive: true });
       await initBareRepoWithCommit(bareRepoDir);
@@ -220,6 +225,156 @@ describe("patchy repo clone", () => {
       );
 
       expect(result).toFailWith("Failed to checkout ref");
+    });
+  });
+
+  describe("repo_dir prompt", () => {
+    it("should skip prompt in non-TTY mode (e2e tests)", async () => {
+      const tmpDir = generateTmpDir();
+      const bareRepoDir = path.join(tmpDir, "bare-repo.git");
+      mkdirSync(bareRepoDir, { recursive: true });
+      await initBareRepoWithCommit(bareRepoDir);
+      const bareRepoUrl = `file://${bareRepoDir}`;
+
+      await setupTestWithConfig({
+        tmpDir,
+        createDirectories: { clonesDir: "repos" },
+        jsonConfig: { clones_dir: "repos" },
+      });
+
+      const result = await runCli(
+        `patchy repo clone --repo-url ${bareRepoUrl}`,
+        tmpDir,
+      );
+
+      expect(result).toSucceed();
+      expect(result).toHaveOutput("Successfully cloned repository");
+      expect(result).not.toHaveOutput("Updated patchy.json");
+    });
+
+    it("should skip prompt when repo_dir already matches", async () => {
+      const tmpDir = generateTmpDir();
+      const bareRepoDir = path.join(tmpDir, "bare-repo.git");
+      mkdirSync(bareRepoDir, { recursive: true });
+      await initBareRepoWithCommit(bareRepoDir);
+      const bareRepoUrl = `file://${bareRepoDir}`;
+
+      await setupTestWithConfig({
+        tmpDir,
+        createDirectories: { clonesDir: "repos" },
+        jsonConfig: { clones_dir: "repos", repo_dir: "bare-repo" },
+      });
+
+      const result = await runCli(
+        `patchy repo clone --repo-url ${bareRepoUrl}`,
+        tmpDir,
+      );
+
+      expect(result).toSucceed();
+      expect(result).toHaveOutput("Successfully cloned repository");
+      expect(result).not.toHaveOutput("Updated patchy.json");
+    });
+
+    it("should skip prompt in dry-run mode", async () => {
+      const tmpDir = generateTmpDir();
+      const bareRepoDir = path.join(tmpDir, "bare-repo.git");
+      mkdirSync(bareRepoDir, { recursive: true });
+      await initBareRepoWithCommit(bareRepoDir);
+      const bareRepoUrl = `file://${bareRepoDir}`;
+
+      await setupTestWithConfig({
+        tmpDir,
+        createDirectories: { clonesDir: "repos" },
+        jsonConfig: { clones_dir: "repos" },
+      });
+
+      const result = await runCli(
+        `patchy repo clone --repo-url ${bareRepoUrl} --dry-run`,
+        tmpDir,
+      );
+
+      expect(result).toSucceed();
+      expect(result).toHaveOutput("[DRY RUN]");
+      expect(result).not.toHaveOutput("repo_dir");
+    });
+
+    it("should skip prompt when patchy.json does not exist", async () => {
+      const tmpDir = generateTmpDir();
+      const bareRepoDir = path.join(tmpDir, "bare-repo.git");
+      mkdirSync(bareRepoDir, { recursive: true });
+      await initBareRepoWithCommit(bareRepoDir);
+      const bareRepoUrl = `file://${bareRepoDir}`;
+
+      mkdirSync(path.join(tmpDir, "repos"), { recursive: true });
+
+      const result = await runCli(
+        `patchy repo clone --repo-url ${bareRepoUrl} --clones-dir repos`,
+        tmpDir,
+      );
+
+      expect(result).toSucceed();
+      expect(result).toHaveOutput("Successfully cloned repository");
+    });
+
+    it("should prompt to save repo_dir after clone", async () => {
+      const tmpDir = generateTmpDir();
+      const bareRepoDir = path.join(tmpDir, "bare-repo.git");
+      mkdirSync(bareRepoDir, { recursive: true });
+      await initBareRepoWithCommit(bareRepoDir);
+      const bareRepoUrl = `file://${bareRepoDir}`;
+
+      await setupTestWithConfig({
+        tmpDir,
+        createDirectories: { clonesDir: "repos" },
+        jsonConfig: { clones_dir: "repos" },
+      });
+
+      const { resultPromise, tester } = runCliWithPrompts(
+        `patchy repo clone --repo-url ${bareRepoUrl}`,
+        tmpDir,
+      );
+
+      // Confirm saving repo_dir - accept default (yes)
+      tester.press("return");
+
+      const result = await resultPromise;
+      expect(result).toSucceed();
+
+      // Verify repo_dir was saved to config
+      const configPath = path.join(tmpDir, "patchy.json");
+      const config = JSON.parse(readFileSync(configPath, "utf-8"));
+      expect(config.repo_dir).toBe("bare-repo");
+    });
+
+    it("should not save repo_dir when prompt declined", async () => {
+      const tmpDir = generateTmpDir();
+      const bareRepoDir = path.join(tmpDir, "bare-repo.git");
+      mkdirSync(bareRepoDir, { recursive: true });
+      await initBareRepoWithCommit(bareRepoDir);
+      const bareRepoUrl = `file://${bareRepoDir}`;
+
+      await setupTestWithConfig({
+        tmpDir,
+        createDirectories: { clonesDir: "repos" },
+        jsonConfig: { clones_dir: "repos" },
+      });
+
+      const { resultPromise, tester } = runCliWithPrompts(
+        `patchy repo clone --repo-url ${bareRepoUrl}`,
+        tmpDir,
+      );
+
+      // Decline saving repo_dir - move to "no" and confirm
+      tester.press("right");
+      tester.press("return");
+
+      const result = await resultPromise;
+      expect(result).toSucceed();
+
+      // Verify repo_dir was NOT saved
+      const configPath = path.join(tmpDir, "patchy.json");
+      const config = JSON.parse(readFileSync(configPath, "utf-8"));
+      expect(config.repo_dir).toBeUndefined();
     });
   });
 });

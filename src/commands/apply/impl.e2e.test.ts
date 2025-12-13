@@ -1,4 +1,4 @@
-import { beforeEach, describe, expect, it } from "bun:test";
+import { describe, expect, it } from "bun:test";
 import { mkdirSync } from "node:fs";
 import path from "node:path";
 import {
@@ -11,13 +11,8 @@ import {
 } from "~/testing/test-utils";
 
 describe("patchy apply", () => {
-  let tmpDir: string;
-
-  beforeEach(async () => {
-    tmpDir = generateTmpDir();
-  });
-
   it("should apply patches with all flags specified", async () => {
+    const tmpDir = generateTmpDir();
     await setupTestWithConfig({
       tmpDir,
       createDirectories: {
@@ -44,6 +39,7 @@ describe("patchy apply", () => {
   });
 
   it("should apply patches using config file values", async () => {
+    const tmpDir = generateTmpDir();
     await setupTestWithConfig({
       tmpDir,
       createDirectories: {
@@ -73,6 +69,7 @@ describe("patchy apply", () => {
   });
 
   it("should override config file values with CLI flags", async () => {
+    const tmpDir = generateTmpDir();
     await setupTestWithConfig({
       tmpDir,
       createDirectories: {
@@ -102,6 +99,7 @@ describe("patchy apply", () => {
   });
 
   it("should fail when required fields are missing", async () => {
+    const tmpDir = generateTmpDir();
     await setupTestWithConfig({
       tmpDir,
       createDirectories: {
@@ -126,6 +124,7 @@ describe("patchy apply", () => {
   });
 
   it("should fail when config file doesn't exist with explicit path", async () => {
+    const tmpDir = generateTmpDir();
     mkdirSync(tmpDir, { recursive: true });
 
     const result = await runCli(
@@ -140,6 +139,7 @@ describe("patchy apply", () => {
   });
 
   it("should fail on invalid JSON syntax", async () => {
+    const tmpDir = generateTmpDir();
     await writeTestFile(tmpDir, "invalid.json", "{ invalid json: content }");
 
     const result = await runCli(`patchy apply --config invalid.json`, tmpDir);
@@ -154,6 +154,7 @@ describe("patchy apply", () => {
   });
 
   it("should fail validation when directories don't exist", async () => {
+    const tmpDir = generateTmpDir();
     await setupTestWithConfig({
       tmpDir,
       createDirectories: {},
@@ -177,6 +178,7 @@ describe("patchy apply", () => {
   });
 
   it("should succeed even with invalid repo URL since it's not required for apply", async () => {
+    const tmpDir = generateTmpDir();
     await setupTestWithConfig({
       tmpDir,
       createDirectories: {
@@ -201,6 +203,7 @@ describe("patchy apply", () => {
   });
 
   it("should handle empty JSON config file with CLI flags", async () => {
+    const tmpDir = generateTmpDir();
     await writeTestFile(tmpDir, "empty.json", "{}");
 
     await setupTestWithConfig({
@@ -226,6 +229,7 @@ describe("patchy apply", () => {
   });
 
   it("should handle boolean flags correctly", async () => {
+    const tmpDir = generateTmpDir();
     await setupTestWithConfig({
       tmpDir,
       createDirectories: {
@@ -251,6 +255,7 @@ describe("patchy apply", () => {
   });
 
   it("should use custom config path", async () => {
+    const tmpDir = generateTmpDir();
     const customConfigPath = path.join(tmpDir, "custom", "config.json");
 
     await setupTestWithConfig({
@@ -282,6 +287,7 @@ describe("patchy apply", () => {
   });
 
   it("should correctly join clones_dir and repo_dir paths", async () => {
+    const tmpDir = generateTmpDir();
     await setupTestWithConfig({
       tmpDir,
       createDirectories: {
@@ -306,6 +312,7 @@ describe("patchy apply", () => {
   });
 
   it("should use default values when not specified", async () => {
+    const tmpDir = generateTmpDir();
     await setupTestWithConfig({
       tmpDir,
       createDirectories: {
@@ -330,6 +337,7 @@ describe("patchy apply", () => {
   });
 
   it("should handle different combinations of missing required fields", async () => {
+    const tmpDir = generateTmpDir();
     await setupTestWithConfig({
       tmpDir,
       createDirectories: {},
@@ -352,6 +360,7 @@ describe("patchy apply", () => {
   });
 
   it("should handle ref override from CLI", async () => {
+    const tmpDir = generateTmpDir();
     await setupTestWithConfig({
       tmpDir,
       createDirectories: {
@@ -380,6 +389,7 @@ describe("patchy apply", () => {
   });
 
   it("should handle absolute paths in config", async () => {
+    const tmpDir = generateTmpDir();
     const absoluteBase = path.join(tmpDir, "absolute-base");
     const absolutePatches = path.join(tmpDir, "absolute-patches");
 
@@ -408,6 +418,7 @@ describe("patchy apply", () => {
   });
 
   it("should handle truly empty JSON file", async () => {
+    const tmpDir = generateTmpDir();
     await writeTestFile(tmpDir, "truly-empty.json", "");
 
     const result = await runCli(
@@ -425,6 +436,7 @@ describe("patchy apply", () => {
   });
 
   it("should handle invalid JSON structure", async () => {
+    const tmpDir = generateTmpDir();
     await writeJsonConfig(tmpDir, "invalid-structure.json", {
       repo_url: 123,
       verbose: "not-a-boolean",
@@ -440,6 +452,7 @@ describe("patchy apply", () => {
   });
 
   it("should handle Zod validation error for empty string fields", async () => {
+    const tmpDir = generateTmpDir();
     await writeJsonConfig(tmpDir, "empty-strings.json", {
       repo_url: "",
       ref: "",
@@ -463,6 +476,7 @@ describe("patchy apply", () => {
   });
 
   it("should handle Zod validation error for null values", async () => {
+    const tmpDir = generateTmpDir();
     await writeJsonConfig(tmpDir, "null-values.json", {
       repo_url: null,
       verbose: null,
@@ -483,6 +497,7 @@ describe("patchy apply", () => {
   });
 
   it("should handle Zod strict mode error for unknown fields", async () => {
+    const tmpDir = generateTmpDir();
     await writeJsonConfig(tmpDir, "unknown-fields.json", {
       repo_url: "https://github.com/user/repo.git",
       unknown_field: "value",
@@ -501,6 +516,7 @@ describe("patchy apply", () => {
   });
 
   it("should handle boolean field with string value", async () => {
+    const tmpDir = generateTmpDir();
     await writeJsonConfig(tmpDir, "boolean-string.json", {
       verbose: "yes",
       dry_run: "true",
@@ -519,6 +535,7 @@ describe("patchy apply", () => {
   });
 
   it("should handle array values where strings are expected", async () => {
+    const tmpDir = generateTmpDir();
     await writeJsonConfig(tmpDir, "array-values.json", {
       repo_url: ["https://github.com/user/repo.git"],
       ref: ["main", "develop"],
@@ -539,6 +556,7 @@ describe("patchy apply", () => {
   });
 
   it("should handle object values where primitives are expected", async () => {
+    const tmpDir = generateTmpDir();
     await writeJsonConfig(tmpDir, "object-values.json", {
       repo_url: { url: "https://github.com/user/repo.git" },
       verbose: { enabled: true },
@@ -557,6 +575,7 @@ describe("patchy apply", () => {
   });
 
   it("should handle multiple Zod errors with mixed types", async () => {
+    const tmpDir = generateTmpDir();
     await writeJsonConfig(tmpDir, "mixed-errors.json", {
       repo_url: 123,
       ref: true,
@@ -585,6 +604,7 @@ describe("patchy apply", () => {
   });
 
   it("should copy new files from patches to repo", async () => {
+    const tmpDir = generateTmpDir();
     const ctx = await setupTestWithConfig({
       tmpDir,
       createDirectories: {
@@ -621,6 +641,7 @@ describe("patchy apply", () => {
   });
 
   it("should copy new files in nested directories", async () => {
+    const tmpDir = generateTmpDir();
     const ctx = await setupTestWithConfig({
       tmpDir,
       createDirectories: {
@@ -655,6 +676,7 @@ describe("patchy apply", () => {
   });
 
   it("should apply diff files to existing files", async () => {
+    const tmpDir = generateTmpDir();
     const ctx = await setupTestWithConfig({
       tmpDir,
       createDirectories: {
@@ -703,6 +725,7 @@ describe("patchy apply", () => {
   });
 
   it("should handle mixed files (copies and diffs)", async () => {
+    const tmpDir = generateTmpDir();
     const ctx = await setupTestWithConfig({
       tmpDir,
       createDirectories: {
@@ -748,6 +771,7 @@ describe("patchy apply", () => {
   });
 
   it("should report error when diff target file does not exist", async () => {
+    const tmpDir = generateTmpDir();
     const ctx = await setupTestWithConfig({
       tmpDir,
       createDirectories: {
@@ -784,6 +808,7 @@ describe("patchy apply", () => {
   });
 
   it("should list what would be done in dry-run mode", async () => {
+    const tmpDir = generateTmpDir();
     const ctx = await setupTestWithConfig({
       tmpDir,
       createDirectories: {
@@ -816,6 +841,7 @@ describe("patchy apply", () => {
   });
 
   it("should preserve file content when copying", async () => {
+    const tmpDir = generateTmpDir();
     const ctx = await setupTestWithConfig({
       tmpDir,
       createDirectories: {
@@ -851,6 +877,7 @@ export const component = () => {
   });
 
   it("should apply diff with fuzzy matching when context lines are missing from target", async () => {
+    const tmpDir = generateTmpDir();
     const ctx = await setupTestWithConfig({
       tmpDir,
       createDirectories: {
@@ -905,6 +932,7 @@ const other = 2;
   });
 
   it("should fail to apply diff when fuzz-factor is 0 and context lines are missing", async () => {
+    const tmpDir = generateTmpDir();
     const ctx = await setupTestWithConfig({
       tmpDir,
       createDirectories: {
