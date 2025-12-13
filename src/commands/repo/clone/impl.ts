@@ -31,17 +31,17 @@ export default async function (
   const dryRun = config.dry_run;
   const verbose = config.verbose;
 
-  if (!config.repo_base_dir) {
+  if (!config.clones_dir) {
     this.process.stderr.write(
       chalk.red(
-        `Missing required parameter: repo_base_dir\nSet --repo-base-dir flag, ${FLAG_METADATA.repo_base_dir.env} env var, or repo_base_dir in config file.\n`,
+        `Missing required parameter: clones_dir\nSet --clones-dir flag, ${FLAG_METADATA.clones_dir.env} env var, or clones_dir in config file.\n`,
       ),
     );
     this.process.exit(1);
     return;
   }
 
-  const repoBaseDir = resolve(this.cwd, config.repo_base_dir);
+  const clonesDir = resolve(this.cwd, config.clones_dir);
 
   if (!isValidGitUrl(repoUrl)) {
     this.process.stderr.write(
@@ -62,11 +62,11 @@ export default async function (
     return;
   }
 
-  const targetDir = join(repoBaseDir, repoName);
+  const targetDir = join(clonesDir, repoName);
 
   if (verbose) {
     this.process.stdout.write(`Repository URL: ${repoUrl}\n`);
-    this.process.stdout.write(`Repository base directory: ${repoBaseDir}\n`);
+    this.process.stdout.write(`Clones directory: ${clonesDir}\n`);
     this.process.stdout.write(`Target directory: ${targetDir}\n`);
     this.process.stdout.write(`Git ref: ${ref}\n`);
   }
@@ -89,11 +89,11 @@ export default async function (
     return;
   }
 
-  ensureDirExists(repoBaseDir);
+  ensureDirExists(clonesDir);
 
   this.process.stdout.write(`Cloning ${repoUrl} to ${targetDir}...\n`);
 
-  const git = createGitClient(repoBaseDir);
+  const git = createGitClient(clonesDir);
   try {
     await git.clone(repoUrl, repoName);
   } catch (error) {

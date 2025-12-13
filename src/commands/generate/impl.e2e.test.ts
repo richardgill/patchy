@@ -22,11 +22,11 @@ describe("patchy generate", () => {
       tmpDir,
       createDirectories: {
         patchesDir: "patches",
-        repoBaseDir: "repos",
+        clonesDir: "repos",
         repoDir: "upstream",
       },
       jsonConfig: {
-        repo_base_dir: "repos",
+        clones_dir: "repos",
         repo_dir: "upstream",
         patches_dir: "patches",
       },
@@ -61,11 +61,11 @@ describe("patchy generate", () => {
       tmpDir,
       createDirectories: {
         patchesDir: "patches",
-        repoBaseDir: "repos",
+        clonesDir: "repos",
         repoDir: "upstream",
       },
       jsonConfig: {
-        repo_base_dir: "repos",
+        clones_dir: "repos",
         repo_dir: "upstream",
         patches_dir: "patches",
       },
@@ -95,11 +95,11 @@ describe("patchy generate", () => {
       tmpDir,
       createDirectories: {
         patchesDir: "patches",
-        repoBaseDir: "repos",
+        clonesDir: "repos",
         repoDir: "upstream",
       },
       jsonConfig: {
-        repo_base_dir: "repos",
+        clones_dir: "repos",
         repo_dir: "upstream",
         patches_dir: "patches",
       },
@@ -131,11 +131,11 @@ describe("patchy generate", () => {
       tmpDir,
       createDirectories: {
         patchesDir: "patches",
-        repoBaseDir: "repos",
+        clonesDir: "repos",
         repoDir: "upstream",
       },
       jsonConfig: {
-        repo_base_dir: "repos",
+        clones_dir: "repos",
         repo_dir: "upstream",
         patches_dir: "patches",
       },
@@ -160,11 +160,11 @@ describe("patchy generate", () => {
       tmpDir,
       createDirectories: {
         patchesDir: "patches",
-        repoBaseDir: "repos",
+        clonesDir: "repos",
         repoDir: "upstream",
       },
       jsonConfig: {
-        repo_base_dir: "repos",
+        clones_dir: "repos",
         repo_dir: "upstream",
         patches_dir: "patches",
       },
@@ -199,11 +199,11 @@ describe("patchy generate", () => {
       tmpDir,
       createDirectories: {
         patchesDir: "patches",
-        repoBaseDir: "repos",
+        clonesDir: "repos",
         repoDir: "upstream",
       },
       jsonConfig: {
-        repo_base_dir: "repos",
+        clones_dir: "repos",
         repo_dir: "upstream",
         patches_dir: "patches",
       },
@@ -248,10 +248,10 @@ describe("patchy generate", () => {
       tmpDir,
       createDirectories: {
         patchesDir: "patches",
-        repoBaseDir: "repos",
+        clonesDir: "repos",
       },
       jsonConfig: {
-        repo_base_dir: "repos",
+        clones_dir: "repos",
         repo_dir: "non-existent-repo",
         patches_dir: "patches",
       },
@@ -271,11 +271,11 @@ describe("patchy generate", () => {
     const ctx = await setupTestWithConfig({
       tmpDir,
       createDirectories: {
-        repoBaseDir: "repos",
+        clonesDir: "repos",
         repoDir: "upstream",
       },
       jsonConfig: {
-        repo_base_dir: "repos",
+        clones_dir: "repos",
         repo_dir: "upstream",
         patches_dir: "new-patches",
       },
@@ -301,11 +301,11 @@ describe("patchy generate", () => {
       tmpDir,
       createDirectories: {
         patchesDir: "patches",
-        repoBaseDir: "repos",
+        clonesDir: "repos",
         repoDir: "upstream",
       },
       jsonConfig: {
-        repo_base_dir: "repos",
+        clones_dir: "repos",
         repo_dir: "upstream",
         patches_dir: "patches",
       },

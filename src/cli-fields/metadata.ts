@@ -74,21 +74,21 @@ export const FLAG_METADATA = {
       },
     },
   },
-  repo_base_dir: {
+  clones_dir: {
     configField: true,
     requiredInConfig: false,
-    env: "PATCHY_REPO_BASE_DIR",
+    env: "PATCHY_CLONES_DIR",
     type: "string",
-    name: "Repository base directory",
-    example: "./upstream",
-    defaultValue: "./upstream/",
-    validate: (config, _key) => directoryExists(config, "absoluteRepoBaseDir"),
+    name: "Clones directory",
+    example: "./clones",
+    defaultValue: "./clones/",
+    validate: (config, _key) => directoryExists(config, "absoluteClonesDir"),
     stricliFlag: {
-      "repo-base-dir": {
+      "clones-dir": {
         kind: "parsed",
         parse: String,
         brief:
-          "Parent directory where upstream repos are cloned [env: PATCHY_REPO_BASE_DIR]",
+          "Directory where upstream repos are cloned [env: PATCHY_CLONES_DIR]",
         optional: true,
       },
     },

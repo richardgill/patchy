@@ -17,7 +17,7 @@ import type { InitFlags } from "./flags";
 
 type PromptAnswers = {
   patchesDir?: string;
-  repoBaseDir?: string;
+  clonesDir?: string;
   addToGitignore?: boolean;
   repoUrl?: string;
   ref?: string;
@@ -71,33 +71,33 @@ export default async function (
     answers.patchesDir = patchesDir;
   }
 
-  if (flags["repo-base-dir"] === undefined) {
-    const repoBaseDir = await prompts.text({
-      message: "Directory for upstream repos:",
+  if (flags["clones-dir"] === undefined) {
+    const clonesDir = await prompts.text({
+      message: "Directory for cloned repos:",
       placeholder: "Parent directory where upstream repos are cloned",
-      initialValue: getDefaultValue("repo_base_dir"),
+      initialValue: getDefaultValue("clones_dir"),
     });
-    if (prompts.isCancel(repoBaseDir)) {
+    if (prompts.isCancel(clonesDir)) {
       this.process.stderr.write("Initialization cancelled\n");
       this.process.exit?.(1);
       return;
     }
-    answers.repoBaseDir = repoBaseDir;
+    answers.clonesDir = clonesDir;
   }
 
-  const repoBaseDir =
-    flags["repo-base-dir"] ??
-    answers.repoBaseDir ??
-    getDefaultValue("repo_base_dir") ??
+  const clonesDir =
+    flags["clones-dir"] ??
+    answers.clonesDir ??
+    getDefaultValue("clones_dir") ??
     "";
 
   if (flags.gitignore !== undefined) {
     answers.addToGitignore = flags.gitignore;
   } else {
-    const isInteractive = flags["repo-base-dir"] === undefined;
-    if (isInteractive && repoBaseDir) {
+    const isInteractive = flags["clones-dir"] === undefined;
+    if (isInteractive && clonesDir) {
       const addToGitignore = await prompts.confirm({
-        message: `Add ${repoBaseDir} to .gitignore?`,
+        message: `Add ${clonesDir} to .gitignore?`,
         initialValue: true,
       });
       if (prompts.isCancel(addToGitignore)) {
@@ -142,7 +142,7 @@ export default async function (
 
   const finalConfig: JsonConfig = {
     repo_url: flags["repo-url"] ?? answers.repoUrl ?? "",
-    repo_base_dir: repoBaseDir,
+    clones_dir: clonesDir,
     patches_dir:
       flags["patches-dir"] ??
       answers.patchesDir ??
@@ -167,27 +167,25 @@ export default async function (
     }
   }
 
-  const absoluteRepoBaseDir = resolve(this.cwd, repoBaseDir);
-  if (repoBaseDir) {
+  const absoluteClonesDir = resolve(this.cwd, clonesDir);
+  if (clonesDir) {
     try {
-      await mkdir(absoluteRepoBaseDir, { recursive: true });
-      prompts.log.step(
-        `Created upstream directory: ${chalk.cyan(repoBaseDir)}`,
-      );
+      await mkdir(absoluteClonesDir, { recursive: true });
+      prompts.log.step(`Created clones directory: ${chalk.cyan(clonesDir)}`);
     } catch (error) {
       this.process.stderr.write(
-        `Failed to create upstream directory: ${error}\n`,
+        `Failed to create clones directory: ${error}\n`,
       );
       this.process.exit?.(1);
       return;
     }
   }
 
-  if (answers.addToGitignore && repoBaseDir) {
+  if (answers.addToGitignore && clonesDir) {
     try {
-      await addToGitignoreFile(this.cwd, repoBaseDir);
+      await addToGitignoreFile(this.cwd, clonesDir);
       prompts.log.step(
-        `Added ${chalk.cyan(repoBaseDir)} to ${chalk.cyan(".gitignore")}`,
+        `Added ${chalk.cyan(clonesDir)} to ${chalk.cyan(".gitignore")}`,
       );
     } catch (error) {
       this.process.stderr.write(`Failed to update .gitignore: ${error}\n`);
@@ -213,7 +211,7 @@ export default async function (
 
   prompts.outro(chalk.green("Patchy initialized successfully!"));
   this.process.stdout.write(
-    `\nRun ${chalk.cyan("patchy repo clone")} to clone your repo into ${chalk.cyan(repoBaseDir)}\n`,
+    `\nRun ${chalk.cyan("patchy repo clone")} to clone your repo into ${chalk.cyan(clonesDir)}\n`,
   );
 }
 

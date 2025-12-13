@@ -22,7 +22,7 @@ describe("patchy apply", () => {
       tmpDir,
       createDirectories: {
         patchesDir: "patches",
-        repoBaseDir: "repos",
+        clonesDir: "repos",
         repoDir: "main",
       },
       jsonConfig: {
@@ -32,7 +32,7 @@ describe("patchy apply", () => {
     });
 
     const result = await runCli(
-      `patchy apply --repo-dir main --repo-base-dir repos --patches-dir patches --config patchy.json --verbose --dry-run`,
+      `patchy apply --repo-dir main --clones-dir repos --patches-dir patches --config patchy.json --verbose --dry-run`,
       tmpDir,
     );
 
@@ -48,13 +48,13 @@ describe("patchy apply", () => {
       tmpDir,
       createDirectories: {
         patchesDir: "my-patches",
-        repoBaseDir: "repos",
+        clonesDir: "repos",
         repoDir: "upstream",
       },
       jsonConfig: {
         repo_url: "https://github.com/example/test-repo.git",
         repo_dir: "upstream",
-        repo_base_dir: `${tmpDir}/repos`,
+        clones_dir: `${tmpDir}/repos`,
         patches_dir: "my-patches",
         ref: "main",
       },
@@ -77,13 +77,13 @@ describe("patchy apply", () => {
       tmpDir,
       createDirectories: {
         patchesDir: "cli-patches",
-        repoBaseDir: "repos",
+        clonesDir: "repos",
         repoDir: "cli-repo",
       },
       jsonConfig: {
         repo_url: "https://github.com/example/test-repo.git",
         repo_dir: "config-repo",
-        repo_base_dir: `${tmpDir}/repos`,
+        clones_dir: `${tmpDir}/repos`,
         patches_dir: "config-patches",
         ref: "main",
       },
@@ -159,7 +159,7 @@ describe("patchy apply", () => {
       createDirectories: {},
       jsonConfig: {
         repo_url: "https://github.com/example/repo.git",
-        repo_base_dir: "non-existent-base",
+        clones_dir: "non-existent-base",
         repo_dir: "non-existent-repo",
         patches_dir: "non-existent-patches",
       },
@@ -171,7 +171,7 @@ describe("patchy apply", () => {
     expect(result.stderr).toMatchInlineSnapshot(`
       "Validation errors:
 
-      repo_base_dir: non-existent-base in ./patchy.json does not exist: <TEST_DIR>/non-existent-base
+      clones_dir: non-existent-base in ./patchy.json does not exist: <TEST_DIR>/non-existent-base
       patches_dir: non-existent-patches in ./patchy.json does not exist: <TEST_DIR>/non-existent-patches"
     `);
   });
@@ -180,13 +180,13 @@ describe("patchy apply", () => {
     await setupTestWithConfig({
       tmpDir,
       createDirectories: {
-        repoBaseDir: "base",
+        clonesDir: "base",
         repoDir: "repo",
         patchesDir: "patches",
       },
       jsonConfig: {
         repo_url: "invalid-url-format",
-        repo_base_dir: "base",
+        clones_dir: "base",
         repo_dir: "repo",
       },
     });
@@ -206,7 +206,7 @@ describe("patchy apply", () => {
     await setupTestWithConfig({
       tmpDir,
       createDirectories: {
-        repoBaseDir: "base",
+        clonesDir: "base",
         repoDir: "repo",
         patchesDir: "patches",
       },
@@ -214,7 +214,7 @@ describe("patchy apply", () => {
     });
 
     const result = await runCli(
-      `patchy apply --config empty.json --repo-url https://github.com/example/repo.git --repo-base-dir base --repo-dir repo --dry-run --verbose`,
+      `patchy apply --config empty.json --repo-url https://github.com/example/repo.git --clones-dir base --repo-dir repo --dry-run --verbose`,
       tmpDir,
     );
 
@@ -229,13 +229,13 @@ describe("patchy apply", () => {
     await setupTestWithConfig({
       tmpDir,
       createDirectories: {
-        repoBaseDir: "base",
+        clonesDir: "base",
         repoDir: "repo",
         patchesDir: "patches",
       },
       jsonConfig: {
         repo_url: "https://github.com/example/repo.git",
-        repo_base_dir: "base",
+        clones_dir: "base",
         repo_dir: "repo",
         verbose: false,
       },
@@ -257,13 +257,13 @@ describe("patchy apply", () => {
       tmpDir,
       configPath: customConfigPath,
       createDirectories: {
-        repoBaseDir: "base",
+        clonesDir: "base",
         repoDir: "repo",
         patchesDir: "patches",
       },
       jsonConfig: {
         repo_url: "https://github.com/example/custom.git",
-        repo_base_dir: "base",
+        clones_dir: "base",
         repo_dir: "repo",
         ref: "custom-branch",
       },
@@ -281,17 +281,17 @@ describe("patchy apply", () => {
     `);
   });
 
-  it("should correctly join repo_base_dir and repo_dir paths", async () => {
+  it("should correctly join clones_dir and repo_dir paths", async () => {
     await setupTestWithConfig({
       tmpDir,
       createDirectories: {
-        repoBaseDir: "my-base/nested",
+        clonesDir: "my-base/nested",
         repoDir: "my-repo/nested-repo",
         patchesDir: "patches",
       },
       jsonConfig: {
         repo_url: "https://github.com/example/repo.git",
-        repo_base_dir: "my-base/nested",
+        clones_dir: "my-base/nested",
         repo_dir: "my-repo/nested-repo",
       },
     });
@@ -309,13 +309,13 @@ describe("patchy apply", () => {
     await setupTestWithConfig({
       tmpDir,
       createDirectories: {
-        repoBaseDir: "repoBaseDir1",
+        clonesDir: "clonesDir1",
         repoDir: "repoDir1",
         patchesDir: "patches",
       },
       jsonConfig: {
         repo_url: "https://github.com/example/repo.git",
-        repo_base_dir: "repoBaseDir1",
+        clones_dir: "clonesDir1",
         repo_dir: "repoDir1",
       },
     });
@@ -355,13 +355,13 @@ describe("patchy apply", () => {
     await setupTestWithConfig({
       tmpDir,
       createDirectories: {
-        repoBaseDir: "base",
+        clonesDir: "base",
         repoDir: "repo",
         patchesDir: "patches",
       },
       jsonConfig: {
         repo_url: "https://github.com/example/repo.git",
-        repo_base_dir: "base",
+        clones_dir: "base",
         repo_dir: "repo",
         ref: "json-ref",
       },
@@ -386,13 +386,13 @@ describe("patchy apply", () => {
     await setupTestWithConfig({
       tmpDir,
       createDirectories: {
-        repoBaseDir: "absolute-base",
+        clonesDir: "absolute-base",
         repoDir: "repo",
         patchesDir: "absolute-patches",
       },
       jsonConfig: {
         repo_url: "https://github.com/example/repo.git",
-        repo_base_dir: absoluteBase,
+        clones_dir: absoluteBase,
         repo_dir: "repo",
         patches_dir: absolutePatches,
       },
@@ -443,7 +443,7 @@ describe("patchy apply", () => {
     await writeJsonConfig(tmpDir, "empty-strings.json", {
       repo_url: "",
       ref: "",
-      repo_base_dir: "",
+      clones_dir: "",
     });
 
     const result = await runCli(
@@ -560,7 +560,7 @@ describe("patchy apply", () => {
     await writeJsonConfig(tmpDir, "mixed-errors.json", {
       repo_url: 123,
       ref: true,
-      repo_base_dir: ["base"],
+      clones_dir: ["base"],
       repo_dir: null,
       patches_dir: {},
       verbose: "false",
@@ -576,7 +576,7 @@ describe("patchy apply", () => {
     expect(result.stderr).toMatchInlineSnapshot(`
       "repo_url: Invalid input: expected string, received number
       repo_dir: Invalid input: expected string, received null
-      repo_base_dir: Invalid input: expected string, received array
+      clones_dir: Invalid input: expected string, received array
       patches_dir: Invalid input: expected string, received object
       ref: Invalid input: expected string, received boolean
       verbose: Invalid input: expected boolean, received string
@@ -588,13 +588,13 @@ describe("patchy apply", () => {
     const ctx = await setupTestWithConfig({
       tmpDir,
       createDirectories: {
-        repoBaseDir: "repos",
+        clonesDir: "repos",
         repoDir: "main",
         patchesDir: "patches",
       },
       jsonConfig: {
         repo_url: "https://github.com/example/test-repo.git",
-        repo_base_dir: "repos",
+        clones_dir: "repos",
         repo_dir: "main",
       },
     });
@@ -624,13 +624,13 @@ describe("patchy apply", () => {
     const ctx = await setupTestWithConfig({
       tmpDir,
       createDirectories: {
-        repoBaseDir: "repos",
+        clonesDir: "repos",
         repoDir: "main",
         patchesDir: "patches",
       },
       jsonConfig: {
         repo_url: "https://github.com/example/test-repo.git",
-        repo_base_dir: "repos",
+        clones_dir: "repos",
         repo_dir: "main",
       },
     });
@@ -658,13 +658,13 @@ describe("patchy apply", () => {
     const ctx = await setupTestWithConfig({
       tmpDir,
       createDirectories: {
-        repoBaseDir: "repos",
+        clonesDir: "repos",
         repoDir: "main",
         patchesDir: "patches",
       },
       jsonConfig: {
         repo_url: "https://github.com/example/test-repo.git",
-        repo_base_dir: "repos",
+        clones_dir: "repos",
         repo_dir: "main",
       },
     });
@@ -706,13 +706,13 @@ describe("patchy apply", () => {
     const ctx = await setupTestWithConfig({
       tmpDir,
       createDirectories: {
-        repoBaseDir: "repos",
+        clonesDir: "repos",
         repoDir: "main",
         patchesDir: "patches",
       },
       jsonConfig: {
         repo_url: "https://github.com/example/test-repo.git",
-        repo_base_dir: "repos",
+        clones_dir: "repos",
         repo_dir: "main",
       },
     });
@@ -751,13 +751,13 @@ describe("patchy apply", () => {
     const ctx = await setupTestWithConfig({
       tmpDir,
       createDirectories: {
-        repoBaseDir: "repos",
+        clonesDir: "repos",
         repoDir: "main",
         patchesDir: "patches",
       },
       jsonConfig: {
         repo_url: "https://github.com/example/test-repo.git",
-        repo_base_dir: "repos",
+        clones_dir: "repos",
         repo_dir: "main",
       },
     });
@@ -787,13 +787,13 @@ describe("patchy apply", () => {
     const ctx = await setupTestWithConfig({
       tmpDir,
       createDirectories: {
-        repoBaseDir: "repos",
+        clonesDir: "repos",
         repoDir: "main",
         patchesDir: "patches",
       },
       jsonConfig: {
         repo_url: "https://github.com/example/test-repo.git",
-        repo_base_dir: "repos",
+        clones_dir: "repos",
         repo_dir: "main",
       },
     });
@@ -819,13 +819,13 @@ describe("patchy apply", () => {
     const ctx = await setupTestWithConfig({
       tmpDir,
       createDirectories: {
-        repoBaseDir: "repos",
+        clonesDir: "repos",
         repoDir: "main",
         patchesDir: "patches",
       },
       jsonConfig: {
         repo_url: "https://github.com/example/test-repo.git",
-        repo_base_dir: "repos",
+        clones_dir: "repos",
         repo_dir: "main",
       },
     });
@@ -854,13 +854,13 @@ export const component = () => {
     const ctx = await setupTestWithConfig({
       tmpDir,
       createDirectories: {
-        repoBaseDir: "repos",
+        clonesDir: "repos",
         repoDir: "main",
         patchesDir: "patches",
       },
       jsonConfig: {
         repo_url: "https://github.com/example/test-repo.git",
-        repo_base_dir: "repos",
+        clones_dir: "repos",
         repo_dir: "main",
       },
     });
@@ -908,13 +908,13 @@ const other = 2;
     const ctx = await setupTestWithConfig({
       tmpDir,
       createDirectories: {
-        repoBaseDir: "repos",
+        clonesDir: "repos",
         repoDir: "main",
         patchesDir: "patches",
       },
       jsonConfig: {
         repo_url: "https://github.com/example/test-repo.git",
-        repo_base_dir: "repos",
+        clones_dir: "repos",
         repo_dir: "main",
       },
     });

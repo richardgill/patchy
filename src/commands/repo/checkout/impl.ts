@@ -31,7 +31,7 @@ export default async function (
 ): Promise<void> {
   const result = createEnrichedMergedConfig({
     flags,
-    requiredFields: ["repo_base_dir", "repo_dir"],
+    requiredFields: ["clones_dir", "repo_dir"],
     cwd: this.cwd,
   });
 

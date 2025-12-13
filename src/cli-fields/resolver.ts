@@ -31,18 +31,16 @@ const enrichConfig = (
   cwd: string,
 ): EnrichedMergedConfig => {
   const {
-    repo_base_dir: repoBaseDir,
+    clones_dir: clonesDir,
     repo_dir: repoDir,
     patches_dir: patchesDir,
   } = config;
 
   return {
     ...config,
-    absoluteRepoBaseDir: repoBaseDir ? resolve(cwd, repoBaseDir) : undefined,
+    absoluteClonesDir: clonesDir ? resolve(cwd, clonesDir) : undefined,
     absoluteRepoDir:
-      repoBaseDir && repoDir
-        ? resolve(cwd, join(repoBaseDir, repoDir))
-        : undefined,
+      clonesDir && repoDir ? resolve(cwd, join(clonesDir, repoDir)) : undefined,
     absolutePatchesDir: patchesDir ? resolve(cwd, patchesDir) : undefined,
   };
 };

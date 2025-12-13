@@ -28,8 +28,8 @@ describe("patchy repo clone", () => {
 
     await setupTestWithConfig({
       tmpDir,
-      createDirectories: { repoBaseDir: "repos" },
-      jsonConfig: { repo_base_dir: "repos" },
+      createDirectories: { clonesDir: "repos" },
+      jsonConfig: { clones_dir: "repos" },
     });
 
     const result = await runCli(
@@ -52,8 +52,8 @@ describe("patchy repo clone", () => {
 
     await setupTestWithConfig({
       tmpDir,
-      createDirectories: { repoBaseDir: "repos" },
-      jsonConfig: { repo_base_dir: "repos" },
+      createDirectories: { clonesDir: "repos" },
+      jsonConfig: { clones_dir: "repos" },
     });
 
     const result = await runCli(
@@ -77,8 +77,8 @@ describe("patchy repo clone", () => {
 
     await setupTestWithConfig({
       tmpDir,
-      createDirectories: { repoBaseDir: "repos" },
-      jsonConfig: { repo_base_dir: "repos" },
+      createDirectories: { clonesDir: "repos" },
+      jsonConfig: { clones_dir: "repos" },
     });
 
     const result = await runCli(
@@ -88,7 +88,7 @@ describe("patchy repo clone", () => {
 
     expect(result).toSucceed();
     expect(result).toHaveOutput("Repository URL:");
-    expect(result).toHaveOutput("Repository base directory:");
+    expect(result).toHaveOutput("Clones directory:");
     expect(result).toHaveOutput("Target directory:");
   });
 
@@ -101,8 +101,8 @@ describe("patchy repo clone", () => {
 
       await setupTestWithConfig({
         tmpDir,
-        createDirectories: { repoBaseDir: "repos" },
-        jsonConfig: { repo_base_dir: "repos" },
+        createDirectories: { clonesDir: "repos" },
+        jsonConfig: { clones_dir: "repos" },
       });
 
       const result = await runCli(
@@ -123,8 +123,8 @@ describe("patchy repo clone", () => {
 
       await setupTestWithConfig({
         tmpDir,
-        createDirectories: { repoBaseDir: "repos" },
-        jsonConfig: { repo_base_dir: "repos" },
+        createDirectories: { clonesDir: "repos" },
+        jsonConfig: { clones_dir: "repos" },
       });
 
       const result = await runCli(
@@ -141,8 +141,8 @@ describe("patchy repo clone", () => {
     it("should fail with invalid git URL", async () => {
       await setupTestWithConfig({
         tmpDir,
-        createDirectories: { repoBaseDir: "repos" },
-        jsonConfig: { repo_base_dir: "repos" },
+        createDirectories: { clonesDir: "repos" },
+        jsonConfig: { clones_dir: "repos" },
       });
 
       const result = await runCli(
@@ -153,7 +153,7 @@ describe("patchy repo clone", () => {
       expect(result).toFailWith("is invalid");
     });
 
-    it("should use default repo_base_dir when not specified", async () => {
+    it("should use default clones_dir when not specified", async () => {
       await writeTestFile(tmpDir, "patchy.json", "{}");
 
       const result = await runCli(
@@ -161,7 +161,7 @@ describe("patchy repo clone", () => {
         tmpDir,
       );
 
-      // Uses default ./upstream/ dir, but clone still fails because it's a non-existent repo
+      // Uses default ./clones/ dir, but clone still fails because it's a non-existent repo
       expect(result).toFailWith("Failed to clone repository");
     });
 
@@ -173,8 +173,8 @@ describe("patchy repo clone", () => {
 
       await setupTestWithConfig({
         tmpDir,
-        createDirectories: { repoBaseDir: "repos" },
-        jsonConfig: { repo_base_dir: "repos" },
+        createDirectories: { clonesDir: "repos" },
+        jsonConfig: { clones_dir: "repos" },
       });
 
       mkdirSync(path.join(tmpDir, "repos", "bare-repo"), { recursive: true });
@@ -190,8 +190,8 @@ describe("patchy repo clone", () => {
     it("should fail when remote repository does not exist", async () => {
       await setupTestWithConfig({
         tmpDir,
-        createDirectories: { repoBaseDir: "repos" },
-        jsonConfig: { repo_base_dir: "repos" },
+        createDirectories: { clonesDir: "repos" },
+        jsonConfig: { clones_dir: "repos" },
       });
 
       const result = await runCli(
@@ -210,8 +210,8 @@ describe("patchy repo clone", () => {
 
       await setupTestWithConfig({
         tmpDir,
-        createDirectories: { repoBaseDir: "repos" },
-        jsonConfig: { repo_base_dir: "repos" },
+        createDirectories: { clonesDir: "repos" },
+        jsonConfig: { clones_dir: "repos" },
       });
 
       const result = await runCli(

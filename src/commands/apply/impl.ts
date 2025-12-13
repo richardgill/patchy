@@ -89,7 +89,7 @@ export default async function (
   try {
     const result = createEnrichedMergedConfig({
       flags,
-      requiredFields: ["repo_base_dir", "repo_dir", "patches_dir"],
+      requiredFields: ["clones_dir", "repo_dir", "patches_dir"],
       cwd: this.cwd,
     });
 

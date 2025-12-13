@@ -48,7 +48,7 @@ my-patch-repo/
   "patches_dir": "./patches/", // Override: --patches-dir | env: PATCHY_PATCHES_DIR
 
   // Parent directory for cloning repos. You can easily clone more repos here from repo_url.
-  "repo_base_dir": "~/repos", // Override: --repo-base-dir | env: PATCHY_REPO_BASE_DIR
+  "clones_dir": "./clones/", // Override: --clones-dir | env: PATCHY_CLONES_DIR
 
   // Git ref to checkout (branch, tag, SHA).
   "ref": "main" // Override: --ref | env: PATCHY_REF
@@ -129,10 +129,10 @@ patchy repo checkout --ref main [--repo-dir]
 
 ### `patchy repo clone --url <git-url>`
 
-Clone a repository into a subdirectory of `repo_base_dir`. The target directory is derived from the repo name.
+Clone a repository into a subdirectory of `clones_dir`. The target directory is derived from the repo name.
 
 ```sh
-patchy repo clone [--repo-base-dir] [--ref] [--repo-url] 
+patchy repo clone [--clones-dir] [--ref] [--repo-url] 
 ```
 
 ## License

@@ -27,11 +27,11 @@ describe("patchy repo checkout", () => {
     const ctx = await setupTestWithConfig({
       tmpDir,
       createDirectories: {
-        repoBaseDir: "repos",
+        clonesDir: "repos",
         repoDir: "main",
       },
       jsonConfig: {
-        repo_base_dir: "repos",
+        clones_dir: "repos",
         repo_dir: "main",
       },
     });
@@ -54,11 +54,11 @@ describe("patchy repo checkout", () => {
     const ctx = await setupTestWithConfig({
       tmpDir,
       createDirectories: {
-        repoBaseDir: "repos",
+        clonesDir: "repos",
         repoDir: "main",
       },
       jsonConfig: {
-        repo_base_dir: "repos",
+        clones_dir: "repos",
         repo_dir: "main",
       },
     });
@@ -78,11 +78,11 @@ describe("patchy repo checkout", () => {
     const ctx = await setupTestWithConfig({
       tmpDir,
       createDirectories: {
-        repoBaseDir: "repos",
+        clonesDir: "repos",
         repoDir: "main",
       },
       jsonConfig: {
-        repo_base_dir: "repos",
+        clones_dir: "repos",
         repo_dir: "main",
       },
     });
@@ -106,11 +106,11 @@ describe("patchy repo checkout", () => {
     const ctx = await setupTestWithConfig({
       tmpDir,
       createDirectories: {
-        repoBaseDir: "repos",
+        clonesDir: "repos",
         repoDir: "main",
       },
       jsonConfig: {
-        repo_base_dir: "repos",
+        clones_dir: "repos",
         repo_dir: "main",
       },
     });
@@ -133,11 +133,11 @@ describe("patchy repo checkout", () => {
     const ctx = await setupTestWithConfig({
       tmpDir,
       createDirectories: {
-        repoBaseDir: "repos",
+        clonesDir: "repos",
         repoDir: "main",
       },
       jsonConfig: {
-        repo_base_dir: "repos",
+        clones_dir: "repos",
         repo_dir: "main",
       },
     });
@@ -161,11 +161,11 @@ describe("patchy repo checkout", () => {
     const ctx = await setupTestWithConfig({
       tmpDir,
       createDirectories: {
-        repoBaseDir: "repos",
+        clonesDir: "repos",
         repoDir: "main",
       },
       jsonConfig: {
-        repo_base_dir: "repos",
+        clones_dir: "repos",
         repo_dir: "main",
       },
     });
@@ -188,11 +188,11 @@ describe("patchy repo checkout", () => {
     await setupTestWithConfig({
       tmpDir,
       createDirectories: {
-        repoBaseDir: "repos",
+        clonesDir: "repos",
         repoDir: "custom-repo",
       },
       jsonConfig: {
-        repo_base_dir: "repos",
+        clones_dir: "repos",
         repo_dir: "default-repo",
       },
     });
@@ -234,11 +234,11 @@ describe("patchy repo checkout", () => {
       const ctx = await setupTestWithConfig({
         tmpDir,
         createDirectories: {
-          repoBaseDir: "repos",
+          clonesDir: "repos",
           repoDir: "main",
         },
         jsonConfig: {
-          repo_base_dir: "repos",
+          clones_dir: "repos",
           repo_dir: "main",
         },
       });
@@ -264,11 +264,11 @@ describe("patchy repo checkout", () => {
       const ctx = await setupTestWithConfig({
         tmpDir,
         createDirectories: {
-          repoBaseDir: "repos",
+          clonesDir: "repos",
           repoDir: "main",
         },
         jsonConfig: {
-          repo_base_dir: "repos",
+          clones_dir: "repos",
           repo_dir: "main",
         },
       });

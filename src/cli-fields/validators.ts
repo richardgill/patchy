@@ -23,8 +23,8 @@ export const directoryExists: PatchyValidatorFn = (config, key) => {
 };
 
 export const repoDirExists: PatchyValidatorFn = (config, _key) => {
-  // Skip validation if parent directory doesn't exist (will be caught by repo_base_dir validator)
-  if (!config.absoluteRepoBaseDir || !existsSync(config.absoluteRepoBaseDir)) {
+  // Skip validation if parent directory doesn't exist (will be caught by clones_dir validator)
+  if (!config.absoluteClonesDir || !existsSync(config.absoluteClonesDir)) {
     return null;
   }
   return checkPathExists(config.absoluteRepoDir);
