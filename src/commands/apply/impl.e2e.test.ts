@@ -5,6 +5,8 @@ import {
   generateTmpDir,
   runCli,
   setupTestWithConfig,
+  writeJsonConfig,
+  writeTestFile,
 } from "~/testing/test-utils";
 
 describe("patchy apply", () => {
@@ -138,9 +140,7 @@ describe("patchy apply", () => {
   });
 
   it("should fail on invalid JSON syntax", async () => {
-    mkdirSync(tmpDir, { recursive: true });
-    const invalidJsonPath = path.join(tmpDir, "invalid.json");
-    writeFileSync(invalidJsonPath, "{ invalid json: content }");
+    await writeTestFile(tmpDir, "invalid.json", "{ invalid json: content }");
 
     const result = await runCli(`patchy apply --config invalid.json`, tmpDir);
 
@@ -201,9 +201,7 @@ describe("patchy apply", () => {
   });
 
   it("should handle empty JSON config file with CLI flags", async () => {
-    mkdirSync(tmpDir, { recursive: true });
-    const emptyJsonPath = path.join(tmpDir, "empty.json");
-    writeFileSync(emptyJsonPath, "{}");
+    await writeTestFile(tmpDir, "empty.json", "{}");
 
     await setupTestWithConfig({
       tmpDir,
@@ -411,9 +409,7 @@ describe("patchy apply", () => {
   });
 
   it("should handle truly empty JSON file", async () => {
-    mkdirSync(tmpDir, { recursive: true });
-    const emptyJsonPath = path.join(tmpDir, "truly-empty.json");
-    writeFileSync(emptyJsonPath, "");
+    await writeTestFile(tmpDir, "truly-empty.json", "");
 
     const result = await runCli(
       `patchy apply --config truly-empty.json`,
@@ -430,16 +426,11 @@ describe("patchy apply", () => {
   });
 
   it("should handle invalid JSON structure", async () => {
-    mkdirSync(tmpDir, { recursive: true });
-    const invalidJsonPath = path.join(tmpDir, "invalid-structure.json");
-    writeFileSync(
-      invalidJsonPath,
-      JSON.stringify({
-        repo_url: 123,
-        verbose: "not-a-boolean",
-        ref: ["array", "not", "string"],
-      }),
-    );
+    await writeJsonConfig(tmpDir, "invalid-structure.json", {
+      repo_url: 123,
+      verbose: "not-a-boolean",
+      ref: ["array", "not", "string"],
+    });
 
     const result = await runCli(
       `patchy apply --config invalid-structure.json`,
@@ -451,16 +442,11 @@ describe("patchy apply", () => {
   });
 
   it("should handle Zod validation error for empty string fields", async () => {
-    mkdirSync(tmpDir, { recursive: true });
-    const jsonPath = path.join(tmpDir, "empty-strings.json");
-    writeFileSync(
-      jsonPath,
-      JSON.stringify({
-        repo_url: "",
-        ref: "",
-        repo_base_dir: "",
-      }),
-    );
+    await writeJsonConfig(tmpDir, "empty-strings.json", {
+      repo_url: "",
+      ref: "",
+      repo_base_dir: "",
+    });
 
     const result = await runCli(
       `patchy apply --config empty-strings.json`,
@@ -476,16 +462,11 @@ describe("patchy apply", () => {
   });
 
   it("should handle Zod validation error for null values", async () => {
-    mkdirSync(tmpDir, { recursive: true });
-    const jsonPath = path.join(tmpDir, "null-values.json");
-    writeFileSync(
-      jsonPath,
-      JSON.stringify({
-        repo_url: null,
-        verbose: null,
-        patches_dir: null,
-      }),
-    );
+    await writeJsonConfig(tmpDir, "null-values.json", {
+      repo_url: null,
+      verbose: null,
+      patches_dir: null,
+    });
 
     const result = await runCli(
       `patchy apply --config null-values.json`,
@@ -501,16 +482,11 @@ describe("patchy apply", () => {
   });
 
   it("should handle Zod strict mode error for unknown fields", async () => {
-    mkdirSync(tmpDir, { recursive: true });
-    const jsonPath = path.join(tmpDir, "unknown-fields.json");
-    writeFileSync(
-      jsonPath,
-      JSON.stringify({
-        repo_url: "https://github.com/user/repo.git",
-        unknown_field: "value",
-        another_unknown: 123,
-      }),
-    );
+    await writeJsonConfig(tmpDir, "unknown-fields.json", {
+      repo_url: "https://github.com/user/repo.git",
+      unknown_field: "value",
+      another_unknown: 123,
+    });
 
     const result = await runCli(
       `patchy apply --config unknown-fields.json`,
@@ -524,15 +500,10 @@ describe("patchy apply", () => {
   });
 
   it("should handle boolean field with string value", async () => {
-    mkdirSync(tmpDir, { recursive: true });
-    const jsonPath = path.join(tmpDir, "boolean-string.json");
-    writeFileSync(
-      jsonPath,
-      JSON.stringify({
-        verbose: "yes",
-        dry_run: "true",
-      }),
-    );
+    await writeJsonConfig(tmpDir, "boolean-string.json", {
+      verbose: "yes",
+      dry_run: "true",
+    });
 
     const result = await runCli(
       `patchy apply --config boolean-string.json`,
@@ -547,16 +518,11 @@ describe("patchy apply", () => {
   });
 
   it("should handle array values where strings are expected", async () => {
-    mkdirSync(tmpDir, { recursive: true });
-    const jsonPath = path.join(tmpDir, "array-values.json");
-    writeFileSync(
-      jsonPath,
-      JSON.stringify({
-        repo_url: ["https://github.com/user/repo.git"],
-        ref: ["main", "develop"],
-        patches_dir: ["./patches"],
-      }),
-    );
+    await writeJsonConfig(tmpDir, "array-values.json", {
+      repo_url: ["https://github.com/user/repo.git"],
+      ref: ["main", "develop"],
+      patches_dir: ["./patches"],
+    });
 
     const result = await runCli(
       `patchy apply --config array-values.json`,
@@ -572,15 +538,10 @@ describe("patchy apply", () => {
   });
 
   it("should handle object values where primitives are expected", async () => {
-    mkdirSync(tmpDir, { recursive: true });
-    const jsonPath = path.join(tmpDir, "object-values.json");
-    writeFileSync(
-      jsonPath,
-      JSON.stringify({
-        repo_url: { url: "https://github.com/user/repo.git" },
-        verbose: { enabled: true },
-      }),
-    );
+    await writeJsonConfig(tmpDir, "object-values.json", {
+      repo_url: { url: "https://github.com/user/repo.git" },
+      verbose: { enabled: true },
+    });
 
     const result = await runCli(
       `patchy apply --config object-values.json`,
@@ -595,20 +556,15 @@ describe("patchy apply", () => {
   });
 
   it("should handle multiple Zod errors with mixed types", async () => {
-    mkdirSync(tmpDir, { recursive: true });
-    const jsonPath = path.join(tmpDir, "mixed-errors.json");
-    writeFileSync(
-      jsonPath,
-      JSON.stringify({
-        repo_url: 123,
-        ref: true,
-        repo_base_dir: ["base"],
-        repo_dir: null,
-        patches_dir: {},
-        verbose: "false",
-        dry_run: 1,
-      }),
-    );
+    await writeJsonConfig(tmpDir, "mixed-errors.json", {
+      repo_url: 123,
+      ref: true,
+      repo_base_dir: ["base"],
+      repo_dir: null,
+      patches_dir: {},
+      verbose: "false",
+      dry_run: 1,
+    });
 
     const result = await runCli(
       `patchy apply --config mixed-errors.json`,

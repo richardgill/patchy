@@ -1,11 +1,13 @@
 import { beforeEach, describe, expect, it } from "bun:test";
-import { mkdirSync, writeFileSync } from "node:fs";
+import { mkdirSync } from "node:fs";
 import path from "node:path";
 import {
   generateTmpDir,
   getStabilizedJson,
   setupTestWithConfig,
   stabilizeTempDir,
+  writeJsonConfig,
+  writeTestFile,
 } from "~/testing/test-utils";
 import { createEnrichedMergedConfig } from "./resolver";
 import type { EnrichedMergedConfig, JsonConfigKey, SharedFlags } from "./types";
@@ -200,9 +202,8 @@ describe("createEnrichedMergedConfig", () => {
   });
 
   it("should throw error on invalid JSON", async () => {
-    mkdirSync(tmpDir, { recursive: true });
+    await writeTestFile(tmpDir, "invalid.json", "{ invalid json: content }");
     const invalidJsonPath = path.join(tmpDir, "invalid.json");
-    writeFileSync(invalidJsonPath, "{ invalid json: content }");
 
     const flags: SharedFlags = {
       config: invalidJsonPath,
@@ -373,9 +374,8 @@ describe("createEnrichedMergedConfig", () => {
   });
 
   it("should handle empty JSON config file", async () => {
-    mkdirSync(tmpDir, { recursive: true });
+    await writeTestFile(tmpDir, "empty.json", "{}");
     const emptyJsonPath = path.join(tmpDir, "empty.json");
-    writeFileSync(emptyJsonPath, "{}");
 
     const flags: SharedFlags = {
       config: emptyJsonPath,
@@ -406,9 +406,8 @@ describe("createEnrichedMergedConfig", () => {
   });
 
   it("should handle empty JSON config file", async () => {
-    mkdirSync(tmpDir, { recursive: true });
+    await writeTestFile(tmpDir, "truly-empty.json", "");
     const emptyJsonPath = path.join(tmpDir, "truly-empty.json");
-    writeFileSync(emptyJsonPath, "");
 
     const flags: SharedFlags = {
       config: emptyJsonPath,
@@ -715,16 +714,12 @@ describe("createEnrichedMergedConfig", () => {
   });
 
   it("should handle Zod validation errors for invalid JSON structure", async () => {
-    mkdirSync(tmpDir, { recursive: true });
+    await writeJsonConfig(tmpDir, "invalid-structure.json", {
+      repo_url: 123,
+      verbose: "not-a-boolean",
+      ref: ["array", "not", "string"],
+    });
     const invalidJsonPath = path.join(tmpDir, "invalid-structure.json");
-    writeFileSync(
-      invalidJsonPath,
-      JSON.stringify({
-        repo_url: 123,
-        verbose: "not-a-boolean",
-        ref: ["array", "not", "string"],
-      }),
-    );
 
     const flags: SharedFlags = {
       config: invalidJsonPath,
@@ -779,16 +774,12 @@ describe("createEnrichedMergedConfig", () => {
   });
 
   it("should handle Zod validation error for empty string fields", async () => {
-    mkdirSync(tmpDir, { recursive: true });
+    await writeJsonConfig(tmpDir, "empty-strings.json", {
+      repo_url: "",
+      ref: "",
+      repo_base_dir: "",
+    });
     const jsonPath = path.join(tmpDir, "empty-strings.json");
-    writeFileSync(
-      jsonPath,
-      JSON.stringify({
-        repo_url: "",
-        ref: "",
-        repo_base_dir: "",
-      }),
-    );
 
     const flags: SharedFlags = {
       config: jsonPath,
@@ -810,16 +801,12 @@ describe("createEnrichedMergedConfig", () => {
   });
 
   it("should handle Zod validation error for null values", async () => {
-    mkdirSync(tmpDir, { recursive: true });
+    await writeJsonConfig(tmpDir, "null-values.json", {
+      repo_url: null,
+      verbose: null,
+      patches_dir: null,
+    });
     const jsonPath = path.join(tmpDir, "null-values.json");
-    writeFileSync(
-      jsonPath,
-      JSON.stringify({
-        repo_url: null,
-        verbose: null,
-        patches_dir: null,
-      }),
-    );
 
     const flags: SharedFlags = {
       config: jsonPath,
@@ -841,16 +828,12 @@ describe("createEnrichedMergedConfig", () => {
   });
 
   it("should handle Zod strict mode error for unknown fields", async () => {
-    mkdirSync(tmpDir, { recursive: true });
+    await writeJsonConfig(tmpDir, "unknown-fields.json", {
+      repo_url: "https://github.com/user/repo.git",
+      unknown_field: "value",
+      another_unknown: 123,
+    });
     const jsonPath = path.join(tmpDir, "unknown-fields.json");
-    writeFileSync(
-      jsonPath,
-      JSON.stringify({
-        repo_url: "https://github.com/user/repo.git",
-        unknown_field: "value",
-        another_unknown: 123,
-      }),
-    );
 
     const flags: SharedFlags = {
       config: jsonPath,
@@ -870,15 +853,11 @@ describe("createEnrichedMergedConfig", () => {
   });
 
   it("should handle boolean field with string value", async () => {
-    mkdirSync(tmpDir, { recursive: true });
+    await writeJsonConfig(tmpDir, "boolean-string.json", {
+      verbose: "yes",
+      dry_run: "true",
+    });
     const jsonPath = path.join(tmpDir, "boolean-string.json");
-    writeFileSync(
-      jsonPath,
-      JSON.stringify({
-        verbose: "yes",
-        dry_run: "true",
-      }),
-    );
 
     const flags: SharedFlags = {
       config: jsonPath,
@@ -899,16 +878,12 @@ describe("createEnrichedMergedConfig", () => {
   });
 
   it("should handle array values where strings are expected", async () => {
-    mkdirSync(tmpDir, { recursive: true });
+    await writeJsonConfig(tmpDir, "array-values.json", {
+      repo_url: ["https://github.com/user/repo.git"],
+      ref: ["main", "develop"],
+      patches_dir: ["./patches"],
+    });
     const jsonPath = path.join(tmpDir, "array-values.json");
-    writeFileSync(
-      jsonPath,
-      JSON.stringify({
-        repo_url: ["https://github.com/user/repo.git"],
-        ref: ["main", "develop"],
-        patches_dir: ["./patches"],
-      }),
-    );
 
     const flags: SharedFlags = {
       config: jsonPath,
@@ -930,15 +905,11 @@ describe("createEnrichedMergedConfig", () => {
   });
 
   it("should handle object values where primitives are expected", async () => {
-    mkdirSync(tmpDir, { recursive: true });
+    await writeJsonConfig(tmpDir, "object-values.json", {
+      repo_url: { url: "https://github.com/user/repo.git" },
+      verbose: { enabled: true },
+    });
     const jsonPath = path.join(tmpDir, "object-values.json");
-    writeFileSync(
-      jsonPath,
-      JSON.stringify({
-        repo_url: { url: "https://github.com/user/repo.git" },
-        verbose: { enabled: true },
-      }),
-    );
 
     const flags: SharedFlags = {
       config: jsonPath,
@@ -959,20 +930,16 @@ describe("createEnrichedMergedConfig", () => {
   });
 
   it("should handle multiple Zod errors with mixed types", async () => {
-    mkdirSync(tmpDir, { recursive: true });
+    await writeJsonConfig(tmpDir, "mixed-errors.json", {
+      repo_url: 123,
+      ref: true,
+      repo_base_dir: ["base"],
+      repo_dir: null,
+      patches_dir: {},
+      verbose: "false",
+      dry_run: 1,
+    });
     const jsonPath = path.join(tmpDir, "mixed-errors.json");
-    writeFileSync(
-      jsonPath,
-      JSON.stringify({
-        repo_url: 123,
-        ref: true,
-        repo_base_dir: ["base"],
-        repo_dir: null,
-        patches_dir: {},
-        verbose: "false",
-        dry_run: 1,
-      }),
-    );
 
     const flags: SharedFlags = {
       config: jsonPath,

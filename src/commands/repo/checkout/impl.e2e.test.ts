@@ -12,6 +12,7 @@ import {
   generateTmpDir,
   runCli,
   setupTestWithConfig,
+  writeTestFile,
 } from "~/testing/test-utils";
 
 describe("patchy repo checkout", () => {
@@ -218,8 +219,7 @@ describe("patchy repo checkout", () => {
   });
 
   it("should fail when repo_dir is missing", async () => {
-    mkdirSync(tmpDir, { recursive: true });
-    writeFileSync(path.join(tmpDir, "patchy.json"), "{}");
+    await writeTestFile(tmpDir, "patchy.json", "{}");
 
     const result = await runCli(`patchy repo checkout --ref main`, tmpDir);
 

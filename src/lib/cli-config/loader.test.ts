@@ -1,7 +1,7 @@
 import { beforeEach, describe, expect, it } from "bun:test";
 import { mkdirSync, writeFileSync } from "node:fs";
 import { z } from "zod";
-import { generateTmpDir } from "~/testing/test-utils";
+import { generateTmpDir, writeJsonConfig } from "~/testing/test-utils";
 import { loadConfigFromFile } from "./loader";
 import type { FlagMetadataMap } from "./types";
 
@@ -258,8 +258,8 @@ describe("loadConfigFromFile", () => {
     });
   }
 
-  it("calls custom formatZodError when provided", () => {
-    writeFileSync(`${tmpDir}/test.json`, JSON.stringify({ name: 123 }));
+  it("calls custom formatZodError when provided", async () => {
+    await writeJsonConfig(tmpDir, "test.json", { name: 123 });
 
     const result = loadConfigFromFile<typeof TEST_METADATA, TestJson>({
       metadata: TEST_METADATA,
