@@ -54,8 +54,8 @@ const promptRepoDirSave = async ({
   }
 
   const message = currentRepoDir
-    ? `repo_dir in patchy.json is "${currentRepoDir}". Update to "${repoName}"?`
-    : `Save repo_dir: "${repoName}" to patchy.json?`;
+    ? `repo_dir in ${chalk.cyan("patchy.json")} is ${chalk.cyan(`"${currentRepoDir}"`)}. Update to ${chalk.cyan(`"${repoName}"`)}?`
+    : `Save repo_dir: ${chalk.cyan(`"${repoName}"`)} to ${chalk.cyan("patchy.json")}?`;
 
   const prompts = createPrompts(context);
   const confirmed = await prompts.confirm({
