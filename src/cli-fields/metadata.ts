@@ -1,9 +1,6 @@
-import {
-  directoryExists,
-  gitUrl,
-  repoDirExists,
-  type ValidatorFn,
-} from "./validators";
+import type { ValidatorFn } from "~/lib/cli-config";
+import type { EnrichedFields } from "./enriched-fields";
+import { directoryExists, gitUrl, repoDirExists } from "./validators";
 
 // Extended metadata entry with optional validator
 type PatchyFlagMetadataEntry = {
@@ -22,7 +19,7 @@ type PatchyFlagMetadataEntry = {
   >;
   example: string;
   defaultValue: string | boolean | undefined;
-  validate?: ValidatorFn;
+  validate?: ValidatorFn<EnrichedFields>;
 } & ({ configField: true; requiredInConfig: boolean } | { configField: false });
 
 type PatchyFlagMetadataMap = Record<string, PatchyFlagMetadataEntry>;
@@ -85,7 +82,7 @@ export const FLAG_METADATA = {
     name: "Repository base directory",
     example: "./upstream",
     defaultValue: undefined,
-    validate: directoryExists,
+    validate: (config, _key) => directoryExists(config, "absoluteRepoBaseDir"),
     stricliFlag: {
       "repo-base-dir": {
         kind: "parsed",
@@ -104,7 +101,7 @@ export const FLAG_METADATA = {
     name: "Patches directory",
     example: "./patches",
     defaultValue: "./patches/",
-    validate: directoryExists,
+    validate: (config, _key) => directoryExists(config, "absolutePatchesDir"),
     stricliFlag: {
       "patches-dir": {
         kind: "parsed",
