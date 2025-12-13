@@ -26,7 +26,7 @@ See [ARCHITECTURE.md](./ARCHITECTURE.md)
 
    **Tip:** Add a shell alias for quick access:
    ```sh
-   alias patchydev='bun run --cwd /path/to/patchy dev'
+   alias patchydev="bun run --cwd $(pwd) dev"
    ```
 
 ## Development Commands
