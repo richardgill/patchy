@@ -19,7 +19,7 @@ describe("patchy repo reset", () => {
   it("should reset repository and discard local changes", async () => {
     const ctx = await setupTestWithConfig({
       tmpDir,
-      createDirectories: { repoBaseDir: "repos", repoDir: "test-repo" },
+      createDirectories: { clonesDir: "repos", repoDir: "test-repo" },
     });
 
     const repoPath = assertDefined(ctx.absoluteRepoDir, "absoluteRepoDir");
@@ -30,7 +30,7 @@ describe("patchy repo reset", () => {
     expect(join(repoPath, "test.txt")).toHaveFileContent("modified content");
 
     const result = await runCli(
-      `patchy repo reset --repo-base-dir repos --repo-dir test-repo --yes`,
+      `patchy repo reset --clones-dir repos --repo-dir test-repo --yes`,
       tmpDir,
     );
     expect(result).toSucceed();
@@ -41,7 +41,7 @@ describe("patchy repo reset", () => {
   it("should show success message after reset", async () => {
     const ctx = await setupTestWithConfig({
       tmpDir,
-      createDirectories: { repoBaseDir: "repos", repoDir: "test-repo" },
+      createDirectories: { clonesDir: "repos", repoDir: "test-repo" },
     });
 
     const repoPath = assertDefined(ctx.absoluteRepoDir, "absoluteRepoDir");
@@ -49,7 +49,7 @@ describe("patchy repo reset", () => {
     await commitFile(repoPath, "test.txt", "content");
 
     const result = await runCli(
-      `patchy repo reset --repo-base-dir repos --repo-dir test-repo --yes`,
+      `patchy repo reset --clones-dir repos --repo-dir test-repo --yes`,
       tmpDir,
     );
 
@@ -63,11 +63,11 @@ describe("patchy repo reset", () => {
     it("should fail when repo directory does not exist", async () => {
       await setupTestWithConfig({
         tmpDir,
-        createDirectories: { repoBaseDir: "repos" },
+        createDirectories: { clonesDir: "repos" },
       });
 
       const result = await runCli(
-        `patchy repo reset --repo-base-dir repos --repo-dir nonexistent`,
+        `patchy repo reset --clones-dir repos --repo-dir nonexistent`,
         tmpDir,
       );
 
@@ -77,11 +77,11 @@ describe("patchy repo reset", () => {
     it("should fail when directory is not a git repository", async () => {
       await setupTestWithConfig({
         tmpDir,
-        createDirectories: { repoBaseDir: "repos", repoDir: "not-a-repo" },
+        createDirectories: { clonesDir: "repos", repoDir: "not-a-repo" },
       });
 
       const result = await runCli(
-        `patchy repo reset --repo-base-dir repos --repo-dir not-a-repo`,
+        `patchy repo reset --clones-dir repos --repo-dir not-a-repo`,
         tmpDir,
       );
 
@@ -91,7 +91,7 @@ describe("patchy repo reset", () => {
       );
     });
 
-    it("should fail when repo-base-dir directory does not exist", async () => {
+    it("should fail when clones-dir directory does not exist", async () => {
       await setupTestWithConfig({ tmpDir });
 
       const result = await runCli(
@@ -99,18 +99,18 @@ describe("patchy repo reset", () => {
         tmpDir,
       );
 
-      // Uses default ./upstream/, which doesn't exist
+      // Uses default ./clones/, which doesn't exist
       expect(result).toFailWith("does not exist");
     });
 
     it("should fail when repo-dir is missing", async () => {
       await setupTestWithConfig({
         tmpDir,
-        createDirectories: { repoBaseDir: "repos" },
+        createDirectories: { clonesDir: "repos" },
       });
 
       const result = await runCli(
-        `patchy repo reset --repo-base-dir repos`,
+        `patchy repo reset --clones-dir repos`,
         tmpDir,
       );
 
@@ -122,7 +122,7 @@ describe("patchy repo reset", () => {
     it("should not reset when --dry-run is set", async () => {
       const ctx = await setupTestWithConfig({
         tmpDir,
-        createDirectories: { repoBaseDir: "repos", repoDir: "test-repo" },
+        createDirectories: { clonesDir: "repos", repoDir: "test-repo" },
       });
 
       const repoPath = assertDefined(ctx.absoluteRepoDir, "absoluteRepoDir");
@@ -131,7 +131,7 @@ describe("patchy repo reset", () => {
       await writeFileIn(repoPath, "test.txt", "modified content");
 
       const result = await runCli(
-        `patchy repo reset --repo-base-dir repos --repo-dir test-repo --dry-run`,
+        `patchy repo reset --clones-dir repos --repo-dir test-repo --dry-run`,
         tmpDir,
       );
 
@@ -145,11 +145,11 @@ describe("patchy repo reset", () => {
     it("should still validate repo exists in dry-run mode", async () => {
       await setupTestWithConfig({
         tmpDir,
-        createDirectories: { repoBaseDir: "repos" },
+        createDirectories: { clonesDir: "repos" },
       });
 
       const result = await runCli(
-        `patchy repo reset --repo-base-dir repos --repo-dir nonexistent --dry-run`,
+        `patchy repo reset --clones-dir repos --repo-dir nonexistent --dry-run`,
         tmpDir,
       );
 

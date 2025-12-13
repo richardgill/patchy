@@ -12,13 +12,13 @@ describe("generateJsonSchema", () => {
           "$schema": {
             "type": "string",
           },
+          "clones_dir": {
+            "type": "string",
+          },
           "patches_dir": {
             "type": "string",
           },
           "ref": {
-            "type": "string",
-          },
-          "repo_base_dir": {
             "type": "string",
           },
           "repo_dir": {

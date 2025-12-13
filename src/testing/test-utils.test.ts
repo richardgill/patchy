@@ -13,7 +13,7 @@ describe("test-utils", () => {
       await writeTestConfig(configPath, {
         repo_url: "https://github.com/example/repo.git",
         repo_dir: "main",
-        repo_base_dir: "/tmp/repos",
+        clones_dir: "/tmp/repos",
         patches_dir: "patches",
         ref: "main",
         verbose: true,
@@ -26,7 +26,7 @@ describe("test-utils", () => {
         "{
           "repo_url": "https://github.com/example/repo.git",
           "repo_dir": "main",
-          "repo_base_dir": "/tmp/repos",
+          "clones_dir": "/tmp/repos",
           "patches_dir": "patches",
           "ref": "main",
           "verbose": true,
