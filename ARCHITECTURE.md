@@ -7,8 +7,15 @@ This is a modern CLI 'template' designed to be used with AI agents.
 - Bun
 - Strcli
 - Clack
-- Biome
-- Knip (dead code analysis)
+- AI agent optimized
+  - `bun run local-ci` runs:
+    - Biome formatting and linting
+    - tsc
+    - Knip (dead code analysis)
+    - tests
+- Extensive end-to-end testing using `runCli('patchy apply')` in tests
+  - Tests run fast in-process
+- Changesets with automated release PRs
 
 ## Binaries / Runtime
 
