@@ -22,6 +22,8 @@ type BaseFlagMetadataEntry<TEnvPrefix extends string = string> = {
   stricliFlag: Record<string, StricliFlag>;
   example: string;
   defaultValue: string | boolean | undefined;
+  // biome-ignore lint/suspicious/noExplicitAny: validators need to accept any config type
+  validate?: ValidatorFn<any>;
 };
 
 // Entry for flags that appear in the config file
@@ -51,3 +53,10 @@ export type TypeMap = {
   string: string;
   boolean: boolean;
 };
+
+// Generic validator function type
+// TConfig is the config object passed to validators (e.g., EnrichedMergedConfig)
+export type ValidatorFn<TConfig = Record<string, unknown>> = (
+  config: TConfig,
+  key: string,
+) => string | null;

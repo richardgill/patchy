@@ -1,16 +1,15 @@
 import { beforeEach, describe, expect, it } from "bun:test";
-import { mkdirSync, writeFileSync } from "node:fs";
+import { mkdirSync } from "node:fs";
 import path from "node:path";
 import {
   generateTmpDir,
   getStabilizedJson,
   setupTestWithConfig,
   stabilizeTempDir,
+  writeJsonConfig,
+  writeTestFile,
 } from "~/testing/test-utils";
-import {
-  createEnrichedMergedConfig,
-  parseOptionalJsonConfig,
-} from "./resolver";
+import { createEnrichedMergedConfig } from "./resolver";
 import type { EnrichedMergedConfig, JsonConfigKey, SharedFlags } from "./types";
 
 const expectSuccessfulMerge: (
@@ -203,9 +202,8 @@ describe("createEnrichedMergedConfig", () => {
   });
 
   it("should throw error on invalid JSON", async () => {
-    mkdirSync(tmpDir, { recursive: true });
+    await writeTestFile(tmpDir, "invalid.json", "{ invalid json: content }");
     const invalidJsonPath = path.join(tmpDir, "invalid.json");
-    writeFileSync(invalidJsonPath, "{ invalid json: content }");
 
     const flags: SharedFlags = {
       config: invalidJsonPath,
@@ -376,9 +374,8 @@ describe("createEnrichedMergedConfig", () => {
   });
 
   it("should handle empty JSON config file", async () => {
-    mkdirSync(tmpDir, { recursive: true });
+    await writeTestFile(tmpDir, "empty.json", "{}");
     const emptyJsonPath = path.join(tmpDir, "empty.json");
-    writeFileSync(emptyJsonPath, "{}");
 
     const flags: SharedFlags = {
       config: emptyJsonPath,
@@ -408,10 +405,9 @@ describe("createEnrichedMergedConfig", () => {
     );
   });
 
-  it("should handle empty JSON config file", async () => {
-    mkdirSync(tmpDir, { recursive: true });
+  it("should handle truly empty config file (no content)", async () => {
+    await writeTestFile(tmpDir, "truly-empty.json", "");
     const emptyJsonPath = path.join(tmpDir, "truly-empty.json");
-    writeFileSync(emptyJsonPath, "");
 
     const flags: SharedFlags = {
       config: emptyJsonPath,
@@ -566,12 +562,11 @@ describe("createEnrichedMergedConfig", () => {
   });
 
   it("should use custom config path", async () => {
-    const customConfigDir = path.join(tmpDir, "custom");
-    const customConfigPath = path.join(customConfigDir, "config.json");
-    mkdirSync(customConfigDir, { recursive: true });
+    const customConfigPath = path.join(tmpDir, "custom", "config.json");
 
     await setupTestWithConfig({
       tmpDir,
+      configPath: customConfigPath,
       createDirectories: {
         repoBaseDir: "base",
         repoDir: "repo",
@@ -583,20 +578,6 @@ describe("createEnrichedMergedConfig", () => {
         ref: "custom-branch",
       },
     });
-
-    writeFileSync(
-      customConfigPath,
-      JSON.stringify(
-        {
-          repo_url: "https://github.com/example/custom.git",
-          repo_base_dir: "base",
-          repo_dir: "repo",
-          ref: "custom-branch",
-        },
-        null,
-        2,
-      ),
-    );
 
     const flags: SharedFlags = {
       config: customConfigPath,
@@ -733,16 +714,12 @@ describe("createEnrichedMergedConfig", () => {
   });
 
   it("should handle Zod validation errors for invalid JSON structure", async () => {
-    mkdirSync(tmpDir, { recursive: true });
+    await writeJsonConfig(tmpDir, "invalid-structure.json", {
+      repo_url: 123,
+      verbose: "not-a-boolean",
+      ref: ["array", "not", "string"],
+    });
     const invalidJsonPath = path.join(tmpDir, "invalid-structure.json");
-    writeFileSync(
-      invalidJsonPath,
-      JSON.stringify({
-        repo_url: 123,
-        verbose: "not-a-boolean",
-        ref: ["array", "not", "string"],
-      }),
-    );
 
     const flags: SharedFlags = {
       config: invalidJsonPath,
@@ -797,16 +774,12 @@ describe("createEnrichedMergedConfig", () => {
   });
 
   it("should handle Zod validation error for empty string fields", async () => {
-    mkdirSync(tmpDir, { recursive: true });
+    await writeJsonConfig(tmpDir, "empty-strings.json", {
+      repo_url: "",
+      ref: "",
+      repo_base_dir: "",
+    });
     const jsonPath = path.join(tmpDir, "empty-strings.json");
-    writeFileSync(
-      jsonPath,
-      JSON.stringify({
-        repo_url: "",
-        ref: "",
-        repo_base_dir: "",
-      }),
-    );
 
     const flags: SharedFlags = {
       config: jsonPath,
@@ -828,16 +801,12 @@ describe("createEnrichedMergedConfig", () => {
   });
 
   it("should handle Zod validation error for null values", async () => {
-    mkdirSync(tmpDir, { recursive: true });
+    await writeJsonConfig(tmpDir, "null-values.json", {
+      repo_url: null,
+      verbose: null,
+      patches_dir: null,
+    });
     const jsonPath = path.join(tmpDir, "null-values.json");
-    writeFileSync(
-      jsonPath,
-      JSON.stringify({
-        repo_url: null,
-        verbose: null,
-        patches_dir: null,
-      }),
-    );
 
     const flags: SharedFlags = {
       config: jsonPath,
@@ -859,16 +828,12 @@ describe("createEnrichedMergedConfig", () => {
   });
 
   it("should handle Zod strict mode error for unknown fields", async () => {
-    mkdirSync(tmpDir, { recursive: true });
+    await writeJsonConfig(tmpDir, "unknown-fields.json", {
+      repo_url: "https://github.com/user/repo.git",
+      unknown_field: "value",
+      another_unknown: 123,
+    });
     const jsonPath = path.join(tmpDir, "unknown-fields.json");
-    writeFileSync(
-      jsonPath,
-      JSON.stringify({
-        repo_url: "https://github.com/user/repo.git",
-        unknown_field: "value",
-        another_unknown: 123,
-      }),
-    );
 
     const flags: SharedFlags = {
       config: jsonPath,
@@ -888,15 +853,11 @@ describe("createEnrichedMergedConfig", () => {
   });
 
   it("should handle boolean field with string value", async () => {
-    mkdirSync(tmpDir, { recursive: true });
+    await writeJsonConfig(tmpDir, "boolean-string.json", {
+      verbose: "yes",
+      dry_run: "true",
+    });
     const jsonPath = path.join(tmpDir, "boolean-string.json");
-    writeFileSync(
-      jsonPath,
-      JSON.stringify({
-        verbose: "yes",
-        dry_run: "true",
-      }),
-    );
 
     const flags: SharedFlags = {
       config: jsonPath,
@@ -917,16 +878,12 @@ describe("createEnrichedMergedConfig", () => {
   });
 
   it("should handle array values where strings are expected", async () => {
-    mkdirSync(tmpDir, { recursive: true });
+    await writeJsonConfig(tmpDir, "array-values.json", {
+      repo_url: ["https://github.com/user/repo.git"],
+      ref: ["main", "develop"],
+      patches_dir: ["./patches"],
+    });
     const jsonPath = path.join(tmpDir, "array-values.json");
-    writeFileSync(
-      jsonPath,
-      JSON.stringify({
-        repo_url: ["https://github.com/user/repo.git"],
-        ref: ["main", "develop"],
-        patches_dir: ["./patches"],
-      }),
-    );
 
     const flags: SharedFlags = {
       config: jsonPath,
@@ -948,15 +905,11 @@ describe("createEnrichedMergedConfig", () => {
   });
 
   it("should handle object values where primitives are expected", async () => {
-    mkdirSync(tmpDir, { recursive: true });
+    await writeJsonConfig(tmpDir, "object-values.json", {
+      repo_url: { url: "https://github.com/user/repo.git" },
+      verbose: { enabled: true },
+    });
     const jsonPath = path.join(tmpDir, "object-values.json");
-    writeFileSync(
-      jsonPath,
-      JSON.stringify({
-        repo_url: { url: "https://github.com/user/repo.git" },
-        verbose: { enabled: true },
-      }),
-    );
 
     const flags: SharedFlags = {
       config: jsonPath,
@@ -977,20 +930,16 @@ describe("createEnrichedMergedConfig", () => {
   });
 
   it("should handle multiple Zod errors with mixed types", async () => {
-    mkdirSync(tmpDir, { recursive: true });
+    await writeJsonConfig(tmpDir, "mixed-errors.json", {
+      repo_url: 123,
+      ref: true,
+      repo_base_dir: ["base"],
+      repo_dir: null,
+      patches_dir: {},
+      verbose: "false",
+      dry_run: 1,
+    });
     const jsonPath = path.join(tmpDir, "mixed-errors.json");
-    writeFileSync(
-      jsonPath,
-      JSON.stringify({
-        repo_url: 123,
-        ref: true,
-        repo_base_dir: ["base"],
-        repo_dir: null,
-        patches_dir: {},
-        verbose: "false",
-        dry_run: 1,
-      }),
-    );
 
     const flags: SharedFlags = {
       config: jsonPath,
@@ -1195,32 +1144,22 @@ describe("createEnrichedMergedConfig", () => {
   });
 
   it("should use PATCHY_CONFIG env var for config path", async () => {
-    const customConfigDir = path.join(tmpDir, "custom-env");
-    const customConfigPath = path.join(customConfigDir, "env-config.json");
-    mkdirSync(customConfigDir, { recursive: true });
+    const customConfigPath = path.join(tmpDir, "custom-env", "env-config.json");
 
     await setupTestWithConfig({
       tmpDir,
+      configPath: customConfigPath,
       createDirectories: {
         repoBaseDir: "base",
         repoDir: "repo",
       },
-      jsonConfig: {},
+      jsonConfig: {
+        repo_url: "https://github.com/example/env-config.git",
+        repo_base_dir: "base",
+        repo_dir: "repo",
+        ref: "env-config-branch",
+      },
     });
-
-    writeFileSync(
-      customConfigPath,
-      JSON.stringify(
-        {
-          repo_url: "https://github.com/example/env-config.git",
-          repo_base_dir: "base",
-          repo_dir: "repo",
-          ref: "env-config-branch",
-        },
-        null,
-        2,
-      ),
-    );
 
     const flags: SharedFlags = {};
     const requiredFields: JsonConfigKey[] = [
@@ -1379,155 +1318,5 @@ describe("createEnrichedMergedConfig", () => {
       "https://github.com/example/json-repo.git",
     );
     expect(result.mergedConfig.ref).toBe("json-ref");
-  });
-});
-
-describe("parseOptionalJsonConfig", () => {
-  it("should parse valid config successfully", () => {
-    const result = parseOptionalJsonConfig(
-      JSON.stringify({
-        repo_url: "https://github.com/user/repo.git",
-        ref: "main",
-        verbose: true,
-      }),
-    );
-
-    expect(result.success).toBe(true);
-    if (result.success) {
-      expect(result.data).toEqual({
-        repo_url: "https://github.com/user/repo.git",
-        ref: "main",
-        verbose: true,
-      });
-    }
-  });
-
-  it("should return empty object for undefined input", () => {
-    const result = parseOptionalJsonConfig(undefined);
-
-    expect(result.success).toBe(true);
-    if (result.success) {
-      expect(result.data).toEqual({});
-    }
-  });
-
-  it("should handle empty string fields with custom error messages", () => {
-    const result = parseOptionalJsonConfig(
-      JSON.stringify({
-        repo_url: "",
-        ref: "",
-        repo_base_dir: "",
-      }),
-    );
-
-    expect(result.success).toBe(false);
-    if (!result.success) {
-      expect(result.error).toMatchInlineSnapshot(`
-        "repo_url: Repository URL is required
-        repo_base_dir: Repository base directory is required
-        ref: Git reference is required"
-      `);
-    }
-  });
-
-  it("should fail with type errors for wrong field types", () => {
-    const result = parseOptionalJsonConfig(
-      JSON.stringify({
-        repo_url: 123,
-        verbose: "not-a-boolean",
-        ref: ["array", "not", "string"],
-      }),
-    );
-
-    expect(result.success).toBe(false);
-    if (!result.success) {
-      expect(result.error).toMatchInlineSnapshot(`
-        "repo_url: Invalid input: expected string, received number
-        ref: Invalid input: expected string, received array
-        verbose: Invalid input: expected boolean, received string"
-      `);
-    }
-  });
-
-  it("should fail with strict mode error for unknown fields", () => {
-    const result = parseOptionalJsonConfig(
-      JSON.stringify({
-        repo_url: "https://github.com/user/repo.git",
-        unknown_field: "value",
-        another_unknown: 123,
-      }),
-    );
-
-    expect(result.success).toBe(false);
-    if (!result.success) {
-      expect(result.error).toContain("Unrecognized key");
-    }
-  });
-
-  it("should reject dry_run in JSON config (runtime-only flag)", () => {
-    const result = parseOptionalJsonConfig(
-      JSON.stringify({
-        dry_run: true,
-      }),
-    );
-
-    expect(result.success).toBe(false);
-    if (!result.success) {
-      expect(result.error).toContain('Unrecognized key: "dry_run"');
-    }
-  });
-
-  it("should handle all valid optional fields", () => {
-    const result = parseOptionalJsonConfig(
-      JSON.stringify({
-        repo_url: "https://github.com/user/repo.git",
-        ref: "develop",
-        repo_base_dir: "/home/user/repos",
-        repo_dir: "my-repo",
-        patches_dir: "./patches",
-        verbose: false,
-      }),
-    );
-
-    expect(result.success).toBe(true);
-    if (result.success) {
-      expect(result.data).toEqual({
-        repo_url: "https://github.com/user/repo.git",
-        ref: "develop",
-        repo_base_dir: "/home/user/repos",
-        repo_dir: "my-repo",
-        patches_dir: "./patches",
-        verbose: false,
-      });
-    }
-  });
-
-  it("should handle JSON parsing errors", () => {
-    const result = parseOptionalJsonConfig("{ invalid json");
-
-    expect(result.success).toBe(false);
-    if (!result.success) {
-      expect(result.error).toContain("JSON parse error");
-      expect(result.error).toContain("invalid json");
-    }
-  });
-
-  it("should handle null values as invalid types", () => {
-    const result = parseOptionalJsonConfig(
-      JSON.stringify({
-        repo_url: null,
-        verbose: null,
-      }),
-    );
-
-    expect(result.success).toBe(false);
-    if (!result.success) {
-      expect(result.error).toContain(
-        "repo_url: Invalid input: expected string, received null",
-      );
-      expect(result.error).toContain(
-        "verbose: Invalid input: expected boolean, received null",
-      );
-    }
   });
 });

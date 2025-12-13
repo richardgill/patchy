@@ -1,11 +1,10 @@
 import { beforeEach, describe, expect, it } from "bun:test";
-import { existsSync, readFileSync } from "node:fs";
+import { readFileSync } from "node:fs";
 import { join } from "node:path";
 import {
   generateTmpDir,
   runCli,
   setupTestWithConfig,
-  stabilizeTempDir,
 } from "~/testing/test-utils";
 import { getSchemaUrl } from "~/version";
 
@@ -29,7 +28,7 @@ describe("patchy init", () => {
 
     expect(result).toSucceed();
     const configPath = join(tmpDir, "patchy.json");
-    expect(existsSync(configPath)).toBe(true);
+    expect(configPath).toExist();
     const jsonContent = readFileSync(configPath, "utf-8").trim();
 
     const config = JSON.parse(jsonContent);
@@ -111,7 +110,7 @@ describe("patchy init", () => {
       );
 
       expect(result).toFail();
-      expect(stabilizeTempDir(result.stderr)).toMatchInlineSnapshot(
+      expect(result.stderr).toMatchInlineSnapshot(
         `
         "Configuration file already exists at <TEST_DIR>/patchy.json
         Use --force to overwrite"
