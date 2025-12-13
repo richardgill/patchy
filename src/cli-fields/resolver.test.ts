@@ -563,12 +563,11 @@ describe("createEnrichedMergedConfig", () => {
   });
 
   it("should use custom config path", async () => {
-    const customConfigDir = path.join(tmpDir, "custom");
-    const customConfigPath = path.join(customConfigDir, "config.json");
-    mkdirSync(customConfigDir, { recursive: true });
+    const customConfigPath = path.join(tmpDir, "custom", "config.json");
 
     await setupTestWithConfig({
       tmpDir,
+      configPath: customConfigPath,
       createDirectories: {
         repoBaseDir: "base",
         repoDir: "repo",
@@ -580,20 +579,6 @@ describe("createEnrichedMergedConfig", () => {
         ref: "custom-branch",
       },
     });
-
-    writeFileSync(
-      customConfigPath,
-      JSON.stringify(
-        {
-          repo_url: "https://github.com/example/custom.git",
-          repo_base_dir: "base",
-          repo_dir: "repo",
-          ref: "custom-branch",
-        },
-        null,
-        2,
-      ),
-    );
 
     const flags: SharedFlags = {
       config: customConfigPath,
@@ -1192,32 +1177,22 @@ describe("createEnrichedMergedConfig", () => {
   });
 
   it("should use PATCHY_CONFIG env var for config path", async () => {
-    const customConfigDir = path.join(tmpDir, "custom-env");
-    const customConfigPath = path.join(customConfigDir, "env-config.json");
-    mkdirSync(customConfigDir, { recursive: true });
+    const customConfigPath = path.join(tmpDir, "custom-env", "env-config.json");
 
     await setupTestWithConfig({
       tmpDir,
+      configPath: customConfigPath,
       createDirectories: {
         repoBaseDir: "base",
         repoDir: "repo",
       },
-      jsonConfig: {},
+      jsonConfig: {
+        repo_url: "https://github.com/example/env-config.git",
+        repo_base_dir: "base",
+        repo_dir: "repo",
+        ref: "env-config-branch",
+      },
     });
-
-    writeFileSync(
-      customConfigPath,
-      JSON.stringify(
-        {
-          repo_url: "https://github.com/example/env-config.git",
-          repo_base_dir: "base",
-          repo_dir: "repo",
-          ref: "env-config-branch",
-        },
-        null,
-        2,
-      ),
-    );
 
     const flags: SharedFlags = {};
     const requiredFields: JsonConfigKey[] = [

@@ -253,12 +253,11 @@ describe("patchy apply", () => {
   });
 
   it("should use custom config path", async () => {
-    const customConfigDir = path.join(tmpDir, "custom");
-    const customConfigPath = path.join(customConfigDir, "config.json");
-    mkdirSync(customConfigDir, { recursive: true });
+    const customConfigPath = path.join(tmpDir, "custom", "config.json");
 
     await setupTestWithConfig({
       tmpDir,
+      configPath: customConfigPath,
       createDirectories: {
         repoBaseDir: "base",
         repoDir: "repo",
@@ -271,20 +270,6 @@ describe("patchy apply", () => {
         ref: "custom-branch",
       },
     });
-
-    writeFileSync(
-      customConfigPath,
-      JSON.stringify(
-        {
-          repo_url: "https://github.com/example/custom.git",
-          repo_base_dir: "base",
-          repo_dir: "repo",
-          ref: "custom-branch",
-        },
-        null,
-        2,
-      ),
-    );
 
     const result = await runCli(
       `patchy apply --config ${customConfigPath} --dry-run --verbose`,

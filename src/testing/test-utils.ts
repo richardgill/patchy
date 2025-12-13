@@ -1,6 +1,6 @@
 import { randomUUID } from "node:crypto";
 import { mkdir, writeFile } from "node:fs/promises";
-import { join, resolve } from "node:path";
+import { dirname, join, resolve } from "node:path";
 import { run } from "@stricli/core";
 import { app } from "~/app";
 import type { LocalContext } from "~/context";
@@ -77,6 +77,27 @@ export const writeTestConfig = async (
   await writeFile(configPath, jsonContent);
 };
 
+// Write a raw string to a file in a test directory, creating the dir if needed.
+export const writeTestFile = async (
+  dir: string,
+  filename: string,
+  content: string,
+): Promise<string> => {
+  await mkdir(dir, { recursive: true });
+  await writeFile(join(dir, filename), content);
+  return filename;
+};
+
+// Write arbitrary JSON to a file in a test directory, creating the dir if needed.
+export const writeJsonConfig = async (
+  dir: string,
+  filename: string,
+  // biome-ignore lint/suspicious/noExplicitAny: Test utility needs to accept invalid configs for error testing
+  content: any,
+): Promise<string> => {
+  return writeTestFile(dir, filename, JSON.stringify(content, null, 2));
+};
+
 export const generateTmpDir = (): string => {
   const testId = randomUUID();
   return join(process.cwd(), "e2e/tmp", `test-${testId}`);
@@ -144,6 +165,7 @@ export const setupTestWithConfig = async ({
   tmpDir,
   createDirectories = {},
   jsonConfig = {},
+  configPath,
 }: {
   tmpDir: string;
   createDirectories?: {
@@ -152,11 +174,13 @@ export const setupTestWithConfig = async ({
     repoDir?: string | undefined;
   };
   jsonConfig?: Record<string, string | boolean | number>;
+  configPath?: string;
 }): Promise<TestDirContext> => {
   const ctx = await createTestDirStructure(tmpDir, createDirectories);
 
-  const configPath = resolve(tmpDir, "patchy.json");
-  await writeTestConfig(configPath, jsonConfig);
+  const resolvedConfigPath = configPath ?? resolve(tmpDir, "patchy.json");
+  await mkdir(dirname(resolvedConfigPath), { recursive: true });
+  await writeTestConfig(resolvedConfigPath, jsonConfig);
 
   return ctx;
 };
