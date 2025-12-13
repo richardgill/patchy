@@ -1,5 +1,5 @@
 import { beforeEach, describe, expect, it } from "bun:test";
-import { existsSync, mkdirSync, readFileSync } from "node:fs";
+import { mkdirSync } from "node:fs";
 import path from "node:path";
 import {
   generateTmpDir,
@@ -615,9 +615,7 @@ describe("patchy apply", () => {
     expect(result.stdout).toContain("Copied: newFile.ts");
     expect(result.stdout).toContain("Successfully applied 1 patch file(s).");
 
-    const targetFile = path.join(repoDir, "newFile.ts");
-    expect(existsSync(targetFile)).toBe(true);
-    expect(readFileSync(targetFile, "utf-8")).toBe(
+    expect(path.join(repoDir, "newFile.ts")).toHaveFileContent(
       'export const hello = "world";',
     );
   });
@@ -651,9 +649,7 @@ describe("patchy apply", () => {
     expect(result).toSucceed();
     expect(result.stdout).toContain("Copied: src/utils/helper.ts");
 
-    const targetFile = path.join(repoDir, "src", "utils", "helper.ts");
-    expect(existsSync(targetFile)).toBe(true);
-    expect(readFileSync(targetFile, "utf-8")).toBe(
+    expect(path.join(repoDir, "src", "utils", "helper.ts")).toHaveFileContent(
       "export const add = (a: number, b: number) => a + b;",
     );
   });
@@ -701,7 +697,7 @@ describe("patchy apply", () => {
     expect(result).toSucceed();
     expect(result.stdout).toContain("Applied diff: existing.ts.diff");
 
-    expect(readFileSync(targetFile, "utf-8")).toBe(
+    expect(targetFile).toHaveFileContent(
       "const value = 42;\nconst other = 2;\n",
     );
   });
@@ -743,10 +739,12 @@ describe("patchy apply", () => {
     expect(result.stdout).toContain("Applying 2 patch file(s)...");
     expect(result.stdout).toContain("Successfully applied 2 patch file(s).");
 
-    const existingFile = path.join(repoDir, "existing.ts");
-    expect(readFileSync(existingFile, "utf-8")).toBe("const x = 100;\n");
-    const newTargetFile = path.join(repoDir, "new.ts");
-    expect(readFileSync(newTargetFile, "utf-8")).toBe("export const y = 2;");
+    expect(path.join(repoDir, "existing.ts")).toHaveFileContent(
+      "const x = 100;\n",
+    );
+    expect(path.join(repoDir, "new.ts")).toHaveFileContent(
+      "export const y = 2;",
+    );
   });
 
   it("should report error when diff target file does not exist", async () => {
@@ -815,7 +813,7 @@ describe("patchy apply", () => {
     expect(result.stdout).toContain("Apply diff: existing.ts.diff");
     expect(result.stdout).toContain("Copy: newFile.ts");
 
-    expect(existsSync(path.join(repoDir, "newFile.ts"))).toBe(false);
+    expect(path.join(repoDir, "newFile.ts")).not.toExist();
   });
 
   it("should preserve file content when copying", async () => {
@@ -850,8 +848,7 @@ export const component = () => {
     const result = await runCli(`patchy apply`, tmpDir);
 
     expect(result).toSucceed();
-    const targetFile = path.join(repoDir, "complex.tsx");
-    expect(readFileSync(targetFile, "utf-8")).toBe(complexContent);
+    expect(path.join(repoDir, "complex.tsx")).toHaveFileContent(complexContent);
   });
 
   it("should apply diff with fuzzy matching when context lines are missing from target", async () => {
@@ -901,8 +898,7 @@ const other = 2;
     expect(result).toSucceed();
     expect(result.stdout).toContain("Applied diff: fuzzy.ts.diff");
 
-    const targetFile = path.join(repoDir, "fuzzy.ts");
-    expect(readFileSync(targetFile, "utf-8")).toBe(
+    expect(path.join(repoDir, "fuzzy.ts")).toHaveFileContent(
       `const value = 42;
 const other = 2;
 `,

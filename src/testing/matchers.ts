@@ -1,4 +1,5 @@
 import { expect } from "bun:test";
+import { existsSync, readFileSync } from "node:fs";
 import type { CLIResult } from "~/testing/test-utils";
 
 export const cliMatchers = {
@@ -69,7 +70,46 @@ export const cliMatchers = {
   },
 };
 
+export const fileMatchers = {
+  toExist(path: unknown) {
+    const filePath = path as string;
+    const pass = existsSync(filePath);
+
+    return {
+      pass,
+      message: () =>
+        pass
+          ? `Expected file NOT to exist: ${filePath}`
+          : `Expected file to exist: ${filePath}`,
+    };
+  },
+
+  toHaveFileContent(path: unknown, expectedContent: string) {
+    const filePath = path as string;
+    const exists = existsSync(filePath);
+
+    if (!exists) {
+      return {
+        pass: false,
+        message: () => `Expected file to exist: ${filePath}`,
+      };
+    }
+
+    const actualContent = readFileSync(filePath, "utf-8");
+    const pass = actualContent === expectedContent;
+
+    return {
+      pass,
+      message: () =>
+        pass
+          ? `Expected file NOT to have content:\n${expectedContent}\n\nActual:\n${actualContent}`
+          : `Expected file to have content:\n${expectedContent}\n\nActual:\n${actualContent}`,
+    };
+  },
+};
+
 expect.extend(cliMatchers);
+expect.extend(fileMatchers);
 
 declare module "bun:test" {
   // biome-ignore lint/correctness/noUnusedVariables: T must match bun-types Matchers<T> signature
@@ -78,5 +118,7 @@ declare module "bun:test" {
     toFail(): void;
     toHaveOutput(expected: string | RegExp): void;
     toFailWith(expected: string | RegExp): void;
+    toExist(): void;
+    toHaveFileContent(expected: string): void;
   }
 }

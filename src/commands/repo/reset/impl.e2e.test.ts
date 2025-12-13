@@ -1,5 +1,4 @@
 import { beforeEach, describe, expect, it } from "bun:test";
-import { readFileSync } from "node:fs";
 import { join } from "node:path";
 import { assertDefined } from "~/lib/assert";
 import { commitFile, initGitRepo } from "~/testing/git-helpers";
@@ -28,9 +27,7 @@ describe("patchy repo reset", () => {
     await commitFile(repoPath, "test.txt", "original content");
     await writeFileIn(repoPath, "test.txt", "modified content");
 
-    expect(readFileSync(join(repoPath, "test.txt"), "utf-8")).toBe(
-      "modified content",
-    );
+    expect(join(repoPath, "test.txt")).toHaveFileContent("modified content");
 
     const result = await runCli(
       `patchy repo reset --repo-base-dir repos --repo-dir test-repo --yes`,
@@ -38,9 +35,7 @@ describe("patchy repo reset", () => {
     );
     expect(result).toSucceed();
 
-    expect(readFileSync(join(repoPath, "test.txt"), "utf-8")).toBe(
-      "original content",
-    );
+    expect(join(repoPath, "test.txt")).toHaveFileContent("original content");
   });
 
   it("should show success message after reset", async () => {
@@ -143,9 +138,7 @@ describe("patchy repo reset", () => {
       expect(result).toHaveOutput("[DRY RUN]");
       expect(result).toHaveOutput("Would hard reset");
 
-      expect(readFileSync(join(repoPath, "test.txt"), "utf-8")).toBe(
-        "modified content",
-      );
+      expect(join(repoPath, "test.txt")).toHaveFileContent("modified content");
     });
 
     it("should still validate repo exists in dry-run mode", async () => {

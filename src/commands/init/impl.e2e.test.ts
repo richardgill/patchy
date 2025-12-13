@@ -1,5 +1,5 @@
 import { beforeEach, describe, expect, it } from "bun:test";
-import { existsSync, readFileSync } from "node:fs";
+import { readFileSync } from "node:fs";
 import { join } from "node:path";
 import {
   generateTmpDir,
@@ -28,7 +28,7 @@ describe("patchy init", () => {
 
     expect(result).toSucceed();
     const configPath = join(tmpDir, "patchy.json");
-    expect(existsSync(configPath)).toBe(true);
+    expect(configPath).toExist();
     const jsonContent = readFileSync(configPath, "utf-8").trim();
 
     const config = JSON.parse(jsonContent);

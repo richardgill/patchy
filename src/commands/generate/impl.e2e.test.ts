@@ -1,5 +1,5 @@
 import { beforeEach, describe, expect, it } from "bun:test";
-import { existsSync, readFileSync } from "node:fs";
+import { readFileSync } from "node:fs";
 import path from "node:path";
 import { assertDefined } from "~/lib/assert";
 import { initGitRepoWithCommit } from "~/testing/git-helpers";
@@ -51,7 +51,7 @@ describe("patchy generate", () => {
     expect(result.stdout).toContain("Generated 1 patch(es) successfully");
 
     const diffPath = path.join(patchesDir, "initial.txt.diff");
-    expect(existsSync(diffPath)).toBe(true);
+    expect(diffPath).toExist();
 
     const diffContent = readFileSync(diffPath, "utf-8");
     expect(diffContent).toContain("-initial content");
@@ -87,11 +87,9 @@ describe("patchy generate", () => {
     expect(result).toSucceed();
     expect(result.stdout).toContain("Copied new file: newfile.txt");
 
-    const newFilePath = path.join(patchesDir, "newfile.txt");
-    expect(existsSync(newFilePath)).toBe(true);
-
-    const content = readFileSync(newFilePath, "utf-8");
-    expect(content).toBe("new file content\n");
+    expect(path.join(patchesDir, "newfile.txt")).toHaveFileContent(
+      "new file content\n",
+    );
   });
 
   it("should handle nested directory structure", async () => {
@@ -129,8 +127,7 @@ describe("patchy generate", () => {
       "Copied new file: src/components/Button.tsx",
     );
 
-    const newFilePath = path.join(patchesDir, "src/components/Button.tsx");
-    expect(existsSync(newFilePath)).toBe(true);
+    expect(path.join(patchesDir, "src/components/Button.tsx")).toExist();
   });
 
   it("should handle both modified and new files", async () => {
@@ -197,8 +194,8 @@ describe("patchy generate", () => {
     expect(result.stdout).toContain("diff: initial.txt");
     expect(result.stdout).toContain("copy: newfile.txt");
 
-    expect(existsSync(path.join(patchesDir, "initial.txt.diff"))).toBe(false);
-    expect(existsSync(path.join(patchesDir, "newfile.txt"))).toBe(false);
+    expect(path.join(patchesDir, "initial.txt.diff")).not.toExist();
+    expect(path.join(patchesDir, "newfile.txt")).not.toExist();
   });
 
   it("should report no changes when repository is clean", async () => {
@@ -300,8 +297,8 @@ describe("patchy generate", () => {
     expect(result.stdout).toContain("Generated 1 patch(es) successfully");
 
     const patchesDir = path.join(tmpDir, "new-patches");
-    expect(existsSync(patchesDir)).toBe(true);
-    expect(existsSync(path.join(patchesDir, "initial.txt.diff"))).toBe(true);
+    expect(patchesDir).toExist();
+    expect(path.join(patchesDir, "initial.txt.diff")).toExist();
   });
 
   it("should handle verbose flag", async () => {
