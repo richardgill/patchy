@@ -1,8 +1,13 @@
 export const isValidGitUrl = (url: string): boolean => {
   const httpsPattern = /^https?:\/\/[\w.-]+\/[\w.-]+(\/[\w.-]+)+(\.git)?$/;
   const sshPattern = /^git@[\w.-]+:[\w.-]+(\/[\w.-]+)+(\.git)?$/;
+  const filePattern = /^file:\/\/\/.+$/;
   const trimmed = url.trim();
-  return httpsPattern.test(trimmed) || sshPattern.test(trimmed);
+  return (
+    httpsPattern.test(trimmed) ||
+    sshPattern.test(trimmed) ||
+    filePattern.test(trimmed)
+  );
 };
 
 export const validateGitUrl = (url: string): string | true => {

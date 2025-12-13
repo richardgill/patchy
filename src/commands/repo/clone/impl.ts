@@ -94,12 +94,30 @@ export default async function (
   this.process.stdout.write(`Cloning ${repoUrl} to ${targetDir}...\n`);
 
   const git = createGitClient(repoBaseDir);
-  await git.clone(repoUrl, repoName);
+  try {
+    await git.clone(repoUrl, repoName);
+  } catch (error) {
+    const message = error instanceof Error ? error.message : String(error);
+    this.process.stderr.write(
+      chalk.red(`Failed to clone repository: ${message}\n`),
+    );
+    this.process.exit(1);
+    return;
+  }
 
   if (ref) {
     this.process.stdout.write(`Checking out ${ref}...\n`);
     const repoGit = createGitClient(targetDir);
-    await repoGit.checkout(ref);
+    try {
+      await repoGit.checkout(ref);
+    } catch (error) {
+      const message = error instanceof Error ? error.message : String(error);
+      this.process.stderr.write(
+        chalk.red(`Failed to checkout ref "${ref}": ${message}\n`),
+      );
+      this.process.exit(1);
+      return;
+    }
   }
 
   this.process.stdout.write(
