@@ -91,7 +91,7 @@ describe("patchy repo reset", () => {
       );
     });
 
-    it("should fail when repo-base-dir is missing", async () => {
+    it("should fail when repo-base-dir directory does not exist", async () => {
       await setupTestWithConfig({ tmpDir });
 
       const result = await runCli(
@@ -99,7 +99,8 @@ describe("patchy repo reset", () => {
         tmpDir,
       );
 
-      expect(result).toFailWith("Missing");
+      // Uses default ./upstream/, which doesn't exist
+      expect(result).toFailWith("does not exist");
     });
 
     it("should fail when repo-dir is missing", async () => {

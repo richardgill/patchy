@@ -108,11 +108,7 @@ describe("createEnrichedMergedConfig", () => {
       "dry-run": true,
     };
 
-    const requiredFields: JsonConfigKey[] = [
-      "repo_url",
-      "repo_base_dir",
-      "repo_dir",
-    ];
+    const requiredFields: JsonConfigKey[] = ["repo_url", "repo_dir"];
 
     const result = createEnrichedMergedConfig({
       flags,
@@ -125,7 +121,6 @@ describe("createEnrichedMergedConfig", () => {
       "Missing required parameters:
 
         Missing Repository URL: set repo_url in ./patchy.json, PATCHY_REPO_URL env var, or --repo-url flag
-        Missing Repository base directory: set repo_base_dir in ./patchy.json, PATCHY_REPO_BASE_DIR env var, or --repo-base-dir flag
         Missing Repository directory: set repo_dir in ./patchy.json, PATCHY_REPO_DIR env var, or --repo-dir flag
 
       You can set up ./patchy.json by running:
@@ -394,11 +389,13 @@ describe("createEnrichedMergedConfig", () => {
       `
       "{
         "repo_url": "https://github.com/example/repo.git",
+        "repo_base_dir": "./upstream/",
         "patches_dir": "./patches/",
         "ref": "main",
         "verbose": false,
         "dry_run": false,
         "config": "<TEST_DIR>/empty.json",
+        "absoluteRepoBaseDir": "<TEST_DIR>/upstream",
         "absolutePatchesDir": "<TEST_DIR>/patches"
       }"
     `,
@@ -450,14 +447,13 @@ describe("createEnrichedMergedConfig", () => {
       cwd: tmpDir,
     });
 
+    // Now repo_base_dir and patches_dir have defaults, so validation fails on missing directories
     expectFailedMerge(result);
     expect(stabilizeTempDir(result.error)).toMatchInlineSnapshot(`
-      "Missing required parameters:
+      "Validation errors:
 
-        Missing Repository base directory: set repo_base_dir in ./patchy.json, PATCHY_REPO_BASE_DIR env var, or --repo-base-dir flag
-
-      You can set up ./patchy.json by running:
-        patchy init
+      Repository base directory does not exist: <TEST_DIR>/upstream
+      Patches directory does not exist: <TEST_DIR>/patches
 
       "
     `);
@@ -773,7 +769,7 @@ describe("createEnrichedMergedConfig", () => {
     `);
   });
 
-  it("should handle Zod validation error for empty string fields", async () => {
+  it("should handle empty string fields (now accepted by schema)", async () => {
     await writeJsonConfig(tmpDir, "empty-strings.json", {
       repo_url: "",
       ref: "",
@@ -792,12 +788,12 @@ describe("createEnrichedMergedConfig", () => {
       cwd: tmpDir,
     });
 
-    expectFailedMerge(result);
-    expect(result.error).toMatchInlineSnapshot(`
-      "repo_url: Repository URL is required
-      repo_base_dir: Repository base directory is required
-      ref: Git reference is required"
-    `);
+    // Empty strings are now accepted by schema (since requiredInConfig: false)
+    // Config values override defaults, so empty strings take precedence
+    expectSuccessfulMerge(result);
+    expect(result.mergedConfig.repo_url).toBe("");
+    expect(result.mergedConfig.ref).toBe("");
+    expect(result.mergedConfig.repo_base_dir).toBe("");
   });
 
   it("should handle Zod validation error for null values", async () => {

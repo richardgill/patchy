@@ -3,7 +3,6 @@ import type { ParsedFlags } from "~/types/utils";
 
 export const initFlags = {
   ...FLAG_METADATA.repo_base_dir.stricliFlag,
-  ...FLAG_METADATA.repo_dir.stricliFlag,
   ...FLAG_METADATA.patches_dir.stricliFlag,
   ...FLAG_METADATA.repo_url.stricliFlag,
   ...FLAG_METADATA.ref.stricliFlag,

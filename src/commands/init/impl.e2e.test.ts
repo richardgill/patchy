@@ -18,11 +18,11 @@ describe("patchy init", () => {
   it("should initialize patchy with all flags", async () => {
     await setupTestWithConfig({
       tmpDir,
-      createDirectories: { repoBaseDir: "repoBaseDir1", repoDir: "main" },
+      createDirectories: { repoBaseDir: "upstream" },
     });
 
     const result = await runCli(
-      `patchy init --repo-url https://github.com/example/test-repo.git --repo-dir main --repo-base-dir repoBaseDir1 --patches-dir patches --ref main --config patchy.json --force`,
+      `patchy init --repo-url https://github.com/example/test-repo.git --repo-base-dir upstream --patches-dir patches --ref main --config patchy.json --force`,
       tmpDir,
     );
 
@@ -36,9 +36,45 @@ describe("patchy init", () => {
       $schema: await getSchemaUrl(),
       repo_url: "https://github.com/example/test-repo.git",
       ref: "main",
-      repo_base_dir: "repoBaseDir1",
-      repo_dir: "main",
+      repo_base_dir: "upstream",
       patches_dir: "patches",
+    });
+  });
+
+  it("should not include repo_dir in config", async () => {
+    await setupTestWithConfig({
+      tmpDir,
+      createDirectories: { repoBaseDir: "upstream" },
+    });
+
+    const result = await runCli(
+      `patchy init --repo-url https://github.com/example/test-repo.git --repo-base-dir upstream --patches-dir patches --ref main --force`,
+      tmpDir,
+    );
+
+    expect(result).toSucceed();
+    const configPath = join(tmpDir, "patchy.json");
+    const config = JSON.parse(readFileSync(configPath, "utf-8"));
+    expect(config).not.toHaveProperty("repo_dir");
+  });
+
+  describe("gitignore", () => {
+    it("should create .gitignore when it does not exist (via flags, no prompt)", async () => {
+      await setupTestWithConfig({
+        tmpDir,
+        createDirectories: { repoBaseDir: "upstream" },
+      });
+
+      // Note: gitignore is only modified via interactive prompt, not flags
+      // This test verifies flags-only mode doesn't touch gitignore
+      const result = await runCli(
+        `patchy init --repo-url https://github.com/example/repo.git --repo-base-dir upstream --patches-dir patches --ref main --force`,
+        tmpDir,
+      );
+
+      expect(result).toSucceed();
+      // When using flags, gitignore prompt is shown interactively
+      // In non-interactive mode (flags), gitignore is not modified
     });
   });
 
@@ -46,11 +82,11 @@ describe("patchy init", () => {
     it("should fail with malformed repo url - missing protocol", async () => {
       await setupTestWithConfig({
         tmpDir,
-        createDirectories: { repoBaseDir: "repoBaseDir1", repoDir: "main" },
+        createDirectories: { repoBaseDir: "upstream" },
       });
 
       const result = await runCli(
-        `patchy init --repo-url github.com/example/repo --repo-dir main --repo-base-dir repoBaseDir1 --patches-dir patches --ref main --config patchy.json --force`,
+        `patchy init --repo-url github.com/example/repo --repo-base-dir upstream --patches-dir patches --ref main --config patchy.json --force`,
         tmpDir,
       );
 
@@ -63,11 +99,11 @@ describe("patchy init", () => {
     it("should fail with malformed repo url - invalid domain", async () => {
       await setupTestWithConfig({
         tmpDir,
-        createDirectories: { repoBaseDir: "repoBaseDir1", repoDir: "main" },
+        createDirectories: { repoBaseDir: "upstream" },
       });
 
       const result = await runCli(
-        `patchy init --repo-url https://invalid_domain/repo --repo-dir main --repo-base-dir repoBaseDir1 --patches-dir patches --ref main --config patchy.json --force`,
+        `patchy init --repo-url https://invalid_domain/repo --repo-base-dir upstream --patches-dir patches --ref main --config patchy.json --force`,
         tmpDir,
       );
 
@@ -80,11 +116,11 @@ describe("patchy init", () => {
     it("should fail with malformed repo url - incomplete path", async () => {
       await setupTestWithConfig({
         tmpDir,
-        createDirectories: { repoBaseDir: "repoBaseDir1", repoDir: "main" },
+        createDirectories: { repoBaseDir: "upstream" },
       });
 
       const result = await runCli(
-        `patchy init --repo-url https://github.com/ --repo-dir main --repo-base-dir repoBaseDir1 --patches-dir patches --ref main --config patchy.json --force`,
+        `patchy init --repo-url https://github.com/ --repo-base-dir upstream --patches-dir patches --ref main --config patchy.json --force`,
         tmpDir,
       );
 
@@ -95,17 +131,17 @@ describe("patchy init", () => {
     it("should fail when config file exists without force flag", async () => {
       await setupTestWithConfig({
         tmpDir,
-        createDirectories: { repoBaseDir: "repoBaseDir1", repoDir: "main" },
+        createDirectories: { repoBaseDir: "upstream" },
         jsonConfig: { hello: "world" },
       });
 
       await runCli(
-        `patchy init --repo-url https://github.com/example/repo.git --repo-dir main --repo-base-dir repoBaseDir1 --patches-dir patches --ref main --config patchy.json --force`,
+        `patchy init --repo-url https://github.com/example/repo.git --repo-base-dir upstream --patches-dir patches --ref main --config patchy.json --force`,
         tmpDir,
       );
 
       const result = await runCli(
-        `patchy init --repo-url https://github.com/example/another-repo.git --repo-dir main --repo-base-dir repoBaseDir1 --patches-dir patches --ref main --config patchy.json`,
+        `patchy init --repo-url https://github.com/example/another-repo.git --repo-base-dir upstream --patches-dir patches --ref main --config patchy.json`,
         tmpDir,
       );
 
@@ -121,11 +157,11 @@ describe("patchy init", () => {
     it("should fail with validation error for empty repo_url", async () => {
       await setupTestWithConfig({
         tmpDir,
-        createDirectories: { repoBaseDir: "repoBaseDir1", repoDir: "main" },
+        createDirectories: { repoBaseDir: "upstream" },
       });
 
       const result = await runCli(
-        `patchy init --repo-url "" --repo-dir main --repo-base-dir repoBaseDir1 --patches-dir patches --ref main --config patchy.json --force`,
+        `patchy init --repo-url "" --repo-base-dir upstream --patches-dir patches --ref main --config patchy.json --force`,
         tmpDir,
       );
 

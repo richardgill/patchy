@@ -13,23 +13,18 @@ describe("generateJsonSchema", () => {
             "type": "string",
           },
           "patches_dir": {
-            "minLength": 1,
             "type": "string",
           },
           "ref": {
-            "minLength": 1,
             "type": "string",
           },
           "repo_base_dir": {
-            "minLength": 1,
             "type": "string",
           },
           "repo_dir": {
-            "minLength": 1,
             "type": "string",
           },
           "repo_url": {
-            "minLength": 1,
             "type": "string",
           },
           "verbose": {
