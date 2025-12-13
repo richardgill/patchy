@@ -31,7 +31,7 @@ export const formatSourceLocation = <
   return meta.name;
 };
 
-export type ValidateConfigParams<
+type ValidateConfigParams<
   M extends FlagMetadataMap,
   TJson extends Partial<Record<DeriveJsonConfigKey<M>, unknown>>,
   TConfig,
@@ -48,7 +48,7 @@ export type ValidateConfigParams<
   ) => string;
 };
 
-export type ValidateConfigResult =
+type ValidateConfigResult =
   | { success: true }
   | { success: false; error: string };
 

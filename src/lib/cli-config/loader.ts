@@ -11,7 +11,7 @@ import type {
 } from "./type-derivations";
 import type { FlagMetadataMap } from "./types";
 
-export type LoadConfigParams<
+type LoadConfigParams<
   M extends FlagMetadataMap,
   TJson extends Partial<Record<DeriveJsonConfigKey<M>, unknown>>,
 > = {
@@ -25,7 +25,7 @@ export type LoadConfigParams<
   formatZodError?: (error: ZodError) => string;
 };
 
-export type LoadConfigSuccess<
+type LoadConfigSuccess<
   M extends FlagMetadataMap,
   TJson extends Partial<Record<DeriveJsonConfigKey<M>, unknown>>,
 > = {
@@ -35,7 +35,7 @@ export type LoadConfigSuccess<
   sources: ConfigSources<M, TJson>;
 };
 
-export type LoadConfigResult<
+type LoadConfigResult<
   M extends FlagMetadataMap,
   TJson extends Partial<Record<DeriveJsonConfigKey<M>, unknown>>,
 > = LoadConfigSuccess<M, TJson> | { success: false; error: string };

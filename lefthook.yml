@@ -9,6 +9,8 @@ pre-commit:
       run: bun run typecheck
     test:
       run: bun run test
+    knip:
+      run: bun run knip
 
 post-merge:
   commands:
