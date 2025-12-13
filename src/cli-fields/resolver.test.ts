@@ -405,7 +405,7 @@ describe("createEnrichedMergedConfig", () => {
     );
   });
 
-  it("should handle empty JSON config file", async () => {
+  it("should handle truly empty config file (no content)", async () => {
     await writeTestFile(tmpDir, "truly-empty.json", "");
     const emptyJsonPath = path.join(tmpDir, "truly-empty.json");
 

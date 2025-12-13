@@ -1,5 +1,5 @@
 import { beforeEach, describe, expect, it } from "bun:test";
-import { mkdirSync, writeFileSync } from "node:fs";
+import { mkdirSync } from "node:fs";
 import path from "node:path";
 import {
   createBranch,
@@ -12,6 +12,7 @@ import {
   generateTmpDir,
   runCli,
   setupTestWithConfig,
+  writeFileIn,
   writeTestFile,
 } from "~/testing/test-utils";
 
@@ -150,7 +151,7 @@ describe("patchy repo checkout", () => {
     await initGitRepoWithCommit(repoDir, "file.txt", "initial content");
     await createBranch(repoDir, "feature-branch");
 
-    writeFileSync(path.join(repoDir, "uncommitted.txt"), "dirty content");
+    await writeFileIn(repoDir, "uncommitted.txt", "dirty content");
 
     const result = await runCli(
       `patchy repo checkout --ref feature-branch`,

@@ -1,4 +1,5 @@
 import { randomUUID } from "node:crypto";
+import { existsSync } from "node:fs";
 import { mkdir, writeFile } from "node:fs/promises";
 import { dirname, join, resolve } from "node:path";
 import { run } from "@stricli/core";
@@ -77,18 +78,21 @@ export const writeTestConfig = async (
   await writeFile(configPath, jsonContent);
 };
 
-// Write a raw string to a file in a test directory, creating the dir if needed.
+// Write a file to a directory, creating any necessary parent directories.
+// Supports nested paths like "config/settings.json".
 export const writeTestFile = async (
   dir: string,
   filename: string,
   content: string,
 ): Promise<string> => {
-  await mkdir(dir, { recursive: true });
-  await writeFile(join(dir, filename), content);
+  const fullPath = join(dir, filename);
+  await mkdir(dirname(fullPath), { recursive: true });
+  await writeFile(fullPath, content);
   return filename;
 };
 
-// Write arbitrary JSON to a file in a test directory, creating the dir if needed.
+// Write JSON to a file, creating any necessary parent directories.
+// Supports nested paths like "config/settings.json".
 export const writeJsonConfig = async (
   dir: string,
   filename: string,
@@ -101,6 +105,20 @@ export const writeJsonConfig = async (
 export const generateTmpDir = (): string => {
   const testId = randomUUID();
   return join(process.cwd(), "e2e/tmp", `test-${testId}`);
+};
+
+// Write a file to a base directory, creating nested subdirectories as needed.
+export const writeFileIn = async (
+  baseDir: string,
+  relativePath: string,
+  content: string,
+): Promise<void> => {
+  const fullPath = join(baseDir, relativePath);
+  const dir = dirname(fullPath);
+  if (!existsSync(dir)) {
+    await mkdir(dir, { recursive: true });
+  }
+  await writeFile(fullPath, content);
 };
 
 // Replace paths up to and including tmp/test-UUID directory with <TEST_DIR>

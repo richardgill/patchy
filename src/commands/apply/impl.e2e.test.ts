@@ -1,10 +1,11 @@
 import { beforeEach, describe, expect, it } from "bun:test";
-import { existsSync, mkdirSync, readFileSync, writeFileSync } from "node:fs";
+import { existsSync, mkdirSync, readFileSync } from "node:fs";
 import path from "node:path";
 import {
   generateTmpDir,
   runCli,
   setupTestWithConfig,
+  writeFileIn,
   writeJsonConfig,
   writeTestFile,
 } from "~/testing/test-utils";
@@ -601,8 +602,11 @@ describe("patchy apply", () => {
     const patchesDir = ctx.absolutePatchesDir as string;
     const repoDir = ctx.absoluteRepoDir as string;
 
-    const patchFile = path.join(patchesDir, "newFile.ts");
-    writeFileSync(patchFile, 'export const hello = "world";');
+    await writeFileIn(
+      patchesDir,
+      "newFile.ts",
+      'export const hello = "world";',
+    );
 
     const result = await runCli(`patchy apply --verbose`, tmpDir);
 
@@ -636,11 +640,9 @@ describe("patchy apply", () => {
     const patchesDir = ctx.absolutePatchesDir as string;
     const repoDir = ctx.absoluteRepoDir as string;
 
-    const nestedPatchDir = path.join(patchesDir, "src", "utils");
-    mkdirSync(nestedPatchDir, { recursive: true });
-    const patchFile = path.join(nestedPatchDir, "helper.ts");
-    writeFileSync(
-      patchFile,
+    await writeFileIn(
+      patchesDir,
+      "src/utils/helper.ts",
       "export const add = (a: number, b: number) => a + b;",
     );
 
@@ -674,12 +676,15 @@ describe("patchy apply", () => {
     const patchesDir = ctx.absolutePatchesDir as string;
     const repoDir = ctx.absoluteRepoDir as string;
 
-    const targetFile = path.join(repoDir, "existing.ts");
-    writeFileSync(targetFile, "const value = 1;\nconst other = 2;\n");
+    await writeFileIn(
+      repoDir,
+      "existing.ts",
+      "const value = 1;\nconst other = 2;\n",
+    );
 
-    const diffFile = path.join(patchesDir, "existing.ts.diff");
-    writeFileSync(
-      diffFile,
+    await writeFileIn(
+      patchesDir,
+      "existing.ts.diff",
       `--- a/existing.ts
 +++ b/existing.ts
 @@ -1,2 +1,2 @@
@@ -688,6 +693,8 @@ describe("patchy apply", () => {
  const other = 2;
 `,
     );
+
+    const targetFile = path.join(repoDir, "existing.ts");
 
     const result = await runCli(`patchy apply --verbose`, tmpDir);
 
@@ -717,15 +724,11 @@ describe("patchy apply", () => {
     const patchesDir = ctx.absolutePatchesDir as string;
     const repoDir = ctx.absoluteRepoDir as string;
 
-    const existingFile = path.join(repoDir, "existing.ts");
-    writeFileSync(existingFile, "const x = 1;\n");
-
-    const newPatchFile = path.join(patchesDir, "new.ts");
-    writeFileSync(newPatchFile, "export const y = 2;");
-
-    const diffFile = path.join(patchesDir, "existing.ts.diff");
-    writeFileSync(
-      diffFile,
+    await writeFileIn(repoDir, "existing.ts", "const x = 1;\n");
+    await writeFileIn(patchesDir, "new.ts", "export const y = 2;");
+    await writeFileIn(
+      patchesDir,
+      "existing.ts.diff",
       `--- a/existing.ts
 +++ b/existing.ts
 @@ -1 +1 @@
@@ -740,6 +743,7 @@ describe("patchy apply", () => {
     expect(result.stdout).toContain("Applying 2 patch file(s)...");
     expect(result.stdout).toContain("Successfully applied 2 patch file(s).");
 
+    const existingFile = path.join(repoDir, "existing.ts");
     expect(readFileSync(existingFile, "utf-8")).toBe("const x = 100;\n");
     const newTargetFile = path.join(repoDir, "new.ts");
     expect(readFileSync(newTargetFile, "utf-8")).toBe("export const y = 2;");
@@ -762,9 +766,9 @@ describe("patchy apply", () => {
 
     const patchesDir = ctx.absolutePatchesDir as string;
 
-    const diffFile = path.join(patchesDir, "missing.ts.diff");
-    writeFileSync(
-      diffFile,
+    await writeFileIn(
+      patchesDir,
+      "missing.ts.diff",
       `--- a/missing.ts
 +++ b/missing.ts
 @@ -1 +1 @@
@@ -800,11 +804,8 @@ describe("patchy apply", () => {
     const patchesDir = ctx.absolutePatchesDir as string;
     const repoDir = ctx.absoluteRepoDir as string;
 
-    const newFile = path.join(patchesDir, "newFile.ts");
-    writeFileSync(newFile, "content");
-
-    const diffFile = path.join(patchesDir, "existing.ts.diff");
-    writeFileSync(diffFile, "diff content");
+    await writeFileIn(patchesDir, "newFile.ts", "content");
+    await writeFileIn(patchesDir, "existing.ts.diff", "diff content");
 
     const result = await runCli(`patchy apply --dry-run`, tmpDir);
 
@@ -844,8 +845,7 @@ export const component = () => {
     const patchesDir = ctx.absolutePatchesDir as string;
     const repoDir = ctx.absoluteRepoDir as string;
 
-    const patchFile = path.join(patchesDir, "complex.tsx");
-    writeFileSync(patchFile, complexContent);
+    await writeFileIn(patchesDir, "complex.tsx", complexContent);
 
     const result = await runCli(`patchy apply`, tmpDir);
 
@@ -873,18 +873,18 @@ export const component = () => {
     const repoDir = ctx.absoluteRepoDir as string;
 
     // The target file has fewer lines than the diff's context expects
-    const targetFile = path.join(repoDir, "fuzzy.ts");
-    writeFileSync(
-      targetFile,
+    await writeFileIn(
+      repoDir,
+      "fuzzy.ts",
       `const value = 1;
 const other = 2;
 `,
     );
 
     // The diff has an extra context line that doesn't exist in the target
-    const diffFile = path.join(patchesDir, "fuzzy.ts.diff");
-    writeFileSync(
-      diffFile,
+    await writeFileIn(
+      patchesDir,
+      "fuzzy.ts.diff",
       `--- a/fuzzy.ts
 +++ b/fuzzy.ts
 @@ -1,3 +1,3 @@
@@ -901,6 +901,7 @@ const other = 2;
     expect(result).toSucceed();
     expect(result.stdout).toContain("Applied diff: fuzzy.ts.diff");
 
+    const targetFile = path.join(repoDir, "fuzzy.ts");
     expect(readFileSync(targetFile, "utf-8")).toBe(
       `const value = 42;
 const other = 2;
@@ -927,18 +928,18 @@ const other = 2;
     const repoDir = ctx.absoluteRepoDir as string;
 
     // The target file has fewer lines than the diff's context expects
-    const targetFile = path.join(repoDir, "fuzzy.ts");
-    writeFileSync(
-      targetFile,
+    await writeFileIn(
+      repoDir,
+      "fuzzy.ts",
       `const value = 1;
 const other = 2;
 `,
     );
 
     // The diff has an extra context line that doesn't exist in the target
-    const diffFile = path.join(patchesDir, "fuzzy.ts.diff");
-    writeFileSync(
-      diffFile,
+    await writeFileIn(
+      patchesDir,
+      "fuzzy.ts.diff",
       `--- a/fuzzy.ts
 +++ b/fuzzy.ts
 @@ -1,3 +1,3 @@

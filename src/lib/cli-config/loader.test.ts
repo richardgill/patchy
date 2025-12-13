@@ -1,7 +1,11 @@
 import { beforeEach, describe, expect, it } from "bun:test";
-import { mkdirSync, writeFileSync } from "node:fs";
+import { mkdirSync } from "node:fs";
 import { z } from "zod";
-import { generateTmpDir, writeJsonConfig } from "~/testing/test-utils";
+import {
+  generateTmpDir,
+  writeJsonConfig,
+  writeTestFile,
+} from "~/testing/test-utils";
 import { loadConfigFromFile } from "./loader";
 import type { FlagMetadataMap } from "./types";
 
@@ -81,7 +85,7 @@ describe("loadConfigFromFile", () => {
 
   const loadTestCases: {
     name: string;
-    setup: (tmpDir: string) => void;
+    setup: (tmpDir: string) => Promise<void> | void;
     flags: Record<string, unknown>;
     env?: Record<string, string | undefined>;
     expectedSuccess: boolean;
@@ -90,11 +94,12 @@ describe("loadConfigFromFile", () => {
   }[] = [
     {
       name: "loads valid JSON config",
-      setup: (dir) => {
-        writeFileSync(
-          `${dir}/test.json`,
-          JSON.stringify({ name: "test-name", count: "10", verbose: true }),
-        );
+      setup: async (dir) => {
+        await writeJsonConfig(dir, "test.json", {
+          name: "test-name",
+          count: "10",
+          verbose: true,
+        });
       },
       flags: {},
       expectedSuccess: true,
@@ -124,8 +129,8 @@ describe("loadConfigFromFile", () => {
     },
     {
       name: "fails on invalid JSON",
-      setup: (dir) => {
-        writeFileSync(`${dir}/test.json`, "{ invalid json }");
+      setup: async (dir) => {
+        await writeTestFile(dir, "test.json", "{ invalid json }");
       },
       flags: {},
       expectedSuccess: false,
@@ -133,11 +138,11 @@ describe("loadConfigFromFile", () => {
     },
     {
       name: "fails on Zod validation error",
-      setup: (dir) => {
-        writeFileSync(
-          `${dir}/test.json`,
-          JSON.stringify({ name: 123, verbose: "not-boolean" }),
-        );
+      setup: async (dir) => {
+        await writeJsonConfig(dir, "test.json", {
+          name: 123,
+          verbose: "not-boolean",
+        });
       },
       flags: {},
       expectedSuccess: false,
@@ -145,11 +150,11 @@ describe("loadConfigFromFile", () => {
     },
     {
       name: "fails on unknown fields (strict mode)",
-      setup: (dir) => {
-        writeFileSync(
-          `${dir}/test.json`,
-          JSON.stringify({ name: "test", unknown_field: "value" }),
-        );
+      setup: async (dir) => {
+        await writeJsonConfig(dir, "test.json", {
+          name: "test",
+          unknown_field: "value",
+        });
       },
       flags: {},
       expectedSuccess: false,
@@ -157,11 +162,11 @@ describe("loadConfigFromFile", () => {
     },
     {
       name: "merges flags with JSON values",
-      setup: (dir) => {
-        writeFileSync(
-          `${dir}/test.json`,
-          JSON.stringify({ name: "from-json", verbose: false }),
-        );
+      setup: async (dir) => {
+        await writeJsonConfig(dir, "test.json", {
+          name: "from-json",
+          verbose: false,
+        });
       },
       flags: { name: "from-flag", verbose: true },
       expectedSuccess: true,
@@ -169,11 +174,11 @@ describe("loadConfigFromFile", () => {
     },
     {
       name: "merges env with JSON values",
-      setup: (dir) => {
-        writeFileSync(
-          `${dir}/test.json`,
-          JSON.stringify({ name: "from-json", verbose: false }),
-        );
+      setup: async (dir) => {
+        await writeJsonConfig(dir, "test.json", {
+          name: "from-json",
+          verbose: false,
+        });
       },
       flags: {},
       env: { TEST_NAME: "from-env", TEST_VERBOSE: "true" },
@@ -182,12 +187,10 @@ describe("loadConfigFromFile", () => {
     },
     {
       name: "uses custom config path from flag",
-      setup: (dir) => {
-        mkdirSync(`${dir}/custom`, { recursive: true });
-        writeFileSync(
-          `${dir}/custom/config.json`,
-          JSON.stringify({ name: "custom-name" }),
-        );
+      setup: async (dir) => {
+        await writeJsonConfig(dir, "custom/config.json", {
+          name: "custom-name",
+        });
       },
       flags: { config: "./custom/config.json" },
       expectedSuccess: true,
@@ -195,12 +198,10 @@ describe("loadConfigFromFile", () => {
     },
     {
       name: "uses custom config path from env",
-      setup: (dir) => {
-        mkdirSync(`${dir}/env-custom`, { recursive: true });
-        writeFileSync(
-          `${dir}/env-custom/config.json`,
-          JSON.stringify({ name: "env-custom-name" }),
-        );
+      setup: async (dir) => {
+        await writeJsonConfig(dir, "env-custom/config.json", {
+          name: "env-custom-name",
+        });
       },
       flags: {},
       env: { TEST_CONFIG: "./env-custom/config.json" },
@@ -209,9 +210,10 @@ describe("loadConfigFromFile", () => {
     },
     {
       name: "handles JSONC (JSON with comments)",
-      setup: (dir) => {
-        writeFileSync(
-          `${dir}/test.json`,
+      setup: async (dir) => {
+        await writeTestFile(
+          dir,
+          "test.json",
           `{
             // This is a comment
             "name": "with-comments",
@@ -227,8 +229,8 @@ describe("loadConfigFromFile", () => {
   ];
 
   for (const testCase of loadTestCases) {
-    it(testCase.name, () => {
-      testCase.setup(tmpDir);
+    it(testCase.name, async () => {
+      await testCase.setup(tmpDir);
 
       const result = loadConfigFromFile<typeof TEST_METADATA, TestJson>({
         metadata: TEST_METADATA,
