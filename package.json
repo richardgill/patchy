@@ -12,13 +12,13 @@
   "scripts": {
     "build": "bun run ./scripts/build.ts",
     "build-single": "bun run ./scripts/build.ts --single",
-    "check": "biome check --error-on-warnings --diagnostic-level=warn",
+    "check": "bun run scripts/check.ts",
     "check-fix": "biome check --write --error-on-warnings --diagnostic-level=warn",
     "changeset": "changeset",
     "changeset-version": "changeset version",
     "dev": "bun run src/cli.ts",
     "knip": "knip-bun",
-    "local-ci": "concurrently --group -p none -n 'check,typecheck,test,knip' 'bun run check-fix' 'bun run typecheck' 'bun run test' 'bun run knip'",
+    "local-ci": "bun run scripts/local-ci.ts",
     "prepare": "[ -n \"$CI\" ] || lefthook install",
     "typecheck": "tsgo --noEmit",
     "test": "bun run scripts/test.ts",
@@ -32,7 +32,6 @@
     "@types/node": "^24.0.13",
     "@typescript/native-preview": "7.0.0-dev.20250712.1",
     "bun-types": "^1.3.4",
-    "concurrently": "^9.2.0",
     "knip": "^5.73.4",
     "lefthook": "^2.0.11",
     "typescript": "^5.9.2"
