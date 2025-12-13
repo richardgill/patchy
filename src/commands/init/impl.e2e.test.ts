@@ -1,5 +1,5 @@
 import { beforeEach, describe, expect, it } from "bun:test";
-import { readFileSync } from "node:fs";
+import { existsSync, readFileSync } from "node:fs";
 import { join } from "node:path";
 import {
   generateTmpDir,
@@ -59,22 +59,54 @@ describe("patchy init", () => {
   });
 
   describe("gitignore", () => {
-    it("should create .gitignore when it does not exist (via flags, no prompt)", async () => {
+    it("should add to .gitignore with --gitignore flag", async () => {
       await setupTestWithConfig({
         tmpDir,
         createDirectories: { repoBaseDir: "upstream" },
       });
 
-      // Note: gitignore is only modified via interactive prompt, not flags
-      // This test verifies flags-only mode doesn't touch gitignore
+      const result = await runCli(
+        `patchy init --repo-url https://github.com/example/repo.git --repo-base-dir upstream --patches-dir patches --ref main --gitignore --force`,
+        tmpDir,
+      );
+
+      expect(result).toSucceed();
+      const gitignorePath = join(tmpDir, ".gitignore");
+      expect(gitignorePath).toExist();
+      const content = readFileSync(gitignorePath, "utf-8");
+      expect(content).toContain("upstream/");
+    });
+
+    it("should not modify .gitignore with --no-gitignore flag", async () => {
+      await setupTestWithConfig({
+        tmpDir,
+        createDirectories: { repoBaseDir: "upstream" },
+      });
+
+      const result = await runCli(
+        `patchy init --repo-url https://github.com/example/repo.git --repo-base-dir upstream --patches-dir patches --ref main --no-gitignore --force`,
+        tmpDir,
+      );
+
+      expect(result).toSucceed();
+      const gitignorePath = join(tmpDir, ".gitignore");
+      expect(existsSync(gitignorePath)).toBe(false);
+    });
+
+    it("should not modify .gitignore without flag in non-interactive mode", async () => {
+      await setupTestWithConfig({
+        tmpDir,
+        createDirectories: { repoBaseDir: "upstream" },
+      });
+
       const result = await runCli(
         `patchy init --repo-url https://github.com/example/repo.git --repo-base-dir upstream --patches-dir patches --ref main --force`,
         tmpDir,
       );
 
       expect(result).toSucceed();
-      // When using flags, gitignore prompt is shown interactively
-      // In non-interactive mode (flags), gitignore is not modified
+      const gitignorePath = join(tmpDir, ".gitignore");
+      expect(existsSync(gitignorePath)).toBe(false);
     });
   });
 

@@ -91,18 +91,22 @@ export default async function (
     getDefaultValue("repo_base_dir") ??
     "";
 
-  const isInteractive = flags["repo-base-dir"] === undefined;
-  if (isInteractive && repoBaseDir) {
-    const addToGitignore = await prompts.confirm({
-      message: `Add ${repoBaseDir} to .gitignore?`,
-      initialValue: true,
-    });
-    if (prompts.isCancel(addToGitignore)) {
-      this.process.stderr.write("Initialization cancelled\n");
-      this.process.exit?.(1);
-      return;
+  if (flags.gitignore !== undefined) {
+    answers.addToGitignore = flags.gitignore;
+  } else {
+    const isInteractive = flags["repo-base-dir"] === undefined;
+    if (isInteractive && repoBaseDir) {
+      const addToGitignore = await prompts.confirm({
+        message: `Add ${repoBaseDir} to .gitignore?`,
+        initialValue: true,
+      });
+      if (prompts.isCancel(addToGitignore)) {
+        this.process.stderr.write("Initialization cancelled\n");
+        this.process.exit?.(1);
+        return;
+      }
+      answers.addToGitignore = addToGitignore;
     }
-    answers.addToGitignore = addToGitignore;
   }
 
   if (flags["repo-url"] === undefined) {

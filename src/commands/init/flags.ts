@@ -13,6 +13,11 @@ export const initFlags = {
     brief: "Overwrite existing configuration",
     optional: true,
   },
+  gitignore: {
+    kind: "boolean",
+    brief: "Add upstream directory to .gitignore",
+    optional: true,
+  },
 } as const;
 
 export type InitFlags = ParsedFlags<typeof initFlags>;
