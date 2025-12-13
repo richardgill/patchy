@@ -1,4 +1,4 @@
-import { writeFileSync } from "node:fs";
+import { mkdirSync, rmSync, writeFileSync } from "node:fs";
 import { writeFile } from "node:fs/promises";
 import { join } from "node:path";
 import { createTestGitClient } from "~/lib/git";
@@ -20,6 +20,29 @@ export const initGitRepoWithCommit = async (
   const git = createTestGitClient(repoDir);
   await git.add(".");
   await git.commit("initial commit");
+};
+
+export const initBareRepoWithCommit = async (
+  bareRepoDir: string,
+  filename = "initial.txt",
+  content = "initial content\n",
+): Promise<void> => {
+  const git = createTestGitClient(bareRepoDir);
+  await git.init(true);
+  const tmpWorkDir = join(bareRepoDir, "..", `tmp-work-${Date.now()}`);
+  mkdirSync(tmpWorkDir, { recursive: true });
+  const workGit = createTestGitClient(tmpWorkDir);
+  await workGit.init();
+  await workGit.addConfig("user.email", "test@test.com");
+  await workGit.addConfig("user.name", "Test User");
+  await workGit.addConfig("init.defaultBranch", "main");
+  await workGit.checkout(["-b", "main"]);
+  writeFileSync(join(tmpWorkDir, filename), content);
+  await workGit.add(".");
+  await workGit.commit("initial commit");
+  await workGit.addRemote("origin", bareRepoDir);
+  await workGit.push(["-u", "origin", "main"]);
+  rmSync(tmpWorkDir, { recursive: true, force: true });
 };
 
 export const commitFile = async (
@@ -70,4 +93,25 @@ export const getCurrentCommit = async (repoDir: string): Promise<string> => {
   const git = createTestGitClient(repoDir);
   const commit = await git.revparse(["HEAD"]);
   return commit.trim();
+};
+
+export const pushBranchToBareRepo = async (
+  bareRepoDir: string,
+  branchName: string,
+): Promise<void> => {
+  const tmpWorkDir = join(bareRepoDir, "..", `tmp-work-${Date.now()}`);
+  mkdirSync(tmpWorkDir, { recursive: true });
+  const workGit = createTestGitClient(tmpWorkDir);
+  await workGit.clone(bareRepoDir, ".");
+  await workGit.addConfig("user.email", "test@test.com");
+  await workGit.addConfig("user.name", "Test User");
+  await workGit.checkoutLocalBranch(branchName);
+  writeFileSync(
+    join(tmpWorkDir, "branch-file.txt"),
+    `content from ${branchName}`,
+  );
+  await workGit.add(".");
+  await workGit.commit(`commit on ${branchName}`);
+  await workGit.push("origin", branchName);
+  rmSync(tmpWorkDir, { recursive: true, force: true });
 };

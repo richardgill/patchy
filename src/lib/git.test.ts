@@ -13,6 +13,9 @@ describe("extractRepoName", () => {
     { url: "git@bitbucket.org:team/project.git", expected: "project" },
     { url: "https://github.com/user/repo.name.git", expected: "repo.name" },
     { url: "git@github.com:user/repo.name.git", expected: "repo.name" },
+    { url: "file:///path/to/repo.git", expected: "repo" },
+    { url: "file:///home/user/repos/my-repo", expected: "my-repo" },
+    { url: "file:///tmp/test-repo.git", expected: "test-repo" },
     { url: "", expected: undefined },
     { url: "invalid", expected: undefined },
   ];

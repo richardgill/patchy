@@ -44,11 +44,9 @@ describe("patchy generate", () => {
     const result = await runCli(`patchy generate`, tmpDir);
 
     expect(result).toSucceed();
-    expect(result.stdout).toContain(
-      "Generating patches from upstream to patches",
-    );
-    expect(result.stdout).toContain("Created diff: initial.txt.diff");
-    expect(result.stdout).toContain("Generated 1 patch(es) successfully");
+    expect(result).toHaveOutput("Generating patches from upstream to patches");
+    expect(result).toHaveOutput("Created diff: initial.txt.diff");
+    expect(result).toHaveOutput("Generated 1 patch(es) successfully");
 
     const diffPath = path.join(patchesDir, "initial.txt.diff");
     expect(diffPath).toExist();
@@ -85,7 +83,7 @@ describe("patchy generate", () => {
     const result = await runCli(`patchy generate`, tmpDir);
 
     expect(result).toSucceed();
-    expect(result.stdout).toContain("Copied new file: newfile.txt");
+    expect(result).toHaveOutput("Copied new file: newfile.txt");
 
     expect(path.join(patchesDir, "newfile.txt")).toHaveFileContent(
       "new file content\n",
@@ -123,9 +121,7 @@ describe("patchy generate", () => {
     const result = await runCli(`patchy generate`, tmpDir);
 
     expect(result).toSucceed();
-    expect(result.stdout).toContain(
-      "Copied new file: src/components/Button.tsx",
-    );
+    expect(result).toHaveOutput("Copied new file: src/components/Button.tsx");
 
     expect(path.join(patchesDir, "src/components/Button.tsx")).toExist();
   });
@@ -154,9 +150,9 @@ describe("patchy generate", () => {
     const result = await runCli(`patchy generate`, tmpDir);
 
     expect(result).toSucceed();
-    expect(result.stdout).toContain("Created diff: initial.txt.diff");
-    expect(result.stdout).toContain("Copied new file: newfile.txt");
-    expect(result.stdout).toContain("Generated 2 patch(es) successfully");
+    expect(result).toHaveOutput("Created diff: initial.txt.diff");
+    expect(result).toHaveOutput("Copied new file: newfile.txt");
+    expect(result).toHaveOutput("Generated 2 patch(es) successfully");
   });
 
   it("should show dry-run output without making changes", async () => {
@@ -187,12 +183,12 @@ describe("patchy generate", () => {
     const result = await runCli(`patchy generate --dry-run`, tmpDir);
 
     expect(result).toSucceed();
-    expect(result.stdout).toContain(
+    expect(result).toHaveOutput(
       "[DRY RUN] Would generate patches from upstream to patches",
     );
-    expect(result.stdout).toContain("Found 2 change(s):");
-    expect(result.stdout).toContain("diff: initial.txt");
-    expect(result.stdout).toContain("copy: newfile.txt");
+    expect(result).toHaveOutput("Found 2 change(s):");
+    expect(result).toHaveOutput("diff: initial.txt");
+    expect(result).toHaveOutput("copy: newfile.txt");
 
     expect(path.join(patchesDir, "initial.txt.diff")).not.toExist();
     expect(path.join(patchesDir, "newfile.txt")).not.toExist();
@@ -220,7 +216,7 @@ describe("patchy generate", () => {
     const result = await runCli(`patchy generate`, tmpDir);
 
     expect(result).toSucceed();
-    expect(result.stdout).toContain("No changes detected in repository");
+    expect(result).toHaveOutput("No changes detected in repository");
   });
 
   it("should fail when required fields are missing", async () => {
@@ -294,7 +290,7 @@ describe("patchy generate", () => {
     const result = await runCli(`patchy generate`, tmpDir);
 
     expect(result).toSucceed();
-    expect(result.stdout).toContain("Generated 1 patch(es) successfully");
+    expect(result).toHaveOutput("Generated 1 patch(es) successfully");
 
     const patchesDir = path.join(tmpDir, "new-patches");
     expect(patchesDir).toExist();
@@ -324,9 +320,7 @@ describe("patchy generate", () => {
     const result = await runCli(`patchy generate --verbose`, tmpDir);
 
     expect(result).toSucceed();
-    expect(result.stdout).toContain(
-      "Generating patches from upstream to patches",
-    );
-    expect(result.stdout).toContain("Created diff: initial.txt.diff");
+    expect(result).toHaveOutput("Generating patches from upstream to patches");
+    expect(result).toHaveOutput("Created diff: initial.txt.diff");
   });
 });

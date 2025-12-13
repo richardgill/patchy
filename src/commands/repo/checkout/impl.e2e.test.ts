@@ -46,9 +46,7 @@ describe("patchy repo checkout", () => {
     );
 
     expect(result).toSucceed();
-    expect(result.stdout).toContain(
-      'Successfully checked out "feature-branch"',
-    );
+    expect(result).toHaveOutput('Successfully checked out "feature-branch"');
     expect(await getCurrentBranch(repoDir)).toBe("feature-branch");
   });
 
@@ -73,7 +71,7 @@ describe("patchy repo checkout", () => {
     const result = await runCli(`patchy repo checkout --ref v1.0.0`, tmpDir);
 
     expect(result).toSucceed();
-    expect(result.stdout).toContain('Successfully checked out "v1.0.0"');
+    expect(result).toHaveOutput('Successfully checked out "v1.0.0"');
   });
 
   it("should checkout a commit SHA", async () => {
@@ -100,9 +98,7 @@ describe("patchy repo checkout", () => {
     );
 
     expect(result).toSucceed();
-    expect(result.stdout).toContain(
-      `Successfully checked out "${initialCommit}"`,
-    );
+    expect(result).toHaveOutput(`Successfully checked out "${initialCommit}"`);
     expect(await getCurrentCommit(repoDir)).toBe(initialCommit);
   });
 
@@ -127,8 +123,7 @@ describe("patchy repo checkout", () => {
       tmpDir,
     );
 
-    expect(result).toFail();
-    expect(result.stderr).toContain('Invalid git ref "non-existent-ref"');
+    expect(result).toFailWith('Invalid git ref "non-existent-ref"');
     expect(result.stderr).toContain(
       "Please specify a valid branch, tag, or commit SHA",
     );
@@ -158,8 +153,7 @@ describe("patchy repo checkout", () => {
       tmpDir,
     );
 
-    expect(result).toFail();
-    expect(result.stderr).toContain("has uncommitted changes");
+    expect(result).toFailWith("has uncommitted changes");
     expect(result.stderr).toContain("Please commit or stash your changes");
   });
 
@@ -186,8 +180,8 @@ describe("patchy repo checkout", () => {
     );
 
     expect(result).toSucceed();
-    expect(result.stdout).toContain("Checking out ref");
-    expect(result.stdout).toContain("feature-branch");
+    expect(result).toHaveOutput("Checking out ref");
+    expect(result).toHaveOutput("feature-branch");
   });
 
   it("should use repo-dir from CLI flag", async () => {
@@ -213,9 +207,7 @@ describe("patchy repo checkout", () => {
     );
 
     expect(result).toSucceed();
-    expect(result.stdout).toContain(
-      'Successfully checked out "feature-branch"',
-    );
+    expect(result).toHaveOutput('Successfully checked out "feature-branch"');
     expect(await getCurrentBranch(repoDir)).toBe("feature-branch");
   });
 
@@ -224,8 +216,7 @@ describe("patchy repo checkout", () => {
 
     const result = await runCli(`patchy repo checkout --ref main`, tmpDir);
 
-    expect(result).toFail();
-    expect(result.stderr).toContain("Missing required parameters");
+    expect(result).toFailWith("Missing required parameters");
     expect(result.stderr).toContain("repo_base_dir");
     expect(result.stderr).toContain("repo_dir");
   });
@@ -235,7 +226,7 @@ describe("patchy repo checkout", () => {
 
     const result = await runCli(`patchy repo checkout --help`, tmpDir);
 
-    expect(result.stdout).toContain("--ref");
+    expect(result).toHaveOutput("--ref");
     expect(result.stdout).not.toContain("[--ref]");
   });
 
@@ -265,8 +256,8 @@ describe("patchy repo checkout", () => {
       );
 
       expect(result).toSucceed();
-      expect(result.stdout).toContain("[DRY RUN]");
-      expect(result.stdout).toContain("feature-branch");
+      expect(result).toHaveOutput("[DRY RUN]");
+      expect(result).toHaveOutput("feature-branch");
       expect(await getCurrentBranch(repoDir)).toBe(initialBranch);
     });
 
@@ -291,8 +282,7 @@ describe("patchy repo checkout", () => {
         tmpDir,
       );
 
-      expect(result).toFail();
-      expect(result.stderr).toContain('Invalid git ref "non-existent-ref"');
+      expect(result).toFailWith('Invalid git ref "non-existent-ref"');
     });
   });
 });

@@ -438,8 +438,7 @@ describe("patchy apply", () => {
       tmpDir,
     );
 
-    expect(result).toFail();
-    expect(result.stderr).toContain("Invalid input");
+    expect(result).toFailWith("Invalid input");
   });
 
   it("should handle Zod validation error for empty string fields", async () => {
@@ -611,9 +610,9 @@ describe("patchy apply", () => {
     const result = await runCli(`patchy apply --verbose`, tmpDir);
 
     expect(result).toSucceed();
-    expect(result.stdout).toContain("Applying 1 patch file(s)...");
-    expect(result.stdout).toContain("Copied: newFile.ts");
-    expect(result.stdout).toContain("Successfully applied 1 patch file(s).");
+    expect(result).toHaveOutput("Applying 1 patch file(s)...");
+    expect(result).toHaveOutput("Copied: newFile.ts");
+    expect(result).toHaveOutput("Successfully applied 1 patch file(s).");
 
     expect(path.join(repoDir, "newFile.ts")).toHaveFileContent(
       'export const hello = "world";',
@@ -647,7 +646,7 @@ describe("patchy apply", () => {
     const result = await runCli(`patchy apply --verbose`, tmpDir);
 
     expect(result).toSucceed();
-    expect(result.stdout).toContain("Copied: src/utils/helper.ts");
+    expect(result).toHaveOutput("Copied: src/utils/helper.ts");
 
     expect(path.join(repoDir, "src", "utils", "helper.ts")).toHaveFileContent(
       "export const add = (a: number, b: number) => a + b;",
@@ -695,7 +694,7 @@ describe("patchy apply", () => {
     const result = await runCli(`patchy apply --verbose`, tmpDir);
 
     expect(result).toSucceed();
-    expect(result.stdout).toContain("Applied diff: existing.ts.diff");
+    expect(result).toHaveOutput("Applied diff: existing.ts.diff");
 
     expect(targetFile).toHaveFileContent(
       "const value = 42;\nconst other = 2;\n",
@@ -736,8 +735,8 @@ describe("patchy apply", () => {
     const result = await runCli(`patchy apply --verbose`, tmpDir);
 
     expect(result).toSucceed();
-    expect(result.stdout).toContain("Applying 2 patch file(s)...");
-    expect(result.stdout).toContain("Successfully applied 2 patch file(s).");
+    expect(result).toHaveOutput("Applying 2 patch file(s)...");
+    expect(result).toHaveOutput("Successfully applied 2 patch file(s).");
 
     expect(path.join(repoDir, "existing.ts")).toHaveFileContent(
       "const x = 100;\n",
@@ -777,8 +776,7 @@ describe("patchy apply", () => {
 
     const result = await runCli(`patchy apply`, tmpDir);
 
-    expect(result).toFail();
-    expect(result.stderr).toContain("Errors occurred while applying patches:");
+    expect(result).toFailWith("Errors occurred while applying patches:");
     expect(result.stderr).toContain(
       "missing.ts.diff: Target file does not exist",
     );
@@ -808,10 +806,10 @@ describe("patchy apply", () => {
     const result = await runCli(`patchy apply --dry-run`, tmpDir);
 
     expect(result).toSucceed();
-    expect(result.stdout).toContain("[DRY RUN]");
-    expect(result.stdout).toContain("Would apply 2 file(s):");
-    expect(result.stdout).toContain("Apply diff: existing.ts.diff");
-    expect(result.stdout).toContain("Copy: newFile.ts");
+    expect(result).toHaveOutput("[DRY RUN]");
+    expect(result).toHaveOutput("Would apply 2 file(s):");
+    expect(result).toHaveOutput("Apply diff: existing.ts.diff");
+    expect(result).toHaveOutput("Copy: newFile.ts");
 
     expect(path.join(repoDir, "newFile.ts")).not.toExist();
   });
@@ -896,7 +894,7 @@ const other = 2;
     const result = await runCli(`patchy apply --verbose`, tmpDir);
 
     expect(result).toSucceed();
-    expect(result.stdout).toContain("Applied diff: fuzzy.ts.diff");
+    expect(result).toHaveOutput("Applied diff: fuzzy.ts.diff");
 
     expect(path.join(repoDir, "fuzzy.ts")).toHaveFileContent(
       `const value = 42;
@@ -949,8 +947,7 @@ const other = 2;
     // With fuzz-factor 0, this should fail because the context line doesn't match
     const result = await runCli(`patchy apply --fuzz-factor 0`, tmpDir);
 
-    expect(result).toFail();
-    expect(result.stderr).toContain("Errors occurred while applying patches:");
+    expect(result).toFailWith("Errors occurred while applying patches:");
     expect(result.stderr).toContain("Patch failed to apply");
   });
 });
