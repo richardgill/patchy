@@ -1,4 +1,4 @@
-import { beforeEach, describe, expect, it } from "bun:test";
+import { describe, expect, it } from "bun:test";
 import { mkdirSync } from "node:fs";
 import { z } from "zod";
 import {
@@ -76,13 +76,6 @@ const testSchema = z
 type TestJson = z.infer<typeof testSchema>;
 
 describe("loadConfigFromFile", () => {
-  let tmpDir: string;
-
-  beforeEach(() => {
-    tmpDir = generateTmpDir();
-    mkdirSync(tmpDir, { recursive: true });
-  });
-
   const loadTestCases: {
     name: string;
     setup: (tmpDir: string) => Promise<void> | void;
@@ -230,6 +223,8 @@ describe("loadConfigFromFile", () => {
 
   for (const testCase of loadTestCases) {
     it(testCase.name, async () => {
+      const tmpDir = generateTmpDir();
+      mkdirSync(tmpDir, { recursive: true });
       await testCase.setup(tmpDir);
 
       const result = loadConfigFromFile<typeof TEST_METADATA, TestJson>({
@@ -261,6 +256,8 @@ describe("loadConfigFromFile", () => {
   }
 
   it("calls custom formatZodError when provided", async () => {
+    const tmpDir = generateTmpDir();
+    mkdirSync(tmpDir, { recursive: true });
     await writeJsonConfig(tmpDir, "test.json", { name: 123 });
 
     const result = loadConfigFromFile<typeof TEST_METADATA, TestJson>({

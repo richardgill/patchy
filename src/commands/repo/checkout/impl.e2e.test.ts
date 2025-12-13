@@ -1,4 +1,4 @@
-import { beforeEach, describe, expect, it } from "bun:test";
+import { describe, expect, it } from "bun:test";
 import { mkdirSync } from "node:fs";
 import path from "node:path";
 import {
@@ -17,13 +17,8 @@ import {
 } from "~/testing/test-utils";
 
 describe("patchy repo checkout", () => {
-  let tmpDir: string;
-
-  beforeEach(() => {
-    tmpDir = generateTmpDir();
-  });
-
   it("should checkout a branch", async () => {
+    const tmpDir = generateTmpDir();
     const ctx = await setupTestWithConfig({
       tmpDir,
       createDirectories: {
@@ -51,6 +46,7 @@ describe("patchy repo checkout", () => {
   });
 
   it("should checkout a tag", async () => {
+    const tmpDir = generateTmpDir();
     const ctx = await setupTestWithConfig({
       tmpDir,
       createDirectories: {
@@ -75,6 +71,7 @@ describe("patchy repo checkout", () => {
   });
 
   it("should checkout a commit SHA", async () => {
+    const tmpDir = generateTmpDir();
     const ctx = await setupTestWithConfig({
       tmpDir,
       createDirectories: {
@@ -103,6 +100,7 @@ describe("patchy repo checkout", () => {
   });
 
   it("should fail with invalid git ref", async () => {
+    const tmpDir = generateTmpDir();
     const ctx = await setupTestWithConfig({
       tmpDir,
       createDirectories: {
@@ -130,6 +128,7 @@ describe("patchy repo checkout", () => {
   });
 
   it("should fail when working tree has uncommitted changes", async () => {
+    const tmpDir = generateTmpDir();
     const ctx = await setupTestWithConfig({
       tmpDir,
       createDirectories: {
@@ -158,6 +157,7 @@ describe("patchy repo checkout", () => {
   });
 
   it("should use verbose output when --verbose is set", async () => {
+    const tmpDir = generateTmpDir();
     const ctx = await setupTestWithConfig({
       tmpDir,
       createDirectories: {
@@ -185,6 +185,7 @@ describe("patchy repo checkout", () => {
   });
 
   it("should use repo-dir from CLI flag", async () => {
+    const tmpDir = generateTmpDir();
     await setupTestWithConfig({
       tmpDir,
       createDirectories: {
@@ -212,6 +213,7 @@ describe("patchy repo checkout", () => {
   });
 
   it("should fail when repo_dir is missing", async () => {
+    const tmpDir = generateTmpDir();
     await writeTestFile(tmpDir, "patchy.json", "{}");
 
     const result = await runCli(`patchy repo checkout --ref main`, tmpDir);
@@ -221,6 +223,7 @@ describe("patchy repo checkout", () => {
   });
 
   it("should show --ref as required in help output", async () => {
+    const tmpDir = generateTmpDir();
     mkdirSync(tmpDir, { recursive: true });
 
     const result = await runCli(`patchy repo checkout --help`, tmpDir);
@@ -231,6 +234,7 @@ describe("patchy repo checkout", () => {
 
   describe("dry-run", () => {
     it("should not checkout when --dry-run is set", async () => {
+      const tmpDir = generateTmpDir();
       const ctx = await setupTestWithConfig({
         tmpDir,
         createDirectories: {
@@ -261,6 +265,7 @@ describe("patchy repo checkout", () => {
     });
 
     it("should still validate the ref exists in dry-run mode", async () => {
+      const tmpDir = generateTmpDir();
       const ctx = await setupTestWithConfig({
         tmpDir,
         createDirectories: {

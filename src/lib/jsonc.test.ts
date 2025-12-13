@@ -1,5 +1,5 @@
 import { describe, expect, it } from "bun:test";
-import { parseJsonc } from "./jsonc";
+import { parseJsonc, updateJsoncField } from "./jsonc";
 
 describe("parseJsonc", () => {
   it("should parse valid JSON successfully", () => {
@@ -196,6 +196,48 @@ describe("parseJsonc", () => {
       // TypeScript should know result.json is TestConfig
       expect(result.json.name).toBe("app");
       expect(result.json.port).toBe(3000);
+    }
+  });
+});
+
+describe("updateJsoncField", () => {
+  it("should add a new field to JSON", () => {
+    const input = `{
+  "repo_url": "https://github.com/foo/bar"
+}`;
+    const result = updateJsoncField(input, "repo_dir", "my-repo");
+
+    expect(result.success).toBe(true);
+    if (result.success) {
+      expect(result.content).toContain('"repo_dir": "my-repo"');
+      expect(result.content).toContain('"repo_url"');
+    }
+  });
+
+  it("should update an existing field", () => {
+    const input = `{
+  "repo_url": "https://github.com/foo/bar",
+  "repo_dir": "old-repo"
+}`;
+    const result = updateJsoncField(input, "repo_dir", "new-repo");
+
+    expect(result.success).toBe(true);
+    if (result.success) {
+      expect(result.content).toContain('"repo_dir": "new-repo"');
+      expect(result.content).not.toContain("old-repo");
+    }
+  });
+
+  it("should preserve comments", () => {
+    const input = `{
+  // This is a comment
+  "repo_url": "https://github.com/foo/bar"
+}`;
+    const result = updateJsoncField(input, "repo_dir", "my-repo");
+
+    expect(result.success).toBe(true);
+    if (result.success) {
+      expect(result.content).toContain("// This is a comment");
     }
   });
 });

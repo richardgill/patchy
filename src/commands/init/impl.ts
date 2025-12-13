@@ -1,7 +1,6 @@
 import { existsSync, readFileSync } from "node:fs";
 import { appendFile, mkdir, writeFile } from "node:fs/promises";
 import { resolve } from "node:path";
-import * as prompts from "@clack/prompts";
 import chalk from "chalk";
 import { omitBy } from "es-toolkit";
 import {
@@ -11,6 +10,7 @@ import {
   jsonConfigSchema,
 } from "~/cli-fields";
 import type { LocalContext } from "~/context";
+import { createPrompts } from "~/lib/prompts";
 import { isValidGitUrl, validateGitUrl } from "~/lib/validation";
 import { getSchemaUrl } from "~/version";
 import type { InitFlags } from "./flags";
@@ -56,6 +56,7 @@ export default async function (
   this.process.stdout.write("\n🔧 Let's set up your Patchy project\n\n");
 
   const answers: PromptAnswers = {};
+  const prompts = createPrompts(this);
 
   if (flags["patches-dir"] === undefined) {
     const patchesDir = await prompts.text({
@@ -114,6 +115,7 @@ export default async function (
       message: "Upstream repository URL:",
       placeholder: "https://github.com/example/repo",
       validate: (url) => {
+        if (!url) return "Repository URL is required";
         const result = validateGitUrl(url);
         return result === true ? undefined : result;
       },

@@ -2,9 +2,11 @@ import { randomUUID } from "node:crypto";
 import { existsSync } from "node:fs";
 import { mkdir, writeFile } from "node:fs/promises";
 import { dirname, join, resolve } from "node:path";
+import type { Readable, Writable } from "node:stream";
 import { run } from "@stricli/core";
 import { app } from "~/app";
 import type { LocalContext } from "~/context";
+import { createPromptTester } from "./prompt-tester";
 
 type CLIResult = {
   stdout: string;
@@ -15,10 +17,20 @@ type CLIResult = {
   cwd: string;
 };
 
+type PromptTester = ReturnType<
+  typeof import("./prompt-tester").createPromptTester
+>;
+
+type PromptOptions = {
+  promptInput?: Readable;
+  promptOutput?: Writable;
+};
+
 // This helper can run cli commands in-process which is much faster than spinning up a new runtime for each test
 export const runCli = async (
   command: string,
   cwd: string,
+  options: PromptOptions = {},
 ): Promise<CLIResult> => {
   // Drop "patchy" prefix if present, e.g., "patchy init" becomes "init"
   const processedCommand = command.replace(/^patchy\s+/, "");
@@ -49,6 +61,8 @@ export const runCli = async (
   const context: LocalContext = {
     process: mockProcess as unknown as NodeJS.Process,
     cwd,
+    promptInput: options.promptInput,
+    promptOutput: options.promptOutput,
   };
 
   try {
@@ -201,4 +215,21 @@ export const setupTestWithConfig = async ({
   await writeTestConfig(resolvedConfigPath, jsonConfig);
 
   return ctx;
+};
+
+type InteractiveCliResult = {
+  resultPromise: Promise<CLIResult>;
+  tester: PromptTester;
+};
+
+export const runCliWithPrompts = (
+  command: string,
+  cwd: string,
+): InteractiveCliResult => {
+  const tester = createPromptTester();
+  const resultPromise = runCli(command, cwd, {
+    promptInput: tester.input,
+    promptOutput: tester.output,
+  });
+  return { resultPromise, tester };
 };

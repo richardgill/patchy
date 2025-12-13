@@ -1,4 +1,4 @@
-import { beforeEach, describe, expect, it } from "bun:test";
+import { describe, expect, it } from "bun:test";
 import { mkdirSync } from "node:fs";
 import path from "node:path";
 import {
@@ -33,13 +33,8 @@ const expectFailedMerge: (
 };
 
 describe("createEnrichedMergedConfig", () => {
-  let tmpDir: string;
-
-  beforeEach(() => {
-    tmpDir = generateTmpDir();
-  });
-
   it("should merge JSON config with CLI flags successfully", async () => {
+    const tmpDir = generateTmpDir();
     await setupTestWithConfig({
       tmpDir,
       createDirectories: {
@@ -94,6 +89,7 @@ describe("createEnrichedMergedConfig", () => {
   });
 
   it("should fail when required fields are missing", async () => {
+    const tmpDir = generateTmpDir();
     await setupTestWithConfig({
       tmpDir,
       createDirectories: {
@@ -131,6 +127,7 @@ describe("createEnrichedMergedConfig", () => {
   });
 
   it("should use default values when not specified", async () => {
+    const tmpDir = generateTmpDir();
     await setupTestWithConfig({
       tmpDir,
       createDirectories: {
@@ -178,6 +175,7 @@ describe("createEnrichedMergedConfig", () => {
   });
 
   it("should throw error when config file doesn't exist with explicit path", async () => {
+    const tmpDir = generateTmpDir();
     mkdirSync(tmpDir, { recursive: true });
     const flags: SharedFlags = {
       config: "./non-existent-config.json",
@@ -197,6 +195,7 @@ describe("createEnrichedMergedConfig", () => {
   });
 
   it("should throw error on invalid JSON", async () => {
+    const tmpDir = generateTmpDir();
     await writeTestFile(tmpDir, "invalid.json", "{ invalid json: content }");
     const invalidJsonPath = path.join(tmpDir, "invalid.json");
 
@@ -223,6 +222,7 @@ describe("createEnrichedMergedConfig", () => {
   });
 
   it("should fail validation when directories don't exist", async () => {
+    const tmpDir = generateTmpDir();
     await setupTestWithConfig({
       tmpDir,
       createDirectories: {},
@@ -260,6 +260,7 @@ describe("createEnrichedMergedConfig", () => {
   });
 
   it("should prioritize CLI flags over JSON values", async () => {
+    const tmpDir = generateTmpDir();
     await setupTestWithConfig({
       tmpDir,
       createDirectories: {
@@ -319,6 +320,7 @@ describe("createEnrichedMergedConfig", () => {
   });
 
   it("should correctly resolve absolute paths", async () => {
+    const tmpDir = generateTmpDir();
     await setupTestWithConfig({
       tmpDir,
       createDirectories: {
@@ -369,6 +371,7 @@ describe("createEnrichedMergedConfig", () => {
   });
 
   it("should handle empty JSON config file", async () => {
+    const tmpDir = generateTmpDir();
     await writeTestFile(tmpDir, "empty.json", "{}");
     const emptyJsonPath = path.join(tmpDir, "empty.json");
 
@@ -403,6 +406,7 @@ describe("createEnrichedMergedConfig", () => {
   });
 
   it("should handle truly empty config file (no content)", async () => {
+    const tmpDir = generateTmpDir();
     await writeTestFile(tmpDir, "truly-empty.json", "");
     const emptyJsonPath = path.join(tmpDir, "truly-empty.json");
 
@@ -430,6 +434,7 @@ describe("createEnrichedMergedConfig", () => {
   });
 
   it("should handle different combinations of missing required fields", async () => {
+    const tmpDir = generateTmpDir();
     await setupTestWithConfig({
       tmpDir,
       createDirectories: {},
@@ -460,6 +465,7 @@ describe("createEnrichedMergedConfig", () => {
   });
 
   it("should handle boolean flags correctly", async () => {
+    const tmpDir = generateTmpDir();
     await setupTestWithConfig({
       tmpDir,
       createDirectories: {
@@ -511,6 +517,7 @@ describe("createEnrichedMergedConfig", () => {
   });
 
   it("should correctly join clones_dir and repo_dir paths", async () => {
+    const tmpDir = generateTmpDir();
     await setupTestWithConfig({
       tmpDir,
       createDirectories: {
@@ -558,6 +565,7 @@ describe("createEnrichedMergedConfig", () => {
   });
 
   it("should use custom config path", async () => {
+    const tmpDir = generateTmpDir();
     const customConfigPath = path.join(tmpDir, "custom", "config.json");
 
     await setupTestWithConfig({
@@ -611,6 +619,7 @@ describe("createEnrichedMergedConfig", () => {
   });
 
   it("should handle working directory changes with cwd parameter", async () => {
+    const tmpDir = generateTmpDir();
     const subDir = path.join(tmpDir, "subdir");
     await setupTestWithConfig({
       tmpDir: subDir,
@@ -661,6 +670,7 @@ describe("createEnrichedMergedConfig", () => {
   });
 
   it("should restore process working directory after execution", async () => {
+    const tmpDir = generateTmpDir();
     await setupTestWithConfig({
       tmpDir,
       createDirectories: {
@@ -710,6 +720,7 @@ describe("createEnrichedMergedConfig", () => {
   });
 
   it("should handle Zod validation errors for invalid JSON structure", async () => {
+    const tmpDir = generateTmpDir();
     await writeJsonConfig(tmpDir, "invalid-structure.json", {
       repo_url: 123,
       verbose: "not-a-boolean",
@@ -733,6 +744,7 @@ describe("createEnrichedMergedConfig", () => {
   });
 
   it("should fail validation when repo URL is invalid", async () => {
+    const tmpDir = generateTmpDir();
     await setupTestWithConfig({
       tmpDir,
       createDirectories: {
@@ -770,6 +782,7 @@ describe("createEnrichedMergedConfig", () => {
   });
 
   it("should handle empty string fields (now accepted by schema)", async () => {
+    const tmpDir = generateTmpDir();
     await writeJsonConfig(tmpDir, "empty-strings.json", {
       repo_url: "",
       ref: "",
@@ -797,6 +810,7 @@ describe("createEnrichedMergedConfig", () => {
   });
 
   it("should handle Zod validation error for null values", async () => {
+    const tmpDir = generateTmpDir();
     await writeJsonConfig(tmpDir, "null-values.json", {
       repo_url: null,
       verbose: null,
@@ -824,6 +838,7 @@ describe("createEnrichedMergedConfig", () => {
   });
 
   it("should handle Zod strict mode error for unknown fields", async () => {
+    const tmpDir = generateTmpDir();
     await writeJsonConfig(tmpDir, "unknown-fields.json", {
       repo_url: "https://github.com/user/repo.git",
       unknown_field: "value",
@@ -849,6 +864,7 @@ describe("createEnrichedMergedConfig", () => {
   });
 
   it("should handle boolean field with string value", async () => {
+    const tmpDir = generateTmpDir();
     await writeJsonConfig(tmpDir, "boolean-string.json", {
       verbose: "yes",
       dry_run: "true",
@@ -874,6 +890,7 @@ describe("createEnrichedMergedConfig", () => {
   });
 
   it("should handle array values where strings are expected", async () => {
+    const tmpDir = generateTmpDir();
     await writeJsonConfig(tmpDir, "array-values.json", {
       repo_url: ["https://github.com/user/repo.git"],
       ref: ["main", "develop"],
@@ -901,6 +918,7 @@ describe("createEnrichedMergedConfig", () => {
   });
 
   it("should handle object values where primitives are expected", async () => {
+    const tmpDir = generateTmpDir();
     await writeJsonConfig(tmpDir, "object-values.json", {
       repo_url: { url: "https://github.com/user/repo.git" },
       verbose: { enabled: true },
@@ -926,6 +944,7 @@ describe("createEnrichedMergedConfig", () => {
   });
 
   it("should handle multiple Zod errors with mixed types", async () => {
+    const tmpDir = generateTmpDir();
     await writeJsonConfig(tmpDir, "mixed-errors.json", {
       repo_url: 123,
       ref: true,
@@ -961,6 +980,7 @@ describe("createEnrichedMergedConfig", () => {
   });
 
   it("should use environment variables when flags and JSON are not set", async () => {
+    const tmpDir = generateTmpDir();
     await setupTestWithConfig({
       tmpDir,
       createDirectories: {
@@ -1016,6 +1036,7 @@ describe("createEnrichedMergedConfig", () => {
   });
 
   it("should prioritize CLI flags over environment variables", async () => {
+    const tmpDir = generateTmpDir();
     await setupTestWithConfig({
       tmpDir,
       createDirectories: {
@@ -1079,6 +1100,7 @@ describe("createEnrichedMergedConfig", () => {
   });
 
   it("should prioritize environment variables over JSON config", async () => {
+    const tmpDir = generateTmpDir();
     await setupTestWithConfig({
       tmpDir,
       createDirectories: {
@@ -1140,6 +1162,7 @@ describe("createEnrichedMergedConfig", () => {
   });
 
   it("should use PATCHY_CONFIG env var for config path", async () => {
+    const tmpDir = generateTmpDir();
     const customConfigPath = path.join(tmpDir, "custom-env", "env-config.json");
 
     await setupTestWithConfig({
@@ -1195,6 +1218,7 @@ describe("createEnrichedMergedConfig", () => {
   });
 
   it("should fail when PATCHY_CONFIG env var points to non-existent file", async () => {
+    const tmpDir = generateTmpDir();
     mkdirSync(tmpDir, { recursive: true });
 
     const flags: SharedFlags = {};
@@ -1217,6 +1241,7 @@ describe("createEnrichedMergedConfig", () => {
   });
 
   it("should handle boolean env vars with different truthy values", async () => {
+    const tmpDir = generateTmpDir();
     await setupTestWithConfig({
       tmpDir,
       createDirectories: {
@@ -1277,6 +1302,7 @@ describe("createEnrichedMergedConfig", () => {
   });
 
   it("should ignore empty string env vars", async () => {
+    const tmpDir = generateTmpDir();
     await setupTestWithConfig({
       tmpDir,
       createDirectories: {
