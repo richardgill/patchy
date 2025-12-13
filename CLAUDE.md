@@ -15,7 +15,7 @@ This is a CLI tool for managing Git patch workflows. It helps maintain curated p
 
 - `@stricli/core` - CLI framework
 - `es-toolkit` - Utility functions (lodash alternative)
-- `enquirer` - Interactive prompts
+- `clack` - Interactive prompts
 - `jsonc-parser` - JSON with comments parsing
 - `zod` - Runtime validation
 
@@ -35,3 +35,7 @@ The test suite uses bun:test and spawns the actual CLI as a subprocess using `bu
 ## Releasing
 
 Run `bun run changeset` to bump version and generate CHANGELOG
+
+## Dependencies
+
+- All dependencies use pinned versions with `=` syntax (e.g., `=1.2.3`)
