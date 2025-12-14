@@ -1,4 +1,4 @@
-import { existsSync, mkdirSync } from "node:fs";
+import { existsSync, mkdirSync, rmSync } from "node:fs";
 import { readdir } from "node:fs/promises";
 import path from "node:path";
 
@@ -27,4 +27,8 @@ export const getAllFiles = async (
   );
 
   return nested.flat();
+};
+
+export const removeFile = (filePath: string): void => {
+  rmSync(filePath, { force: true });
 };

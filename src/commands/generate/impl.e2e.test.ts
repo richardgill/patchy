@@ -326,4 +326,152 @@ describe("patchy generate", () => {
     expect(result).toHaveOutput("Generating patches from upstream to patches");
     expect(result).toHaveOutput("Created diff: initial.txt.diff");
   });
+
+  it("should remove stale patches that no longer have changes", async () => {
+    const tmpDir = generateTmpDir();
+    const ctx = await setupTestWithConfig({
+      tmpDir,
+      createDirectories: {
+        patchesDir: "patches",
+        clonesDir: "repos",
+        repoDir: "upstream",
+      },
+      jsonConfig: {
+        clones_dir: "repos",
+        repo_dir: "upstream",
+        patches_dir: "patches",
+      },
+    });
+
+    const repoDir = assertDefined(ctx.absoluteRepoDir, "absoluteRepoDir");
+    const patchesDir = assertDefined(
+      ctx.absolutePatchesDir,
+      "absolutePatchesDir",
+    );
+
+    await initGitRepoWithCommit(repoDir);
+
+    await writeFileIn(patchesDir, "stale-file.txt.diff", "old diff content\n");
+    await writeFileIn(patchesDir, "another-stale.txt", "old file content\n");
+
+    await writeFileIn(repoDir, "initial.txt", "modified content\n");
+
+    const result = await runCli(`patchy generate`, tmpDir);
+
+    expect(result).toSucceed();
+    expect(result).toHaveOutput("Removed stale: stale-file.txt.diff");
+    expect(result).toHaveOutput("Removed stale: another-stale.txt");
+    expect(result).toHaveOutput("removed 2 stale");
+
+    expect(path.join(patchesDir, "stale-file.txt.diff")).not.toExist();
+    expect(path.join(patchesDir, "another-stale.txt")).not.toExist();
+
+    expect(path.join(patchesDir, "initial.txt.diff")).toExist();
+  });
+
+  it("should show stale patches in dry-run output", async () => {
+    const tmpDir = generateTmpDir();
+    const ctx = await setupTestWithConfig({
+      tmpDir,
+      createDirectories: {
+        patchesDir: "patches",
+        clonesDir: "repos",
+        repoDir: "upstream",
+      },
+      jsonConfig: {
+        clones_dir: "repos",
+        repo_dir: "upstream",
+        patches_dir: "patches",
+      },
+    });
+
+    const repoDir = assertDefined(ctx.absoluteRepoDir, "absoluteRepoDir");
+    const patchesDir = assertDefined(
+      ctx.absolutePatchesDir,
+      "absolutePatchesDir",
+    );
+
+    await initGitRepoWithCommit(repoDir);
+
+    await writeFileIn(patchesDir, "stale-file.txt.diff", "old diff content\n");
+
+    await writeFileIn(repoDir, "initial.txt", "modified content\n");
+
+    const result = await runCli(`patchy generate --dry-run`, tmpDir);
+
+    expect(result).toSucceed();
+    expect(result).toHaveOutput("Would remove 1 stale patch(es)");
+    expect(result).toHaveOutput("remove: stale-file.txt.diff");
+
+    expect(path.join(patchesDir, "stale-file.txt.diff")).toExist();
+  });
+
+  it("should remove stale patches in nested directories", async () => {
+    const tmpDir = generateTmpDir();
+    const ctx = await setupTestWithConfig({
+      tmpDir,
+      createDirectories: {
+        patchesDir: "patches",
+        clonesDir: "repos",
+        repoDir: "upstream",
+      },
+      jsonConfig: {
+        clones_dir: "repos",
+        repo_dir: "upstream",
+        patches_dir: "patches",
+      },
+    });
+
+    const repoDir = assertDefined(ctx.absoluteRepoDir, "absoluteRepoDir");
+    const patchesDir = assertDefined(
+      ctx.absolutePatchesDir,
+      "absolutePatchesDir",
+    );
+
+    await initGitRepoWithCommit(repoDir);
+
+    await writeFileIn(patchesDir, "src/old/stale.txt.diff", "old diff\n");
+
+    await writeFileIn(repoDir, "initial.txt", "modified content\n");
+
+    const result = await runCli(`patchy generate`, tmpDir);
+
+    expect(result).toSucceed();
+    expect(result).toHaveOutput("Removed stale: src/old/stale.txt.diff");
+    expect(path.join(patchesDir, "src/old/stale.txt.diff")).not.toExist();
+  });
+
+  it("should remove stale patches even when repo has no changes", async () => {
+    const tmpDir = generateTmpDir();
+    const ctx = await setupTestWithConfig({
+      tmpDir,
+      createDirectories: {
+        patchesDir: "patches",
+        clonesDir: "repos",
+        repoDir: "upstream",
+      },
+      jsonConfig: {
+        clones_dir: "repos",
+        repo_dir: "upstream",
+        patches_dir: "patches",
+      },
+    });
+
+    const repoDir = assertDefined(ctx.absoluteRepoDir, "absoluteRepoDir");
+    const patchesDir = assertDefined(
+      ctx.absolutePatchesDir,
+      "absolutePatchesDir",
+    );
+
+    await initGitRepoWithCommit(repoDir);
+
+    await writeFileIn(patchesDir, "stale-file.txt.diff", "old diff content\n");
+
+    const result = await runCli(`patchy generate`, tmpDir);
+
+    expect(result).toSucceed();
+    expect(result).toHaveOutput("No changes detected in repository");
+    expect(result).toHaveOutput("Removed stale: stale-file.txt.diff");
+    expect(path.join(patchesDir, "stale-file.txt.diff")).not.toExist();
+  });
 });
