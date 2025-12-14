@@ -10,7 +10,7 @@ import {
 } from "~/cli-fields";
 import type { LocalContext } from "~/context";
 import { assertDefined } from "~/lib/assert";
-import { ensureDirExists, resolvePath } from "~/lib/fs";
+import { ensureDirExists, findAvailableDirName, resolvePath } from "~/lib/fs";
 import { createGitClient, extractRepoName } from "~/lib/git";
 import { parseJsonc, updateJsoncField } from "~/lib/jsonc";
 import { createPrompts } from "~/lib/prompts";
@@ -141,21 +141,14 @@ export default async function (
     return;
   }
 
-  const targetDir = join(clonesDir, repoName);
+  const targetDirName = findAvailableDirName(clonesDir, repoName);
+  const targetDir = join(clonesDir, targetDirName);
 
   if (verbose) {
     this.process.stdout.write(`Repository URL: ${repoUrl}\n`);
     this.process.stdout.write(`Clones directory: ${clonesDir}\n`);
     this.process.stdout.write(`Target directory: ${targetDir}\n`);
     this.process.stdout.write(`Git ref: ${ref}\n`);
-  }
-
-  if (existsSync(targetDir)) {
-    this.process.stderr.write(
-      chalk.red(`Target directory already exists: ${targetDir}\n`),
-    );
-    this.process.exit(1);
-    return;
   }
 
   if (dryRun) {
@@ -174,7 +167,7 @@ export default async function (
 
   const git = createGitClient(clonesDir);
   try {
-    await git.clone(repoUrl, repoName);
+    await git.clone(repoUrl, targetDirName);
   } catch (error) {
     const message = error instanceof Error ? error.message : String(error);
     this.process.stderr.write(
@@ -204,7 +197,7 @@ export default async function (
   );
 
   await promptRepoDirSave({
-    repoName,
+    repoName: targetDirName,
     configPath: config.config ?? DEFAULT_CONFIG_PATH,
     context: this,
   });

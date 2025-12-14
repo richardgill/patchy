@@ -167,7 +167,7 @@ describe("patchy repo clone", () => {
       expect(result).toFailWith("Failed to clone repository");
     });
 
-    it("should fail when target directory already exists", async () => {
+    it("should use incremented name when target directory exists", async () => {
       const tmpDir = generateTmpDir();
       const bareRepoDir = path.join(tmpDir, "bare-repo.git");
       mkdirSync(bareRepoDir, { recursive: true });
@@ -187,7 +187,35 @@ describe("patchy repo clone", () => {
         tmpDir,
       );
 
-      expect(result).toFailWith("Target directory already exists");
+      expect(result).toSucceed();
+      expect(result).toHaveOutput("Successfully cloned repository");
+      expect(path.join(tmpDir, "repos", "bare-repo-1")).toExist();
+    });
+
+    it("should use incremented name with multiple conflicts", async () => {
+      const tmpDir = generateTmpDir();
+      const bareRepoDir = path.join(tmpDir, "bare-repo.git");
+      mkdirSync(bareRepoDir, { recursive: true });
+      await initBareRepoWithCommit(bareRepoDir);
+      const bareRepoUrl = `file://${bareRepoDir}`;
+
+      await setupTestWithConfig({
+        tmpDir,
+        createDirectories: { clonesDir: "repos" },
+        jsonConfig: { clones_dir: "repos" },
+      });
+
+      mkdirSync(path.join(tmpDir, "repos", "bare-repo"), { recursive: true });
+      mkdirSync(path.join(tmpDir, "repos", "bare-repo-1"), { recursive: true });
+
+      const result = await runCli(
+        `patchy repo clone --repo-url ${bareRepoUrl}`,
+        tmpDir,
+      );
+
+      expect(result).toSucceed();
+      expect(result).toHaveOutput("Successfully cloned repository");
+      expect(path.join(tmpDir, "repos", "bare-repo-2")).toExist();
     });
 
     it("should fail when remote repository does not exist", async () => {
@@ -349,6 +377,42 @@ describe("patchy repo clone", () => {
       const configPath = path.join(tmpDir, "patchy.json");
       const config = JSON.parse(readFileSync(configPath, "utf-8"));
       expect(config.repo_dir).toBe("bare-repo");
+    });
+
+    it("should prompt with incremented name when directory exists", async () => {
+      const tmpDir = generateTmpDir();
+      const bareRepoDir = path.join(tmpDir, "bare-repo.git");
+      mkdirSync(bareRepoDir, { recursive: true });
+      await initBareRepoWithCommit(bareRepoDir);
+      const bareRepoUrl = `file://${bareRepoDir}`;
+
+      await setupTestWithConfig({
+        tmpDir,
+        createDirectories: { clonesDir: "repos" },
+        jsonConfig: { clones_dir: "repos" },
+      });
+
+      mkdirSync(path.join(tmpDir, "repos", "bare-repo"), { recursive: true });
+
+      const { result, prompts } = await runCliWithPrompts(
+        `patchy repo clone --repo-url ${bareRepoUrl}`,
+        tmpDir,
+      )
+        .on({ confirm: /bare-repo-1/, respond: true })
+        .run();
+
+      expect(result).toSucceed();
+      expect(prompts).toMatchObject([
+        {
+          type: "confirm",
+          message: expect.stringMatching(/bare-repo-1/),
+          response: true,
+        },
+      ]);
+
+      const configPath = path.join(tmpDir, "patchy.json");
+      const config = JSON.parse(readFileSync(configPath, "utf-8"));
+      expect(config.repo_dir).toBe("bare-repo-1");
     });
 
     it("should not save repo_dir when prompt declined", async () => {
