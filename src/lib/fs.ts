@@ -1,9 +1,14 @@
 import { existsSync, mkdirSync, rmSync } from "node:fs";
 import { readdir } from "node:fs/promises";
 import path from "node:path";
+import untildify from "untildify";
+
+export const resolvePath = (cwd: string, targetPath: string): string => {
+  return path.resolve(cwd, untildify(targetPath));
+};
 
 export const isPathWithinDir = (dir: string, targetPath: string): boolean => {
-  const absoluteTarget = path.resolve(dir, targetPath);
+  const absoluteTarget = resolvePath(dir, targetPath);
   const relativePath = path.relative(dir, absoluteTarget);
   // Path is within dir if:
   // - It's not the dir itself (relativePath is empty string for same dir)

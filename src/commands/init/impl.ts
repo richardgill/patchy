@@ -12,7 +12,7 @@ import {
   jsonConfigSchema,
 } from "~/cli-fields";
 import type { LocalContext } from "~/context";
-import { isPathWithinDir } from "~/lib/fs";
+import { isPathWithinDir, resolvePath } from "~/lib/fs";
 import { canPrompt, createPrompts } from "~/lib/prompts";
 import { isValidGitUrl, validateGitUrl } from "~/lib/validation";
 import { getSchemaUrl } from "~/version";
@@ -44,7 +44,7 @@ const promptAndRunClone = async ({
 
   const prompts = createPrompts(context);
   const shouldClone = await prompts.confirm({
-    message: `Clone repository into ${chalk.cyan(clonesDir)}?`,
+    message: `Clone repository into ${chalk.cyan(clonesDir)} now?`,
     initialValue: true,
   });
 
@@ -195,7 +195,10 @@ export default async function (
     ref: flags.ref ?? answers.ref ?? getDefaultValue("ref") ?? "",
   };
 
-  const absolutePatchesDir = resolve(this.cwd, finalConfig.patches_dir ?? "");
+  const absolutePatchesDir = resolvePath(
+    this.cwd,
+    finalConfig.patches_dir ?? "",
+  );
   if (finalConfig.patches_dir) {
     try {
       await mkdir(absolutePatchesDir, { recursive: true });
@@ -211,7 +214,7 @@ export default async function (
     }
   }
 
-  const absoluteClonesDir = resolve(this.cwd, clonesDir);
+  const absoluteClonesDir = resolvePath(this.cwd, clonesDir);
   if (clonesDir) {
     try {
       await mkdir(absoluteClonesDir, { recursive: true });

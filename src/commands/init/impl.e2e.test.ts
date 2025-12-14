@@ -383,6 +383,56 @@ describe("patchy init", () => {
       expect(existsSync(gitignorePath)).toBe(false);
     });
 
+    it("should not prompt for gitignore when clonesDir uses tilde path", async () => {
+      const tmpDir = generateTmpDir();
+      await setupTestWithConfig({
+        tmpDir,
+        createDirectories: {},
+        jsonConfig: {},
+      });
+
+      const { result, prompts } = await runCliWithPrompts(
+        "patchy init --force",
+        tmpDir,
+      )
+        .on({ text: /patch files/, respond: acceptDefault })
+        .on({ text: /cloned repos/, respond: "~/code/test-clones" })
+        .on({
+          text: /repository URL/,
+          respond: "https://github.com/example/repo.git",
+        })
+        .on({ text: /ref/, respond: acceptDefault })
+        .run();
+
+      expect(result).toSucceed();
+      // Should NOT have a gitignore prompt since ~/code/test-clones is outside the project
+      expect(prompts).toMatchObject([
+        {
+          type: "text",
+          message: expect.stringMatching(/patch files/),
+          response: "default",
+        },
+        {
+          type: "text",
+          message: expect.stringMatching(/cloned repos/),
+          response: "~/code/test-clones",
+        },
+        {
+          type: "text",
+          message: expect.stringMatching(/repository URL/),
+          response: "https://github.com/example/repo.git",
+        },
+        {
+          type: "text",
+          message: expect.stringMatching(/ref/),
+          response: "default",
+        },
+      ]);
+
+      const gitignorePath = join(tmpDir, ".gitignore");
+      expect(existsSync(gitignorePath)).toBe(false);
+    });
+
     it("should prompt to clone and run clone when user accepts", async () => {
       const tmpDir = generateTmpDir();
       const bareRepoDir = path.join(tmpDir, "bare-repo.git");
