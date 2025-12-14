@@ -10,6 +10,11 @@ GREEN='\033[0;32m'
 MUTED='\033[0;2m'
 NC='\033[0m'
 
+error() {
+  echo -e "${RED}error:${NC} $*" >&2
+  exit 1
+}
+
 print_message() {
   local level=$1
   local message=$2
@@ -116,11 +121,11 @@ if [ -n "$requested_pr" ]; then
   print_message info "${MUTED}Installing PR #${requested_pr} preview build${NC}"
 elif [ -z "$requested_version" ]; then
   url="https://github.com/$REPO/releases/latest/download/$filename"
-  specific_version=$(curl -s "https://api.github.com/repos/$REPO/releases/latest" | sed -n 's/.*"tag_name": *"v\([^"]*\)".*/\1/p')
+  specific_version=$(curl -s "https://api.github.com/repos/$REPO/releases/latest" | sed -n 's/.*"tag_name": *"v\([^"]*\)".*/\1/p') ||
+    error "Failed to fetch version information from GitHub API"
 
-  if [[ $? -ne 0 || -z "$specific_version" ]]; then
-    echo -e "${RED}Failed to fetch version information${NC}"
-    exit 1
+  if [[ -z "$specific_version" ]]; then
+    error "No releases found for $REPO"
   fi
 else
   url="https://github.com/$REPO/releases/download/v${requested_version}/$filename"
@@ -134,15 +139,19 @@ download_and_install() {
   cd "$tmp_dir"
 
   echo -e "${MUTED}Downloading from $url${NC}"
-  curl -fsSL -o "$filename" "$url"
+  curl -fsSL -o "$filename" "$url" ||
+    error "Failed to download $APP from $url"
 
   if [ "$os" = "linux" ]; then
-    tar -xzf "$filename"
+    tar -xzf "$filename" ||
+      error "Failed to extract $filename"
   else
-    unzip -q "$filename"
+    unzip -q "$filename" ||
+      error "Failed to extract $filename"
   fi
 
-  mv "$APP" "$INSTALL_DIR/" 2>/dev/null || mv "$APP.exe" "$INSTALL_DIR/" 2>/dev/null
+  mv "$APP" "$INSTALL_DIR/" 2>/dev/null || mv "$APP.exe" "$INSTALL_DIR/" 2>/dev/null ||
+    error "Failed to move $APP to $INSTALL_DIR"
   chmod 755 "${INSTALL_DIR}/$APP" 2>/dev/null || true
 
   cd - >/dev/null
