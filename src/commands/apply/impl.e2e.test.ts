@@ -33,7 +33,7 @@ describe("patchy apply", () => {
 
     expect(result).toSucceed();
     expect(result.stdout).toMatchInlineSnapshot(`
-      "[DRY RUN] Would apply patches from patches to main
+      "[DRY RUN] Would apply patches from ./patches to ./main
       No patch files found."
     `);
   });
@@ -63,7 +63,7 @@ describe("patchy apply", () => {
 
     expect(result).toSucceed();
     expect(result.stdout).toMatchInlineSnapshot(`
-      "[DRY RUN] Would apply patches from my-patches to upstream
+      "[DRY RUN] Would apply patches from ./my-patches to ./upstream
       No patch files found."
     `);
   });
@@ -93,7 +93,7 @@ describe("patchy apply", () => {
 
     expect(result).toSucceed();
     expect(result.stdout).toMatchInlineSnapshot(`
-      "[DRY RUN] Would apply patches from cli-patches to cli-repo
+      "[DRY RUN] Would apply patches from ./cli-patches to ./cli-repo
       No patch files found."
     `);
   });
@@ -197,7 +197,7 @@ describe("patchy apply", () => {
 
     expect(result).toSucceed();
     expect(result.stdout).toMatchInlineSnapshot(`
-      "[DRY RUN] Would apply patches from ./patches/ to repo
+      "[DRY RUN] Would apply patches from ./patches/ to ./repo
       No patch files found."
     `);
   });
@@ -223,7 +223,7 @@ describe("patchy apply", () => {
 
     expect(result).toSucceed();
     expect(result.stdout).toMatchInlineSnapshot(`
-      "[DRY RUN] Would apply patches from ./patches/ to repo
+      "[DRY RUN] Would apply patches from ./patches/ to ./repo
       No patch files found."
     `);
   });
@@ -249,7 +249,7 @@ describe("patchy apply", () => {
 
     expect(result).toSucceed();
     expect(result.stdout).toMatchInlineSnapshot(`
-      "[DRY RUN] Would apply patches from ./patches/ to repo
+      "[DRY RUN] Would apply patches from ./patches/ to ./repo
       No patch files found."
     `);
   });
@@ -281,7 +281,7 @@ describe("patchy apply", () => {
 
     expect(result).toSucceed();
     expect(result.stdout).toMatchInlineSnapshot(`
-      "[DRY RUN] Would apply patches from ./patches/ to repo
+      "[DRY RUN] Would apply patches from ./patches/ to ./repo
       No patch files found."
     `);
   });
@@ -306,7 +306,7 @@ describe("patchy apply", () => {
 
     expect(result).toSucceed();
     expect(result.stdout).toMatchInlineSnapshot(`
-      "[DRY RUN] Would apply patches from ./patches/ to my-repo/nested-repo
+      "[DRY RUN] Would apply patches from ./patches/ to ./my-repo/nested-repo
       No patch files found."
     `);
   });
@@ -331,7 +331,7 @@ describe("patchy apply", () => {
 
     expect(result).toSucceed();
     expect(result.stdout).toMatchInlineSnapshot(`
-      "[DRY RUN] Would apply patches from ./patches/ to repoDir1
+      "[DRY RUN] Would apply patches from ./patches/ to ./repoDir1
       No patch files found."
     `);
   });
@@ -383,7 +383,7 @@ describe("patchy apply", () => {
 
     expect(result).toSucceed();
     expect(result.stdout).toMatchInlineSnapshot(`
-      "[DRY RUN] Would apply patches from ./patches/ to repo
+      "[DRY RUN] Would apply patches from ./patches/ to ./repo
       No patch files found."
     `);
   });
@@ -412,7 +412,7 @@ describe("patchy apply", () => {
 
     expect(result).toSucceed();
     expect(result.stdout).toMatchInlineSnapshot(`
-      "[DRY RUN] Would apply patches from <TEST_DIR>/absolute-patches to repo
+      "[DRY RUN] Would apply patches from <TEST_DIR>/absolute-patches to ./repo
       No patch files found."
     `);
   });
@@ -468,7 +468,7 @@ describe("patchy apply", () => {
     expect(result.stderr).toMatchInlineSnapshot(`
       "Missing required parameters:
 
-        Missing Repository directory: set repo_dir in empty-strings.json, PATCHY_REPO_DIR env var, or --repo-dir flag
+        Missing Repository directory: set repo_dir in ./empty-strings.json, PATCHY_REPO_DIR env var, or --repo-dir flag
 
       You can set up empty-strings.json by running:
         patchy init --config empty-strings.json"

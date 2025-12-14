@@ -10,7 +10,12 @@ import {
 } from "~/cli-fields";
 import type { LocalContext } from "~/context";
 import { assertDefined } from "~/lib/assert";
-import { ensureDirExists, findAvailableDirName, resolvePath } from "~/lib/fs";
+import {
+  ensureDirExists,
+  findAvailableDirName,
+  formatPathForDisplay,
+  resolvePath,
+} from "~/lib/fs";
 import { createGitClient, extractRepoName } from "~/lib/git";
 import { parseJsonc, updateJsoncField } from "~/lib/jsonc";
 import { createPrompts } from "~/lib/prompts";
@@ -153,7 +158,7 @@ export default async function (
 
   if (dryRun) {
     this.process.stdout.write(
-      `[DRY RUN] Would clone ${repoUrl} to ${targetDir}\n`,
+      `[DRY RUN] Would clone ${repoUrl} to ${formatPathForDisplay(join(config.clones_dir ?? "", targetDirName))}\n`,
     );
     if (ref) {
       this.process.stdout.write(`[DRY RUN] Would checkout ref: ${ref}\n`);
@@ -163,7 +168,9 @@ export default async function (
 
   ensureDirExists(clonesDir);
 
-  this.process.stdout.write(`Cloning ${repoUrl} to ${targetDir}...\n`);
+  this.process.stdout.write(
+    `Cloning ${repoUrl} to ${formatPathForDisplay(join(config.clones_dir ?? "", targetDirName))}...\n`,
+  );
 
   const git = createGitClient(clonesDir);
   try {
@@ -193,7 +200,9 @@ export default async function (
   }
 
   this.process.stdout.write(
-    chalk.green(`Successfully cloned repository to ${targetDir}\n`),
+    chalk.green(
+      `Successfully cloned repository to ${formatPathForDisplay(join(config.clones_dir ?? "", targetDirName))}\n`,
+    ),
   );
 
   await promptRepoDirSave({

@@ -3,7 +3,12 @@ import { mkdirSync } from "node:fs";
 import os from "node:os";
 import path, { join } from "node:path";
 import { generateTmpDir } from "~/testing/test-utils";
-import { findAvailableDirName, isPathWithinDir, resolvePath } from "./fs";
+import {
+  findAvailableDirName,
+  formatPathForDisplay,
+  isPathWithinDir,
+  resolvePath,
+} from "./fs";
 
 describe("findAvailableDirName", () => {
   const testCases: {
@@ -134,5 +139,23 @@ describe("isPathWithinDir", () => {
 
   it("should return false for same directory", () => {
     expect(isPathWithinDir("/project", ".")).toBe(false);
+  });
+});
+
+describe("formatPathForDisplay", () => {
+  const testCases: { input: string; expected: string }[] = [
+    { input: "~/code/test", expected: "~/code/test" },
+    { input: "~", expected: "~" },
+    { input: "/home/user/code", expected: "/home/user/code" },
+    { input: "/tmp/clones", expected: "/tmp/clones" },
+    { input: "clones", expected: "./clones" },
+    { input: "foo/bar", expected: "./foo/bar" },
+    { input: "./already-relative", expected: "./already-relative" },
+  ];
+
+  testCases.forEach(({ input, expected }) => {
+    it(`formats "${input}" as "${expected}"`, () => {
+      expect(formatPathForDisplay(input)).toBe(expected);
+    });
   });
 });

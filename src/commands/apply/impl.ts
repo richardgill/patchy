@@ -3,7 +3,7 @@ import { copyFile, mkdir, readFile, writeFile } from "node:fs/promises";
 import path from "node:path";
 import { createEnrichedMergedConfig, DEFAULT_FUZZ_FACTOR } from "~/cli-fields";
 import type { LocalContext } from "~/context";
-import { getAllFiles } from "~/lib/fs";
+import { formatPathForDisplay, getAllFiles } from "~/lib/fs";
 import { applyDiff } from "./apply-diff";
 import type { ApplyFlags } from "./flags";
 
@@ -106,7 +106,7 @@ export default async function (
     if (config.dry_run) {
       this.process.stdout.write(
         "[DRY RUN] Would apply patches from " +
-          `${config.patches_dir} to ${config.repo_dir}\n`,
+          `${formatPathForDisplay(config.patches_dir ?? "")} to ${formatPathForDisplay(config.repo_dir ?? "")}\n`,
       );
     }
 

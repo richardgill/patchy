@@ -12,7 +12,7 @@ import {
   jsonConfigSchema,
 } from "~/cli-fields";
 import type { LocalContext } from "~/context";
-import { isPathWithinDir, resolvePath } from "~/lib/fs";
+import { formatPathForDisplay, isPathWithinDir, resolvePath } from "~/lib/fs";
 import { canPrompt, createPrompts } from "~/lib/prompts";
 import { isValidGitUrl, validateGitUrl } from "~/lib/validation";
 import { getSchemaUrl } from "~/version";
@@ -37,20 +37,20 @@ const promptAndRunClone = async ({
 }: PromptCloneParams): Promise<void> => {
   if (!canPrompt(context)) {
     context.process.stdout.write(
-      `\nRun ${chalk.cyan("patchy repo clone")} to clone your repo into ${chalk.cyan(clonesDir)}\n`,
+      `\nRun ${chalk.cyan("patchy repo clone")} to clone your repo into ${chalk.cyan(formatPathForDisplay(clonesDir))}\n`,
     );
     return;
   }
 
   const prompts = createPrompts(context);
   const shouldClone = await prompts.confirm({
-    message: `Clone repository into ${chalk.cyan(clonesDir)} now?`,
+    message: `Clone repository into ${chalk.cyan(formatPathForDisplay(clonesDir))} now?`,
     initialValue: true,
   });
 
   if (prompts.isCancel(shouldClone) || !shouldClone) {
     context.process.stdout.write(
-      `\nRun ${chalk.cyan("patchy repo clone")} when you're ready to clone your repo into ${chalk.cyan(clonesDir)}\n`,
+      `\nRun ${chalk.cyan("patchy repo clone")} when you're ready to clone your repo into ${chalk.cyan(formatPathForDisplay(clonesDir))}\n`,
     );
     return;
   }
@@ -59,7 +59,7 @@ const promptAndRunClone = async ({
   await run(app, ["repo", "clone"], context);
 
   context.process.stdout.write(
-    `\nNow you can edit your clone ${chalk.cyan(`./${clonesDir}`)} and run ${chalk.cyan("patchy generate")} to generate patches\n`,
+    `\nNow you can edit your clone ${chalk.cyan(formatPathForDisplay(clonesDir))} and run ${chalk.cyan("patchy generate")} to generate patches\n`,
   );
 };
 
@@ -140,7 +140,7 @@ export default async function (
     const isInteractive = flags["clones-dir"] === undefined;
     if (isInteractive && clonesDirWithinCwd) {
       const addToGitignore = await prompts.confirm({
-        message: `Add ${clonesDir} to .gitignore?`,
+        message: `Add ${formatPathForDisplay(clonesDir)} to .gitignore?`,
         initialValue: true,
       });
       if (prompts.isCancel(addToGitignore)) {
@@ -203,7 +203,7 @@ export default async function (
     try {
       await mkdir(absolutePatchesDir, { recursive: true });
       prompts.log.step(
-        `Created patches directory: ${chalk.cyan(finalConfig.patches_dir)}`,
+        `Created patches directory: ${chalk.cyan(formatPathForDisplay(finalConfig.patches_dir ?? ""))}`,
       );
     } catch (error) {
       this.process.stderr.write(
@@ -218,7 +218,9 @@ export default async function (
   if (clonesDir) {
     try {
       await mkdir(absoluteClonesDir, { recursive: true });
-      prompts.log.step(`Created clones directory: ${chalk.cyan(clonesDir)}`);
+      prompts.log.step(
+        `Created clones directory: ${chalk.cyan(formatPathForDisplay(clonesDir))}`,
+      );
     } catch (error) {
       this.process.stderr.write(
         `Failed to create clones directory: ${error}\n`,
@@ -232,7 +234,7 @@ export default async function (
     try {
       await addToGitignoreFile(this.cwd, clonesDir);
       prompts.log.step(
-        `Added ${chalk.cyan(clonesDir)} to ${chalk.cyan(".gitignore")}`,
+        `Added ${chalk.cyan(formatPathForDisplay(clonesDir))} to ${chalk.cyan(".gitignore")}`,
       );
     } catch (error) {
       this.process.stderr.write(`Failed to update .gitignore: ${error}\n`);

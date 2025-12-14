@@ -39,7 +39,9 @@ describe("patchy generate", () => {
     const result = await runCli(`patchy generate`, tmpDir);
 
     expect(result).toSucceed();
-    expect(result).toHaveOutput("Generating patches from upstream to patches");
+    expect(result).toHaveOutput(
+      "Generating patches from ./upstream to ./patches",
+    );
     expect(result).toHaveOutput("Created diff: initial.txt.diff");
     expect(result).toHaveOutput("Generated 1 patch(es) successfully");
 
@@ -183,7 +185,7 @@ describe("patchy generate", () => {
 
     expect(result).toSucceed();
     expect(result).toHaveOutput(
-      "[DRY RUN] Would generate patches from upstream to patches",
+      "[DRY RUN] Would generate patches from ./upstream to ./patches",
     );
     expect(result).toHaveOutput("Found 2 change(s):");
     expect(result).toHaveOutput("diff: initial.txt");
@@ -323,7 +325,9 @@ describe("patchy generate", () => {
     const result = await runCli(`patchy generate --verbose`, tmpDir);
 
     expect(result).toSucceed();
-    expect(result).toHaveOutput("Generating patches from upstream to patches");
+    expect(result).toHaveOutput(
+      "Generating patches from ./upstream to ./patches",
+    );
     expect(result).toHaveOutput("Created diff: initial.txt.diff");
   });
 

@@ -52,6 +52,17 @@ export const removeFile = (filePath: string): void => {
   rmSync(filePath, { force: true });
 };
 
+export const formatPathForDisplay = (targetPath: string): string => {
+  if (
+    targetPath.startsWith("~") ||
+    targetPath.startsWith("/") ||
+    targetPath.startsWith("./")
+  ) {
+    return targetPath;
+  }
+  return `./${targetPath}`;
+};
+
 export const findAvailableDirName = (
   parentDir: string,
   baseName: string,

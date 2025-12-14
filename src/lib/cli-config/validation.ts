@@ -1,5 +1,6 @@
 import chalk from "chalk";
 import { isNil } from "es-toolkit";
+import { formatPathForDisplay } from "~/lib/fs";
 import { type ConfigSources, getValuesByKey } from "./resolver";
 import { type DeriveJsonConfigKey, getFlagName } from "./type-derivations";
 import type { FlagMetadataMap, ValidatorFn } from "./types";
@@ -26,7 +27,7 @@ export const formatSourceLocation = <
     return `${meta.env}=${sources.env[meta.env]}`;
   }
   if (values.json) {
-    return `${key}: ${values.json} in ${configPath}`;
+    return `${key}: ${values.json} in ${formatPathForDisplay(configPath)}`;
   }
   return meta.name;
 };
@@ -73,7 +74,7 @@ export const validateConfig = <
     const missingFieldLines = missingFields.map((fieldKey) => {
       const field = metadata[fieldKey];
       const flagName = getFlagName(metadata, fieldKey);
-      return `  Missing ${chalk.bold(field.name)}: set ${chalk.cyan(fieldKey)} in ${chalk.blue(configPath)}, ${chalk.cyan(field.env)} env var, or ${chalk.cyan(`--${flagName}`)} flag`;
+      return `  Missing ${chalk.bold(field.name)}: set ${chalk.cyan(fieldKey)} in ${chalk.blue(formatPathForDisplay(configPath))}, ${chalk.cyan(field.env)} env var, or ${chalk.cyan(`--${flagName}`)} flag`;
     });
 
     const initHint = formatInitHint?.(configPath, sources) ?? "";
