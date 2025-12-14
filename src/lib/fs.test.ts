@@ -43,10 +43,10 @@ describe("findAvailableDirName", () => {
       expected: "nix-4",
     },
     {
-      description: "fills gaps in numbering",
+      description: "increments past gaps in numbering",
       existingDirs: ["nix", "nix-2"],
       baseName: "nix",
-      expected: "nix-1",
+      expected: "nix-3",
     },
     {
       description: "works with hyphenated base names",

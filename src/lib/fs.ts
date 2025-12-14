@@ -60,19 +60,19 @@ export const findAvailableDirName = (
     return baseName;
   }
 
-  const existingNames = new Set(readdirSync(parentDir));
+  const existingNames = readdirSync(parentDir);
 
-  if (!existingNames.has(baseName)) {
+  if (!existingNames.includes(baseName)) {
     return baseName;
   }
 
-  let counter = 1;
-  let candidateName = `${baseName}-${counter}`;
+  const pattern = new RegExp(`^${baseName}-(\\d+)$`);
+  const counters = existingNames.flatMap((name) => {
+    const match = name.match(pattern);
+    return match ? [parseInt(match[1], 10)] : [];
+  });
 
-  while (existingNames.has(candidateName)) {
-    counter++;
-    candidateName = `${baseName}-${counter}`;
-  }
+  const maxCounter = counters.length > 0 ? Math.max(...counters) : 0;
 
-  return candidateName;
+  return `${baseName}-${maxCounter + 1}`;
 };
