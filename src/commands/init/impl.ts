@@ -13,7 +13,7 @@ import {
 } from "~/cli-fields";
 import type { LocalContext } from "~/context";
 import { isPathWithinDir } from "~/lib/fs";
-import { createPrompts } from "~/lib/prompts";
+import { canPrompt, createPrompts } from "~/lib/prompts";
 import { isValidGitUrl, validateGitUrl } from "~/lib/validation";
 import { getSchemaUrl } from "~/version";
 import type { InitFlags } from "./flags";
@@ -24,15 +24,6 @@ type PromptAnswers = {
   addToGitignore?: boolean;
   repoUrl?: string;
   ref?: string;
-};
-
-const canPrompt = (context: LocalContext): boolean => {
-  const inputStream = context.promptInput;
-  const isTTY = Boolean(
-    inputStream && "isTTY" in inputStream && inputStream.isTTY,
-  );
-  const hasPromptHandler = context.promptHandler !== undefined;
-  return isTTY || hasPromptHandler;
 };
 
 type PromptCloneParams = {
