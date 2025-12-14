@@ -4,64 +4,55 @@ An opinionated command-line tool for managing Git patch workflows.
 
 ## How it works
 
-Initialize Patchy in your folder with:
+Patchy helps you manage a set of `.diff` patches for a repository you want to modify. 
+
+`patchy.json`
+```json5
+{
+  // The upstream repository you want to patch
+  "repo_url": "https://github.com/octocat/spoon-knife",
+
+  // Folder where your patches are stored
+  "patches_dir": "./patches/",
+
+  // Folder with your repository clones
+  "clones_dir": "./clones/"
+
+  // Current repo inside ./clones/
+  "repo_dir": "spoon-knife",
+}
+```
+
+Initialize Patchy with:
 ```bash
 patchy init
 ```
-```
-🔧 Let's set up your Patchy project
 
-│
-◇  Path for patch files:
-│  ./patches/
-│
-◇  Directory for cloned repos:
-│  ./clones/
-│
-◇  Upstream repository URL:
-│  https://github.com/octocat/spoon-knife
-│
-◇  Created configuration file: ./patchy.json
-│
-└  Patchy initialized successfully!
+You can `patchy repo clone` the repo into `./clones/` to complete the setup.
 
-│
-◇  Clone spoon-knife into ./clones/ now?
-│  Yes
-
-Cloning https://github.com/octocat/spoon-knife to ./clones/spoon-knife...
-
-Successfully cloned repository to ./clones/spoon-knife
-│
-◇  Save repo_dir: "spoon-knife" to patchy.json?
-│  Yes
-Updated patchy.json with repo_dir: "spoon-knife"
-
-Now you can edit your clone ./clones/spoon-knife and run patchy generate to generate patches
-```
-
-
-1. Clone repo → `~/target-1`
-2. Make some edits (the patches!)
-3. Create a repo for your patches → `~/my-patches`
-3. `patchy generate --repo ~/target-1` → Creates `~/my-patches/patches/*.diff`
-
-Then reapply your changes later with:
-
-5. `patchy apply --repo ~/target-1` → `~/target-1` (patches applied)
-
-
-### `patches/` folder structure
-
-Patch files are stored in the same folder structure as the target repo:
+Now you'll have
 
 ```
-~/target-1/
-└── path/in/repo/existingFile.txt
-```
+.
+  patches/
+  clones/
+    - spoon-knife
+      README.md
+      ...more files
+   
+  patchy.json
 
 ```
-my-patch-repo/
+
+Now you can make changes directly to `./clones/spoon-knife`
+
+And generate patches with `patchy generate`
+
+
+```
+./
+    clones/
+      path/in/repo/existingFile.txt
 ├── patches/
 │   ├── path/in/repo/existingFile.txt.diff
 │   └── path/in/repo/newFile.txt
@@ -70,6 +61,10 @@ my-patch-repo/
 
 - **Edits** are stored as `.diff` files e.g. `existingFile.txt.diff`.
 - **New files** are stored as regular files e.g. `newFile.txt`. 
+
+Then reapply your changes later with:
+
+`patchy apply`
 
 ### `patchy.json`
 
