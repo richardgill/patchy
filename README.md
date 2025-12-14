@@ -1,6 +1,6 @@
 # patchy
 
-A simple patch management system 
+An opinionated command-line tool for managing Git patch workflows. 
 
 ## How it works
 
@@ -38,12 +38,11 @@ Now you can make changes directly to `./clones/spoon-knife`
 
 And generate patches with `patchy generate`
 
-
 ```
 ./
 ├── clones/
 │   └── spoon-knife/
-│       └── path/to/existingFile.txt
+│       ├── path/to/existingFile.txt
 │       └── path/to/newFile.txt
 ├── patches/
 │   ├── path/to/existingFile.txt.diff
