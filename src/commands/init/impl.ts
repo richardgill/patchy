@@ -1,8 +1,10 @@
 import { existsSync, readFileSync } from "node:fs";
 import { appendFile, mkdir, writeFile } from "node:fs/promises";
 import { resolve } from "node:path";
+import { run } from "@stricli/core";
 import chalk from "chalk";
 import { omitBy } from "es-toolkit";
+import { app } from "~/app";
 import {
   DEFAULT_CONFIG_PATH,
   getDefaultValue,
@@ -11,7 +13,7 @@ import {
 } from "~/cli-fields";
 import type { LocalContext } from "~/context";
 import { isPathWithinDir } from "~/lib/fs";
-import { createPrompts } from "~/lib/prompts";
+import { canPrompt, createPrompts } from "~/lib/prompts";
 import { isValidGitUrl, validateGitUrl } from "~/lib/validation";
 import { getSchemaUrl } from "~/version";
 import type { InitFlags } from "./flags";
@@ -22,6 +24,43 @@ type PromptAnswers = {
   addToGitignore?: boolean;
   repoUrl?: string;
   ref?: string;
+};
+
+type PromptCloneParams = {
+  clonesDir: string;
+  context: LocalContext;
+};
+
+const promptAndRunClone = async ({
+  clonesDir,
+  context,
+}: PromptCloneParams): Promise<void> => {
+  if (!canPrompt(context)) {
+    context.process.stdout.write(
+      `\nRun ${chalk.cyan("patchy repo clone")} to clone your repo into ${chalk.cyan(clonesDir)}\n`,
+    );
+    return;
+  }
+
+  const prompts = createPrompts(context);
+  const shouldClone = await prompts.confirm({
+    message: `Clone repository into ${chalk.cyan(clonesDir)}?`,
+    initialValue: true,
+  });
+
+  if (prompts.isCancel(shouldClone) || !shouldClone) {
+    context.process.stdout.write(
+      `\nRun ${chalk.cyan("patchy repo clone")} when you're ready to clone your repo into ${chalk.cyan(clonesDir)}\n`,
+    );
+    return;
+  }
+
+  context.process.stdout.write("\n");
+  await run(app, ["repo", "clone"], context);
+
+  context.process.stdout.write(
+    `\nNow you can edit your clone ${chalk.cyan(`./${clonesDir}`)} and run ${chalk.cyan("patchy generate")} to generate patches\n`,
+  );
 };
 
 export default async function (
@@ -215,9 +254,11 @@ export default async function (
   }
 
   prompts.outro(chalk.green("Patchy initialized successfully!"));
-  this.process.stdout.write(
-    `\nRun ${chalk.cyan("patchy repo clone")} to clone your repo into ${chalk.cyan(clonesDir)}\n`,
-  );
+
+  await promptAndRunClone({
+    clonesDir,
+    context: this,
+  });
 }
 
 const addToGitignoreFile = async (

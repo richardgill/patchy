@@ -82,6 +82,15 @@ const createTestablePrompts = ({
   };
 };
 
+export const canPrompt = (context: LocalContext): boolean => {
+  const inputStream = context.promptInput;
+  const isTTY = Boolean(
+    inputStream && "isTTY" in inputStream && inputStream.isTTY,
+  );
+  const hasPromptHandler = context.promptHandler !== undefined;
+  return isTTY || hasPromptHandler;
+};
+
 export const createPrompts = (context: LocalContext) => {
   if (context.promptHandler) {
     return createTestablePrompts({

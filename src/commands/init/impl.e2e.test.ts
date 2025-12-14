@@ -1,6 +1,7 @@
 import { describe, expect, it } from "bun:test";
-import { existsSync, readFileSync } from "node:fs";
-import { join } from "node:path";
+import { existsSync, mkdirSync, readFileSync } from "node:fs";
+import path, { join } from "node:path";
+import { initBareRepoWithCommit } from "~/testing/git-helpers";
 import {
   acceptDefault,
   cancel,
@@ -266,6 +267,7 @@ describe("patchy init", () => {
           respond: "https://github.com/example/repo.git",
         })
         .on({ text: /ref/, respond: acceptDefault })
+        .on({ confirm: /Clone repository/, respond: false })
         .run();
 
       expect(result).toSucceed();
@@ -294,6 +296,11 @@ describe("patchy init", () => {
           type: "text",
           message: expect.stringMatching(/ref/),
           response: "default",
+        },
+        {
+          type: "confirm",
+          message: expect.stringMatching(/Clone repository/),
+          response: false,
         },
       ]);
 
@@ -375,5 +382,96 @@ describe("patchy init", () => {
       const gitignorePath = join(tmpDir, ".gitignore");
       expect(existsSync(gitignorePath)).toBe(false);
     });
+
+    it("should prompt to clone and run clone when user accepts", async () => {
+      const tmpDir = generateTmpDir();
+      const bareRepoDir = path.join(tmpDir, "bare-repo.git");
+      mkdirSync(bareRepoDir, { recursive: true });
+      await initBareRepoWithCommit(bareRepoDir);
+      const bareRepoUrl = `file://${bareRepoDir}`;
+
+      const { result, prompts } = await runCliWithPrompts(
+        "patchy init --force",
+        tmpDir,
+      )
+        .on({ text: /patch files/, respond: acceptDefault })
+        .on({ text: /cloned repos/, respond: acceptDefault })
+        .on({ confirm: /gitignore/, respond: true })
+        .on({ text: /repository URL/, respond: bareRepoUrl })
+        .on({ text: /ref/, respond: acceptDefault })
+        .on({ confirm: /Clone repository/, respond: true })
+        .on({ confirm: /Save repo_dir/, respond: true })
+        .run();
+
+      expect(result).toSucceed();
+      expect(result).toHaveOutput("Successfully cloned repository");
+      expect(result).toHaveOutput("patchy generate");
+
+      expect(prompts).toMatchObject([
+        { type: "text", message: expect.stringMatching(/patch files/) },
+        { type: "text", message: expect.stringMatching(/cloned repos/) },
+        { type: "confirm", message: expect.stringMatching(/gitignore/) },
+        { type: "text", message: expect.stringMatching(/repository URL/) },
+        { type: "text", message: expect.stringMatching(/ref/) },
+        { type: "confirm", message: expect.stringMatching(/Clone repository/) },
+        { type: "confirm", message: expect.stringMatching(/Save repo_dir/) },
+      ]);
+
+      // Verify clone actually happened
+      const clonedDir = path.join(tmpDir, "clones", "bare-repo");
+      expect(existsSync(clonedDir)).toBe(true);
+    });
+
+    it("should show manual clone instructions when user declines clone prompt", async () => {
+      const tmpDir = generateTmpDir();
+
+      const { result, prompts } = await runCliWithPrompts(
+        "patchy init --force",
+        tmpDir,
+      )
+        .on({ text: /patch files/, respond: acceptDefault })
+        .on({ text: /cloned repos/, respond: acceptDefault })
+        .on({ confirm: /gitignore/, respond: true })
+        .on({
+          text: /repository URL/,
+          respond: "https://github.com/example/repo.git",
+        })
+        .on({ text: /ref/, respond: acceptDefault })
+        .on({ confirm: /Clone repository/, respond: false })
+        .run();
+
+      expect(result).toSucceed();
+      expect(result).toHaveOutput("patchy repo clone");
+      expect(result).toHaveOutput("when you're ready");
+      expect(result).not.toHaveOutput("Successfully cloned");
+
+      expect(prompts).toMatchObject([
+        { type: "text", message: expect.stringMatching(/patch files/) },
+        { type: "text", message: expect.stringMatching(/cloned repos/) },
+        { type: "confirm", message: expect.stringMatching(/gitignore/) },
+        { type: "text", message: expect.stringMatching(/repository URL/) },
+        { type: "text", message: expect.stringMatching(/ref/) },
+        {
+          type: "confirm",
+          message: expect.stringMatching(/Clone repository/),
+          response: false,
+        },
+      ]);
+    });
+  });
+
+  it("should show manual clone instructions in non-interactive mode", async () => {
+    const tmpDir = generateTmpDir();
+
+    const result = await runCli(
+      `patchy init --force --patches-dir patches --clones-dir clones --repo-url https://github.com/example/repo.git --ref main --gitignore`,
+      tmpDir,
+    );
+
+    expect(result).toSucceed();
+    // In non-interactive mode, clone prompt is skipped and manual instructions are shown
+    expect(result).toHaveOutput("patchy repo clone");
+    // Should NOT contain the next-steps message since clone wasn't run
+    expect(result).not.toHaveOutput("patchy generate");
   });
 });
