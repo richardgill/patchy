@@ -13,6 +13,7 @@ import {
 } from "~/cli-fields";
 import type { LocalContext } from "~/context";
 import { isPathWithinDir, resolvePath } from "~/lib/fs";
+import { extractRepoName } from "~/lib/git";
 import { canPrompt, createPrompts } from "~/lib/prompts";
 import { isValidGitUrl, validateGitUrl } from "~/lib/validation";
 import { getSchemaUrl } from "~/version";
@@ -28,23 +29,27 @@ type PromptAnswers = {
 
 type PromptCloneParams = {
   clonesDir: string;
+  repoUrl: string;
   context: LocalContext;
 };
 
 const promptAndRunClone = async ({
   clonesDir,
+  repoUrl,
   context,
 }: PromptCloneParams): Promise<void> => {
+  const repoName = extractRepoName(repoUrl) ?? "repository";
+
   if (!canPrompt(context)) {
     context.process.stdout.write(
-      `\nRun ${chalk.cyan("patchy repo clone")} to clone your repo into ${chalk.cyan(clonesDir)}\n`,
+      `\nRun ${chalk.cyan("patchy repo clone")} to clone ${chalk.cyan(repoName)} into ${chalk.cyan(clonesDir)}\n`,
     );
     return;
   }
 
   const prompts = createPrompts(context);
   const shouldClone = await prompts.confirm({
-    message: `Clone repository into ${chalk.cyan(clonesDir)} now?`,
+    message: `Clone ${chalk.cyan(repoName)} into ${chalk.cyan(clonesDir)} now?`,
     initialValue: true,
   });
 
@@ -260,6 +265,7 @@ export default async function (
 
   await promptAndRunClone({
     clonesDir,
+    repoUrl: finalConfig.repo_url ?? "",
     context: this,
   });
 }
