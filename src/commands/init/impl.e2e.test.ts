@@ -267,7 +267,7 @@ describe("patchy init", () => {
           respond: "https://github.com/example/repo.git",
         })
         .on({ text: /ref/, respond: acceptDefault })
-        .on({ confirm: /Clone repository/, respond: false })
+        .on({ confirm: /Clone repo/, respond: false })
         .run();
 
       expect(result).toSucceed();
@@ -299,7 +299,7 @@ describe("patchy init", () => {
         },
         {
           type: "confirm",
-          message: expect.stringMatching(/Clone repository/),
+          message: expect.stringMatching(/Clone repo/),
           response: false,
         },
       ]);
@@ -449,7 +449,7 @@ describe("patchy init", () => {
         .on({ confirm: /gitignore/, respond: true })
         .on({ text: /repository URL/, respond: bareRepoUrl })
         .on({ text: /ref/, respond: acceptDefault })
-        .on({ confirm: /Clone repository/, respond: true })
+        .on({ confirm: /Clone bare-repo/, respond: true })
         .on({ confirm: /Save repo_dir/, respond: true })
         .run();
 
@@ -463,7 +463,7 @@ describe("patchy init", () => {
         { type: "confirm", message: expect.stringMatching(/gitignore/) },
         { type: "text", message: expect.stringMatching(/repository URL/) },
         { type: "text", message: expect.stringMatching(/ref/) },
-        { type: "confirm", message: expect.stringMatching(/Clone repository/) },
+        { type: "confirm", message: expect.stringMatching(/Clone bare-repo/) },
         { type: "confirm", message: expect.stringMatching(/Save repo_dir/) },
       ]);
 
@@ -487,7 +487,7 @@ describe("patchy init", () => {
           respond: "https://github.com/example/repo.git",
         })
         .on({ text: /ref/, respond: acceptDefault })
-        .on({ confirm: /Clone repository/, respond: false })
+        .on({ confirm: /Clone repo/, respond: false })
         .run();
 
       expect(result).toSucceed();
@@ -503,7 +503,7 @@ describe("patchy init", () => {
         { type: "text", message: expect.stringMatching(/ref/) },
         {
           type: "confirm",
-          message: expect.stringMatching(/Clone repository/),
+          message: expect.stringMatching(/Clone repo/),
           response: false,
         },
       ]);
