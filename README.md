@@ -4,6 +4,8 @@ An opinionated command-line tool for managing Git patch workflows.
 
 ## How it works
 
+
+
 1. Clone repo → `~/target-1`
 2. Make some edits (the patches!)
 3. Create a repo for your patches → `~/my-patches`
