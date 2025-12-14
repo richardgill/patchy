@@ -10,7 +10,7 @@ import {
 } from "~/cli-fields";
 import type { LocalContext } from "~/context";
 import { assertDefined } from "~/lib/assert";
-import { ensureDirExists } from "~/lib/fs";
+import { ensureDirExists, resolvePath } from "~/lib/fs";
 import { createGitClient, extractRepoName } from "~/lib/git";
 import { parseJsonc, updateJsoncField } from "~/lib/jsonc";
 import { createPrompts } from "~/lib/prompts";
@@ -120,7 +120,7 @@ export default async function (
     return;
   }
 
-  const clonesDir = resolve(this.cwd, config.clones_dir);
+  const clonesDir = resolvePath(this.cwd, config.clones_dir);
 
   if (!isValidGitUrl(repoUrl)) {
     this.process.stderr.write(

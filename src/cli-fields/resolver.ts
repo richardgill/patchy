@@ -1,10 +1,11 @@
-import { join, resolve } from "node:path";
+import { join } from "node:path";
 import chalk from "chalk";
 import {
   type ConfigSources,
   loadConfigFromFile,
   validateConfig,
 } from "~/lib/cli-config";
+import { resolvePath } from "~/lib/fs";
 import { formatZodErrorHuman } from "~/lib/zod";
 import { DEFAULT_CONFIG_PATH } from "./defaults";
 import { FLAG_METADATA } from "./metadata";
@@ -38,10 +39,12 @@ const enrichConfig = (
 
   return {
     ...config,
-    absoluteClonesDir: clonesDir ? resolve(cwd, clonesDir) : undefined,
+    absoluteClonesDir: clonesDir ? resolvePath(cwd, clonesDir) : undefined,
     absoluteRepoDir:
-      clonesDir && repoDir ? resolve(cwd, join(clonesDir, repoDir)) : undefined,
-    absolutePatchesDir: patchesDir ? resolve(cwd, patchesDir) : undefined,
+      clonesDir && repoDir
+        ? resolvePath(cwd, join(clonesDir, repoDir))
+        : undefined,
+    absolutePatchesDir: patchesDir ? resolvePath(cwd, patchesDir) : undefined,
   };
 };
 
