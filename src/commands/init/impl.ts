@@ -1,6 +1,6 @@
 import { existsSync, readFileSync } from "node:fs";
 import { appendFile, mkdir, writeFile } from "node:fs/promises";
-import { resolve } from "node:path";
+import { join, resolve } from "node:path";
 import { run } from "@stricli/core";
 import chalk from "chalk";
 import { omitBy } from "es-toolkit";
@@ -64,7 +64,7 @@ const promptAndRunClone = async ({
   await run(app, ["repo", "clone"], context);
 
   context.process.stdout.write(
-    `\nNow you can edit your clone ${chalk.cyan(formatPathForDisplay(clonesDir))} and run ${chalk.cyan("patchy generate")} to generate patches\n`,
+    `\nNow you can edit your clone ${chalk.cyan(formatPathForDisplay(join(clonesDir, repoName)))} and run ${chalk.cyan("patchy generate")} to generate patches\n`,
   );
 };
 
@@ -98,7 +98,7 @@ export default async function (
     }
   }
 
-  this.process.stdout.write("\n🔧 Let's set up your Patchy project\n\n");
+  this.process.stdout.write("\n🔧 Setting up patch in this directory\n\n");
 
   const answers: PromptAnswers = {};
   const prompts = createPrompts(this);
