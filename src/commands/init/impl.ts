@@ -10,6 +10,7 @@ import {
   jsonConfigSchema,
 } from "~/cli-fields";
 import type { LocalContext } from "~/context";
+import { isPathWithinDir } from "~/lib/fs";
 import { createPrompts } from "~/lib/prompts";
 import { isValidGitUrl, validateGitUrl } from "~/lib/validation";
 import { getSchemaUrl } from "~/version";
@@ -92,11 +93,13 @@ export default async function (
     getDefaultValue("clones_dir") ??
     "";
 
+  const clonesDirWithinCwd = clonesDir && isPathWithinDir(this.cwd, clonesDir);
+
   if (flags.gitignore !== undefined) {
-    answers.addToGitignore = flags.gitignore;
+    answers.addToGitignore = flags.gitignore && Boolean(clonesDirWithinCwd);
   } else {
     const isInteractive = flags["clones-dir"] === undefined;
-    if (isInteractive && clonesDir) {
+    if (isInteractive && clonesDirWithinCwd) {
       const addToGitignore = await prompts.confirm({
         message: `Add ${clonesDir} to .gitignore?`,
         initialValue: true,
