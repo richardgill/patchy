@@ -13,7 +13,7 @@ import {
 } from "~/cli-fields";
 import type { LocalContext } from "~/context";
 import { formatPathForDisplay, isPathWithinDir, resolvePath } from "~/lib/fs";
-import { extractRepoName } from "~/lib/git";
+import { extractRepoName, normalizeGitignoreEntry } from "~/lib/git";
 import { canPrompt, createPrompts } from "~/lib/prompts";
 import { isValidGitUrl, validateGitUrl } from "~/lib/validation";
 import { getSchemaUrl } from "~/version";
@@ -277,7 +277,7 @@ const addToGitignoreFile = async (
   entry: string,
 ): Promise<void> => {
   const gitignorePath = resolve(cwd, ".gitignore");
-  const normalizedEntry = entry.endsWith("/") ? entry : `${entry}/`;
+  const normalizedEntry = normalizeGitignoreEntry(entry);
 
   if (existsSync(gitignorePath)) {
     const content = readFileSync(gitignorePath, "utf8");

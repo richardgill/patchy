@@ -78,6 +78,63 @@ describe("patchy init", () => {
       expect(content).toContain("clones/");
     });
 
+    it("should strip ./ prefix from .gitignore entry", async () => {
+      const tmpDir = generateTmpDir();
+      await setupTestWithConfig({
+        tmpDir,
+        createDirectories: { clonesDir: "clones" },
+      });
+
+      const result = await runCli(
+        `patchy init --repo-url https://github.com/example/repo.git --clones-dir ./clones --patches-dir patches --ref main --gitignore --force`,
+        tmpDir,
+      );
+
+      expect(result).toSucceed();
+      const gitignorePath = join(tmpDir, ".gitignore");
+      expect(gitignorePath).toExist();
+      const content = readFileSync(gitignorePath, "utf-8");
+      expect(content).toBe("clones/\n");
+      expect(content).not.toContain("./");
+    });
+
+    it("should strip multiple ./ prefixes from .gitignore entry", async () => {
+      const tmpDir = generateTmpDir();
+      await setupTestWithConfig({
+        tmpDir,
+        createDirectories: { clonesDir: "clones" },
+      });
+
+      const result = await runCli(
+        `patchy init --repo-url https://github.com/example/repo.git --clones-dir ././clones --patches-dir patches --ref main --gitignore --force`,
+        tmpDir,
+      );
+
+      expect(result).toSucceed();
+      const gitignorePath = join(tmpDir, ".gitignore");
+      const content = readFileSync(gitignorePath, "utf-8");
+      expect(content).toBe("clones/\n");
+      expect(content).not.toContain("./");
+    });
+
+    it("should handle ./ prefix with existing trailing slash", async () => {
+      const tmpDir = generateTmpDir();
+      await setupTestWithConfig({
+        tmpDir,
+        createDirectories: { clonesDir: "clones" },
+      });
+
+      const result = await runCli(
+        `patchy init --repo-url https://github.com/example/repo.git --clones-dir ./clones/ --patches-dir patches --ref main --gitignore --force`,
+        tmpDir,
+      );
+
+      expect(result).toSucceed();
+      const gitignorePath = join(tmpDir, ".gitignore");
+      const content = readFileSync(gitignorePath, "utf-8");
+      expect(content).toBe("clones/\n");
+    });
+
     it("should not modify .gitignore with --no-gitignore flag", async () => {
       const tmpDir = generateTmpDir();
       await setupTestWithConfig({

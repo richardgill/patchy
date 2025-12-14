@@ -1,5 +1,5 @@
 import { describe, expect, it } from "bun:test";
-import { extractRepoName } from "./git";
+import { extractRepoName, normalizeGitignoreEntry } from "./git";
 
 describe("extractRepoName", () => {
   const testCases: { url: string; expected: string | undefined }[] = [
@@ -23,6 +23,26 @@ describe("extractRepoName", () => {
   testCases.forEach(({ url, expected }) => {
     it(`extracts "${expected}" from "${url}"`, () => {
       expect(extractRepoName(url)).toBe(expected);
+    });
+  });
+});
+
+describe("normalizeGitignoreEntry", () => {
+  const testCases: { entry: string; expected: string }[] = [
+    { entry: "clones", expected: "clones/" },
+    { entry: "clones/", expected: "clones/" },
+    { entry: "./clones", expected: "clones/" },
+    { entry: "./clones/", expected: "clones/" },
+    { entry: "././clones", expected: "clones/" },
+    { entry: "././clones/", expected: "clones/" },
+    { entry: "./foo/bar", expected: "foo/bar/" },
+    { entry: "foo/bar", expected: "foo/bar/" },
+    { entry: "/absolute/path", expected: "/absolute/path/" },
+  ];
+
+  testCases.forEach(({ entry, expected }) => {
+    it(`normalizes "${entry}" to "${expected}"`, () => {
+      expect(normalizeGitignoreEntry(entry)).toBe(expected);
     });
   });
 });
