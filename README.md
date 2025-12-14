@@ -4,6 +4,41 @@ An opinionated command-line tool for managing Git patch workflows.
 
 ## How it works
 
+Initialize Patchy in your folder with:
+```bash
+patchy init
+```
+
+🔧 Let's set up your Patchy project
+
+│
+◇  Path for patch files:
+│  ./patches/
+│
+◇  Directory for cloned repos:
+│  ./clones/
+│
+◇  Upstream repository URL:
+│  https://github.com/octocat/spoon-knife
+│
+◇  Created configuration file: ./patchy.json
+│
+└  Patchy initialized successfully!
+
+│
+◇  Clone spoon-knife into ./clones/ now?
+│  Yes
+
+Cloning https://github.com/octocat/spoon-knife to ./clones/spoon-knife...
+
+Successfully cloned repository to ./clones/spoon-knife
+│
+◇  Save repo_dir: "spoon-knife" to patchy.json?
+│  Yes
+Updated patchy.json with repo_dir: "spoon-knife"
+
+Now you can edit your clone ./clones/spoon-knife and run patchy generate to generate patches
+```
 
 
 1. Clone repo → `~/target-1`
