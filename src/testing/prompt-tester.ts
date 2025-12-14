@@ -56,7 +56,15 @@ type PromptTester = {
   output: MockWritable;
   type: (text: string) => void;
   press: (
-    key: "return" | "escape" | "up" | "down" | "left" | "right" | "space",
+    key:
+      | "return"
+      | "escape"
+      | "up"
+      | "down"
+      | "left"
+      | "right"
+      | "space"
+      | "backspace",
   ) => void;
   getOutput: () => string;
 };

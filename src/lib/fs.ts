@@ -2,6 +2,20 @@ import { existsSync, mkdirSync } from "node:fs";
 import { readdir } from "node:fs/promises";
 import path from "node:path";
 
+export const isPathWithinDir = (dir: string, targetPath: string): boolean => {
+  const absoluteTarget = path.resolve(dir, targetPath);
+  const relativePath = path.relative(dir, absoluteTarget);
+  // Path is within dir if:
+  // - It's not the dir itself (relativePath is empty string for same dir)
+  // - Relative path doesn't start with ".." (meaning it's a parent/sibling)
+  // - Relative path isn't absolute (Windows: different drives)
+  return (
+    relativePath !== "" &&
+    !relativePath.startsWith("..") &&
+    !path.isAbsolute(relativePath)
+  );
+};
+
 export const ensureDirExists = (dirPath: string): void => {
   if (!existsSync(dirPath)) {
     mkdirSync(dirPath, { recursive: true });

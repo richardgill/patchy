@@ -108,6 +108,40 @@ describe("patchy init", () => {
       const gitignorePath = join(tmpDir, ".gitignore");
       expect(existsSync(gitignorePath)).toBe(false);
     });
+
+    it("should not modify .gitignore when path is outside cwd with --gitignore flag", async () => {
+      const tmpDir = generateTmpDir();
+      await setupTestWithConfig({
+        tmpDir,
+        createDirectories: {},
+      });
+
+      const result = await runCli(
+        `patchy init --repo-url https://github.com/example/repo.git --clones-dir /tmp/some-other-clones --patches-dir patches --ref main --gitignore --force`,
+        tmpDir,
+      );
+
+      expect(result).toSucceed();
+      const gitignorePath = join(tmpDir, ".gitignore");
+      expect(existsSync(gitignorePath)).toBe(false);
+    });
+
+    it("should not modify .gitignore when path is outside cwd with relative path", async () => {
+      const tmpDir = generateTmpDir();
+      await setupTestWithConfig({
+        tmpDir,
+        createDirectories: {},
+      });
+
+      const result = await runCli(
+        `patchy init --repo-url https://github.com/example/repo.git --clones-dir ../outside-clones --patches-dir patches --ref main --gitignore --force`,
+        tmpDir,
+      );
+
+      expect(result).toSucceed();
+      const gitignorePath = join(tmpDir, ".gitignore");
+      expect(existsSync(gitignorePath)).toBe(false);
+    });
   });
 
   describe("error cases", () => {
@@ -261,6 +295,40 @@ describe("patchy init", () => {
       const result = await resultPromise;
       expect(result).toFail();
       expect(result.stderr).toContain("cancelled");
+    });
+
+    it("should not prompt for gitignore when clonesDir is outside cwd", async () => {
+      const tmpDir = generateTmpDir();
+      await setupTestWithConfig({
+        tmpDir,
+        createDirectories: {},
+        jsonConfig: {},
+      });
+
+      const { resultPromise, tester } = runCliWithPrompts(
+        "patchy init --force",
+        tmpDir,
+      );
+
+      // patches dir prompt - accept default
+      tester.press("return");
+      // clones dir prompt - clear default (./clones/ = 10 chars) and enter path outside cwd
+      for (let i = 0; i < 10; i++) {
+        tester.press("backspace");
+      }
+      tester.type("/tmp/external-clones");
+      tester.press("return");
+      // NO gitignore prompt - repo url prompt should be next
+      tester.type("https://github.com/example/repo.git");
+      tester.press("return");
+      // ref prompt - accept default
+      tester.press("return");
+
+      const result = await resultPromise;
+      expect(result).toSucceed();
+
+      const gitignorePath = join(tmpDir, ".gitignore");
+      expect(existsSync(gitignorePath)).toBe(false);
     });
   });
 });
