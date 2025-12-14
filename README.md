@@ -1,24 +1,17 @@
 # patchy
 
-An opinionated command-line tool for managing Git patch workflows.
+A simple patch management system 
 
 ## How it works
 
-Patchy helps you manage a set of `.diff` patches for a repository you want to modify. 
+Patchy helps you manage `.diff` patches for a repository you want to modify.
 
-`patchy.json`
+`patchy.json` (see [full config reference](#patchyjson) below)
 ```json5
 {
-  // The upstream repository you want to patch
   "repo_url": "https://github.com/octocat/spoon-knife",
-
-  // Folder where your patches are stored
   "patches_dir": "./patches/",
-
-  // Folder with your repository clones
-  "clones_dir": "./clones/"
-
-  // Current repo inside ./clones/
+  "clones_dir": "./clones/",
   "repo_dir": "spoon-knife",
 }
 ```
@@ -33,15 +26,12 @@ You can `patchy repo clone` the repo into `./clones/` to complete the setup.
 Now you'll have
 
 ```
-.
-  patches/
-  clones/
-    - spoon-knife
-      README.md
-      ...more files
-   
-  patchy.json
-
+./
+├── patches/
+├── clones/
+│   └── spoon-knife/
+│       ├── path/to/existingFile.txt
+└── patchy.json
 ```
 
 Now you can make changes directly to `./clones/spoon-knife`
@@ -51,18 +41,20 @@ And generate patches with `patchy generate`
 
 ```
 ./
-    clones/
-      path/in/repo/existingFile.txt
+├── clones/
+│   └── spoon-knife/
+│       └── path/to/existingFile.txt
+│       └── path/to/newFile.txt
 ├── patches/
-│   ├── path/in/repo/existingFile.txt.diff
-│   └── path/in/repo/newFile.txt
+│   ├── path/to/existingFile.txt.diff
+│   └── path/to/newFile.txt
 └── patchy.json
 ```
 
 - **Edits** are stored as `.diff` files e.g. `existingFile.txt.diff`.
-- **New files** are stored as regular files e.g. `newFile.txt`. 
+- **New files** are copied as regular files e.g. `newFile.txt`. 
 
-Then reapply your changes later with:
+You can reapply your changes later with:
 
 `patchy apply`
 
