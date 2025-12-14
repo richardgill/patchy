@@ -43,13 +43,20 @@ const parseArgs = async (): Promise<Config> => {
   }
 
   const prNumber = prArg ? Number.parseInt(prArg, 10) : undefined;
-  const baseVersion = versionArg ?? (await getVersion());
-  const shortSha = (await $`git rev-parse --short HEAD`.text()).trim();
 
-  const version =
-    mode === "preview"
-      ? `${baseVersion}-pr.${prNumber}.${shortSha}`
-      : baseVersion;
+  // If --version is passed, use it directly (workflow already computed full version)
+  // Otherwise, compute preview version from package.json base version
+  const version = await (async () => {
+    if (versionArg) {
+      return versionArg;
+    }
+    const baseVersion = await getVersion();
+    if (mode === "preview") {
+      const shortSha = (await $`git rev-parse --short HEAD`.text()).trim();
+      return `${baseVersion}-pr.${prNumber}.${shortSha}`;
+    }
+    return baseVersion;
+  })();
 
   const npmTag = mode === "preview" ? `pr-${prNumber}` : "latest";
 
