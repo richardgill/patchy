@@ -150,7 +150,19 @@ download_and_install() {
       error "Failed to extract $filename"
   fi
 
-  mv "$APP" "$INSTALL_DIR/" 2>/dev/null || mv "$APP.exe" "$INSTALL_DIR/" 2>/dev/null ||
+  # Binary may be named with platform suffix (e.g., patchy-linux-x64) or just patchy
+  local binary_name=""
+  if [ -f "$APP-$target" ]; then
+    binary_name="$APP-$target"
+  elif [ -f "$APP" ]; then
+    binary_name="$APP"
+  elif [ -f "$APP.exe" ]; then
+    binary_name="$APP.exe"
+  else
+    error "Could not find $APP binary after extraction"
+  fi
+
+  mv "$binary_name" "$INSTALL_DIR/$APP" ||
     error "Failed to move $APP to $INSTALL_DIR"
   chmod 755 "${INSTALL_DIR}/$APP" 2>/dev/null || true
 
