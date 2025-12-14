@@ -1,4 +1,4 @@
-import { existsSync, mkdirSync, rmSync } from "node:fs";
+import { existsSync, mkdirSync, readdirSync, rmSync } from "node:fs";
 import { readdir } from "node:fs/promises";
 import path from "node:path";
 
@@ -45,4 +45,29 @@ export const getAllFiles = async (
 
 export const removeFile = (filePath: string): void => {
   rmSync(filePath, { force: true });
+};
+
+export const findAvailableDirName = (
+  parentDir: string,
+  baseName: string,
+): string => {
+  if (!existsSync(parentDir)) {
+    return baseName;
+  }
+
+  const existingNames = new Set(readdirSync(parentDir));
+
+  if (!existingNames.has(baseName)) {
+    return baseName;
+  }
+
+  let counter = 1;
+  let candidateName = `${baseName}-${counter}`;
+
+  while (existingNames.has(candidateName)) {
+    counter++;
+    candidateName = `${baseName}-${counter}`;
+  }
+
+  return candidateName;
 };
