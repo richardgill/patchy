@@ -3,7 +3,12 @@ import { copyFile } from "node:fs/promises";
 import { dirname, join } from "node:path";
 import { createEnrichedMergedConfig } from "~/cli-fields";
 import type { LocalContext } from "~/context";
-import { ensureDirExists, getAllFiles, removeFile } from "~/lib/fs";
+import {
+  ensureDirExists,
+  formatPathForDisplay,
+  getAllFiles,
+  removeFile,
+} from "~/lib/fs";
 import { createGitClient } from "~/lib/git";
 import type { GenerateFlags } from "./flags";
 
@@ -135,7 +140,7 @@ export default async function (
 
   if (config.dry_run) {
     this.process.stdout.write(
-      `[DRY RUN] Would generate patches from ${config.repo_dir} to ${config.patches_dir}\n`,
+      `[DRY RUN] Would generate patches from ${formatPathForDisplay(config.repo_dir ?? "")} to ${formatPathForDisplay(config.patches_dir ?? "")}\n`,
     );
     this.process.stdout.write(`Found ${operations.length} change(s):\n`);
     for (const op of operations) {
@@ -162,7 +167,7 @@ export default async function (
   }
 
   this.process.stdout.write(
-    `Generating patches from ${config.repo_dir} to ${config.patches_dir}...\n`,
+    `Generating patches from ${formatPathForDisplay(config.repo_dir ?? "")} to ${formatPathForDisplay(config.patches_dir ?? "")}...\n`,
   );
 
   ensureDirExists(absolutePatchesDir);
