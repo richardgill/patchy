@@ -8,7 +8,7 @@ Initialize Patchy in your folder with:
 ```bash
 patchy init
 ```
-
+```
 🔧 Let's set up your Patchy project
 
 │
