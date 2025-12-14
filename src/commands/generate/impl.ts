@@ -1,9 +1,9 @@
-import { writeFileSync } from "node:fs";
+import { existsSync, writeFileSync } from "node:fs";
 import { copyFile } from "node:fs/promises";
 import { dirname, join } from "node:path";
 import { createEnrichedMergedConfig } from "~/cli-fields";
 import type { LocalContext } from "~/context";
-import { ensureDirExists } from "~/lib/fs";
+import { ensureDirExists, getAllFiles, removeFile } from "~/lib/fs";
 import { createGitClient } from "~/lib/git";
 import type { GenerateFlags } from "./flags";
 
@@ -66,6 +66,22 @@ const toPatchToGenerates = (
     };
   });
 
+const getExpectedPatchPaths = (operations: PatchToGenerate[]): Set<string> =>
+  new Set(operations.map((op) => op.destPath));
+
+const getStalePatches = async (
+  patchesDir: string,
+  expectedPaths: Set<string>,
+): Promise<string[]> => {
+  if (!existsSync(patchesDir)) {
+    return [];
+  }
+  const existingPatches = await getAllFiles(patchesDir);
+  return existingPatches
+    .map((relativePath) => join(patchesDir, relativePath))
+    .filter((absolutePath) => !expectedPaths.has(absolutePath));
+};
+
 export default async function (
   this: LocalContext,
   flags: GenerateFlags,
@@ -90,6 +106,24 @@ export default async function (
 
   if (changes.length === 0) {
     this.process.stdout.write("No changes detected in repository.\n");
+
+    const expectedPaths = new Set<string>();
+    const stalePatches = await getStalePatches(
+      absolutePatchesDir,
+      expectedPaths,
+    );
+
+    for (const stalePath of stalePatches) {
+      removeFile(stalePath);
+      const relativePath = stalePath.replace(`${absolutePatchesDir}/`, "");
+      this.process.stdout.write(`  Removed stale: ${relativePath}\n`);
+    }
+
+    if (stalePatches.length > 0) {
+      this.process.stdout.write(
+        `Removed ${stalePatches.length} stale patch(es).\n`,
+      );
+    }
     return;
   }
 
@@ -108,6 +142,21 @@ export default async function (
       this.process.stdout.write(
         `  ${op.type}: ${op.relativePath} -> ${op.destPath}\n`,
       );
+    }
+
+    const expectedPaths = getExpectedPatchPaths(operations);
+    const stalePatches = await getStalePatches(
+      absolutePatchesDir,
+      expectedPaths,
+    );
+    if (stalePatches.length > 0) {
+      this.process.stdout.write(
+        `\nWould remove ${stalePatches.length} stale patch(es):\n`,
+      );
+      for (const stalePath of stalePatches) {
+        const relativePath = stalePath.replace(`${absolutePatchesDir}/`, "");
+        this.process.stdout.write(`  remove: ${relativePath}\n`);
+      }
     }
     return;
   }
@@ -131,7 +180,18 @@ export default async function (
     }
   }
 
+  const expectedPaths = getExpectedPatchPaths(operations);
+  const stalePatches = await getStalePatches(absolutePatchesDir, expectedPaths);
+
+  for (const stalePath of stalePatches) {
+    removeFile(stalePath);
+    const relativePath = stalePath.replace(`${absolutePatchesDir}/`, "");
+    this.process.stdout.write(`  Removed stale: ${relativePath}\n`);
+  }
+
+  const removedMsg =
+    stalePatches.length > 0 ? `, removed ${stalePatches.length} stale` : "";
   this.process.stdout.write(
-    `Generated ${operations.length} patch(es) successfully.\n`,
+    `Generated ${operations.length} patch(es)${removedMsg} successfully.\n`,
   );
 }
