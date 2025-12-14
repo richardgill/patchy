@@ -63,26 +63,22 @@ Precedence: CLI flags > Environment variables > `patchy.json`
 
 ```sh
 curl -fsSL https://raw.githubusercontent.com/richardgill/patchy/main/install | bash
+# follow instructions
+patchy
 ```
 
 Or via npm:
 
-**Install script (recommended):**
-
-```sh
-curl -fsSL https://raw.githubusercontent.com/richardgill/patchy/main/install | bash
-```
-
-**Via npm:**
 
 ```sh
 npm install -g patchy-cli
+patchy-cli
 ```
 
 Or use directly without installing:
 
 ```sh
-npx patchy-cli --version
+npx patchy-cli@latest
 ```
 
 ### Initialize patchy
