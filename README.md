@@ -1,38 +1,61 @@
 # patchy
 
-An opinionated command-line tool for managing Git patch workflows.
+An opinionated command-line tool for managing Git patch workflows. 
 
 ## How it works
 
-1. Clone repo → `~/target-1`
-2. Make some edits (the patches!)
-3. Create a repo for your patches → `~/my-patches`
-3. `patchy generate --repo ~/target-1` → Creates `~/my-patches/patches/*.diff`
+Patchy helps you manage `.diff` patches for a repository you want to modify.
 
-Then reapply your changes later with:
-
-5. `patchy apply --repo ~/target-1` → `~/target-1` (patches applied)
-
-
-### `patches/` folder structure
-
-Patch files are stored in the same folder structure as the target repo:
-
-```
-~/target-1/
-└── path/in/repo/existingFile.txt
+`patchy.json` (see [full config reference](#patchyjson) below)
+```json5
+{
+  "repo_url": "https://github.com/octocat/spoon-knife",
+  "patches_dir": "./patches/",
+  "clones_dir": "./clones/",
+  "repo_dir": "spoon-knife",
+}
 ```
 
+Initialize Patchy with:
+```bash
+patchy init
 ```
-my-patch-repo/
+
+You can `patchy repo clone` the repo into `./clones/` to complete the setup.
+
+Now you'll have
+
+```
+./
 ├── patches/
-│   ├── path/in/repo/existingFile.txt.diff
-│   └── path/in/repo/newFile.txt
+├── clones/
+│   └── spoon-knife/
+│       ├── path/to/existingFile.txt
+└── patchy.json
+```
+
+Now you can make changes directly to `./clones/spoon-knife`
+
+And generate patches with `patchy generate`
+
+```
+./
+├── clones/
+│   └── spoon-knife/
+│       ├── path/to/existingFile.txt
+│       └── path/to/newFile.txt
+├── patches/
+│   ├── path/to/existingFile.txt.diff
+│   └── path/to/newFile.txt
 └── patchy.json
 ```
 
 - **Edits** are stored as `.diff` files e.g. `existingFile.txt.diff`.
-- **New files** are stored as regular files e.g. `newFile.txt`. 
+- **New files** are copied as regular files e.g. `newFile.txt`. 
+
+You can reapply your changes later with:
+
+`patchy apply`
 
 ### `patchy.json`
 
@@ -63,26 +86,22 @@ Precedence: CLI flags > Environment variables > `patchy.json`
 
 ```sh
 curl -fsSL https://raw.githubusercontent.com/richardgill/patchy/main/install | bash
+# follow instructions
+patchy
 ```
 
 Or via npm:
 
-**Install script (recommended):**
-
-```sh
-curl -fsSL https://raw.githubusercontent.com/richardgill/patchy/main/install | bash
-```
-
-**Via npm:**
 
 ```sh
 npm install -g patchy-cli
+patchy-cli
 ```
 
 Or use directly without installing:
 
 ```sh
-npx patchy-cli --version
+npx patchy-cli@latest
 ```
 
 ### Initialize patchy
