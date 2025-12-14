@@ -1,0 +1,3 @@
+[test]
+preload = ["./src/testing/setup.ts", "./src/testing/matchers.ts"]
+concurrentTestGlob = "**/*.test.ts"

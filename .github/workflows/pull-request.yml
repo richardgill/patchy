@@ -1,0 +1,136 @@
+name: Publish Preview
+
+on:
+  pull_request:
+    types: [opened, synchronize, reopened, ready_for_review]
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.head_ref || github.run_id }}
+  cancel-in-progress: true
+
+jobs:
+  publish-preview:
+    name: Publish preview
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+      pull-requests: write
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Bun
+        uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: latest
+
+      - name: Install dependencies
+        run: bun install --frozen-lockfile
+
+      - name: Get version info
+        id: version
+        run: |
+          BASE_VERSION=$(node -p "require('./package.json').version")
+          SHORT_SHA=$(git rev-parse --short HEAD)
+          PR_NUMBER=${{ github.event.pull_request.number }}
+          VERSION="${BASE_VERSION}-pr.${PR_NUMBER}.${SHORT_SHA}"
+          echo "version=$VERSION" >> $GITHUB_OUTPUT
+          echo "short_sha=$SHORT_SHA" >> $GITHUB_OUTPUT
+          echo "pr_number=$PR_NUMBER" >> $GITHUB_OUTPUT
+          echo "tag=pr-${PR_NUMBER}" >> $GITHUB_OUTPUT
+
+      - name: Build all binaries
+        run: bun run build
+        env:
+          PATCHY_VERSION: ${{ steps.version.outputs.version }}
+
+      - name: Setup npm auth
+        run: echo "//registry.npmjs.org/:_authToken=${{ secrets.NPM_TOKEN }}" > ~/.npmrc
+
+      - name: Publish preview to npm and prepare assets
+        run: bun run scripts/publish.ts --mode=preview --pr=${{ github.event.pull_request.number }} --version=${{ steps.version.outputs.version }}
+
+      - name: Delete existing GitHub release (if any)
+        run: gh release delete ${{ steps.version.outputs.tag }} --repo ${{ github.repository }} --yes || true
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Create GitHub release
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: ${{ steps.version.outputs.tag }}
+          name: "PR #${{ steps.version.outputs.pr_number }} Preview"
+          body: |
+            **Preview build for PR #${{ steps.version.outputs.pr_number }}**
+
+            - Commit: `${{ steps.version.outputs.short_sha }}`
+            - Version: `${{ steps.version.outputs.version }}`
+
+            This is an automated pre-release for testing. It will be deleted when the PR is merged or closed.
+          prerelease: true
+          files: |
+            release/patchy-linux-x64.tar.gz
+            release/patchy-linux-arm64.tar.gz
+            release/patchy-darwin-x64.zip
+            release/patchy-darwin-arm64.zip
+            release/patchy-windows-x64.zip
+            release/checksums.txt
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Post PR comment
+        uses: marocchino/sticky-pull-request-comment@v2
+        with:
+          header: pr-build
+          message: |
+            ## 🔨 PR Build Ready!
+
+            | | |
+            |---|---|
+            | **Commit** | `${{ steps.version.outputs.short_sha }}` |
+            | **Version** | `${{ steps.version.outputs.version }}` |
+
+            ### Quick Install
+
+            ```bash
+            curl -fsSL https://raw.githubusercontent.com/richardgill/patchy/main/install | bash -s -- --pr ${{ steps.version.outputs.pr_number }}
+            ```
+
+            ### Install via npm
+
+            ```bash
+            npm install -g patchy-cli@pr-${{ steps.version.outputs.pr_number }}
+            ```
+
+            Or use directly:
+
+            ```bash
+            npx patchy-cli@pr-${{ steps.version.outputs.pr_number }} --version
+            ```
+
+            ### Direct Downloads
+
+            | Platform | Architecture | Download |
+            |----------|--------------|----------|
+            | Linux | x64 | [patchy-linux-x64.tar.gz](https://github.com/richardgill/patchy/releases/download/${{ steps.version.outputs.tag }}/patchy-linux-x64.tar.gz) |
+            | Linux | arm64 | [patchy-linux-arm64.tar.gz](https://github.com/richardgill/patchy/releases/download/${{ steps.version.outputs.tag }}/patchy-linux-arm64.tar.gz) |
+            | macOS | Intel | [patchy-darwin-x64.zip](https://github.com/richardgill/patchy/releases/download/${{ steps.version.outputs.tag }}/patchy-darwin-x64.zip) |
+            | macOS | Apple Silicon | [patchy-darwin-arm64.zip](https://github.com/richardgill/patchy/releases/download/${{ steps.version.outputs.tag }}/patchy-darwin-arm64.zip) |
+            | Windows | x64 | [patchy-windows-x64.zip](https://github.com/richardgill/patchy/releases/download/${{ steps.version.outputs.tag }}/patchy-windows-x64.zip) |
+
+            <details>
+            <summary>Manual installation</summary>
+
+            ```bash
+            # Download (replace PLATFORM with: linux-x64, linux-arm64, darwin-x64, darwin-arm64, or windows-x64)
+            curl -fsSL https://github.com/richardgill/patchy/releases/download/${{ steps.version.outputs.tag }}/patchy-PLATFORM.tar.gz | tar -xz
+
+            # Make executable and run
+            chmod +x patchy-*
+            ./patchy-* --version
+            ```
+
+            </details>
+
+            ---
+            <sub>🤖 This comment updates automatically with each push. [View release](https://github.com/richardgill/patchy/releases/tag/${{ steps.version.outputs.tag }})</sub>

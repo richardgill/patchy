@@ -1,0 +1,1 @@
+export const PATCHY_VERSION_ENV_VAR = "PATCHY_VERSION";
