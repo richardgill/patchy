@@ -329,16 +329,21 @@ describe("patchy repo clone", () => {
         jsonConfig: { clones_dir: "repos" },
       });
 
-      const { resultPromise, tester } = runCliWithPrompts(
+      const { result, prompts } = await runCliWithPrompts(
         `patchy repo clone --repo-url ${bareRepoUrl}`,
         tmpDir,
-      );
+      )
+        .on({ confirm: /Save repo_dir/, respond: true })
+        .run();
 
-      // Confirm saving repo_dir - accept default (yes)
-      tester.press("return");
-
-      const result = await resultPromise;
       expect(result).toSucceed();
+      expect(prompts).toMatchObject([
+        {
+          type: "confirm",
+          message: expect.stringMatching(/Save repo_dir/),
+          response: true,
+        },
+      ]);
 
       // Verify repo_dir was saved to config
       const configPath = path.join(tmpDir, "patchy.json");
@@ -359,17 +364,21 @@ describe("patchy repo clone", () => {
         jsonConfig: { clones_dir: "repos" },
       });
 
-      const { resultPromise, tester } = runCliWithPrompts(
+      const { result, prompts } = await runCliWithPrompts(
         `patchy repo clone --repo-url ${bareRepoUrl}`,
         tmpDir,
-      );
+      )
+        .on({ confirm: /Save repo_dir/, respond: false })
+        .run();
 
-      // Decline saving repo_dir - move to "no" and confirm
-      tester.press("right");
-      tester.press("return");
-
-      const result = await resultPromise;
       expect(result).toSucceed();
+      expect(prompts).toMatchObject([
+        {
+          type: "confirm",
+          message: expect.stringMatching(/Save repo_dir/),
+          response: false,
+        },
+      ]);
 
       // Verify repo_dir was NOT saved
       const configPath = path.join(tmpDir, "patchy.json");

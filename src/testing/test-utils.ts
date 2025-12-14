@@ -6,27 +6,23 @@ import type { Readable, Writable } from "node:stream";
 import { run } from "@stricli/core";
 import { app } from "~/app";
 import type { LocalContext } from "~/context";
-import { createPromptTester } from "./prompt-tester";
+import type { CLIResult } from "./cli-types";
+import {
+  acceptDefault,
+  cancel,
+  createPromptBuilder,
+  type PromptBuilder,
+} from "./prompt-builder";
 
-type CLIResult = {
-  stdout: string;
-  stderr: string;
-  exitCode: number;
-  failed: boolean;
-  command: string;
-  cwd: string;
-};
-
-type PromptTester = ReturnType<
-  typeof import("./prompt-tester").createPromptTester
->;
+import type { PromptHandler, RecordedPrompt } from "./prompt-testing-types";
 
 type PromptOptions = {
   promptInput?: Readable;
   promptOutput?: Writable;
+  promptHandler?: PromptHandler;
+  onPromptRecord?: (prompt: RecordedPrompt) => void;
 };
 
-// This helper can run cli commands in-process which is much faster than spinning up a new runtime for each test
 export const runCli = async (
   command: string,
   cwd: string,
@@ -63,6 +59,8 @@ export const runCli = async (
     cwd,
     promptInput: options.promptInput,
     promptOutput: options.promptOutput,
+    promptHandler: options.promptHandler,
+    onPromptRecord: options.onPromptRecord,
   };
 
   try {
@@ -217,19 +215,16 @@ export const setupTestWithConfig = async ({
   return ctx;
 };
 
-type InteractiveCliResult = {
-  resultPromise: Promise<CLIResult>;
-  tester: PromptTester;
-};
-
 export const runCliWithPrompts = (
   command: string,
   cwd: string,
-): InteractiveCliResult => {
-  const tester = createPromptTester();
-  const resultPromise = runCli(command, cwd, {
-    promptInput: tester.input,
-    promptOutput: tester.output,
+): PromptBuilder => {
+  return createPromptBuilder(async (handler, onRecord) => {
+    return runCli(command, cwd, {
+      promptHandler: handler,
+      onPromptRecord: onRecord,
+    });
   });
-  return { resultPromise, tester };
 };
+
+export { acceptDefault, cancel };

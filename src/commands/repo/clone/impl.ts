@@ -30,7 +30,8 @@ const promptRepoDirSave = async ({
 }: PromptRepoDirSaveParams): Promise<void> => {
   const inputStream = context.promptInput;
   const isTTY = inputStream && "isTTY" in inputStream && inputStream.isTTY;
-  if (!isTTY) {
+  const hasPromptHandler = context.promptHandler !== undefined;
+  if (!isTTY && !hasPromptHandler) {
     return;
   }
 

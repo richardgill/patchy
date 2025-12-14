@@ -7,6 +7,7 @@ import {
   initGitRepoWithCommit,
 } from "~/testing/git-helpers";
 import {
+  cancel,
   generateTmpDir,
   runCli,
   runCliWithPrompts,
@@ -185,18 +186,22 @@ describe("patchy repo reset", () => {
       // Make uncommitted changes
       await writeFileIn(repoDir, "dirty.txt", "uncommitted changes");
 
-      const { resultPromise, tester } = runCliWithPrompts(
+      const { result, prompts } = await runCliWithPrompts(
         "patchy repo reset",
         tmpDir,
-      );
+      )
+        .on({ confirm: /discard all uncommitted/, respond: true })
+        .run();
 
-      // Confirm reset - move to "yes" and confirm
-      tester.press("left");
-      tester.press("return");
-
-      const result = await resultPromise;
       expect(result).toSucceed();
       expect(result).toHaveOutput("Successfully reset");
+      expect(prompts).toMatchObject([
+        {
+          type: "confirm",
+          message: expect.stringMatching(/discard all uncommitted/),
+          response: true,
+        },
+      ]);
     });
 
     it("should cancel when user declines", async () => {
@@ -216,20 +221,25 @@ describe("patchy repo reset", () => {
       const repoDir = assertDefined(ctx.absoluteRepoDir, "absoluteRepoDir");
       await initGitRepoWithCommit(repoDir);
 
-      const { resultPromise, tester } = runCliWithPrompts(
+      const { result, prompts } = await runCliWithPrompts(
         "patchy repo reset",
         tmpDir,
-      );
+      )
+        .on({ confirm: /discard all uncommitted/, respond: false })
+        .run();
 
-      // Decline reset - accept default (no)
-      tester.press("return");
-
-      const result = await resultPromise;
       expect(result).toFail();
       expect(result.stderr).toContain("cancelled");
+      expect(prompts).toMatchObject([
+        {
+          type: "confirm",
+          message: expect.stringMatching(/discard all uncommitted/),
+          response: false,
+        },
+      ]);
     });
 
-    it("should cancel when user presses escape", async () => {
+    it("should cancel when user cancels prompt", async () => {
       const tmpDir = generateTmpDir();
       const ctx = await setupTestWithConfig({
         tmpDir,
@@ -246,17 +256,22 @@ describe("patchy repo reset", () => {
       const repoDir = assertDefined(ctx.absoluteRepoDir, "absoluteRepoDir");
       await initGitRepoWithCommit(repoDir);
 
-      const { resultPromise, tester } = runCliWithPrompts(
+      const { result, prompts } = await runCliWithPrompts(
         "patchy repo reset",
         tmpDir,
-      );
+      )
+        .on({ confirm: /discard all uncommitted/, respond: cancel })
+        .run();
 
-      // Press escape to cancel
-      tester.press("escape");
-
-      const result = await resultPromise;
       expect(result).toFail();
       expect(result.stderr).toContain("cancelled");
+      expect(prompts).toMatchObject([
+        {
+          type: "confirm",
+          message: expect.stringMatching(/discard all uncommitted/),
+          response: "cancelled",
+        },
+      ]);
     });
   });
 });

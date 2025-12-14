@@ -2,6 +2,8 @@ import { describe, expect, it } from "bun:test";
 import { existsSync, readFileSync } from "node:fs";
 import { join } from "node:path";
 import {
+  acceptDefault,
+  cancel,
   generateTmpDir,
   runCli,
   runCliWithPrompts,
@@ -252,25 +254,48 @@ describe("patchy init", () => {
         jsonConfig: {},
       });
 
-      const { resultPromise, tester } = runCliWithPrompts(
+      const { result, prompts } = await runCliWithPrompts(
         "patchy init --force",
         tmpDir,
-      );
+      )
+        .on({ text: /patch files/, respond: acceptDefault })
+        .on({ text: /cloned repos/, respond: acceptDefault })
+        .on({ confirm: /gitignore/, respond: true })
+        .on({
+          text: /repository URL/,
+          respond: "https://github.com/example/repo.git",
+        })
+        .on({ text: /ref/, respond: acceptDefault })
+        .run();
 
-      // patches dir prompt - accept default
-      tester.press("return");
-      // clones dir prompt - accept default
-      tester.press("return");
-      // gitignore confirm - accept default (yes)
-      tester.press("return");
-      // repo url prompt
-      tester.type("https://github.com/example/repo.git");
-      tester.press("return");
-      // ref prompt - accept default
-      tester.press("return");
-
-      const result = await resultPromise;
       expect(result).toSucceed();
+      expect(prompts).toMatchObject([
+        {
+          type: "text",
+          message: expect.stringMatching(/patch files/),
+          response: "default",
+        },
+        {
+          type: "text",
+          message: expect.stringMatching(/cloned repos/),
+          response: "default",
+        },
+        {
+          type: "confirm",
+          message: expect.stringMatching(/gitignore/),
+          response: true,
+        },
+        {
+          type: "text",
+          message: expect.stringMatching(/repository URL/),
+          response: "https://github.com/example/repo.git",
+        },
+        {
+          type: "text",
+          message: expect.stringMatching(/ref/),
+          response: "default",
+        },
+      ]);
 
       const configPath = join(tmpDir, "patchy.json");
       expect(configPath).toExist();
@@ -284,17 +309,22 @@ describe("patchy init", () => {
         jsonConfig: {},
       });
 
-      const { resultPromise, tester } = runCliWithPrompts(
+      const { result, prompts } = await runCliWithPrompts(
         "patchy init --force",
         tmpDir,
-      );
+      )
+        .on({ text: /patch files/, respond: cancel })
+        .run();
 
-      // Cancel on first prompt
-      tester.press("escape");
-
-      const result = await resultPromise;
       expect(result).toFail();
       expect(result.stderr).toContain("cancelled");
+      expect(prompts).toMatchObject([
+        {
+          type: "text",
+          message: expect.stringMatching(/patch files/),
+          response: "cancelled",
+        },
+      ]);
     });
 
     it("should not prompt for gitignore when clonesDir is outside cwd", async () => {
@@ -305,27 +335,42 @@ describe("patchy init", () => {
         jsonConfig: {},
       });
 
-      const { resultPromise, tester } = runCliWithPrompts(
+      const { result, prompts } = await runCliWithPrompts(
         "patchy init --force",
         tmpDir,
-      );
+      )
+        .on({ text: /patch files/, respond: acceptDefault })
+        .on({ text: /cloned repos/, respond: "/tmp/external-clones" })
+        .on({
+          text: /repository URL/,
+          respond: "https://github.com/example/repo.git",
+        })
+        .on({ text: /ref/, respond: acceptDefault })
+        .run();
 
-      // patches dir prompt - accept default
-      tester.press("return");
-      // clones dir prompt - clear default (./clones/ = 10 chars) and enter path outside cwd
-      for (let i = 0; i < 10; i++) {
-        tester.press("backspace");
-      }
-      tester.type("/tmp/external-clones");
-      tester.press("return");
-      // NO gitignore prompt - repo url prompt should be next
-      tester.type("https://github.com/example/repo.git");
-      tester.press("return");
-      // ref prompt - accept default
-      tester.press("return");
-
-      const result = await resultPromise;
       expect(result).toSucceed();
+      expect(prompts).toMatchObject([
+        {
+          type: "text",
+          message: expect.stringMatching(/patch files/),
+          response: "default",
+        },
+        {
+          type: "text",
+          message: expect.stringMatching(/cloned repos/),
+          response: "/tmp/external-clones",
+        },
+        {
+          type: "text",
+          message: expect.stringMatching(/repository URL/),
+          response: "https://github.com/example/repo.git",
+        },
+        {
+          type: "text",
+          message: expect.stringMatching(/ref/),
+          response: "default",
+        },
+      ]);
 
       const gitignorePath = join(tmpDir, ".gitignore");
       expect(existsSync(gitignorePath)).toBe(false);
