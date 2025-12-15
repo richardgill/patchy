@@ -87,7 +87,7 @@ Reset the current upstream repo `patchy repo reset main`, which will reset every
 ```
 ./
 ├── clones/
-│   └── spoon-knife/
+│   └── spoon-knife/  <<< reset
 │       ├── path/to/existingFile.txt
 ├── patches/
 │   ├── path/to/existingFile.txt.diff
