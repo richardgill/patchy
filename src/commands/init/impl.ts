@@ -91,7 +91,7 @@ export default async function (
     }
     if (!isValidGitUrl(flags["repo-url"])) {
       this.process.stderr.write(
-        "Please enter a valid Git URL (https://github.com/owner/repo or git@github.com:owner/repo.git)\n",
+        "Please enter a valid Git URL (https://github.com/owner/repo, git@github.com:owner/repo.git, or /path/to/local/repo)\n",
       );
       this.process.exit?.(1);
       return;

@@ -219,7 +219,7 @@ describe("patchy init", () => {
 
       expect(result).toFail();
       expect(result.stderr).toMatchInlineSnapshot(
-        `"Please enter a valid Git URL (https://github.com/owner/repo or git@github.com:owner/repo.git)"`,
+        `"Please enter a valid Git URL (https://github.com/owner/repo, git@github.com:owner/repo.git, or /path/to/local/repo)"`,
       );
     });
 
@@ -237,7 +237,7 @@ describe("patchy init", () => {
 
       expect(result).toFail();
       expect(result.stderr).toMatchInlineSnapshot(
-        `"Please enter a valid Git URL (https://github.com/owner/repo or git@github.com:owner/repo.git)"`,
+        `"Please enter a valid Git URL (https://github.com/owner/repo, git@github.com:owner/repo.git, or /path/to/local/repo)"`,
       );
     });
 
@@ -298,7 +298,7 @@ describe("patchy init", () => {
 
       expect(result).toFail();
       expect(result.stderr).toMatchInlineSnapshot(
-        `"Please enter a valid Git URL (https://github.com/owner/repo or git@github.com:owner/repo.git)"`,
+        `"Please enter a valid Git URL (https://github.com/owner/repo, git@github.com:owner/repo.git, or /path/to/local/repo)"`,
       );
     });
   });
