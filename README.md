@@ -48,7 +48,7 @@ Create a folder for you fork: `mkdir spoon-knife-fork && cd spoon-knife-fork`
 ├── patches/
 ├── clones/
 │   └── spoon-knife/
-│       ├── path/to/existingFile.txt
+│       └── path/to/existingFile.txt
 └── patchy.json
 ```
 
