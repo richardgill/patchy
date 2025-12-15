@@ -45,9 +45,8 @@ await $`rm -rf dist`;
 await $`mkdir -p dist`;
 
 const jsonSchema = generateJsonSchema();
-const schemaPath = `dist/${SCHEMA_FILENAME}`;
-await Bun.write(schemaPath, `${JSON.stringify(jsonSchema, null, 2)}\n`);
-console.log(`Generated JSON Schema: ${schemaPath}`);
+await Bun.write(SCHEMA_FILENAME, `${JSON.stringify(jsonSchema, null, 2)}\n`);
+console.log(`Generated JSON Schema: ${SCHEMA_FILENAME}`);
 
 const binaries: Record<string, string> = {};
 

@@ -7,7 +7,8 @@
     "patchy": "./bin/patchy.cjs"
   },
   "files": [
-    "bin"
+    "bin",
+    "schema.json"
   ],
   "scripts": {
     "build": "bun run ./scripts/build.ts",
