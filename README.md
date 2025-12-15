@@ -1,6 +1,6 @@
 # Patchy
 
-An opinionated command-line tool for managing git patch forks.
+An opinionated command-line tool for managing git forks with patches.
 
 ## What is a patch-based workflow?
 
