@@ -1,29 +1,45 @@
 # patchy
 
-An opinionated command-line tool for managing Git patch workflows. 
+An opinionated command-line tool for managing git patch workflows. 
 
-## How it works
+## What is a patch-based workflow?
 
-Patchy helps you manage `.diff` patches for a repository you want to modify.
+Patches are an alternative strategy to maintaining a fork of an upstream git repo.
 
-`patchy.json` (see [full config reference](#patchyjson) below)
+You maintain a collection of 'patches', `.diff` files, which can be applied to a clone of the upstream git repo.
+
+Patches are particularly useful if the divergence from the main repo is long running and the changes are not intended to be merged upstream.
+
+As the underlying repo changes you can re-clone the repo with the new changes and attempt to apply your patches. Patch based workflows make it easy to see what you're changed, and are less state-based than maintaining a fork.
+
+## What is Patchy?
+
+The `patchy` cli helps you _generate_ and _apply_ `.diff` patches for to an upstream git repo you've cloned on your machine.
+
+It's opinionated and has [conventions](#patch-file-layout) about how the `.diff` files are stored.
+
+## Example
+
+You want to start a patch-based fork of https://github.com/octocat/spoon-knife.
+
+### Setup patchy
+
+Create a folder for you fork: `mkdir spoon-knife-fork && cd spoon-knife-fork`
+
+[Install Patchy](#install) and run `patchy init`, press enter to select all the default options:
+
+Patchy creates your config: `./patchy.json` (see full [patchy.json config reference](#patchyjson) below)
 ```json5
 {
   "repo_url": "https://github.com/octocat/spoon-knife",
   "patches_dir": "./patches/",
   "clones_dir": "./clones/",
   "repo_dir": "spoon-knife",
+  "ref": "main"
 }
 ```
 
-Initialize Patchy with:
-```bash
-patchy init
-```
-
-You can `patchy repo clone` the repo into `./clones/` to complete the setup.
-
-Now you'll have
+`patchy init` also created an empty `./patches` folder and `patchy repo clone`d the spoon-knife repo into `./clones`:
 
 ```
 ./
@@ -34,9 +50,20 @@ Now you'll have
 └── patchy.json
 ```
 
-Now you can make changes directly to `./clones/spoon-knife`
+### Make changes to the cloned repo
 
-And generate patches with `patchy generate`
+We can now make changes directly in the cloned spoon-knife repo:
+
+```bash
+echo "edit existing file" >> clones/spoon-knife/path/to/existingFile.txt 
+echo "new file" > clones/spoon-knife/path/to/newFile.txt 
+```
+
+### Generate patches:
+
+To generate the patches for your changes run `patchy generate`.
+
+Patchy will generate the patches for your changes:
 
 ```
 ./
@@ -49,36 +76,37 @@ And generate patches with `patchy generate`
 │   └── path/to/newFile.txt
 └── patchy.json
 ```
-
 - **Edits** are stored as `.diff` files e.g. `existingFile.txt.diff`.
 - **New files** are copied as regular files e.g. `newFile.txt`. 
 
-You can reapply your changes later with:
+### Reapplying patches:
 
-`patchy apply`
+Reset your current upstream repo `patchy repo reset main`, which will reset everything to `main`:
 
-### `patchy.json`
-
-```jsonc
-{
-  // Git URL to clone from.
-  "repo_url": "https://github.com/example/repo.git", // Override: --repo-url | env: PATCHY_REPO_URL
-
-  // Path to repo you're generating patches from or applying patches to.
-  "repo_dir": "~/repos/repo", // Override: --repo-dir | env: PATCHY_REPO_DIR
-
-  // Directory containing patch files.
-  "patches_dir": "./patches/", // Override: --patches-dir | env: PATCHY_PATCHES_DIR
-
-  // Parent directory for cloning repos. You can easily clone more repos here from repo_url.
-  "clones_dir": "./clones/", // Override: --clones-dir | env: PATCHY_CLONES_DIR
-
-  // Git ref to checkout (branch, tag, SHA).
-  "ref": "main" // Override: --ref | env: PATCHY_REF
-}
+```
+./
+├── clones/
+│   └── spoon-knife/
+│       ├── path/to/existingFile.txt
+├── patches/
+│   ├── path/to/existingFile.txt.diff
+│   └── path/to/newFile.txt
+└── patchy.json
 ```
 
-Precedence: CLI flags > Environment variables > `patchy.json`
+Apply your patches back to the cloned repo with: `patchy apply`
+
+```
+./
+├── clones/
+│   └── spoon-knife/
+│       ├── path/to/existingFile.txt (modified)
+│       └── path/to/newFile.txt (added)
+├── patches/
+│   ├── path/to/existingFile.txt.diff
+│   └── path/to/newFile.txt
+└── patchy.json
+```
 
 ## Getting started 
 
@@ -111,6 +139,32 @@ Run this command to initialize patchy in your project:
 ```sh
 patchy init
 ```
+### `patchy.json` reference
+
+```jsonc
+{
+  // Git URL to clone from.
+  "repo_url": "https://github.com/example/repo.git", // Override: --repo-url | env: PATCHY_REPO_URL
+
+  // Path to repo you're generating patches from or applying patches to.
+  "repo_dir": "~/repos/repo", // Override: --repo-dir | env: PATCHY_REPO_DIR
+
+  // Directory containing patch files.
+  "patches_dir": "./patches/", // Override: --patches-dir | env: PATCHY_PATCHES_DIR
+
+  // Parent directory for cloning repos. You can easily clone more repos here from repo_url.
+  "clones_dir": "./clones/", // Override: --clones-dir | env: PATCHY_CLONES_DIR
+
+  // Git ref to checkout (branch, tag, SHA).
+  "ref": "main" // Override: --ref | env: PATCHY_REF
+}
+```
+
+
+Precedence: CLI flags > Environment variables > `patchy.json`
+
+### Patch file layout
+<content>
 
 ## Commands
 
@@ -157,3 +211,20 @@ patchy repo clone [--clones-dir] [--ref] [--repo-url]
 ## License
 
 MIT
+
+
+
+### Generating patches:
+
+1. Clone the upstream repo: `patchy repo clone` 
+2. Make changes directly to the cloned upstream repo
+3. Run `patchy generate`
+
+Patchy will generate the patches for your changes.
+
+### Applying patches:
+
+1. Clone a fresh upstream repo `patchy repo clone` (or reset your current upstream repo `patchy repo reset main`)
+2. Apply your patches `patchy apply`
+
+
