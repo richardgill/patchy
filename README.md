@@ -161,9 +161,9 @@ patchy init
   "ref": "main" // Override: --ref | env: PATCHY_REF
 }
 ```
-
-
 Precedence: CLI flags > Environment variables > `patchy.json`
+
+`patchy.json` use jsonc, so comments are allowed.
 
 ## Patch file layout
 
@@ -185,7 +185,7 @@ The `patches/` directory (customizable via [`patches_dir`](#patchyjson)) uses th
 - **`.diff` files** — For modified existing files (generated via `git diff HEAD`)
 - **Plain files** — For newly added files (copied verbatim for easier inspection and editing)
 
-Patchy automatically manages stale patches—files in `patches/` that no longer correspond to changes in `repo_dir` are removed during `generate`.
+`patchy generate` automatically removes stale patches—files in `patches/` that no longer correspond to changes in `repo_dir`.
 
 ## Commands
 
