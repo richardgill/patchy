@@ -5,7 +5,7 @@
 </p>
 <br/>
 <p align="center">
-  <a href="https://www.npmjs.com/package/patchy-cli"><img src="https://img.shields.io/npm/v/patchy-cli.svg" alt="npm package"></a>
+  <a href="https://www.npmjs.com/package/patchy-cli"><img src="https://img.shields.io/npm/v/patchy-cli.svg?label=version" alt="npm package"></a>
   <a href="https://github.com/richardgill/patchy/blob/main/LICENSE"><img src="https://img.shields.io/npm/l/patchy-cli.svg" alt="license"></a>
   <a href="https://github.com/richardgill/patchy/actions/workflows/ci.yml"><img src="https://github.com/richardgill/patchy/actions/workflows/ci.yml/badge.svg?branch=main" alt="build status"></a>
 </p>
