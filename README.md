@@ -1,4 +1,4 @@
-# patchy
+# Patchy
 
 An opinionated command-line tool for managing git patch forks.
 
@@ -14,7 +14,7 @@ As the underlying repo changes you can re-clone the repo with the new changes an
 
 ## What is Patchy?
 
-The `patchy` cli helps you _generate_ and _apply_ `.diff` patches for to an upstream git repo you've cloned on your machine.
+Patchy helps you _generate_ and _apply_ `.diff` patches for to an upstream git repo you've cloned on your machine.
 
 It's opinionated and has [conventions](#patch-file-layout) about how the `.diff` files are stored.
 
@@ -22,13 +22,13 @@ It's opinionated and has [conventions](#patch-file-layout) about how the `.diff`
 
 You want to start a patch-based fork of https://github.com/octocat/spoon-knife.
 
-### Setup patchy
+### Setup Patchy
 
 Create a folder for you fork: `mkdir spoon-knife-fork && cd spoon-knife-fork`
 
 [Install Patchy](#install) and run `patchy init`, press enter to select all the default options:
 
-Patchy creates your config: `./patchy.json` (see full [patchy.json config reference](#patchyjson) below)
+`patchy init` creates your config: `./patchy.json` (see full [patchy.json config reference](#patchyjson) below)
 ```json5
 {
   "repo_url": "https://github.com/octocat/spoon-knife",
@@ -39,7 +39,7 @@ Patchy creates your config: `./patchy.json` (see full [patchy.json config refere
 }
 ```
 
-`patchy init` also created an empty `./patches` folder and `patchy repo clone`d the spoon-knife repo into `./clones`:
+`patchy init` also creates an empty `./patches` folder and clones the spoon-knife repo into `./clones`:
 
 ```
 ./
@@ -61,9 +61,8 @@ echo "new file" > clones/spoon-knife/path/to/newFile.txt
 
 ### Generate patches:
 
-To generate the patches for your changes run `patchy generate`.
+To generate the patches for your changes run `patchy generate`:
 
-Patchy will generate the patches for your changes:
 
 ```
 ./
@@ -132,14 +131,15 @@ Or use directly without installing:
 npx patchy-cli@latest
 ```
 
-### Initialize patchy
+### Initialize Patchy
 
-Run this command to initialize patchy in your project:
+Run this command to initialize Patchy in your project:
 
 ```sh
 patchy init
 ```
-### `patchy.json` reference
+
+## `patchy.json` reference
 
 ```jsonc
 {
@@ -163,8 +163,25 @@ patchy init
 
 Precedence: CLI flags > Environment variables > `patchy.json`
 
-### Patch file layout
-<content>
+## Patch file layout
+
+The `patches/` directory (customizable via [`patches_dir`](#patchyjson)) mirrors the structure of `repo_dir`:
+
+```
+patches/
+├── src/
+│   ├── utils.ts.diff      # Diff for modified file src/utils.ts
+│   └── newHelper.ts       # New file (copied as-is)
+├── README.md.diff         # Diff for modified README.md
+└── config/
+    └── settings.json.diff # Diff for modified config/settings.json
+```
+
+**Two types of patch files:**
+- **`.diff` files** — For modified existing files (generated via `git diff HEAD`)
+- **Plain files** — For newly added files (copied verbatim)
+
+Patchy automatically manages stale patches—files in `patches/` that no longer correspond to changes in `repo_dir` are removed during `generate`.
 
 ## Commands
 
