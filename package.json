@@ -8,7 +8,8 @@
   },
   "files": [
     "bin",
-    "schema.json"
+    "schema.json",
+    "assets"
   ],
   "scripts": {
     "build": "bun run ./scripts/build.ts",

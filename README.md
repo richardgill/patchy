@@ -1,6 +1,19 @@
-# Patchy
+<p align="center">
+  <a href="https://github.com/richardgill/patchy">
+    <img width="180" src="./assets/logo.png" alt="Patchy logo">
+  </a>
+</p>
+<br/>
+<p align="center">
+  <a href="https://www.npmjs.com/package/patchy-cli"><img src="https://img.shields.io/npm/v/patchy-cli.svg?label=version" alt="npm package"></a>
+  <a href="https://github.com/richardgill/patchy/blob/main/LICENSE"><img src="https://img.shields.io/npm/l/patchy-cli.svg" alt="license"></a>
+  <a href="https://github.com/richardgill/patchy/actions/workflows/ci.yml"><img src="https://github.com/richardgill/patchy/actions/workflows/ci.yml/badge.svg?branch=main" alt="build status"></a>
+</p>
+<br/>
 
-A CLI for generating and applying patches to git repositories.
+# Patchy 🩹
+
+> A CLI for generating and applying patches to git repositories.
 
 ## Patches vs forks
 
@@ -22,11 +35,11 @@ Starting a patch-based fork of https://github.com/octocat/spoon-knife.
 
 Create a folder for the fork: `mkdir spoon-knife-fork && cd spoon-knife-fork`
 
-- [Install Patchy](#install)
+- [Install Patchy](#installation)
 - Run `patchy init`
   - press enter to select all the default options
 
-`patchy init` creates your config: `./patchy.json` ([full reference](#patchyjson))
+`patchy init` creates your config: `./patchy.json` ([full reference](#patchyjson-reference))
 ```json5
 {
   "repo_url": "https://github.com/octocat/spoon-knife",
@@ -159,11 +172,11 @@ patchy init
 ```
 Precedence: CLI flags > Environment variables > `patchy.json`
 
-`patchy.json` use jsonc, so comments are allowed.
+`patchy.json` uses jsonc, so comments are allowed.
 
 ## Patch file layout
 
-The `patches/` directory (customizable via [`patches_dir`](#patchyjson)) uses the same folder structure as `repo_dir`:
+The `patches/` directory (customizable via [`patches_dir`](#patchyjson-reference)) uses the same folder structure as `repo_dir`:
 
 ```
 ./
