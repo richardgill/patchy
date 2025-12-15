@@ -4,13 +4,13 @@ An opinionated command-line tool for managing git forks with patches.
 
 ## What is a patch-based fork?
 
-Patches are an alternative strategy to maintaining a fork of an upstream git repo.
+Patches are an alternative strategy to maintaining a traditional Git fork (a long-lived branch or separate repository).
 
 You maintain a collection of 'patches', `.diff` files, which can be applied to a clone of the upstream git repo.
 
-Patches are particularly useful if the divergence from the main repo is long running and the changes are not intended to be merged upstream.
+Patches are particularly useful when maintaining long-running changes that aren't intended to be merged upstream.
 
-As the underlying repo changes you can re-clone the repo with the new changes and attempt to apply your patches. Patch based workflows make it easy to see what you've changed, and are less state-based than maintaining a fork.
+As the underlying repo changes, you can re-clone and reapply your patches. Patch-based workflows make it easy to see what you've changed, without maintaining a long-lived branch history.
 
 ## What is Patchy?
 
@@ -78,7 +78,7 @@ To generate the patches for the changes run `patchy generate`:
 └── patchy.json
 ```
 - **Edits** are stored as `.diff` files e.g. `existingFile.txt.diff`.
-- **New files** are copied as regular files e.g. `newFile.txt`. 
+- **New files** are copied as regular files e.g. `newFile.txt` (easier to inspect and edit directly). 
 
 ### Reapplying patches:
 
@@ -183,7 +183,7 @@ The `patches/` directory (customizable via [`patches_dir`](#patchyjson)) uses th
 
 **Two types of patch files:**
 - **`.diff` files** — For modified existing files (generated via `git diff HEAD`)
-- **Plain files** — For newly added files (copied verbatim)
+- **Plain files** — For newly added files (copied verbatim for easier inspection and editing)
 
 Patchy automatically manages stale patches—files in `patches/` that no longer correspond to changes in `repo_dir` are removed during `generate`.
 
