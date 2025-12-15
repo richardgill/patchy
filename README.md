@@ -3,7 +3,7 @@
   <h1>Patchy</h1>
   <p>A CLI for generating and applying patches to git repositories.</p>
 
-  <a href="https://www.npmjs.com/package/patchy-cli"><img alt="NPM version" src="https://img.shields.io/npm/v/patchy-cli.svg?style=for-the-badge&labelColor=000000"></a>
+  <a href="https://www.npmjs.com/package/patchy-cli"><img alt="NPM version" src="https://img.shields.io/npm/v/patchy-cli.svg?style=for-the-badge&labelColor=000000&label="></a>
   <a href="https://github.com/richardgill/patchy/blob/main/LICENSE"><img alt="License" src="https://img.shields.io/npm/l/patchy-cli.svg?style=for-the-badge&labelColor=000000"></a>
   <a href="https://github.com/richardgill/patchy/actions/workflows/ci.yml"><img alt="Build status" src="https://img.shields.io/github/actions/workflow/status/richardgill/patchy/ci.yml?style=for-the-badge&labelColor=000000"></a>
 </div>
