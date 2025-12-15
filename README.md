@@ -2,7 +2,7 @@
 
 An opinionated command-line tool for managing git forks with patches.
 
-## What is a patch-based workflow?
+## What is a patch-based fork?
 
 Patches are an alternative strategy to maintaining a fork of an upstream git repo.
 
@@ -30,7 +30,7 @@ Create a folder for you fork: `mkdir spoon-knife-fork && cd spoon-knife-fork`
 - Run `patchy init`
   - press enter to select all the default options
 
-`patchy init` creates your config: `./patchy.json` (see full [patchy.json config reference](#patchyjson) below)
+`patchy init` creates your config: `./patchy.json` ([full reference](#patchyjson))
 ```json5
 {
   "repo_url": "https://github.com/octocat/spoon-knife",
