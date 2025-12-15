@@ -172,7 +172,7 @@ patchy init
 ```
 Precedence: CLI flags > Environment variables > `patchy.json`
 
-`patchy.json` use jsonc, so comments are allowed.
+`patchy.json` uses jsonc, so comments are allowed.
 
 ## Patch file layout
 
