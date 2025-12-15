@@ -20,7 +20,7 @@ It's opinionated and has [conventions](#patch-file-layout) about how the `.diff`
 
 ## Example
 
-You want to start a patch-based fork of https://github.com/octocat/spoon-knife.
+Starting a patch-based fork of https://github.com/octocat/spoon-knife.
 
 ### Setup Patchy
 
