@@ -14,7 +14,7 @@ As the underlying repo changes you can re-clone the repo with the new changes an
 
 ## What is Patchy?
 
-Patchy helps you _generate_ and _apply_ `.diff` patches for to an upstream git repo you've cloned on your machine.
+Patchy helps you **generate** and **apply** `.diff` patches for to an upstream git repo you've cloned on your machine.
 
 It's opinionated and has [conventions](#patch-file-layout) about how the `.diff` files are stored.
 
