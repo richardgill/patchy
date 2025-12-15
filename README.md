@@ -1,16 +1,12 @@
 # Patchy
 
-An opinionated command-line tool for managing git forks with patches.
+A CLI for generating and applying patches to git repositories.
 
-## What is a patch-based fork?
+## Patches vs forks
 
-Patches are an alternative strategy to maintaining a traditional Git fork (a long-lived branch or separate repository).
+A traditional fork means maintaining a separate repository or long-lived branch. Over time, your history diverges from upstream, which can make updates painful.
 
-You maintain a collection of 'patches', `.diff` files, which can be applied to a clone of the upstream git repo.
-
-Patches are particularly useful when maintaining long-running changes that aren't intended to be merged upstream.
-
-As the underlying repo changes, you can re-clone and reapply your patches. Patch-based workflows make it easy to see what you've changed, without maintaining a long-lived branch history.
+With patches, you store changes as `.diff` files alongside the upstream repo. You can inspect them, edit them, and apply them to a fresh clone.
 
 ## What is Patchy?
 
