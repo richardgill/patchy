@@ -181,7 +181,7 @@ The `patches/` directory (customizable via [`patches_dir`](#patchyjson)) uses th
 - **`.diff` files** — For modified existing files (generated via `git diff HEAD`)
 - **Plain files** — For newly added files (copied verbatim for easier inspection and editing)
 
-`patchy generate` automatically removes stale patches—files in `patches/` that no longer correspond to changes in `repo_dir`.
+`patchy generate` automatically removes stale files in `patches/` that no longer correspond to changes in `repo_dir`.
 
 ## Commands
 
