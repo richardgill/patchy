@@ -16,6 +16,15 @@ describe("extractRepoName", () => {
     { url: "file:///path/to/repo.git", expected: "repo" },
     { url: "file:///home/user/repos/my-repo", expected: "my-repo" },
     { url: "file:///tmp/test-repo.git", expected: "test-repo" },
+    // Absolute paths
+    { url: "/path/to/repo", expected: "repo" },
+    { url: "/home/user/repos/my-repo.git", expected: "my-repo" },
+    { url: "/tmp/test-repo", expected: "test-repo" },
+    // Relative paths
+    { url: "./upstream", expected: "upstream" },
+    { url: "../sibling-repo", expected: "sibling-repo" },
+    { url: "./path/to/repo.git", expected: "repo" },
+    { url: "../parent/repo", expected: "repo" },
     { url: "", expected: undefined },
     { url: "invalid", expected: undefined },
   ];

@@ -775,7 +775,7 @@ describe("createEnrichedMergedConfig", () => {
     expect(stabilizeTempDir(result.error)).toMatchInlineSnapshot(`
       "Validation errors:
 
-      repo_url: invalid-url-format in ./patchy.json is invalid. Example repo: https://github.com/user/repo.git
+      repo_url: invalid-url-format in ./patchy.json is invalid. Example: https://github.com/owner/repo, git@github.com:owner/repo.git, or /path/to/local/repo
 
       "
     `);

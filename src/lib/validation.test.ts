@@ -3,16 +3,28 @@ import { isValidGitUrl, validateGitUrl } from "./validation";
 
 describe("isValidGitUrl", () => {
   const validUrls = [
+    // HTTPS URLs
     "https://github.com/user/repo.git",
     "https://github.com/user/repo",
     "https://gitlab.com/group/subgroup/repo.git",
     "http://github.com/user/repo",
+    // SSH URLs
     "git@github.com:user/repo.git",
     "git@github.com:user/repo",
     "git@gitlab.com:org/my-repo.git",
+    // file:// URLs
     "file:///path/to/repo.git",
     "file:///home/user/repos/my-repo",
     "file:///tmp/test-repo.git",
+    // Absolute paths
+    "/path/to/repo",
+    "/home/user/repos/my-repo.git",
+    "/tmp/test-repo",
+    // Relative paths
+    "./upstream",
+    "../sibling-repo",
+    "./path/to/repo.git",
+    "../parent/repo",
   ];
 
   validUrls.forEach((url) => {
@@ -31,6 +43,13 @@ describe("isValidGitUrl", () => {
     "file:///",
     "https://",
     "git@",
+    // Invalid local paths
+    ".",
+    "..",
+    "relative",
+    "./",
+    "../",
+    "/",
   ];
 
   invalidUrls.forEach((url) => {

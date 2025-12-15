@@ -130,7 +130,7 @@ export default async function (
   if (!isValidGitUrl(repoUrl)) {
     this.process.stderr.write(
       chalk.red(
-        `Invalid Git URL: ${repoUrl}\nExample: https://github.com/user/repo or git@github.com:user/repo.git\n`,
+        `Invalid Git URL: ${repoUrl}\nExample: https://github.com/user/repo, git@github.com:user/repo.git, or /path/to/local/repo\n`,
       ),
     );
     this.process.exit(1);

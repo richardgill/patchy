@@ -33,7 +33,7 @@ export const repoDirExists: PatchyValidatorFn = (config, _key) => {
 export const gitUrl: PatchyValidatorFn = (config, key) => {
   const value = config[key];
   if (typeof value === "string" && !isValidGitUrl(value)) {
-    return `is invalid. Example repo: https://github.com/user/repo.git`;
+    return `is invalid. Example: https://github.com/owner/repo, git@github.com:owner/repo.git, or /path/to/local/repo`;
   }
   return null;
 };
