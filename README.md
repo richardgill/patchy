@@ -165,16 +165,18 @@ Precedence: CLI flags > Environment variables > `patchy.json`
 
 ## Patch file layout
 
-The `patches/` directory (customizable via [`patches_dir`](#patchyjson)) mirrors the structure of `repo_dir`:
+The `patches/` directory (customizable via [`patches_dir`](#patchyjson)) uses the same folder structure as `repo_dir`:
 
 ```
-patches/
-├── src/
-│   ├── utils.ts.diff      # Diff for modified file src/utils.ts
-│   └── newHelper.ts       # New file (copied as-is)
-├── README.md.diff         # Diff for modified README.md
-└── config/
-    └── settings.json.diff # Diff for modified config/settings.json
+./
+├── patches/
+│   ├── path/to/existingFile.txt.diff
+│   └── path/to/newFile.txt
+├── clones/
+│   └── repo-clone-1/
+│       ├── path/to/existingFile.txt (modified)
+│       └── path/to/newFile.txt (added)
+└── patchy.json
 ```
 
 **Two types of patch files:**
@@ -192,6 +194,8 @@ Generate `.diff` files and new files into `./patches/` based on current `git dif
 ```sh
 patchy generate [--repo-dir] [--patches-dir] [--dry-run]
 ```
+
+Note: `patchy generate` is destructive and will remove any unneeded files in your `./patches/` folder.
 
 ### `patchy apply`
 

@@ -1,5 +1,5 @@
 pre-commit:
-  parallel: false
+  parallel: true
   commands:
     biome:
       glob: "*.{js,ts,cjs,mjs,d.cts,d.mts,jsx,tsx,json,jsonc}"
@@ -12,16 +12,20 @@ pre-commit:
     knip:
       run: bun run knip
 
+# Hook-level files + command-level glob pattern:
+# https://evilmartians.com/chronicles/5-cool-and-surprising-ways-to-configure-lefthook-for-automation-joy
 post-merge:
+  files: git diff-tree -r --name-only --no-commit-id ORIG_HEAD HEAD
   commands:
     bun-install:
-      files: git diff --name-only ORIG_HEAD HEAD | grep -E "^bun\.lock$" || true
+      glob: "bun.lock"
       run: bun install
 
 post-checkout:
+  files: git diff-tree -r --name-only --no-commit-id {1} {2}
   commands:
     bun-install:
-      files: git diff --name-only {1} {2} | grep -E "^bun\.lock$" || true
+      glob: "bun.lock"
       run: bun install
 
 pre-push:
