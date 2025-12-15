@@ -13,7 +13,7 @@
 
 # Patchy 🩹
 
-> A CLI for generating and applying patches to git repositories.
+A CLI for generating and applying patches to git repositories.
 
 ## Patches vs forks
 
