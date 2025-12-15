@@ -35,11 +35,11 @@ Starting a patch-based fork of https://github.com/octocat/spoon-knife.
 
 Create a folder for the fork: `mkdir spoon-knife-fork && cd spoon-knife-fork`
 
-- [Install Patchy](#install)
+- [Install Patchy](#installation)
 - Run `patchy init`
   - press enter to select all the default options
 
-`patchy init` creates your config: `./patchy.json` ([full reference](#patchyjson))
+`patchy init` creates your config: `./patchy.json` ([full reference](#patchyjson-reference))
 ```json5
 {
   "repo_url": "https://github.com/octocat/spoon-knife",
@@ -176,7 +176,7 @@ Precedence: CLI flags > Environment variables > `patchy.json`
 
 ## Patch file layout
 
-The `patches/` directory (customizable via [`patches_dir`](#patchyjson)) uses the same folder structure as `repo_dir`:
+The `patches/` directory (customizable via [`patches_dir`](#patchyjson-reference)) uses the same folder structure as `repo_dir`:
 
 ```
 ./
