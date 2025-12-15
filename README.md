@@ -1,6 +1,6 @@
 # patchy
 
-An opinionated command-line tool for managing git patch workflows. 
+An opinionated command-line tool for managing git patch forks.
 
 ## What is a patch-based workflow?
 
@@ -10,7 +10,7 @@ You maintain a collection of 'patches', `.diff` files, which can be applied to a
 
 Patches are particularly useful if the divergence from the main repo is long running and the changes are not intended to be merged upstream.
 
-As the underlying repo changes you can re-clone the repo with the new changes and attempt to apply your patches. Patch based workflows make it easy to see what you're changed, and are less state-based than maintaining a fork.
+As the underlying repo changes you can re-clone the repo with the new changes and attempt to apply your patches. Patch based workflows make it easy to see what you've changed, and are less state-based than maintaining a fork.
 
 ## What is Patchy?
 
