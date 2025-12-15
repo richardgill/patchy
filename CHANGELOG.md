@@ -1,5 +1,11 @@
 # patchy-cli
 
+## 0.0.6
+
+### Patch Changes
+
+- [#158](https://github.com/richardgill/patchy/pull/158) [`fc32f94`](https://github.com/richardgill/patchy/commit/fc32f94160a11e4a809f5a83fed9304af945722d) Thanks [@richardgill](https://github.com/richardgill)! - Redesigned README with logo and badges
+
 ## 0.0.5
 
 ### Patch Changes
