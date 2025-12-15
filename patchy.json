@@ -1,8 +1,0 @@
-{
-  "$schema": "https://unpkg.com/patchy-cli@0.0.4/dist/patchy.schema.json",
-  "repo_url": "https://github.com/octocat/spoon-knife",
-  "clones_dir": "./clones/",
-  "patches_dir": "./patches/",
-  "ref": "main",
-  "repo_dir": "spoon-knife"
-}
