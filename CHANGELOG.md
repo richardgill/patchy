@@ -1,5 +1,11 @@
 # patchy-cli
 
+## 0.0.5
+
+### Patch Changes
+
+- [#156](https://github.com/richardgill/patchy/pull/156) [`ae322ea`](https://github.com/richardgill/patchy/commit/ae322ea5e2e33a1b39b31737d914cf72a5fbf409) Thanks [@richardgill](https://github.com/richardgill)! - Fix JSON schema URL - schema is now included in npm package and accessible via unpkg
+
 ## 0.0.4
 
 ### Patch Changes
