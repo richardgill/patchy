@@ -5,7 +5,7 @@
 
   <a href="https://www.npmjs.com/package/patchy-cli"><img alt="NPM version" src="https://img.shields.io/npm/v/patchy-cli.svg?style=for-the-badge&labelColor=000000"></a>
   <a href="https://github.com/richardgill/patchy/blob/main/LICENSE"><img alt="License" src="https://img.shields.io/npm/l/patchy-cli.svg?style=for-the-badge&labelColor=000000"></a>
-  <a href="https://github.com/richardgill/patchy/issues"><img alt="GitHub issues" src="https://img.shields.io/github/issues/richardgill/patchy.svg?style=for-the-badge&labelColor=000000"></a>
+  <a href="https://github.com/richardgill/patchy/actions/workflows/ci.yml"><img alt="Build status" src="https://img.shields.io/github/actions/workflow/status/richardgill/patchy/ci.yml?style=for-the-badge&labelColor=000000"></a>
 </div>
 
 ## Patches vs forks
