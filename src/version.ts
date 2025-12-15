@@ -25,4 +25,4 @@ export const getVersion = async (): Promise<string> => {
 export const VERSION = INJECTED_VERSION ?? "0.0.0";
 
 export const getSchemaUrl = async () =>
-  `https://unpkg.com/patchy-cli@${await getVersion()}/dist/patchy.schema.json`;
+  `https://unpkg.com/patchy-cli@${await getVersion()}/schema.json`;

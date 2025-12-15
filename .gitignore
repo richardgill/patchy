@@ -1,5 +1,6 @@
 node_modules
 dist
+schema.json
 coverage
 *.log
 /e2e/
