@@ -24,7 +24,7 @@ Starting a patch-based fork of https://github.com/octocat/spoon-knife.
 
 ### Setup Patchy
 
-Create a folder for you fork: `mkdir spoon-knife-fork && cd spoon-knife-fork`
+Create a folder for the fork: `mkdir spoon-knife-fork && cd spoon-knife-fork`
 
 - [Install Patchy](#install)
 - Run `patchy init`
@@ -63,7 +63,7 @@ echo "new file" > clones/spoon-knife/path/to/newFile.txt
 
 ### Generate patches:
 
-To generate the patches for your changes run `patchy generate`:
+To generate the patches for the changes run `patchy generate`:
 
 
 ```
@@ -82,7 +82,7 @@ To generate the patches for your changes run `patchy generate`:
 
 ### Reapplying patches:
 
-Reset your current upstream repo `patchy repo reset main`, which will reset everything to `main`:
+Reset the current upstream repo `patchy repo reset main`, which will reset everything to `main`:
 
 ```
 ./
@@ -95,7 +95,7 @@ Reset your current upstream repo `patchy repo reset main`, which will reset ever
 └── patchy.json
 ```
 
-Apply your patches back to the cloned repo with: `patchy apply`
+Apply the patches back to the cloned repo with: `patchy apply`
 
 ```
 ./
@@ -135,7 +135,7 @@ npx patchy-cli@latest
 
 ### Initialize Patchy
 
-Run this command to initialize Patchy in your project:
+Run this command to initialize Patchy in your project folder:
 
 ```sh
 patchy init
