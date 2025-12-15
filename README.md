@@ -1,6 +1,12 @@
-# Patchy
+<div align="center">
+  <img alt="Patchy logo" src="./assets/logo.png" height="128">
+  <h1>Patchy</h1>
+  <p>A CLI for generating and applying patches to git repositories.</p>
 
-A CLI for generating and applying patches to git repositories.
+  <a href="https://www.npmjs.com/package/patchy-cli"><img alt="NPM version" src="https://img.shields.io/npm/v/patchy-cli.svg?style=for-the-badge&labelColor=000000"></a>
+  <a href="https://github.com/richardgill/patchy/blob/main/LICENSE"><img alt="License" src="https://img.shields.io/npm/l/patchy-cli.svg?style=for-the-badge&labelColor=000000"></a>
+  <a href="https://github.com/richardgill/patchy/issues"><img alt="GitHub issues" src="https://img.shields.io/github/issues/richardgill/patchy.svg?style=for-the-badge&labelColor=000000"></a>
+</div>
 
 ## Patches vs forks
 
