@@ -26,7 +26,9 @@ Starting a patch-based fork of https://github.com/octocat/spoon-knife.
 
 Create a folder for you fork: `mkdir spoon-knife-fork && cd spoon-knife-fork`
 
-[Install Patchy](#install) and run `patchy init`, press enter to select all the default options:
+- [Install Patchy](#install)
+- Run `patchy init`
+  - press enter to select all the default options
 
 `patchy init` creates your config: `./patchy.json` (see full [patchy.json config reference](#patchyjson) below)
 ```json5
