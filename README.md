@@ -211,20 +211,3 @@ patchy repo clone [--clones-dir] [--ref] [--repo-url]
 ## License
 
 MIT
-
-
-
-### Generating patches:
-
-1. Clone the upstream repo: `patchy repo clone` 
-2. Make changes directly to the cloned upstream repo
-3. Run `patchy generate`
-
-Patchy will generate the patches for your changes.
-
-### Applying patches:
-
-1. Clone a fresh upstream repo `patchy repo clone` (or reset your current upstream repo `patchy repo reset main`)
-2. Apply your patches `patchy apply`
-
-
