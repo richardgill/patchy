@@ -4,3 +4,4 @@ coverage
 *.log
 /e2e/
 plans/
+clones/
