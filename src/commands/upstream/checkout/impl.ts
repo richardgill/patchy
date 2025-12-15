@@ -31,7 +31,7 @@ export default async function (
 ): Promise<void> {
   const result = createEnrichedMergedConfig({
     flags,
-    requiredFields: ["clones_dir", "repo_dir"],
+    requiredFields: ["clones_dir", "upstream_dir"],
     cwd: this.cwd,
   });
 
@@ -42,34 +42,36 @@ export default async function (
   }
 
   const config = result.mergedConfig;
-  const repoDir = config.absoluteRepoDir ?? "";
+  const upstreamDir = config.absoluteUpstreamDir ?? "";
   const ref = flags.ref;
   const verbose = config.verbose;
   const dryRun = config.dry_run;
 
-  if (!existsSync(repoDir)) {
+  if (!existsSync(upstreamDir)) {
     this.process.stderr.write(
-      chalk.red(`Repository directory does not exist: ${repoDir}\n`),
+      chalk.red(`Upstream directory does not exist: ${upstreamDir}\n`),
     );
     this.process.exit(1);
     return;
   }
 
-  const git = createGitClient(repoDir);
+  const git = createGitClient(upstreamDir);
   const isRepo = await git.checkIsRepo(CheckRepoActions.IS_REPO_ROOT);
   if (!isRepo) {
-    this.process.stderr.write(chalk.red(`Not a Git repository: ${repoDir}\n`));
+    this.process.stderr.write(
+      chalk.red(`Not a Git repository: ${upstreamDir}\n`),
+    );
     this.process.exit(1);
     return;
   }
 
   if (verbose) {
-    this.process.stdout.write(`Checking out ref "${ref}" in ${repoDir}\n`);
+    this.process.stdout.write(`Checking out ref "${ref}" in ${upstreamDir}\n`);
   }
 
-  if (await isWorkingTreeDirty(repoDir)) {
+  if (await isWorkingTreeDirty(upstreamDir)) {
     this.process.stderr.write(
-      chalk.red(`Working tree in ${repoDir} has uncommitted changes.\n`),
+      chalk.red(`Working tree in ${upstreamDir} has uncommitted changes.\n`),
     );
     this.process.stderr.write(
       "Please commit or stash your changes before checking out a different ref.\n",
@@ -78,7 +80,7 @@ export default async function (
     return;
   }
 
-  if (!(await isValidGitRef(repoDir, ref))) {
+  if (!(await isValidGitRef(upstreamDir, ref))) {
     this.process.stderr.write(chalk.red(`Invalid git ref "${ref}".\n`));
     this.process.stderr.write(
       "Please specify a valid branch, tag, or commit SHA.\n",
@@ -89,7 +91,7 @@ export default async function (
 
   if (dryRun) {
     this.process.stdout.write(
-      `[DRY RUN] Would checkout ref "${ref}" in ${repoDir}\n`,
+      `[DRY RUN] Would checkout ref "${ref}" in ${upstreamDir}\n`,
     );
     return;
   }

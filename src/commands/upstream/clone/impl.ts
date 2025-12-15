@@ -53,15 +53,15 @@ const promptRepoDirSave = async ({
     return;
   }
 
-  const currentRepoDir = parseResult.json.repo_dir;
+  const currentUpstreamDir = parseResult.json.upstream_dir;
 
-  if (currentRepoDir === repoName) {
+  if (currentUpstreamDir === repoName) {
     return;
   }
 
-  const message = currentRepoDir
-    ? `repo_dir in ${chalk.cyan("patchy.json")} is ${chalk.cyan(`"${currentRepoDir}"`)}. Update to ${chalk.cyan(`"${repoName}"`)}?`
-    : `Save repo_dir: ${chalk.cyan(`"${repoName}"`)} to ${chalk.cyan("patchy.json")}?`;
+  const message = currentUpstreamDir
+    ? `upstream_dir in ${chalk.cyan("patchy.json")} is ${chalk.cyan(`"${currentUpstreamDir}"`)}. Update to ${chalk.cyan(`"${repoName}"`)}?`
+    : `Save upstream_dir: ${chalk.cyan(`"${repoName}"`)} to ${chalk.cyan("patchy.json")}?`;
 
   const prompts = createPrompts(context);
   const confirmed = await prompts.confirm({
@@ -73,7 +73,7 @@ const promptRepoDirSave = async ({
     return;
   }
 
-  const updateResult = updateJsoncField(content, "repo_dir", repoName);
+  const updateResult = updateJsoncField(content, "upstream_dir", repoName);
 
   if (!updateResult.success) {
     context.process.stderr.write(chalk.yellow(`${updateResult.error}\n`));
@@ -83,7 +83,7 @@ const promptRepoDirSave = async ({
   try {
     await writeFile(absoluteConfigPath, updateResult.content, "utf8");
     context.process.stdout.write(
-      chalk.green(`Updated patchy.json with repo_dir: "${repoName}"\n`),
+      chalk.green(`Updated patchy.json with upstream_dir: "${repoName}"\n`),
     );
   } catch (error) {
     const errorMessage = error instanceof Error ? error.message : String(error);
@@ -99,7 +99,7 @@ export default async function (
 ): Promise<void> {
   const result = createEnrichedMergedConfig({
     flags,
-    requiredFields: ["repo_url"],
+    requiredFields: ["upstream_url"],
     cwd: this.cwd,
   });
 
@@ -110,7 +110,7 @@ export default async function (
   }
 
   const config = result.mergedConfig;
-  const repoUrl = assertDefined(config.repo_url, "repo_url");
+  const upstreamUrl = assertDefined(config.upstream_url, "upstream_url");
   const ref = config.ref;
   const dryRun = config.dry_run;
   const verbose = config.verbose;
@@ -127,20 +127,20 @@ export default async function (
 
   const clonesDir = resolvePath(this.cwd, config.clones_dir);
 
-  if (!isValidGitUrl(repoUrl)) {
+  if (!isValidGitUrl(upstreamUrl)) {
     this.process.stderr.write(
       chalk.red(
-        `Invalid Git URL: ${repoUrl}\nExample: https://github.com/user/repo or git@github.com:user/repo.git\n`,
+        `Invalid Git URL: ${upstreamUrl}\nExample: https://github.com/user/repo or git@github.com:user/repo.git\n`,
       ),
     );
     this.process.exit(1);
     return;
   }
 
-  const repoName = extractRepoName(repoUrl);
+  const repoName = extractRepoName(upstreamUrl);
   if (!repoName) {
     this.process.stderr.write(
-      chalk.red(`Could not extract repository name from URL: ${repoUrl}\n`),
+      chalk.red(`Could not extract repository name from URL: ${upstreamUrl}\n`),
     );
     this.process.exit(1);
     return;
@@ -150,7 +150,7 @@ export default async function (
   const targetDir = join(clonesDir, targetDirName);
 
   if (verbose) {
-    this.process.stdout.write(`Repository URL: ${repoUrl}\n`);
+    this.process.stdout.write(`Repository URL: ${upstreamUrl}\n`);
     this.process.stdout.write(`Clones directory: ${clonesDir}\n`);
     this.process.stdout.write(`Target directory: ${targetDir}\n`);
     this.process.stdout.write(`Git ref: ${ref}\n`);
@@ -158,7 +158,7 @@ export default async function (
 
   if (dryRun) {
     this.process.stdout.write(
-      `[DRY RUN] Would clone ${repoUrl} to ${formatPathForDisplay(join(config.clones_dir ?? "", targetDirName))}\n`,
+      `[DRY RUN] Would clone ${upstreamUrl} to ${formatPathForDisplay(join(config.clones_dir ?? "", targetDirName))}\n`,
     );
     if (ref) {
       this.process.stdout.write(`[DRY RUN] Would checkout ref: ${ref}\n`);
@@ -169,12 +169,12 @@ export default async function (
   ensureDirExists(clonesDir);
 
   this.process.stdout.write(
-    `Cloning ${repoUrl} to ${formatPathForDisplay(join(config.clones_dir ?? "", targetDirName))}...\n`,
+    `Cloning ${upstreamUrl} to ${formatPathForDisplay(join(config.clones_dir ?? "", targetDirName))}...\n`,
   );
 
   const git = createGitClient(clonesDir);
   try {
-    await git.clone(repoUrl, targetDirName);
+    await git.clone(upstreamUrl, targetDirName);
   } catch (error) {
     const message = error instanceof Error ? error.message : String(error);
     this.process.stderr.write(

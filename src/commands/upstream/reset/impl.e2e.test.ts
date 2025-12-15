@@ -15,7 +15,7 @@ import {
   writeFileIn,
 } from "~/testing/test-utils";
 
-describe("patchy repo reset", () => {
+describe("patchy upstream reset", () => {
   it("should reset repository and discard local changes", async () => {
     const tmpDir = generateTmpDir();
     const ctx = await setupTestWithConfig({
@@ -23,7 +23,10 @@ describe("patchy repo reset", () => {
       createDirectories: { clonesDir: "repos", repoDir: "test-repo" },
     });
 
-    const repoPath = assertDefined(ctx.absoluteRepoDir, "absoluteRepoDir");
+    const repoPath = assertDefined(
+      ctx.absoluteUpstreamDir,
+      "absoluteUpstreamDir",
+    );
     await initGitRepo(repoPath);
     await commitFile(repoPath, "test.txt", "original content");
     await writeFileIn(repoPath, "test.txt", "modified content");
@@ -31,7 +34,7 @@ describe("patchy repo reset", () => {
     expect(join(repoPath, "test.txt")).toHaveFileContent("modified content");
 
     const result = await runCli(
-      `patchy repo reset --clones-dir repos --repo-dir test-repo --yes`,
+      `patchy upstream reset --clones-dir repos --upstream-dir test-repo --yes`,
       tmpDir,
     );
     expect(result).toSucceed();
@@ -46,12 +49,15 @@ describe("patchy repo reset", () => {
       createDirectories: { clonesDir: "repos", repoDir: "test-repo" },
     });
 
-    const repoPath = assertDefined(ctx.absoluteRepoDir, "absoluteRepoDir");
+    const repoPath = assertDefined(
+      ctx.absoluteUpstreamDir,
+      "absoluteUpstreamDir",
+    );
     await initGitRepo(repoPath);
     await commitFile(repoPath, "test.txt", "content");
 
     const result = await runCli(
-      `patchy repo reset --clones-dir repos --repo-dir test-repo --yes`,
+      `patchy upstream reset --clones-dir repos --upstream-dir test-repo --yes`,
       tmpDir,
     );
 
@@ -70,7 +76,7 @@ describe("patchy repo reset", () => {
       });
 
       const result = await runCli(
-        `patchy repo reset --clones-dir repos --repo-dir nonexistent`,
+        `patchy upstream reset --clones-dir repos --upstream-dir nonexistent`,
         tmpDir,
       );
 
@@ -85,7 +91,7 @@ describe("patchy repo reset", () => {
       });
 
       const result = await runCli(
-        `patchy repo reset --clones-dir repos --repo-dir not-a-repo`,
+        `patchy upstream reset --clones-dir repos --upstream-dir not-a-repo`,
         tmpDir,
       );
 
@@ -100,7 +106,7 @@ describe("patchy repo reset", () => {
       await setupTestWithConfig({ tmpDir });
 
       const result = await runCli(
-        `patchy repo reset --repo-dir test-repo`,
+        `patchy upstream reset --upstream-dir test-repo`,
         tmpDir,
       );
 
@@ -116,7 +122,7 @@ describe("patchy repo reset", () => {
       });
 
       const result = await runCli(
-        `patchy repo reset --clones-dir repos`,
+        `patchy upstream reset --clones-dir repos`,
         tmpDir,
       );
 
@@ -132,13 +138,16 @@ describe("patchy repo reset", () => {
         createDirectories: { clonesDir: "repos", repoDir: "test-repo" },
       });
 
-      const repoPath = assertDefined(ctx.absoluteRepoDir, "absoluteRepoDir");
+      const repoPath = assertDefined(
+        ctx.absoluteUpstreamDir,
+        "absoluteUpstreamDir",
+      );
       await initGitRepo(repoPath);
       await commitFile(repoPath, "test.txt", "original content");
       await writeFileIn(repoPath, "test.txt", "modified content");
 
       const result = await runCli(
-        `patchy repo reset --clones-dir repos --repo-dir test-repo --dry-run`,
+        `patchy upstream reset --clones-dir repos --upstream-dir test-repo --dry-run`,
         tmpDir,
       );
 
@@ -157,7 +166,7 @@ describe("patchy repo reset", () => {
       });
 
       const result = await runCli(
-        `patchy repo reset --clones-dir repos --repo-dir nonexistent --dry-run`,
+        `patchy upstream reset --clones-dir repos --upstream-dir nonexistent --dry-run`,
         tmpDir,
       );
 
@@ -176,18 +185,21 @@ describe("patchy repo reset", () => {
         },
         jsonConfig: {
           clones_dir: "repos",
-          repo_dir: "my-repo",
+          upstream_dir: "my-repo",
         },
       });
 
-      const repoDir = assertDefined(ctx.absoluteRepoDir, "absoluteRepoDir");
+      const repoDir = assertDefined(
+        ctx.absoluteUpstreamDir,
+        "absoluteUpstreamDir",
+      );
       await initGitRepoWithCommit(repoDir);
 
       // Make uncommitted changes
       await writeFileIn(repoDir, "dirty.txt", "uncommitted changes");
 
       const { result, prompts } = await runCliWithPrompts(
-        "patchy repo reset",
+        "patchy upstream reset",
         tmpDir,
       )
         .on({ confirm: /discard all uncommitted/, respond: true })
@@ -214,15 +226,18 @@ describe("patchy repo reset", () => {
         },
         jsonConfig: {
           clones_dir: "repos",
-          repo_dir: "my-repo",
+          upstream_dir: "my-repo",
         },
       });
 
-      const repoDir = assertDefined(ctx.absoluteRepoDir, "absoluteRepoDir");
+      const repoDir = assertDefined(
+        ctx.absoluteUpstreamDir,
+        "absoluteUpstreamDir",
+      );
       await initGitRepoWithCommit(repoDir);
 
       const { result, prompts } = await runCliWithPrompts(
-        "patchy repo reset",
+        "patchy upstream reset",
         tmpDir,
       )
         .on({ confirm: /discard all uncommitted/, respond: false })
@@ -249,15 +264,18 @@ describe("patchy repo reset", () => {
         },
         jsonConfig: {
           clones_dir: "repos",
-          repo_dir: "my-repo",
+          upstream_dir: "my-repo",
         },
       });
 
-      const repoDir = assertDefined(ctx.absoluteRepoDir, "absoluteRepoDir");
+      const repoDir = assertDefined(
+        ctx.absoluteUpstreamDir,
+        "absoluteUpstreamDir",
+      );
       await initGitRepoWithCommit(repoDir);
 
       const { result, prompts } = await runCliWithPrompts(
-        "patchy repo reset",
+        "patchy upstream reset",
         tmpDir,
       )
         .on({ confirm: /discard all uncommitted/, respond: cancel })

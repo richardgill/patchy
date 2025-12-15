@@ -3,13 +3,13 @@ import { checkoutCommand } from "./checkout/command";
 import { cloneCommand } from "./clone/command";
 import { resetCommand } from "./reset/command";
 
-export const repoRoutes = buildRouteMap({
+export const upstreamRoutes = buildRouteMap({
   routes: {
     checkout: checkoutCommand,
     clone: cloneCommand,
     reset: resetCommand,
   },
   docs: {
-    brief: "Repository management commands",
+    brief: "Upstream repository management commands",
   },
 });

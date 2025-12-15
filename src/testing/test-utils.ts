@@ -152,7 +152,7 @@ type TestDirContext = {
   originalCwd: string;
   absolutePatchesDir: string | undefined;
   absoluteClonesDir: string | undefined;
-  absoluteRepoDir: string | undefined;
+  absoluteUpstreamDir: string | undefined;
 };
 
 const createTestDirStructure = async (
@@ -176,10 +176,10 @@ const createTestDirStructure = async (
     absoluteClonesDir = resolve(tmpDir, directories.clonesDir);
     await mkdir(absoluteClonesDir, { recursive: true });
   }
-  let absoluteRepoDir: string | undefined;
+  let absoluteUpstreamDir: string | undefined;
   if (directories.repoDir && absoluteClonesDir) {
-    absoluteRepoDir = join(absoluteClonesDir, directories.repoDir);
-    await mkdir(absoluteRepoDir, { recursive: true });
+    absoluteUpstreamDir = join(absoluteClonesDir, directories.repoDir);
+    await mkdir(absoluteUpstreamDir, { recursive: true });
   }
 
   return {
@@ -187,7 +187,7 @@ const createTestDirStructure = async (
     originalCwd,
     absolutePatchesDir,
     absoluteClonesDir,
-    absoluteRepoDir,
+    absoluteUpstreamDir,
   };
 };
 

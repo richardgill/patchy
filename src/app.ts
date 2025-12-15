@@ -2,7 +2,7 @@ import { buildApplication, buildRouteMap } from "@stricli/core";
 import { applyCommand } from "./commands/apply/command";
 import { generateCommand } from "./commands/generate/command";
 import { initCommand } from "./commands/init/command";
-import { repoRoutes } from "./commands/repo/routes";
+import { upstreamRoutes } from "./commands/upstream/routes";
 import { VERSION } from "./version";
 
 const routes = buildRouteMap({
@@ -10,7 +10,7 @@ const routes = buildRouteMap({
     init: initCommand,
     apply: applyCommand,
     generate: generateCommand,
-    repo: repoRoutes,
+    upstream: upstreamRoutes,
   },
   docs: {
     brief: "A CLI tool for managing Git patch workflows",

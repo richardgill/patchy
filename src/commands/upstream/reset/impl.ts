@@ -14,7 +14,7 @@ export default async function (
   const prompts = createPrompts(this);
   const result = createEnrichedMergedConfig({
     flags,
-    requiredFields: ["clones_dir", "repo_dir"],
+    requiredFields: ["clones_dir", "upstream_dir"],
     cwd: this.cwd,
   });
 
@@ -25,35 +25,37 @@ export default async function (
   }
 
   const config = result.mergedConfig;
-  const repoDir = config.absoluteRepoDir ?? "";
+  const upstreamDir = config.absoluteUpstreamDir ?? "";
   const dryRun = config.dry_run;
 
-  if (!existsSync(repoDir)) {
+  if (!existsSync(upstreamDir)) {
     this.process.stderr.write(
-      chalk.red(`Repository directory does not exist: ${repoDir}\n`),
+      chalk.red(`Upstream directory does not exist: ${upstreamDir}\n`),
     );
     this.process.exit(1);
     return;
   }
 
-  const git = createGitClient(repoDir);
+  const git = createGitClient(upstreamDir);
   const isRepo = await git.checkIsRepo(CheckRepoActions.IS_REPO_ROOT);
   if (!isRepo) {
-    this.process.stderr.write(chalk.red(`Not a Git repository: ${repoDir}\n`));
+    this.process.stderr.write(
+      chalk.red(`Not a Git repository: ${upstreamDir}\n`),
+    );
     this.process.exit(1);
     return;
   }
 
   if (dryRun) {
     this.process.stdout.write(
-      `[DRY RUN] Would hard reset repository: ${repoDir}\n`,
+      `[DRY RUN] Would hard reset repository: ${upstreamDir}\n`,
     );
     return;
   }
 
   if (!flags.yes) {
     const confirmed = await prompts.confirm({
-      message: `This will discard all uncommitted changes in ${repoDir}. Continue?`,
+      message: `This will discard all uncommitted changes in ${upstreamDir}. Continue?`,
       initialValue: false,
     });
 
@@ -66,6 +68,6 @@ export default async function (
 
   await git.reset(["--hard"]);
   this.process.stdout.write(
-    chalk.green(`Successfully reset repository: ${repoDir}\n`),
+    chalk.green(`Successfully reset repository: ${upstreamDir}\n`),
   );
 }

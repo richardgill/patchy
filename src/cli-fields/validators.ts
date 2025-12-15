@@ -6,7 +6,7 @@ import type { EnrichedFields } from "./enriched-fields";
 
 // Patchy validators use EnrichedFields as the config type
 type PatchyValidatorFn = ValidatorFn<
-  EnrichedFields & { [key: string]: unknown } // Allow access to other config fields (e.g., repo_url, repo_dir)
+  EnrichedFields & { [key: string]: unknown } // Allow access to other config fields (e.g., upstream_url, upstream_dir)
 >;
 
 // Helper to check if a path exists
@@ -22,12 +22,12 @@ export const directoryExists: PatchyValidatorFn = (config, key) => {
   return checkPathExists(typeof value === "string" ? value : undefined);
 };
 
-export const repoDirExists: PatchyValidatorFn = (config, _key) => {
+export const upstreamDirExists: PatchyValidatorFn = (config, _key) => {
   // Skip validation if parent directory doesn't exist (will be caught by clones_dir validator)
   if (!config.absoluteClonesDir || !existsSync(config.absoluteClonesDir)) {
     return null;
   }
-  return checkPathExists(config.absoluteRepoDir);
+  return checkPathExists(config.absoluteUpstreamDir);
 };
 
 export const gitUrl: PatchyValidatorFn = (config, key) => {

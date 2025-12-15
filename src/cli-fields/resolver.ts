@@ -33,16 +33,16 @@ const enrichConfig = (
 ): EnrichedMergedConfig => {
   const {
     clones_dir: clonesDir,
-    repo_dir: repoDir,
+    upstream_dir: upstreamDir,
     patches_dir: patchesDir,
   } = config;
 
   return {
     ...config,
     absoluteClonesDir: clonesDir ? resolvePath(cwd, clonesDir) : undefined,
-    absoluteRepoDir:
-      clonesDir && repoDir
-        ? resolvePath(cwd, join(clonesDir, repoDir))
+    absoluteUpstreamDir:
+      clonesDir && upstreamDir
+        ? resolvePath(cwd, join(clonesDir, upstreamDir))
         : undefined,
     absolutePatchesDir: patchesDir ? resolvePath(cwd, patchesDir) : undefined,
   };

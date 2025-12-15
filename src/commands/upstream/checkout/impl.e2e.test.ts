@@ -16,7 +16,7 @@ import {
   writeTestFile,
 } from "~/testing/test-utils";
 
-describe("patchy repo checkout", () => {
+describe("patchy upstream checkout", () => {
   it("should checkout a branch", async () => {
     const tmpDir = generateTmpDir();
     const ctx = await setupTestWithConfig({
@@ -27,16 +27,16 @@ describe("patchy repo checkout", () => {
       },
       jsonConfig: {
         clones_dir: "repos",
-        repo_dir: "main",
+        upstream_dir: "main",
       },
     });
 
-    const repoDir = ctx.absoluteRepoDir as string;
+    const repoDir = ctx.absoluteUpstreamDir as string;
     await initGitRepoWithCommit(repoDir, "file.txt", "initial content");
     await createBranch(repoDir, "feature-branch");
 
     const result = await runCli(
-      `patchy repo checkout --ref feature-branch`,
+      `patchy upstream checkout --ref feature-branch`,
       tmpDir,
     );
 
@@ -55,16 +55,19 @@ describe("patchy repo checkout", () => {
       },
       jsonConfig: {
         clones_dir: "repos",
-        repo_dir: "main",
+        upstream_dir: "main",
       },
     });
 
-    const repoDir = ctx.absoluteRepoDir as string;
+    const repoDir = ctx.absoluteUpstreamDir as string;
     await initGitRepoWithCommit(repoDir, "file.txt", "initial content");
     await createTag(repoDir, "v1.0.0");
     await createBranch(repoDir, "other-branch");
 
-    const result = await runCli(`patchy repo checkout --ref v1.0.0`, tmpDir);
+    const result = await runCli(
+      `patchy upstream checkout --ref v1.0.0`,
+      tmpDir,
+    );
 
     expect(result).toSucceed();
     expect(result).toHaveOutput('Successfully checked out "v1.0.0"');
@@ -80,17 +83,17 @@ describe("patchy repo checkout", () => {
       },
       jsonConfig: {
         clones_dir: "repos",
-        repo_dir: "main",
+        upstream_dir: "main",
       },
     });
 
-    const repoDir = ctx.absoluteRepoDir as string;
+    const repoDir = ctx.absoluteUpstreamDir as string;
     await initGitRepoWithCommit(repoDir, "file.txt", "initial content");
     const initialCommit = await getCurrentCommit(repoDir);
     await createBranch(repoDir, "other-branch");
 
     const result = await runCli(
-      `patchy repo checkout --ref ${initialCommit}`,
+      `patchy upstream checkout --ref ${initialCommit}`,
       tmpDir,
     );
 
@@ -109,15 +112,15 @@ describe("patchy repo checkout", () => {
       },
       jsonConfig: {
         clones_dir: "repos",
-        repo_dir: "main",
+        upstream_dir: "main",
       },
     });
 
-    const repoDir = ctx.absoluteRepoDir as string;
+    const repoDir = ctx.absoluteUpstreamDir as string;
     await initGitRepoWithCommit(repoDir, "file.txt", "initial content");
 
     const result = await runCli(
-      `patchy repo checkout --ref non-existent-ref`,
+      `patchy upstream checkout --ref non-existent-ref`,
       tmpDir,
     );
 
@@ -137,18 +140,18 @@ describe("patchy repo checkout", () => {
       },
       jsonConfig: {
         clones_dir: "repos",
-        repo_dir: "main",
+        upstream_dir: "main",
       },
     });
 
-    const repoDir = ctx.absoluteRepoDir as string;
+    const repoDir = ctx.absoluteUpstreamDir as string;
     await initGitRepoWithCommit(repoDir, "file.txt", "initial content");
     await createBranch(repoDir, "feature-branch");
 
     await writeFileIn(repoDir, "uncommitted.txt", "dirty content");
 
     const result = await runCli(
-      `patchy repo checkout --ref feature-branch`,
+      `patchy upstream checkout --ref feature-branch`,
       tmpDir,
     );
 
@@ -166,16 +169,16 @@ describe("patchy repo checkout", () => {
       },
       jsonConfig: {
         clones_dir: "repos",
-        repo_dir: "main",
+        upstream_dir: "main",
       },
     });
 
-    const repoDir = ctx.absoluteRepoDir as string;
+    const repoDir = ctx.absoluteUpstreamDir as string;
     await initGitRepoWithCommit(repoDir, "file.txt", "initial content");
     await createBranch(repoDir, "feature-branch");
 
     const result = await runCli(
-      `patchy repo checkout --ref feature-branch --verbose`,
+      `patchy upstream checkout --ref feature-branch --verbose`,
       tmpDir,
     );
 
@@ -194,7 +197,7 @@ describe("patchy repo checkout", () => {
       },
       jsonConfig: {
         clones_dir: "repos",
-        repo_dir: "default-repo",
+        upstream_dir: "default-repo",
       },
     });
 
@@ -203,7 +206,7 @@ describe("patchy repo checkout", () => {
     await createBranch(repoDir, "feature-branch");
 
     const result = await runCli(
-      `patchy repo checkout --ref feature-branch --repo-dir custom-repo`,
+      `patchy upstream checkout --ref feature-branch --upstream-dir custom-repo`,
       tmpDir,
     );
 
@@ -212,21 +215,21 @@ describe("patchy repo checkout", () => {
     expect(await getCurrentBranch(repoDir)).toBe("feature-branch");
   });
 
-  it("should fail when repo_dir is missing", async () => {
+  it("should fail when upstream_dir is missing", async () => {
     const tmpDir = generateTmpDir();
     await writeTestFile(tmpDir, "patchy.json", "{}");
 
-    const result = await runCli(`patchy repo checkout --ref main`, tmpDir);
+    const result = await runCli(`patchy upstream checkout --ref main`, tmpDir);
 
     expect(result).toFailWith("Missing required parameters");
-    expect(result.stderr).toContain("repo_dir");
+    expect(result.stderr).toContain("upstream_dir");
   });
 
   it("should show --ref as required in help output", async () => {
     const tmpDir = generateTmpDir();
     mkdirSync(tmpDir, { recursive: true });
 
-    const result = await runCli(`patchy repo checkout --help`, tmpDir);
+    const result = await runCli(`patchy upstream checkout --help`, tmpDir);
 
     expect(result).toHaveOutput("--ref");
     expect(result.stdout).not.toContain("[--ref]");
@@ -243,18 +246,18 @@ describe("patchy repo checkout", () => {
         },
         jsonConfig: {
           clones_dir: "repos",
-          repo_dir: "main",
+          upstream_dir: "main",
         },
       });
 
-      const repoDir = ctx.absoluteRepoDir as string;
+      const repoDir = ctx.absoluteUpstreamDir as string;
       await initGitRepoWithCommit(repoDir, "file.txt", "initial content");
       await createBranch(repoDir, "feature-branch");
 
       const initialBranch = await getCurrentBranch(repoDir);
 
       const result = await runCli(
-        `patchy repo checkout --ref feature-branch --dry-run`,
+        `patchy upstream checkout --ref feature-branch --dry-run`,
         tmpDir,
       );
 
@@ -274,15 +277,15 @@ describe("patchy repo checkout", () => {
         },
         jsonConfig: {
           clones_dir: "repos",
-          repo_dir: "main",
+          upstream_dir: "main",
         },
       });
 
-      const repoDir = ctx.absoluteRepoDir as string;
+      const repoDir = ctx.absoluteUpstreamDir as string;
       await initGitRepoWithCommit(repoDir, "file.txt", "initial content");
 
       const result = await runCli(
-        `patchy repo checkout --ref non-existent-ref --dry-run`,
+        `patchy upstream checkout --ref non-existent-ref --dry-run`,
         tmpDir,
       );
 

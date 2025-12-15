@@ -93,7 +93,7 @@ export default async function (
 ): Promise<void> {
   const result = createEnrichedMergedConfig({
     flags,
-    requiredFields: ["clones_dir", "repo_dir"],
+    requiredFields: ["clones_dir", "upstream_dir"],
     cwd: this.cwd,
   });
 
@@ -104,10 +104,10 @@ export default async function (
   }
 
   const config = result.mergedConfig;
-  const absoluteRepoDir = config.absoluteRepoDir ?? "";
+  const absoluteUpstreamDir = config.absoluteUpstreamDir ?? "";
   const absolutePatchesDir = config.absolutePatchesDir ?? "";
 
-  const changes = await getGitChanges(absoluteRepoDir);
+  const changes = await getGitChanges(absoluteUpstreamDir);
 
   if (changes.length === 0) {
     this.process.stdout.write("No changes detected in repository.\n");
@@ -134,13 +134,13 @@ export default async function (
 
   const operations = toPatchToGenerates(
     changes,
-    absoluteRepoDir,
+    absoluteUpstreamDir,
     absolutePatchesDir,
   );
 
   if (config.dry_run) {
     this.process.stdout.write(
-      `[DRY RUN] Would generate patches from ${formatPathForDisplay(config.repo_dir ?? "")} to ${formatPathForDisplay(config.patches_dir ?? "")}\n`,
+      `[DRY RUN] Would generate patches from ${formatPathForDisplay(config.upstream_dir ?? "")} to ${formatPathForDisplay(config.patches_dir ?? "")}\n`,
     );
     this.process.stdout.write(`Found ${operations.length} change(s):\n`);
     for (const op of operations) {
@@ -167,7 +167,7 @@ export default async function (
   }
 
   this.process.stdout.write(
-    `Generating patches from ${formatPathForDisplay(config.repo_dir ?? "")} to ${formatPathForDisplay(config.patches_dir ?? "")}...\n`,
+    `Generating patches from ${formatPathForDisplay(config.upstream_dir ?? "")} to ${formatPathForDisplay(config.patches_dir ?? "")}...\n`,
   );
 
   ensureDirExists(absolutePatchesDir);
@@ -176,7 +176,7 @@ export default async function (
     ensureDirExists(dirname(op.destPath));
 
     if (op.type === "diff") {
-      const diff = await generateDiff(absoluteRepoDir, op.relativePath);
+      const diff = await generateDiff(absoluteUpstreamDir, op.relativePath);
       writeFileSync(op.destPath, diff);
       this.process.stdout.write(`  Created diff: ${op.relativePath}.diff\n`);
     } else {

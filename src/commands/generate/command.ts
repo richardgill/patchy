@@ -12,6 +12,6 @@ export const generateCommand = buildCommand({
   },
   docs: {
     brief:
-      "Generate .diff files by `git diff`ing repo_dir into the patches directory",
+      "Generate .diff files by `git diff`ing upstream_dir into the patches directory",
   },
 });

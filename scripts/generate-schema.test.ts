@@ -21,10 +21,10 @@ describe("generateJsonSchema", () => {
           "ref": {
             "type": "string",
           },
-          "repo_dir": {
+          "upstream_dir": {
             "type": "string",
           },
-          "repo_url": {
+          "upstream_url": {
             "type": "string",
           },
           "verbose": {

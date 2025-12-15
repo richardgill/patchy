@@ -1,6 +1,6 @@
 import type { ValidatorFn } from "~/lib/cli-config";
 import type { EnrichedFields } from "./enriched-fields";
-import { directoryExists, gitUrl, repoDirExists } from "./validators";
+import { directoryExists, gitUrl, upstreamDirExists } from "./validators";
 
 // Extended metadata entry with optional validator
 type PatchyFlagMetadataEntry = {
@@ -38,38 +38,39 @@ type PatchyFlagMetadataMap = Record<string, PatchyFlagMetadataEntry>;
  * - validate: optional validation function (only for configField: true)
  */
 export const FLAG_METADATA = {
-  repo_url: {
+  upstream_url: {
     configField: true,
     requiredInConfig: false,
-    env: "PATCHY_REPO_URL",
+    env: "PATCHY_UPSTREAM_URL",
     type: "string",
-    name: "Repository URL",
+    name: "Upstream URL",
     example: "https://github.com/user/repo.git",
     defaultValue: undefined,
     validate: gitUrl,
     stricliFlag: {
-      "repo-url": {
+      "upstream-url": {
         kind: "parsed",
         parse: String,
-        brief: "The upstream repository URL [env: PATCHY_REPO_URL]",
+        brief: "The upstream repository URL [env: PATCHY_UPSTREAM_URL]",
         optional: true,
       },
     },
   },
-  repo_dir: {
+  upstream_dir: {
     configField: true,
     requiredInConfig: false,
-    env: "PATCHY_REPO_DIR",
+    env: "PATCHY_UPSTREAM_DIR",
     type: "string",
-    name: "Repository directory",
+    name: "Upstream directory",
     example: "./repo",
     defaultValue: undefined,
-    validate: repoDirExists,
+    validate: upstreamDirExists,
     stricliFlag: {
-      "repo-dir": {
+      "upstream-dir": {
         kind: "parsed",
         parse: String,
-        brief: "Path to the Git repo being patched [env: PATCHY_REPO_DIR]",
+        brief:
+          "Path to the upstream repo being patched [env: PATCHY_UPSTREAM_DIR]",
         optional: true,
       },
     },

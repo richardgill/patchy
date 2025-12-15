@@ -11,6 +11,6 @@ export const resetCommand = buildCommand({
     },
   },
   docs: {
-    brief: "Hard reset the Git working tree of repo_dir",
+    brief: "Hard reset the Git working tree of upstream_dir",
   },
 });

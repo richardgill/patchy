@@ -21,13 +21,13 @@ describe("patchy apply", () => {
         repoDir: "main",
       },
       jsonConfig: {
-        repo_url: "https://github.com/example/test-repo.git",
-        repo_dir: "config-repo",
+        upstream_url: "https://github.com/example/test-repo.git",
+        upstream_dir: "config-repo",
       },
     });
 
     const result = await runCli(
-      `patchy apply --repo-dir main --clones-dir repos --patches-dir patches --config patchy.json --verbose --dry-run`,
+      `patchy apply --upstream-dir main --clones-dir repos --patches-dir patches --config patchy.json --verbose --dry-run`,
       tmpDir,
     );
 
@@ -48,8 +48,8 @@ describe("patchy apply", () => {
         repoDir: "upstream",
       },
       jsonConfig: {
-        repo_url: "https://github.com/example/test-repo.git",
-        repo_dir: "upstream",
+        upstream_url: "https://github.com/example/test-repo.git",
+        upstream_dir: "upstream",
         clones_dir: `${tmpDir}/repos`,
         patches_dir: "my-patches",
         ref: "main",
@@ -78,8 +78,8 @@ describe("patchy apply", () => {
         repoDir: "cli-repo",
       },
       jsonConfig: {
-        repo_url: "https://github.com/example/test-repo.git",
-        repo_dir: "config-repo",
+        upstream_url: "https://github.com/example/test-repo.git",
+        upstream_dir: "config-repo",
         clones_dir: `${tmpDir}/repos`,
         patches_dir: "config-patches",
         ref: "main",
@@ -87,7 +87,7 @@ describe("patchy apply", () => {
     });
 
     const result = await runCli(
-      `patchy apply --repo-dir cli-repo --patches-dir cli-patches --config patchy.json --dry-run --verbose`,
+      `patchy apply --upstream-dir cli-repo --patches-dir cli-patches --config patchy.json --dry-run --verbose`,
       tmpDir,
     );
 
@@ -116,7 +116,7 @@ describe("patchy apply", () => {
     expect(result.stderr).toMatchInlineSnapshot(`
       "Missing required parameters:
 
-        Missing Repository directory: set repo_dir in ./patchy.json, PATCHY_REPO_DIR env var, or --repo-dir flag
+        Missing Upstream directory: set upstream_dir in ./patchy.json, PATCHY_UPSTREAM_DIR env var, or --upstream-dir flag
 
       You can set up ./patchy.json by running:
         patchy init"
@@ -159,9 +159,9 @@ describe("patchy apply", () => {
       tmpDir,
       createDirectories: {},
       jsonConfig: {
-        repo_url: "https://github.com/example/repo.git",
+        upstream_url: "https://github.com/example/repo.git",
         clones_dir: "non-existent-base",
-        repo_dir: "non-existent-repo",
+        upstream_dir: "non-existent-repo",
         patches_dir: "non-existent-patches",
       },
     });
@@ -187,9 +187,9 @@ describe("patchy apply", () => {
         patchesDir: "patches",
       },
       jsonConfig: {
-        repo_url: "invalid-url-format",
+        upstream_url: "invalid-url-format",
         clones_dir: "base",
-        repo_dir: "repo",
+        upstream_dir: "repo",
       },
     });
 
@@ -217,7 +217,7 @@ describe("patchy apply", () => {
     });
 
     const result = await runCli(
-      `patchy apply --config empty.json --repo-url https://github.com/example/repo.git --clones-dir base --repo-dir repo --dry-run --verbose`,
+      `patchy apply --config empty.json --upstream-url https://github.com/example/repo.git --clones-dir base --upstream-dir repo --dry-run --verbose`,
       tmpDir,
     );
 
@@ -238,9 +238,9 @@ describe("patchy apply", () => {
         patchesDir: "patches",
       },
       jsonConfig: {
-        repo_url: "https://github.com/example/repo.git",
+        upstream_url: "https://github.com/example/repo.git",
         clones_dir: "base",
-        repo_dir: "repo",
+        upstream_dir: "repo",
         verbose: false,
       },
     });
@@ -267,9 +267,9 @@ describe("patchy apply", () => {
         patchesDir: "patches",
       },
       jsonConfig: {
-        repo_url: "https://github.com/example/custom.git",
+        upstream_url: "https://github.com/example/custom.git",
         clones_dir: "base",
-        repo_dir: "repo",
+        upstream_dir: "repo",
         ref: "custom-branch",
       },
     });
@@ -286,7 +286,7 @@ describe("patchy apply", () => {
     `);
   });
 
-  it("should correctly join clones_dir and repo_dir paths", async () => {
+  it("should correctly join clones_dir and upstream_dir paths", async () => {
     const tmpDir = generateTmpDir();
     await setupTestWithConfig({
       tmpDir,
@@ -296,9 +296,9 @@ describe("patchy apply", () => {
         patchesDir: "patches",
       },
       jsonConfig: {
-        repo_url: "https://github.com/example/repo.git",
+        upstream_url: "https://github.com/example/repo.git",
         clones_dir: "my-base/nested",
-        repo_dir: "my-repo/nested-repo",
+        upstream_dir: "my-repo/nested-repo",
       },
     });
 
@@ -321,9 +321,9 @@ describe("patchy apply", () => {
         patchesDir: "patches",
       },
       jsonConfig: {
-        repo_url: "https://github.com/example/repo.git",
+        upstream_url: "https://github.com/example/repo.git",
         clones_dir: "clonesDir1",
-        repo_dir: "repoDir1",
+        upstream_dir: "repoDir1",
       },
     });
 
@@ -342,7 +342,7 @@ describe("patchy apply", () => {
       tmpDir,
       createDirectories: {},
       jsonConfig: {
-        repo_url: "https://github.com/example/repo.git",
+        upstream_url: "https://github.com/example/repo.git",
       },
     });
 
@@ -352,7 +352,7 @@ describe("patchy apply", () => {
     expect(result.stderr).toMatchInlineSnapshot(`
       "Missing required parameters:
 
-        Missing Repository directory: set repo_dir in ./patchy.json, PATCHY_REPO_DIR env var, or --repo-dir flag
+        Missing Upstream directory: set upstream_dir in ./patchy.json, PATCHY_UPSTREAM_DIR env var, or --upstream-dir flag
 
       You can set up ./patchy.json by running:
         patchy init"
@@ -369,9 +369,9 @@ describe("patchy apply", () => {
         patchesDir: "patches",
       },
       jsonConfig: {
-        repo_url: "https://github.com/example/repo.git",
+        upstream_url: "https://github.com/example/repo.git",
         clones_dir: "base",
-        repo_dir: "repo",
+        upstream_dir: "repo",
         ref: "json-ref",
       },
     });
@@ -401,9 +401,9 @@ describe("patchy apply", () => {
         patchesDir: "absolute-patches",
       },
       jsonConfig: {
-        repo_url: "https://github.com/example/repo.git",
+        upstream_url: "https://github.com/example/repo.git",
         clones_dir: absoluteBase,
-        repo_dir: "repo",
+        upstream_dir: "repo",
         patches_dir: absolutePatches,
       },
     });
@@ -438,7 +438,7 @@ describe("patchy apply", () => {
   it("should handle invalid JSON structure", async () => {
     const tmpDir = generateTmpDir();
     await writeJsonConfig(tmpDir, "invalid-structure.json", {
-      repo_url: 123,
+      upstream_url: 123,
       verbose: "not-a-boolean",
       ref: ["array", "not", "string"],
     });
@@ -454,7 +454,7 @@ describe("patchy apply", () => {
   it("should handle Zod validation error for empty string fields", async () => {
     const tmpDir = generateTmpDir();
     await writeJsonConfig(tmpDir, "empty-strings.json", {
-      repo_url: "",
+      upstream_url: "",
       ref: "",
       clones_dir: "",
     });
@@ -468,7 +468,7 @@ describe("patchy apply", () => {
     expect(result.stderr).toMatchInlineSnapshot(`
       "Missing required parameters:
 
-        Missing Repository directory: set repo_dir in ./empty-strings.json, PATCHY_REPO_DIR env var, or --repo-dir flag
+        Missing Upstream directory: set upstream_dir in ./empty-strings.json, PATCHY_UPSTREAM_DIR env var, or --upstream-dir flag
 
       You can set up empty-strings.json by running:
         patchy init --config empty-strings.json"
@@ -478,7 +478,7 @@ describe("patchy apply", () => {
   it("should handle Zod validation error for null values", async () => {
     const tmpDir = generateTmpDir();
     await writeJsonConfig(tmpDir, "null-values.json", {
-      repo_url: null,
+      upstream_url: null,
       verbose: null,
       patches_dir: null,
     });
@@ -490,7 +490,7 @@ describe("patchy apply", () => {
 
     expect(result).toFail();
     expect(result.stderr).toMatchInlineSnapshot(`
-      "repo_url: Invalid input: expected string, received null
+      "upstream_url: Invalid input: expected string, received null
       patches_dir: Invalid input: expected string, received null
       verbose: Invalid input: expected boolean, received null"
     `);
@@ -499,7 +499,7 @@ describe("patchy apply", () => {
   it("should handle Zod strict mode error for unknown fields", async () => {
     const tmpDir = generateTmpDir();
     await writeJsonConfig(tmpDir, "unknown-fields.json", {
-      repo_url: "https://github.com/user/repo.git",
+      upstream_url: "https://github.com/user/repo.git",
       unknown_field: "value",
       another_unknown: 123,
     });
@@ -537,7 +537,7 @@ describe("patchy apply", () => {
   it("should handle array values where strings are expected", async () => {
     const tmpDir = generateTmpDir();
     await writeJsonConfig(tmpDir, "array-values.json", {
-      repo_url: ["https://github.com/user/repo.git"],
+      upstream_url: ["https://github.com/user/repo.git"],
       ref: ["main", "develop"],
       patches_dir: ["./patches"],
     });
@@ -549,7 +549,7 @@ describe("patchy apply", () => {
 
     expect(result).toFail();
     expect(result.stderr).toMatchInlineSnapshot(`
-      "repo_url: Invalid input: expected string, received array
+      "upstream_url: Invalid input: expected string, received array
       patches_dir: Invalid input: expected string, received array
       ref: Invalid input: expected string, received array"
     `);
@@ -558,7 +558,7 @@ describe("patchy apply", () => {
   it("should handle object values where primitives are expected", async () => {
     const tmpDir = generateTmpDir();
     await writeJsonConfig(tmpDir, "object-values.json", {
-      repo_url: { url: "https://github.com/user/repo.git" },
+      upstream_url: { url: "https://github.com/user/repo.git" },
       verbose: { enabled: true },
     });
 
@@ -569,7 +569,7 @@ describe("patchy apply", () => {
 
     expect(result).toFail();
     expect(result.stderr).toMatchInlineSnapshot(`
-      "repo_url: Invalid input: expected string, received object
+      "upstream_url: Invalid input: expected string, received object
       verbose: Invalid input: expected boolean, received object"
     `);
   });
@@ -577,10 +577,10 @@ describe("patchy apply", () => {
   it("should handle multiple Zod errors with mixed types", async () => {
     const tmpDir = generateTmpDir();
     await writeJsonConfig(tmpDir, "mixed-errors.json", {
-      repo_url: 123,
+      upstream_url: 123,
       ref: true,
       clones_dir: ["base"],
-      repo_dir: null,
+      upstream_dir: null,
       patches_dir: {},
       verbose: "false",
       dry_run: 1,
@@ -593,8 +593,8 @@ describe("patchy apply", () => {
 
     expect(result).toFail();
     expect(result.stderr).toMatchInlineSnapshot(`
-      "repo_url: Invalid input: expected string, received number
-      repo_dir: Invalid input: expected string, received null
+      "upstream_url: Invalid input: expected string, received number
+      upstream_dir: Invalid input: expected string, received null
       clones_dir: Invalid input: expected string, received array
       patches_dir: Invalid input: expected string, received object
       ref: Invalid input: expected string, received boolean
@@ -613,14 +613,14 @@ describe("patchy apply", () => {
         patchesDir: "patches",
       },
       jsonConfig: {
-        repo_url: "https://github.com/example/test-repo.git",
+        upstream_url: "https://github.com/example/test-repo.git",
         clones_dir: "repos",
-        repo_dir: "main",
+        upstream_dir: "main",
       },
     });
 
     const patchesDir = ctx.absolutePatchesDir as string;
-    const repoDir = ctx.absoluteRepoDir as string;
+    const repoDir = ctx.absoluteUpstreamDir as string;
 
     await writeFileIn(
       patchesDir,
@@ -650,14 +650,14 @@ describe("patchy apply", () => {
         patchesDir: "patches",
       },
       jsonConfig: {
-        repo_url: "https://github.com/example/test-repo.git",
+        upstream_url: "https://github.com/example/test-repo.git",
         clones_dir: "repos",
-        repo_dir: "main",
+        upstream_dir: "main",
       },
     });
 
     const patchesDir = ctx.absolutePatchesDir as string;
-    const repoDir = ctx.absoluteRepoDir as string;
+    const repoDir = ctx.absoluteUpstreamDir as string;
 
     await writeFileIn(
       patchesDir,
@@ -685,14 +685,14 @@ describe("patchy apply", () => {
         patchesDir: "patches",
       },
       jsonConfig: {
-        repo_url: "https://github.com/example/test-repo.git",
+        upstream_url: "https://github.com/example/test-repo.git",
         clones_dir: "repos",
-        repo_dir: "main",
+        upstream_dir: "main",
       },
     });
 
     const patchesDir = ctx.absolutePatchesDir as string;
-    const repoDir = ctx.absoluteRepoDir as string;
+    const repoDir = ctx.absoluteUpstreamDir as string;
 
     await writeFileIn(
       repoDir,
@@ -734,14 +734,14 @@ describe("patchy apply", () => {
         patchesDir: "patches",
       },
       jsonConfig: {
-        repo_url: "https://github.com/example/test-repo.git",
+        upstream_url: "https://github.com/example/test-repo.git",
         clones_dir: "repos",
-        repo_dir: "main",
+        upstream_dir: "main",
       },
     });
 
     const patchesDir = ctx.absolutePatchesDir as string;
-    const repoDir = ctx.absoluteRepoDir as string;
+    const repoDir = ctx.absoluteUpstreamDir as string;
 
     await writeFileIn(repoDir, "existing.ts", "const x = 1;\n");
     await writeFileIn(patchesDir, "new.ts", "export const y = 2;");
@@ -780,9 +780,9 @@ describe("patchy apply", () => {
         patchesDir: "patches",
       },
       jsonConfig: {
-        repo_url: "https://github.com/example/test-repo.git",
+        upstream_url: "https://github.com/example/test-repo.git",
         clones_dir: "repos",
-        repo_dir: "main",
+        upstream_dir: "main",
       },
     });
 
@@ -817,14 +817,14 @@ describe("patchy apply", () => {
         patchesDir: "patches",
       },
       jsonConfig: {
-        repo_url: "https://github.com/example/test-repo.git",
+        upstream_url: "https://github.com/example/test-repo.git",
         clones_dir: "repos",
-        repo_dir: "main",
+        upstream_dir: "main",
       },
     });
 
     const patchesDir = ctx.absolutePatchesDir as string;
-    const repoDir = ctx.absoluteRepoDir as string;
+    const repoDir = ctx.absoluteUpstreamDir as string;
 
     await writeFileIn(patchesDir, "newFile.ts", "content");
     await writeFileIn(patchesDir, "existing.ts.diff", "diff content");
@@ -850,9 +850,9 @@ describe("patchy apply", () => {
         patchesDir: "patches",
       },
       jsonConfig: {
-        repo_url: "https://github.com/example/test-repo.git",
+        upstream_url: "https://github.com/example/test-repo.git",
         clones_dir: "repos",
-        repo_dir: "main",
+        upstream_dir: "main",
       },
     });
 
@@ -866,7 +866,7 @@ export const component = () => {
 // Unicode: 你好 🎉
 `;
     const patchesDir = ctx.absolutePatchesDir as string;
-    const repoDir = ctx.absoluteRepoDir as string;
+    const repoDir = ctx.absoluteUpstreamDir as string;
 
     await writeFileIn(patchesDir, "complex.tsx", complexContent);
 
@@ -886,14 +886,14 @@ export const component = () => {
         patchesDir: "patches",
       },
       jsonConfig: {
-        repo_url: "https://github.com/example/test-repo.git",
+        upstream_url: "https://github.com/example/test-repo.git",
         clones_dir: "repos",
-        repo_dir: "main",
+        upstream_dir: "main",
       },
     });
 
     const patchesDir = ctx.absolutePatchesDir as string;
-    const repoDir = ctx.absoluteRepoDir as string;
+    const repoDir = ctx.absoluteUpstreamDir as string;
 
     // The target file has fewer lines than the diff's context expects
     await writeFileIn(
@@ -941,14 +941,14 @@ const other = 2;
         patchesDir: "patches",
       },
       jsonConfig: {
-        repo_url: "https://github.com/example/test-repo.git",
+        upstream_url: "https://github.com/example/test-repo.git",
         clones_dir: "repos",
-        repo_dir: "main",
+        upstream_dir: "main",
       },
     });
 
     const patchesDir = ctx.absolutePatchesDir as string;
-    const repoDir = ctx.absoluteRepoDir as string;
+    const repoDir = ctx.absoluteUpstreamDir as string;
 
     // The target file has fewer lines than the diff's context expects
     await writeFileIn(

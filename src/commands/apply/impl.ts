@@ -89,7 +89,7 @@ export default async function (
   try {
     const result = createEnrichedMergedConfig({
       flags,
-      requiredFields: ["clones_dir", "repo_dir", "patches_dir"],
+      requiredFields: ["clones_dir", "upstream_dir", "patches_dir"],
       cwd: this.cwd,
     });
 
@@ -101,18 +101,18 @@ export default async function (
 
     const config = result.mergedConfig;
     const absolutePatchesDir = config.absolutePatchesDir ?? "";
-    const absoluteRepoDir = config.absoluteRepoDir ?? "";
+    const absoluteUpstreamDir = config.absoluteUpstreamDir ?? "";
 
     if (config.dry_run) {
       this.process.stdout.write(
         "[DRY RUN] Would apply patches from " +
-          `${formatPathForDisplay(config.patches_dir ?? "")} to ${formatPathForDisplay(config.repo_dir ?? "")}\n`,
+          `${formatPathForDisplay(config.patches_dir ?? "")} to ${formatPathForDisplay(config.upstream_dir ?? "")}\n`,
       );
     }
 
     const patchFiles = await collectPatchToApplys(
       absolutePatchesDir,
-      absoluteRepoDir,
+      absoluteUpstreamDir,
     );
 
     if (patchFiles.length === 0) {

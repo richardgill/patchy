@@ -42,7 +42,7 @@ const promptAndRunClone = async ({
 
   if (!canPrompt(context)) {
     context.process.stdout.write(
-      `\nRun ${chalk.cyan("patchy repo clone")} to clone ${chalk.cyan(repoName)} into ${chalk.cyan(formatPathForDisplay(clonesDir))}\n`,
+      `\nRun ${chalk.cyan("patchy upstream clone")} to clone ${chalk.cyan(repoName)} into ${chalk.cyan(formatPathForDisplay(clonesDir))}\n`,
     );
     return;
   }
@@ -55,13 +55,13 @@ const promptAndRunClone = async ({
 
   if (prompts.isCancel(shouldClone) || !shouldClone) {
     context.process.stdout.write(
-      `\nRun ${chalk.cyan("patchy repo clone")} when you're ready to clone your repo into ${chalk.cyan(formatPathForDisplay(clonesDir))}\n`,
+      `\nRun ${chalk.cyan("patchy upstream clone")} when you're ready to clone your repo into ${chalk.cyan(formatPathForDisplay(clonesDir))}\n`,
     );
     return;
   }
 
   context.process.stdout.write("\n");
-  await run(app, ["repo", "clone"], context);
+  await run(app, ["upstream", "clone"], context);
 
   context.process.stdout.write(
     `\nNow you can edit your clone ${chalk.cyan(formatPathForDisplay(join(clonesDir, repoName)))} and run ${chalk.cyan("patchy generate")} to generate patches\n`,
@@ -83,13 +83,13 @@ export default async function (
     return;
   }
 
-  if (flags["repo-url"] !== undefined) {
-    if (!flags["repo-url"].trim()) {
+  if (flags["upstream-url"] !== undefined) {
+    if (!flags["upstream-url"].trim()) {
       this.process.stderr.write("Repository URL is required\n");
       this.process.exit?.(1);
       return;
     }
-    if (!isValidGitUrl(flags["repo-url"])) {
+    if (!isValidGitUrl(flags["upstream-url"])) {
       this.process.stderr.write(
         "Please enter a valid Git URL (https://github.com/owner/repo or git@github.com:owner/repo.git)\n",
       );
@@ -157,7 +157,7 @@ export default async function (
     }
   }
 
-  if (flags["repo-url"] === undefined) {
+  if (flags["upstream-url"] === undefined) {
     const repoUrl = await prompts.text({
       message: "Upstream repository URL:",
       placeholder: "https://github.com/example/repo",
@@ -190,7 +190,7 @@ export default async function (
   }
 
   const finalConfig: JsonConfig = {
-    repo_url: flags["repo-url"] ?? answers.repoUrl ?? "",
+    upstream_url: flags["upstream-url"] ?? answers.repoUrl ?? "",
     clones_dir: clonesDir,
     patches_dir:
       flags["patches-dir"] ??
@@ -267,7 +267,7 @@ export default async function (
 
   await promptAndRunClone({
     clonesDir,
-    repoUrl: finalConfig.repo_url ?? "",
+    repoUrl: finalConfig.upstream_url ?? "",
     context: this,
   });
 }

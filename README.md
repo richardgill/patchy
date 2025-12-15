@@ -9,10 +9,10 @@ Patchy helps you manage `.diff` patches for a repository you want to modify.
 `patchy.json` (see [full config reference](#patchyjson) below)
 ```json5
 {
-  "repo_url": "https://github.com/octocat/spoon-knife",
+  "upstream_url": "https://github.com/octocat/spoon-knife",
   "patches_dir": "./patches/",
   "clones_dir": "./clones/",
-  "repo_dir": "spoon-knife",
+  "upstream_dir": "spoon-knife",
 }
 ```
 
@@ -21,7 +21,7 @@ Initialize Patchy with:
 patchy init
 ```
 
-You can `patchy repo clone` the repo into `./clones/` to complete the setup.
+You can `patchy upstream clone` the repo into `./clones/` to complete the setup.
 
 Now you'll have
 
@@ -62,15 +62,15 @@ You can reapply your changes later with:
 ```jsonc
 {
   // Git URL to clone from.
-  "repo_url": "https://github.com/example/repo.git", // Override: --repo-url | env: PATCHY_REPO_URL
+  "upstream_url": "https://github.com/example/repo.git", // Override: --upstream-url | env: PATCHY_UPSTREAM_URL
 
   // Path to repo you're generating patches from or applying patches to.
-  "repo_dir": "~/repos/repo", // Override: --repo-dir | env: PATCHY_REPO_DIR
+  "upstream_dir": "~/repos/repo", // Override: --upstream-dir | env: PATCHY_UPSTREAM_DIR
 
   // Directory containing patch files.
   "patches_dir": "./patches/", // Override: --patches-dir | env: PATCHY_PATCHES_DIR
 
-  // Parent directory for cloning repos. You can easily clone more repos here from repo_url.
+  // Parent directory for cloning repos. You can easily clone more repos here from upstream_url.
   "clones_dir": "./clones/", // Override: --clones-dir | env: PATCHY_CLONES_DIR
 
   // Git ref to checkout (branch, tag, SHA).
@@ -116,42 +116,42 @@ patchy init
 
 ### `patchy generate`
 
-Generate `.diff` files and new files into `./patches/` based on current `git diff` in `repo_dir`.
+Generate `.diff` files and new files into `./patches/` based on current `git diff` in `upstream_dir`.
 
 ```sh
-patchy generate [--repo-dir] [--patches-dir] [--dry-run]
+patchy generate [--upstream-dir] [--patches-dir] [--dry-run]
 ```
 
 ### `patchy apply`
 
-Apply patch files from `patches/` into `repo_dir`.
+Apply patch files from `patches/` into `upstream_dir`.
 
 ```sh
-patchy apply [--repo-dir] [--patches-dir] [--dry-run]
+patchy apply [--upstream-dir] [--patches-dir] [--dry-run]
 ```
 
-### `patchy repo reset`
+### `patchy upstream reset`
 
-Hard reset the Git working tree of `repo_dir`. Discards local changes.
+Hard reset the Git working tree of `upstream_dir`. Discards local changes.
 
 ```sh
-patchy repo reset [--repo-dir]
+patchy upstream reset [--upstream-dir]
 ```
 
-### `patchy repo checkout --ref <git-ref>`
+### `patchy upstream checkout --ref <git-ref>`
 
-Check out a specific Git ref (branch, tag, or SHA) in `repo_dir`.
+Check out a specific Git ref (branch, tag, or SHA) in `upstream_dir`.
 
 ```sh
-patchy repo checkout --ref main [--repo-dir]
+patchy upstream checkout --ref main [--upstream-dir]
 ```
 
-### `patchy repo clone --url <git-url>`
+### `patchy upstream clone --url <git-url>`
 
 Clone a repository into a subdirectory of `clones_dir`. The target directory is derived from the repo name.
 
 ```sh
-patchy repo clone [--clones-dir] [--ref] [--repo-url] 
+patchy upstream clone [--clones-dir] [--ref] [--upstream-url] 
 ```
 
 ## License
