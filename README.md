@@ -42,10 +42,10 @@ Create a folder for the fork: `mkdir spoon-knife-fork && cd spoon-knife-fork`
 `patchy init` creates your config: `./patchy.json` ([full reference](#patchyjson-reference))
 ```json5
 {
-  "repo_url": "https://github.com/octocat/spoon-knife",
+  "source_repo": "https://github.com/octocat/spoon-knife",
   "patches_dir": "./patches/",
   "clones_dir": "./clones/",
-  "repo_dir": "spoon-knife",
+  "target_repo": "spoon-knife",
   "ref": "main"
 }
 ```
@@ -154,17 +154,18 @@ patchy init
 
 ```jsonc
 {
-  // Git URL to clone from.
-  "repo_url": "https://github.com/example/repo.git", // Override: --repo-url | env: PATCHY_REPO_URL
-
-  // Path to repo you're generating patches from or applying patches to.
-  "repo_dir": "~/repos/repo", // Override: --repo-dir | env: PATCHY_REPO_DIR
-
+  // Git URL or local file path to clone from.
+  "source_repo": "https://github.com/example/repo.git", // Override: --source-repo | env: PATCHY_SOURCE_REPO
   // Directory containing patch files.
   "patches_dir": "./patches/", // Override: --patches-dir | env: PATCHY_PATCHES_DIR
 
-  // Parent directory for cloning repos. You can easily clone more repos here from repo_url.
+  // Default directory for cloning repos.
   "clones_dir": "./clones/", // Override: --clones-dir | env: PATCHY_CLONES_DIR
+
+  // Path to repo you're generating patches from or applying patches to.
+  // Can be relative to clones_dir: <clones_dir>/<target_repo> or absolute.
+  "target_repo": "repo", // Override: --target-repo | env: PATCHY_TARGET_REPO
+
 
   // Git ref to checkout (branch, tag, SHA).
   "ref": "main" // Override: --ref | env: PATCHY_REF
@@ -176,7 +177,7 @@ Precedence: CLI flags > Environment variables > `patchy.json`
 
 ## Patch file layout
 
-The `patches/` directory (customizable via [`patches_dir`](#patchyjson-reference)) uses the same folder structure as `repo_dir`:
+The `patches/` directory (customizable via [`patches_dir`](#patchyjson-reference)) uses the same folder structure as `target_repo`:
 
 ```
 ./
@@ -194,50 +195,50 @@ The `patches/` directory (customizable via [`patches_dir`](#patchyjson-reference
 - **`.diff` files** — For modified existing files (generated via `git diff HEAD`)
 - **Plain files** — For newly added files (copied verbatim for easier inspection and editing)
 
-`patchy generate` automatically removes stale files in `patches/` that no longer correspond to changes in `repo_dir`.
+`patchy generate` automatically removes stale files in `patches/` that no longer correspond to changes in `target_repo`.
 
 ## Commands
 
 ### `patchy generate`
 
-Generate `.diff` files and new files into `./patches/` based on current `git diff` in `repo_dir`.
+Generate `.diff` files and new files into `./patches/` based on current `git diff` in `target_repo`.
 
 ```sh
-patchy generate [--repo-dir] [--patches-dir] [--dry-run]
+patchy generate [--target-repo] [--patches-dir] [--dry-run]
 ```
 
 Note: `patchy generate` is destructive and will remove any unneeded files in your `./patches/` folder.
 
 ### `patchy apply`
 
-Apply patch files from `patches/` into `repo_dir`.
+Apply patch files from `patches/` into `target_repo`.
 
 ```sh
-patchy apply [--repo-dir] [--patches-dir] [--dry-run]
+patchy apply [--target-repo] [--patches-dir] [--dry-run]
 ```
 
 ### `patchy repo reset`
 
-Hard reset the Git working tree of `repo_dir`. Discards local changes.
+Hard reset the Git working tree of `target_repo`. Discards local changes.
 
 ```sh
-patchy repo reset [--repo-dir]
+patchy repo reset [--target-repo]
 ```
 
 ### `patchy repo checkout --ref <git-ref>`
 
-Check out a specific Git ref (branch, tag, or SHA) in `repo_dir`.
+Check out a specific Git ref (branch, tag, or SHA) in `target_repo`.
 
 ```sh
-patchy repo checkout --ref main [--repo-dir]
+patchy repo checkout --ref main [--target-repo]
 ```
 
-### `patchy repo clone --url <git-url>`
+### `patchy repo clone`
 
 Clone a repository into a subdirectory of `clones_dir`. The target directory is derived from the repo name.
 
 ```sh
-patchy repo clone [--clones-dir] [--ref] [--repo-url] 
+patchy repo clone [--source-repo] [--clones-dir] [--ref]
 ```
 
 ## License

@@ -152,7 +152,7 @@ type TestDirContext = {
   originalCwd: string;
   absolutePatchesDir: string | undefined;
   absoluteClonesDir: string | undefined;
-  absoluteRepoDir: string | undefined;
+  absoluteTargetRepo: string | undefined;
 };
 
 const createTestDirStructure = async (
@@ -160,7 +160,7 @@ const createTestDirStructure = async (
   directories: {
     patchesDir?: string | undefined;
     clonesDir?: string | undefined;
-    repoDir?: string | undefined;
+    targetRepo?: string | undefined;
   },
 ): Promise<TestDirContext> => {
   const originalCwd = process.cwd();
@@ -176,10 +176,10 @@ const createTestDirStructure = async (
     absoluteClonesDir = resolve(tmpDir, directories.clonesDir);
     await mkdir(absoluteClonesDir, { recursive: true });
   }
-  let absoluteRepoDir: string | undefined;
-  if (directories.repoDir && absoluteClonesDir) {
-    absoluteRepoDir = join(absoluteClonesDir, directories.repoDir);
-    await mkdir(absoluteRepoDir, { recursive: true });
+  let absoluteTargetRepo: string | undefined;
+  if (directories.targetRepo && absoluteClonesDir) {
+    absoluteTargetRepo = join(absoluteClonesDir, directories.targetRepo);
+    await mkdir(absoluteTargetRepo, { recursive: true });
   }
 
   return {
@@ -187,7 +187,7 @@ const createTestDirStructure = async (
     originalCwd,
     absolutePatchesDir,
     absoluteClonesDir,
-    absoluteRepoDir,
+    absoluteTargetRepo,
   };
 };
 
@@ -201,7 +201,7 @@ export const setupTestWithConfig = async ({
   createDirectories?: {
     patchesDir?: string | undefined;
     clonesDir?: string | undefined;
-    repoDir?: string | undefined;
+    targetRepo?: string | undefined;
   };
   jsonConfig?: Record<string, string | boolean | number>;
   configPath?: string;

@@ -53,15 +53,15 @@ const promptRepoDirSave = async ({
     return;
   }
 
-  const currentRepoDir = parseResult.json.repo_dir;
+  const currentTargetRepo = parseResult.json.target_repo;
 
-  if (currentRepoDir === repoName) {
+  if (currentTargetRepo === repoName) {
     return;
   }
 
-  const message = currentRepoDir
-    ? `repo_dir in ${chalk.cyan("patchy.json")} is ${chalk.cyan(`"${currentRepoDir}"`)}. Update to ${chalk.cyan(`"${repoName}"`)}?`
-    : `Save repo_dir: ${chalk.cyan(`"${repoName}"`)} to ${chalk.cyan("patchy.json")}?`;
+  const message = currentTargetRepo
+    ? `target_repo in ${chalk.cyan("patchy.json")} is ${chalk.cyan(`"${currentTargetRepo}"`)}. Update to ${chalk.cyan(`"${repoName}"`)}?`
+    : `Save target_repo: ${chalk.cyan(`"${repoName}"`)} to ${chalk.cyan("patchy.json")}?`;
 
   const prompts = createPrompts(context);
   const confirmed = await prompts.confirm({
@@ -73,7 +73,7 @@ const promptRepoDirSave = async ({
     return;
   }
 
-  const updateResult = updateJsoncField(content, "repo_dir", repoName);
+  const updateResult = updateJsoncField(content, "target_repo", repoName);
 
   if (!updateResult.success) {
     context.process.stderr.write(chalk.yellow(`${updateResult.error}\n`));
@@ -83,7 +83,7 @@ const promptRepoDirSave = async ({
   try {
     await writeFile(absoluteConfigPath, updateResult.content, "utf8");
     context.process.stdout.write(
-      chalk.green(`Updated patchy.json with repo_dir: "${repoName}"\n`),
+      chalk.green(`Updated patchy.json with target_repo: "${repoName}"\n`),
     );
   } catch (error) {
     const errorMessage = error instanceof Error ? error.message : String(error);
@@ -99,7 +99,7 @@ export default async function (
 ): Promise<void> {
   const result = createEnrichedMergedConfig({
     flags,
-    requiredFields: ["repo_url"],
+    requiredFields: ["source_repo"],
     cwd: this.cwd,
   });
 
@@ -110,7 +110,7 @@ export default async function (
   }
 
   const config = result.mergedConfig;
-  const repoUrl = assertDefined(config.repo_url, "repo_url");
+  const repoUrl = assertDefined(config.source_repo, "source_repo");
   const ref = config.ref;
   const dryRun = config.dry_run;
   const verbose = config.verbose;

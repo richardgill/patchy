@@ -39,27 +39,27 @@ describe("createEnrichedMergedConfig", () => {
       tmpDir,
       createDirectories: {
         clonesDir: "clonesDir1",
-        repoDir: "repoDir1",
+        targetRepo: "repoDir1",
         patchesDir: "patches",
       },
       jsonConfig: {
-        repo_url: "https://github.com/example/test-repo.git",
+        source_repo: "https://github.com/example/test-repo.git",
         clones_dir: "clonesDir1",
-        repo_dir: "repoDir1",
+        target_repo: "repoDir1",
         ref: "main",
         verbose: true,
       },
     });
 
     const flags: SharedFlags = {
-      "repo-url": "https://github.com/example/flag-repo.git",
+      "source-repo": "https://github.com/example/flag-repo.git",
       "dry-run": true,
     };
 
     const requiredFields: JsonConfigKey[] = [
-      "repo_url",
+      "source_repo",
       "clones_dir",
-      "repo_dir",
+      "target_repo",
     ];
 
     const result = createEnrichedMergedConfig({
@@ -72,8 +72,8 @@ describe("createEnrichedMergedConfig", () => {
     expect(getStabilizedJson(result.mergedConfig)).toMatchInlineSnapshot(
       `
       "{
-        "repo_url": "https://github.com/example/flag-repo.git",
-        "repo_dir": "repoDir1",
+        "source_repo": "https://github.com/example/flag-repo.git",
+        "target_repo": "repoDir1",
         "clones_dir": "clonesDir1",
         "patches_dir": "./patches/",
         "ref": "main",
@@ -81,7 +81,7 @@ describe("createEnrichedMergedConfig", () => {
         "dry_run": true,
         "config": "./patchy.json",
         "absoluteClonesDir": "<TEST_DIR>/clonesDir1",
-        "absoluteRepoDir": "<TEST_DIR>/clonesDir1/repoDir1",
+        "absoluteTargetRepo": "<TEST_DIR>/clonesDir1/repoDir1",
         "absolutePatchesDir": "<TEST_DIR>/patches"
       }"
     `,
@@ -104,7 +104,7 @@ describe("createEnrichedMergedConfig", () => {
       "dry-run": true,
     };
 
-    const requiredFields: JsonConfigKey[] = ["repo_url", "repo_dir"];
+    const requiredFields: JsonConfigKey[] = ["source_repo", "target_repo"];
 
     const result = createEnrichedMergedConfig({
       flags,
@@ -116,8 +116,8 @@ describe("createEnrichedMergedConfig", () => {
     expect(stabilizeTempDir(result.error)).toMatchInlineSnapshot(`
       "Missing required parameters:
 
-        Missing Repository URL: set repo_url in ./patchy.json, PATCHY_REPO_URL env var, or --repo-url flag
-        Missing Repository directory: set repo_dir in ./patchy.json, PATCHY_REPO_DIR env var, or --repo-dir flag
+        Missing Source repository: set source_repo in ./patchy.json, PATCHY_SOURCE_REPO env var, or --source-repo flag
+        Missing Target repository: set target_repo in ./patchy.json, PATCHY_TARGET_REPO env var, or --target-repo flag
 
       You can set up ./patchy.json by running:
         patchy init
@@ -132,20 +132,20 @@ describe("createEnrichedMergedConfig", () => {
       tmpDir,
       createDirectories: {
         clonesDir: "clonesDir1",
-        repoDir: "repoDir1",
+        targetRepo: "repoDir1",
       },
       jsonConfig: {
-        repo_url: "https://github.com/example/repo.git",
+        source_repo: "https://github.com/example/repo.git",
         clones_dir: "clonesDir1",
-        repo_dir: "repoDir1",
+        target_repo: "repoDir1",
       },
     });
 
     const flags: SharedFlags = {};
     const requiredFields: JsonConfigKey[] = [
-      "repo_url",
+      "source_repo",
       "clones_dir",
-      "repo_dir",
+      "target_repo",
     ];
 
     const result = createEnrichedMergedConfig({
@@ -158,8 +158,8 @@ describe("createEnrichedMergedConfig", () => {
     expect(getStabilizedJson(result.mergedConfig)).toMatchInlineSnapshot(
       `
       "{
-        "repo_url": "https://github.com/example/repo.git",
-        "repo_dir": "repoDir1",
+        "source_repo": "https://github.com/example/repo.git",
+        "target_repo": "repoDir1",
         "clones_dir": "clonesDir1",
         "patches_dir": "./patches/",
         "ref": "main",
@@ -167,7 +167,7 @@ describe("createEnrichedMergedConfig", () => {
         "dry_run": false,
         "config": "./patchy.json",
         "absoluteClonesDir": "<TEST_DIR>/clonesDir1",
-        "absoluteRepoDir": "<TEST_DIR>/clonesDir1/repoDir1",
+        "absoluteTargetRepo": "<TEST_DIR>/clonesDir1/repoDir1",
         "absolutePatchesDir": "<TEST_DIR>/patches"
       }"
     `,
@@ -180,7 +180,7 @@ describe("createEnrichedMergedConfig", () => {
     const flags: SharedFlags = {
       config: "./non-existent-config.json",
     };
-    const requiredFields: JsonConfigKey[] = ["repo_url"];
+    const requiredFields: JsonConfigKey[] = ["source_repo"];
 
     const result = createEnrichedMergedConfig({
       flags,
@@ -202,7 +202,7 @@ describe("createEnrichedMergedConfig", () => {
     const flags: SharedFlags = {
       config: invalidJsonPath,
     };
-    const requiredFields: JsonConfigKey[] = ["repo_url"];
+    const requiredFields: JsonConfigKey[] = ["source_repo"];
 
     const result = createEnrichedMergedConfig({
       flags,
@@ -227,18 +227,18 @@ describe("createEnrichedMergedConfig", () => {
       tmpDir,
       createDirectories: {},
       jsonConfig: {
-        repo_url: "https://github.com/example/repo.git",
+        source_repo: "https://github.com/example/repo.git",
         clones_dir: "non-existent-base",
-        repo_dir: "non-existent-repo",
+        target_repo: "non-existent-repo",
         patches_dir: "non-existent-patches",
       },
     });
 
     const flags: SharedFlags = {};
     const requiredFields: JsonConfigKey[] = [
-      "repo_url",
+      "source_repo",
       "clones_dir",
-      "repo_dir",
+      "target_repo",
       "patches_dir",
     ];
 
@@ -265,13 +265,13 @@ describe("createEnrichedMergedConfig", () => {
       tmpDir,
       createDirectories: {
         clonesDir: "flag-base",
-        repoDir: "flag-repo",
+        targetRepo: "flag-repo",
         patchesDir: "flag-patches",
       },
       jsonConfig: {
-        repo_url: "https://github.com/example/test-repo.git",
+        source_repo: "https://github.com/example/test-repo.git",
         clones_dir: "json-base",
-        repo_dir: "json-repo",
+        target_repo: "json-repo",
         patches_dir: "json-patches",
         ref: "json-ref",
         verbose: false,
@@ -279,17 +279,17 @@ describe("createEnrichedMergedConfig", () => {
     });
 
     const flags: SharedFlags = {
-      "repo-url": "https://github.com/example/flag-repo.git",
+      "source-repo": "https://github.com/example/flag-repo.git",
       "clones-dir": "flag-base",
-      "repo-dir": "flag-repo",
+      "target-repo": "flag-repo",
       "patches-dir": "flag-patches",
       ref: "flag-ref",
       verbose: true,
     };
     const requiredFields: JsonConfigKey[] = [
-      "repo_url",
+      "source_repo",
       "clones_dir",
-      "repo_dir",
+      "target_repo",
       "patches_dir",
     ];
 
@@ -303,8 +303,8 @@ describe("createEnrichedMergedConfig", () => {
     expect(getStabilizedJson(result.mergedConfig)).toMatchInlineSnapshot(
       `
       "{
-        "repo_url": "https://github.com/example/flag-repo.git",
-        "repo_dir": "flag-repo",
+        "source_repo": "https://github.com/example/flag-repo.git",
+        "target_repo": "flag-repo",
         "clones_dir": "flag-base",
         "patches_dir": "flag-patches",
         "ref": "flag-ref",
@@ -312,7 +312,7 @@ describe("createEnrichedMergedConfig", () => {
         "dry_run": false,
         "config": "./patchy.json",
         "absoluteClonesDir": "<TEST_DIR>/flag-base",
-        "absoluteRepoDir": "<TEST_DIR>/flag-base/flag-repo",
+        "absoluteTargetRepo": "<TEST_DIR>/flag-base/flag-repo",
         "absolutePatchesDir": "<TEST_DIR>/flag-patches"
       }"
     `,
@@ -325,22 +325,22 @@ describe("createEnrichedMergedConfig", () => {
       tmpDir,
       createDirectories: {
         clonesDir: "base",
-        repoDir: "repo",
+        targetRepo: "repo",
         patchesDir: "patches",
       },
       jsonConfig: {
-        repo_url: "https://github.com/example/repo.git",
+        source_repo: "https://github.com/example/repo.git",
         clones_dir: "base",
-        repo_dir: "repo",
+        target_repo: "repo",
         patches_dir: "patches",
       },
     });
 
     const flags: SharedFlags = {};
     const requiredFields: JsonConfigKey[] = [
-      "repo_url",
+      "source_repo",
       "clones_dir",
-      "repo_dir",
+      "target_repo",
       "patches_dir",
     ];
 
@@ -354,8 +354,8 @@ describe("createEnrichedMergedConfig", () => {
     expect(getStabilizedJson(result.mergedConfig)).toMatchInlineSnapshot(
       `
       "{
-        "repo_url": "https://github.com/example/repo.git",
-        "repo_dir": "repo",
+        "source_repo": "https://github.com/example/repo.git",
+        "target_repo": "repo",
         "clones_dir": "base",
         "patches_dir": "patches",
         "ref": "main",
@@ -363,7 +363,7 @@ describe("createEnrichedMergedConfig", () => {
         "dry_run": false,
         "config": "./patchy.json",
         "absoluteClonesDir": "<TEST_DIR>/base",
-        "absoluteRepoDir": "<TEST_DIR>/base/repo",
+        "absoluteTargetRepo": "<TEST_DIR>/base/repo",
         "absolutePatchesDir": "<TEST_DIR>/patches"
       }"
     `,
@@ -377,9 +377,9 @@ describe("createEnrichedMergedConfig", () => {
 
     const flags: SharedFlags = {
       config: emptyJsonPath,
-      "repo-url": "https://github.com/example/repo.git",
+      "source-repo": "https://github.com/example/repo.git",
     };
-    const requiredFields: JsonConfigKey[] = ["repo_url"];
+    const requiredFields: JsonConfigKey[] = ["source_repo"];
 
     const result = createEnrichedMergedConfig({
       flags,
@@ -391,7 +391,7 @@ describe("createEnrichedMergedConfig", () => {
     expect(getStabilizedJson(result.mergedConfig)).toMatchInlineSnapshot(
       `
       "{
-        "repo_url": "https://github.com/example/repo.git",
+        "source_repo": "https://github.com/example/repo.git",
         "clones_dir": "./clones/",
         "patches_dir": "./patches/",
         "ref": "main",
@@ -412,9 +412,9 @@ describe("createEnrichedMergedConfig", () => {
 
     const flags: SharedFlags = {
       config: emptyJsonPath,
-      "repo-url": "https://github.com/example/repo.git",
+      "source-repo": "https://github.com/example/repo.git",
     };
-    const requiredFields: JsonConfigKey[] = ["repo_url"];
+    const requiredFields: JsonConfigKey[] = ["source_repo"];
 
     const result = createEnrichedMergedConfig({
       flags,
@@ -439,7 +439,7 @@ describe("createEnrichedMergedConfig", () => {
       tmpDir,
       createDirectories: {},
       jsonConfig: {
-        repo_url: "https://github.com/example/repo.git",
+        source_repo: "https://github.com/example/repo.git",
       },
     });
 
@@ -470,12 +470,12 @@ describe("createEnrichedMergedConfig", () => {
       tmpDir,
       createDirectories: {
         clonesDir: "base",
-        repoDir: "repo",
+        targetRepo: "repo",
       },
       jsonConfig: {
-        repo_url: "https://github.com/example/repo.git",
+        source_repo: "https://github.com/example/repo.git",
         clones_dir: "base",
-        repo_dir: "repo",
+        target_repo: "repo",
         verbose: false,
       },
     });
@@ -485,9 +485,9 @@ describe("createEnrichedMergedConfig", () => {
       "dry-run": true,
     };
     const requiredFields: JsonConfigKey[] = [
-      "repo_url",
+      "source_repo",
       "clones_dir",
-      "repo_dir",
+      "target_repo",
     ];
 
     const result = createEnrichedMergedConfig({
@@ -500,8 +500,8 @@ describe("createEnrichedMergedConfig", () => {
     expect(getStabilizedJson(result.mergedConfig)).toMatchInlineSnapshot(
       `
       "{
-        "repo_url": "https://github.com/example/repo.git",
-        "repo_dir": "repo",
+        "source_repo": "https://github.com/example/repo.git",
+        "target_repo": "repo",
         "clones_dir": "base",
         "patches_dir": "./patches/",
         "ref": "main",
@@ -509,33 +509,33 @@ describe("createEnrichedMergedConfig", () => {
         "dry_run": true,
         "config": "./patchy.json",
         "absoluteClonesDir": "<TEST_DIR>/base",
-        "absoluteRepoDir": "<TEST_DIR>/base/repo",
+        "absoluteTargetRepo": "<TEST_DIR>/base/repo",
         "absolutePatchesDir": "<TEST_DIR>/patches"
       }"
     `,
     );
   });
 
-  it("should correctly join clones_dir and repo_dir paths", async () => {
+  it("should correctly join clones_dir and target_repo paths", async () => {
     const tmpDir = generateTmpDir();
     await setupTestWithConfig({
       tmpDir,
       createDirectories: {
         clonesDir: "my-base/nested",
-        repoDir: "my-repo/nested-repo",
+        targetRepo: "my-repo/nested-repo",
       },
       jsonConfig: {
-        repo_url: "https://github.com/example/repo.git",
+        source_repo: "https://github.com/example/repo.git",
         clones_dir: "my-base/nested",
-        repo_dir: "my-repo/nested-repo",
+        target_repo: "my-repo/nested-repo",
       },
     });
 
     const flags: SharedFlags = {};
     const requiredFields: JsonConfigKey[] = [
-      "repo_url",
+      "source_repo",
       "clones_dir",
-      "repo_dir",
+      "target_repo",
     ];
 
     const result = createEnrichedMergedConfig({
@@ -548,8 +548,8 @@ describe("createEnrichedMergedConfig", () => {
     expect(getStabilizedJson(result.mergedConfig)).toMatchInlineSnapshot(
       `
       "{
-        "repo_url": "https://github.com/example/repo.git",
-        "repo_dir": "my-repo/nested-repo",
+        "source_repo": "https://github.com/example/repo.git",
+        "target_repo": "my-repo/nested-repo",
         "clones_dir": "my-base/nested",
         "patches_dir": "./patches/",
         "ref": "main",
@@ -557,7 +557,7 @@ describe("createEnrichedMergedConfig", () => {
         "dry_run": false,
         "config": "./patchy.json",
         "absoluteClonesDir": "<TEST_DIR>/my-base/nested",
-        "absoluteRepoDir": "<TEST_DIR>/my-base/nested/my-repo/nested-repo",
+        "absoluteTargetRepo": "<TEST_DIR>/my-base/nested/my-repo/nested-repo",
         "absolutePatchesDir": "<TEST_DIR>/patches"
       }"
     `,
@@ -573,12 +573,12 @@ describe("createEnrichedMergedConfig", () => {
       configPath: customConfigPath,
       createDirectories: {
         clonesDir: "base",
-        repoDir: "repo",
+        targetRepo: "repo",
       },
       jsonConfig: {
-        repo_url: "https://github.com/example/custom.git",
+        source_repo: "https://github.com/example/custom.git",
         clones_dir: "base",
-        repo_dir: "repo",
+        target_repo: "repo",
         ref: "custom-branch",
       },
     });
@@ -587,9 +587,9 @@ describe("createEnrichedMergedConfig", () => {
       config: customConfigPath,
     };
     const requiredFields: JsonConfigKey[] = [
-      "repo_url",
+      "source_repo",
       "clones_dir",
-      "repo_dir",
+      "target_repo",
     ];
 
     const result = createEnrichedMergedConfig({
@@ -602,8 +602,8 @@ describe("createEnrichedMergedConfig", () => {
     expect(getStabilizedJson(result.mergedConfig)).toMatchInlineSnapshot(
       `
       "{
-        "repo_url": "https://github.com/example/custom.git",
-        "repo_dir": "repo",
+        "source_repo": "https://github.com/example/custom.git",
+        "target_repo": "repo",
         "clones_dir": "base",
         "patches_dir": "./patches/",
         "ref": "custom-branch",
@@ -611,7 +611,7 @@ describe("createEnrichedMergedConfig", () => {
         "dry_run": false,
         "config": "<TEST_DIR>/custom/config.json",
         "absoluteClonesDir": "<TEST_DIR>/base",
-        "absoluteRepoDir": "<TEST_DIR>/base/repo",
+        "absoluteTargetRepo": "<TEST_DIR>/base/repo",
         "absolutePatchesDir": "<TEST_DIR>/patches"
       }"
     `,
@@ -625,20 +625,20 @@ describe("createEnrichedMergedConfig", () => {
       tmpDir: subDir,
       createDirectories: {
         clonesDir: "base",
-        repoDir: "repo",
+        targetRepo: "repo",
       },
       jsonConfig: {
-        repo_url: "https://github.com/example/repo.git",
+        source_repo: "https://github.com/example/repo.git",
         clones_dir: "base",
-        repo_dir: "repo",
+        target_repo: "repo",
       },
     });
 
     const flags: SharedFlags = {};
     const requiredFields: JsonConfigKey[] = [
-      "repo_url",
+      "source_repo",
       "clones_dir",
-      "repo_dir",
+      "target_repo",
     ];
 
     const originalCwd = process.cwd();
@@ -653,8 +653,8 @@ describe("createEnrichedMergedConfig", () => {
     expect(getStabilizedJson(result.mergedConfig)).toMatchInlineSnapshot(
       `
       "{
-        "repo_url": "https://github.com/example/repo.git",
-        "repo_dir": "repo",
+        "source_repo": "https://github.com/example/repo.git",
+        "target_repo": "repo",
         "clones_dir": "base",
         "patches_dir": "./patches/",
         "ref": "main",
@@ -662,7 +662,7 @@ describe("createEnrichedMergedConfig", () => {
         "dry_run": false,
         "config": "./patchy.json",
         "absoluteClonesDir": "<TEST_DIR>/subdir/base",
-        "absoluteRepoDir": "<TEST_DIR>/subdir/base/repo",
+        "absoluteTargetRepo": "<TEST_DIR>/subdir/base/repo",
         "absolutePatchesDir": "<TEST_DIR>/subdir/patches"
       }"
     `,
@@ -675,20 +675,20 @@ describe("createEnrichedMergedConfig", () => {
       tmpDir,
       createDirectories: {
         clonesDir: "base",
-        repoDir: "repo",
+        targetRepo: "repo",
       },
       jsonConfig: {
-        repo_url: "https://github.com/example/repo.git",
+        source_repo: "https://github.com/example/repo.git",
         clones_dir: "base",
-        repo_dir: "repo",
+        target_repo: "repo",
       },
     });
 
     const flags: SharedFlags = {};
     const requiredFields: JsonConfigKey[] = [
-      "repo_url",
+      "source_repo",
       "clones_dir",
-      "repo_dir",
+      "target_repo",
     ];
     const originalCwd = process.cwd();
 
@@ -703,8 +703,8 @@ describe("createEnrichedMergedConfig", () => {
     expect(getStabilizedJson(result.mergedConfig)).toMatchInlineSnapshot(
       `
       "{
-        "repo_url": "https://github.com/example/repo.git",
-        "repo_dir": "repo",
+        "source_repo": "https://github.com/example/repo.git",
+        "target_repo": "repo",
         "clones_dir": "base",
         "patches_dir": "./patches/",
         "ref": "main",
@@ -712,7 +712,7 @@ describe("createEnrichedMergedConfig", () => {
         "dry_run": false,
         "config": "./patchy.json",
         "absoluteClonesDir": "<TEST_DIR>/base",
-        "absoluteRepoDir": "<TEST_DIR>/base/repo",
+        "absoluteTargetRepo": "<TEST_DIR>/base/repo",
         "absolutePatchesDir": "<TEST_DIR>/patches"
       }"
     `,
@@ -722,7 +722,7 @@ describe("createEnrichedMergedConfig", () => {
   it("should handle Zod validation errors for invalid JSON structure", async () => {
     const tmpDir = generateTmpDir();
     await writeJsonConfig(tmpDir, "invalid-structure.json", {
-      repo_url: 123,
+      source_repo: 123,
       verbose: "not-a-boolean",
       ref: ["array", "not", "string"],
     });
@@ -731,7 +731,7 @@ describe("createEnrichedMergedConfig", () => {
     const flags: SharedFlags = {
       config: invalidJsonPath,
     };
-    const requiredFields: JsonConfigKey[] = ["repo_url"];
+    const requiredFields: JsonConfigKey[] = ["source_repo"];
 
     const result = createEnrichedMergedConfig({
       flags,
@@ -749,20 +749,20 @@ describe("createEnrichedMergedConfig", () => {
       tmpDir,
       createDirectories: {
         clonesDir: "base",
-        repoDir: "repo",
+        targetRepo: "repo",
       },
       jsonConfig: {
-        repo_url: "invalid-url-format",
+        source_repo: "invalid-url-format",
         clones_dir: "base",
-        repo_dir: "repo",
+        target_repo: "repo",
       },
     });
 
     const flags: SharedFlags = {};
     const requiredFields: JsonConfigKey[] = [
-      "repo_url",
+      "source_repo",
       "clones_dir",
-      "repo_dir",
+      "target_repo",
     ];
 
     const result = createEnrichedMergedConfig({
@@ -775,7 +775,7 @@ describe("createEnrichedMergedConfig", () => {
     expect(stabilizeTempDir(result.error)).toMatchInlineSnapshot(`
       "Validation errors:
 
-      repo_url: invalid-url-format in ./patchy.json is invalid. Example: https://github.com/owner/repo, git@github.com:owner/repo.git, or /path/to/local/repo
+      source_repo: invalid-url-format in ./patchy.json is invalid. Example: https://github.com/owner/repo, git@github.com:owner/repo.git, or /path/to/local/repo
 
       "
     `);
@@ -784,7 +784,7 @@ describe("createEnrichedMergedConfig", () => {
   it("should handle empty string fields (now accepted by schema)", async () => {
     const tmpDir = generateTmpDir();
     await writeJsonConfig(tmpDir, "empty-strings.json", {
-      repo_url: "",
+      source_repo: "",
       ref: "",
       clones_dir: "",
     });
@@ -804,7 +804,7 @@ describe("createEnrichedMergedConfig", () => {
     // Empty strings are now accepted by schema (since requiredInConfig: false)
     // Config values override defaults, so empty strings take precedence
     expectSuccessfulMerge(result);
-    expect(result.mergedConfig.repo_url).toBe("");
+    expect(result.mergedConfig.source_repo).toBe("");
     expect(result.mergedConfig.ref).toBe("");
     expect(result.mergedConfig.clones_dir).toBe("");
   });
@@ -812,7 +812,7 @@ describe("createEnrichedMergedConfig", () => {
   it("should handle Zod validation error for null values", async () => {
     const tmpDir = generateTmpDir();
     await writeJsonConfig(tmpDir, "null-values.json", {
-      repo_url: null,
+      source_repo: null,
       verbose: null,
       patches_dir: null,
     });
@@ -831,7 +831,7 @@ describe("createEnrichedMergedConfig", () => {
 
     expectFailedMerge(result);
     expect(result.error).toMatchInlineSnapshot(`
-      "repo_url: Invalid input: expected string, received null
+      "source_repo: Invalid input: expected string, received null
       patches_dir: Invalid input: expected string, received null
       verbose: Invalid input: expected boolean, received null"
     `);
@@ -840,7 +840,7 @@ describe("createEnrichedMergedConfig", () => {
   it("should handle Zod strict mode error for unknown fields", async () => {
     const tmpDir = generateTmpDir();
     await writeJsonConfig(tmpDir, "unknown-fields.json", {
-      repo_url: "https://github.com/user/repo.git",
+      source_repo: "https://github.com/user/repo.git",
       unknown_field: "value",
       another_unknown: 123,
     });
@@ -892,7 +892,7 @@ describe("createEnrichedMergedConfig", () => {
   it("should handle array values where strings are expected", async () => {
     const tmpDir = generateTmpDir();
     await writeJsonConfig(tmpDir, "array-values.json", {
-      repo_url: ["https://github.com/user/repo.git"],
+      source_repo: ["https://github.com/user/repo.git"],
       ref: ["main", "develop"],
       patches_dir: ["./patches"],
     });
@@ -911,7 +911,7 @@ describe("createEnrichedMergedConfig", () => {
 
     expectFailedMerge(result);
     expect(result.error).toMatchInlineSnapshot(`
-      "repo_url: Invalid input: expected string, received array
+      "source_repo: Invalid input: expected string, received array
       patches_dir: Invalid input: expected string, received array
       ref: Invalid input: expected string, received array"
     `);
@@ -920,7 +920,7 @@ describe("createEnrichedMergedConfig", () => {
   it("should handle object values where primitives are expected", async () => {
     const tmpDir = generateTmpDir();
     await writeJsonConfig(tmpDir, "object-values.json", {
-      repo_url: { url: "https://github.com/user/repo.git" },
+      source_repo: { url: "https://github.com/user/repo.git" },
       verbose: { enabled: true },
     });
     const jsonPath = path.join(tmpDir, "object-values.json");
@@ -938,7 +938,7 @@ describe("createEnrichedMergedConfig", () => {
 
     expectFailedMerge(result);
     expect(result.error).toMatchInlineSnapshot(`
-      "repo_url: Invalid input: expected string, received object
+      "source_repo: Invalid input: expected string, received object
       verbose: Invalid input: expected boolean, received object"
     `);
   });
@@ -946,10 +946,10 @@ describe("createEnrichedMergedConfig", () => {
   it("should handle multiple Zod errors with mixed types", async () => {
     const tmpDir = generateTmpDir();
     await writeJsonConfig(tmpDir, "mixed-errors.json", {
-      repo_url: 123,
+      source_repo: 123,
       ref: true,
       clones_dir: ["base"],
-      repo_dir: null,
+      target_repo: null,
       patches_dir: {},
       verbose: "false",
       dry_run: 1,
@@ -969,8 +969,8 @@ describe("createEnrichedMergedConfig", () => {
 
     expectFailedMerge(result);
     expect(result.error).toMatchInlineSnapshot(`
-      "repo_url: Invalid input: expected string, received number
-      repo_dir: Invalid input: expected string, received null
+      "source_repo: Invalid input: expected string, received number
+      target_repo: Invalid input: expected string, received null
       clones_dir: Invalid input: expected string, received array
       patches_dir: Invalid input: expected string, received object
       ref: Invalid input: expected string, received boolean
@@ -985,7 +985,7 @@ describe("createEnrichedMergedConfig", () => {
       tmpDir,
       createDirectories: {
         clonesDir: "env-base",
-        repoDir: "env-repo",
+        targetRepo: "env-repo",
         patchesDir: "env-patches",
       },
       jsonConfig: {},
@@ -993,15 +993,15 @@ describe("createEnrichedMergedConfig", () => {
 
     const flags: SharedFlags = {};
     const requiredFields: JsonConfigKey[] = [
-      "repo_url",
+      "source_repo",
       "clones_dir",
-      "repo_dir",
+      "target_repo",
       "patches_dir",
     ];
     const env = {
-      PATCHY_REPO_URL: "https://github.com/example/env-repo.git",
+      PATCHY_SOURCE_REPO: "https://github.com/example/env-repo.git",
       PATCHY_CLONES_DIR: "env-base",
-      PATCHY_REPO_DIR: "env-repo",
+      PATCHY_TARGET_REPO: "env-repo",
       PATCHY_PATCHES_DIR: "env-patches",
       PATCHY_REF: "env-branch",
       PATCHY_VERBOSE: "true",
@@ -1019,8 +1019,8 @@ describe("createEnrichedMergedConfig", () => {
     expect(getStabilizedJson(result.mergedConfig)).toMatchInlineSnapshot(
       `
       "{
-        "repo_url": "https://github.com/example/env-repo.git",
-        "repo_dir": "env-repo",
+        "source_repo": "https://github.com/example/env-repo.git",
+        "target_repo": "env-repo",
         "clones_dir": "env-base",
         "patches_dir": "env-patches",
         "ref": "env-branch",
@@ -1028,7 +1028,7 @@ describe("createEnrichedMergedConfig", () => {
         "dry_run": true,
         "config": "./patchy.json",
         "absoluteClonesDir": "<TEST_DIR>/env-base",
-        "absoluteRepoDir": "<TEST_DIR>/env-base/env-repo",
+        "absoluteTargetRepo": "<TEST_DIR>/env-base/env-repo",
         "absolutePatchesDir": "<TEST_DIR>/env-patches"
       }"
     `,
@@ -1041,31 +1041,31 @@ describe("createEnrichedMergedConfig", () => {
       tmpDir,
       createDirectories: {
         clonesDir: "flag-base",
-        repoDir: "flag-repo",
+        targetRepo: "flag-repo",
         patchesDir: "flag-patches",
       },
       jsonConfig: {},
     });
 
     const flags: SharedFlags = {
-      "repo-url": "https://github.com/example/flag-repo.git",
+      "source-repo": "https://github.com/example/flag-repo.git",
       "clones-dir": "flag-base",
-      "repo-dir": "flag-repo",
+      "target-repo": "flag-repo",
       "patches-dir": "flag-patches",
       ref: "flag-ref",
       verbose: true,
       "dry-run": true,
     };
     const requiredFields: JsonConfigKey[] = [
-      "repo_url",
+      "source_repo",
       "clones_dir",
-      "repo_dir",
+      "target_repo",
       "patches_dir",
     ];
     const env = {
-      PATCHY_REPO_URL: "https://github.com/example/env-repo.git",
+      PATCHY_SOURCE_REPO: "https://github.com/example/env-repo.git",
       PATCHY_CLONES_DIR: "env-base",
-      PATCHY_REPO_DIR: "env-repo",
+      PATCHY_TARGET_REPO: "env-repo",
       PATCHY_PATCHES_DIR: "env-patches",
       PATCHY_REF: "env-branch",
       PATCHY_VERBOSE: "false",
@@ -1083,8 +1083,8 @@ describe("createEnrichedMergedConfig", () => {
     expect(getStabilizedJson(result.mergedConfig)).toMatchInlineSnapshot(
       `
       "{
-        "repo_url": "https://github.com/example/flag-repo.git",
-        "repo_dir": "flag-repo",
+        "source_repo": "https://github.com/example/flag-repo.git",
+        "target_repo": "flag-repo",
         "clones_dir": "flag-base",
         "patches_dir": "flag-patches",
         "ref": "flag-ref",
@@ -1092,7 +1092,7 @@ describe("createEnrichedMergedConfig", () => {
         "dry_run": true,
         "config": "./patchy.json",
         "absoluteClonesDir": "<TEST_DIR>/flag-base",
-        "absoluteRepoDir": "<TEST_DIR>/flag-base/flag-repo",
+        "absoluteTargetRepo": "<TEST_DIR>/flag-base/flag-repo",
         "absolutePatchesDir": "<TEST_DIR>/flag-patches"
       }"
     `,
@@ -1105,13 +1105,13 @@ describe("createEnrichedMergedConfig", () => {
       tmpDir,
       createDirectories: {
         clonesDir: "env-base",
-        repoDir: "env-repo",
+        targetRepo: "env-repo",
         patchesDir: "env-patches",
       },
       jsonConfig: {
-        repo_url: "https://github.com/example/json-repo.git",
+        source_repo: "https://github.com/example/json-repo.git",
         clones_dir: "json-base",
-        repo_dir: "json-repo",
+        target_repo: "json-repo",
         patches_dir: "json-patches",
         ref: "json-ref",
         verbose: false,
@@ -1120,15 +1120,15 @@ describe("createEnrichedMergedConfig", () => {
 
     const flags: SharedFlags = {};
     const requiredFields: JsonConfigKey[] = [
-      "repo_url",
+      "source_repo",
       "clones_dir",
-      "repo_dir",
+      "target_repo",
       "patches_dir",
     ];
     const env = {
-      PATCHY_REPO_URL: "https://github.com/example/env-repo.git",
+      PATCHY_SOURCE_REPO: "https://github.com/example/env-repo.git",
       PATCHY_CLONES_DIR: "env-base",
-      PATCHY_REPO_DIR: "env-repo",
+      PATCHY_TARGET_REPO: "env-repo",
       PATCHY_PATCHES_DIR: "env-patches",
       PATCHY_REF: "env-branch",
       PATCHY_VERBOSE: "true",
@@ -1145,8 +1145,8 @@ describe("createEnrichedMergedConfig", () => {
     expect(getStabilizedJson(result.mergedConfig)).toMatchInlineSnapshot(
       `
       "{
-        "repo_url": "https://github.com/example/env-repo.git",
-        "repo_dir": "env-repo",
+        "source_repo": "https://github.com/example/env-repo.git",
+        "target_repo": "env-repo",
         "clones_dir": "env-base",
         "patches_dir": "env-patches",
         "ref": "env-branch",
@@ -1154,7 +1154,7 @@ describe("createEnrichedMergedConfig", () => {
         "dry_run": false,
         "config": "./patchy.json",
         "absoluteClonesDir": "<TEST_DIR>/env-base",
-        "absoluteRepoDir": "<TEST_DIR>/env-base/env-repo",
+        "absoluteTargetRepo": "<TEST_DIR>/env-base/env-repo",
         "absolutePatchesDir": "<TEST_DIR>/env-patches"
       }"
     `,
@@ -1170,21 +1170,21 @@ describe("createEnrichedMergedConfig", () => {
       configPath: customConfigPath,
       createDirectories: {
         clonesDir: "base",
-        repoDir: "repo",
+        targetRepo: "repo",
       },
       jsonConfig: {
-        repo_url: "https://github.com/example/env-config.git",
+        source_repo: "https://github.com/example/env-config.git",
         clones_dir: "base",
-        repo_dir: "repo",
+        target_repo: "repo",
         ref: "env-config-branch",
       },
     });
 
     const flags: SharedFlags = {};
     const requiredFields: JsonConfigKey[] = [
-      "repo_url",
+      "source_repo",
       "clones_dir",
-      "repo_dir",
+      "target_repo",
     ];
     const env = {
       PATCHY_CONFIG: customConfigPath,
@@ -1201,8 +1201,8 @@ describe("createEnrichedMergedConfig", () => {
     expect(getStabilizedJson(result.mergedConfig)).toMatchInlineSnapshot(
       `
       "{
-        "repo_url": "https://github.com/example/env-config.git",
-        "repo_dir": "repo",
+        "source_repo": "https://github.com/example/env-config.git",
+        "target_repo": "repo",
         "clones_dir": "base",
         "patches_dir": "./patches/",
         "ref": "env-config-branch",
@@ -1210,7 +1210,7 @@ describe("createEnrichedMergedConfig", () => {
         "dry_run": false,
         "config": "<TEST_DIR>/custom-env/env-config.json",
         "absoluteClonesDir": "<TEST_DIR>/base",
-        "absoluteRepoDir": "<TEST_DIR>/base/repo",
+        "absoluteTargetRepo": "<TEST_DIR>/base/repo",
         "absolutePatchesDir": "<TEST_DIR>/patches"
       }"
     `,
@@ -1222,7 +1222,7 @@ describe("createEnrichedMergedConfig", () => {
     mkdirSync(tmpDir, { recursive: true });
 
     const flags: SharedFlags = {};
-    const requiredFields: JsonConfigKey[] = ["repo_url"];
+    const requiredFields: JsonConfigKey[] = ["source_repo"];
     const env = {
       PATCHY_CONFIG: "./non-existent-env-config.json",
     };
@@ -1246,12 +1246,12 @@ describe("createEnrichedMergedConfig", () => {
       tmpDir,
       createDirectories: {
         clonesDir: "base",
-        repoDir: "repo",
+        targetRepo: "repo",
       },
       jsonConfig: {
-        repo_url: "https://github.com/example/repo.git",
+        source_repo: "https://github.com/example/repo.git",
         clones_dir: "base",
-        repo_dir: "repo",
+        target_repo: "repo",
       },
     });
 
@@ -1290,7 +1290,7 @@ describe("createEnrichedMergedConfig", () => {
     } of testCases) {
       const result = createEnrichedMergedConfig({
         flags: {},
-        requiredFields: ["repo_url", "clones_dir", "repo_dir"],
+        requiredFields: ["source_repo", "clones_dir", "target_repo"],
         cwd: tmpDir,
         env: { PATCHY_VERBOSE, PATCHY_DRY_RUN },
       });
@@ -1307,24 +1307,24 @@ describe("createEnrichedMergedConfig", () => {
       tmpDir,
       createDirectories: {
         clonesDir: "json-base",
-        repoDir: "json-repo",
+        targetRepo: "json-repo",
       },
       jsonConfig: {
-        repo_url: "https://github.com/example/json-repo.git",
+        source_repo: "https://github.com/example/json-repo.git",
         clones_dir: "json-base",
-        repo_dir: "json-repo",
+        target_repo: "json-repo",
         ref: "json-ref",
       },
     });
 
     const flags: SharedFlags = {};
     const requiredFields: JsonConfigKey[] = [
-      "repo_url",
+      "source_repo",
       "clones_dir",
-      "repo_dir",
+      "target_repo",
     ];
     const env = {
-      PATCHY_REPO_URL: "",
+      PATCHY_SOURCE_REPO: "",
       PATCHY_REF: "",
     };
 
@@ -1336,7 +1336,7 @@ describe("createEnrichedMergedConfig", () => {
     });
 
     expectSuccessfulMerge(result);
-    expect(result.mergedConfig.repo_url).toBe(
+    expect(result.mergedConfig.source_repo).toBe(
       "https://github.com/example/json-repo.git",
     );
     expect(result.mergedConfig.ref).toBe("json-ref");

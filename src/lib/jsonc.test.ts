@@ -203,27 +203,27 @@ describe("parseJsonc", () => {
 describe("updateJsoncField", () => {
   it("should add a new field to JSON", () => {
     const input = `{
-  "repo_url": "https://github.com/foo/bar"
+  "source_repo": "https://github.com/foo/bar"
 }`;
-    const result = updateJsoncField(input, "repo_dir", "my-repo");
+    const result = updateJsoncField(input, "target_repo", "my-repo");
 
     expect(result.success).toBe(true);
     if (result.success) {
-      expect(result.content).toContain('"repo_dir": "my-repo"');
-      expect(result.content).toContain('"repo_url"');
+      expect(result.content).toContain('"target_repo": "my-repo"');
+      expect(result.content).toContain('"source_repo"');
     }
   });
 
   it("should update an existing field", () => {
     const input = `{
-  "repo_url": "https://github.com/foo/bar",
-  "repo_dir": "old-repo"
+  "source_repo": "https://github.com/foo/bar",
+  "target_repo": "old-repo"
 }`;
-    const result = updateJsoncField(input, "repo_dir", "new-repo");
+    const result = updateJsoncField(input, "target_repo", "new-repo");
 
     expect(result.success).toBe(true);
     if (result.success) {
-      expect(result.content).toContain('"repo_dir": "new-repo"');
+      expect(result.content).toContain('"target_repo": "new-repo"');
       expect(result.content).not.toContain("old-repo");
     }
   });
@@ -231,9 +231,9 @@ describe("updateJsoncField", () => {
   it("should preserve comments", () => {
     const input = `{
   // This is a comment
-  "repo_url": "https://github.com/foo/bar"
+  "source_repo": "https://github.com/foo/bar"
 }`;
-    const result = updateJsoncField(input, "repo_dir", "my-repo");
+    const result = updateJsoncField(input, "target_repo", "my-repo");
 
     expect(result.success).toBe(true);
     if (result.success) {

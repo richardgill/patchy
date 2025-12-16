@@ -11,8 +11,8 @@ describe("test-utils", () => {
       const configPath = join(tempDir, "test-config.json");
 
       await writeTestConfig(configPath, {
-        repo_url: "https://github.com/example/repo.git",
-        repo_dir: "main",
+        source_repo: "https://github.com/example/repo.git",
+        target_repo: "main",
         clones_dir: "/tmp/repos",
         patches_dir: "patches",
         ref: "main",
@@ -24,8 +24,8 @@ describe("test-utils", () => {
 
       expect(jsonContent).toMatchInlineSnapshot(`
         "{
-          "repo_url": "https://github.com/example/repo.git",
-          "repo_dir": "main",
+          "source_repo": "https://github.com/example/repo.git",
+          "target_repo": "main",
           "clones_dir": "/tmp/repos",
           "patches_dir": "patches",
           "ref": "main",

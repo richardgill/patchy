@@ -18,16 +18,16 @@ describe("patchy generate", () => {
       createDirectories: {
         patchesDir: "patches",
         clonesDir: "repos",
-        repoDir: "upstream",
+        targetRepo: "upstream",
       },
       jsonConfig: {
         clones_dir: "repos",
-        repo_dir: "upstream",
+        target_repo: "upstream",
         patches_dir: "patches",
       },
     });
 
-    const repoDir = assertDefined(ctx.absoluteRepoDir, "absoluteRepoDir");
+    const repoDir = assertDefined(ctx.absoluteTargetRepo, "absoluteTargetRepo");
     const patchesDir = assertDefined(
       ctx.absolutePatchesDir,
       "absolutePatchesDir",
@@ -60,16 +60,16 @@ describe("patchy generate", () => {
       createDirectories: {
         patchesDir: "patches",
         clonesDir: "repos",
-        repoDir: "upstream",
+        targetRepo: "upstream",
       },
       jsonConfig: {
         clones_dir: "repos",
-        repo_dir: "upstream",
+        target_repo: "upstream",
         patches_dir: "patches",
       },
     });
 
-    const repoDir = assertDefined(ctx.absoluteRepoDir, "absoluteRepoDir");
+    const repoDir = assertDefined(ctx.absoluteTargetRepo, "absoluteTargetRepo");
     const patchesDir = assertDefined(
       ctx.absolutePatchesDir,
       "absolutePatchesDir",
@@ -95,16 +95,16 @@ describe("patchy generate", () => {
       createDirectories: {
         patchesDir: "patches",
         clonesDir: "repos",
-        repoDir: "upstream",
+        targetRepo: "upstream",
       },
       jsonConfig: {
         clones_dir: "repos",
-        repo_dir: "upstream",
+        target_repo: "upstream",
         patches_dir: "patches",
       },
     });
 
-    const repoDir = assertDefined(ctx.absoluteRepoDir, "absoluteRepoDir");
+    const repoDir = assertDefined(ctx.absoluteTargetRepo, "absoluteTargetRepo");
     const patchesDir = assertDefined(
       ctx.absolutePatchesDir,
       "absolutePatchesDir",
@@ -132,16 +132,16 @@ describe("patchy generate", () => {
       createDirectories: {
         patchesDir: "patches",
         clonesDir: "repos",
-        repoDir: "upstream",
+        targetRepo: "upstream",
       },
       jsonConfig: {
         clones_dir: "repos",
-        repo_dir: "upstream",
+        target_repo: "upstream",
         patches_dir: "patches",
       },
     });
 
-    const repoDir = assertDefined(ctx.absoluteRepoDir, "absoluteRepoDir");
+    const repoDir = assertDefined(ctx.absoluteTargetRepo, "absoluteTargetRepo");
 
     await initGitRepoWithCommit(repoDir);
     await writeFileIn(repoDir, "initial.txt", "modified content\n");
@@ -162,16 +162,16 @@ describe("patchy generate", () => {
       createDirectories: {
         patchesDir: "patches",
         clonesDir: "repos",
-        repoDir: "upstream",
+        targetRepo: "upstream",
       },
       jsonConfig: {
         clones_dir: "repos",
-        repo_dir: "upstream",
+        target_repo: "upstream",
         patches_dir: "patches",
       },
     });
 
-    const repoDir = assertDefined(ctx.absoluteRepoDir, "absoluteRepoDir");
+    const repoDir = assertDefined(ctx.absoluteTargetRepo, "absoluteTargetRepo");
     const patchesDir = assertDefined(
       ctx.absolutePatchesDir,
       "absolutePatchesDir",
@@ -202,16 +202,16 @@ describe("patchy generate", () => {
       createDirectories: {
         patchesDir: "patches",
         clonesDir: "repos",
-        repoDir: "upstream",
+        targetRepo: "upstream",
       },
       jsonConfig: {
         clones_dir: "repos",
-        repo_dir: "upstream",
+        target_repo: "upstream",
         patches_dir: "patches",
       },
     });
 
-    const repoDir = assertDefined(ctx.absoluteRepoDir, "absoluteRepoDir");
+    const repoDir = assertDefined(ctx.absoluteTargetRepo, "absoluteTargetRepo");
 
     await initGitRepoWithCommit(repoDir);
 
@@ -239,14 +239,14 @@ describe("patchy generate", () => {
     expect(result.stderr).toMatchInlineSnapshot(`
       "Missing required parameters:
 
-        Missing Repository directory: set repo_dir in ./patchy.json, PATCHY_REPO_DIR env var, or --repo-dir flag
+        Missing Target repository: set target_repo in ./patchy.json, PATCHY_TARGET_REPO env var, or --target-repo flag
 
       You can set up ./patchy.json by running:
         patchy init"
     `);
   });
 
-  it("should fail when repo_dir does not exist", async () => {
+  it("should fail when target_repo does not exist", async () => {
     const tmpDir = generateTmpDir();
     await setupTestWithConfig({
       tmpDir,
@@ -256,7 +256,7 @@ describe("patchy generate", () => {
       },
       jsonConfig: {
         clones_dir: "repos",
-        repo_dir: "non-existent-repo",
+        target_repo: "non-existent-repo",
         patches_dir: "patches",
       },
     });
@@ -267,7 +267,7 @@ describe("patchy generate", () => {
     expect(result.stderr).toMatchInlineSnapshot(`
       "Validation errors:
 
-      repo_dir: non-existent-repo in ./patchy.json does not exist: <TEST_DIR>/repos/non-existent-repo"
+      target_repo: non-existent-repo in ./patchy.json does not exist: <TEST_DIR>/repos/non-existent-repo"
     `);
   });
 
@@ -277,16 +277,16 @@ describe("patchy generate", () => {
       tmpDir,
       createDirectories: {
         clonesDir: "repos",
-        repoDir: "upstream",
+        targetRepo: "upstream",
       },
       jsonConfig: {
         clones_dir: "repos",
-        repo_dir: "upstream",
+        target_repo: "upstream",
         patches_dir: "new-patches",
       },
     });
 
-    const repoDir = assertDefined(ctx.absoluteRepoDir, "absoluteRepoDir");
+    const repoDir = assertDefined(ctx.absoluteTargetRepo, "absoluteTargetRepo");
 
     await initGitRepoWithCommit(repoDir);
     await writeFileIn(repoDir, "initial.txt", "modified content\n");
@@ -308,16 +308,16 @@ describe("patchy generate", () => {
       createDirectories: {
         patchesDir: "patches",
         clonesDir: "repos",
-        repoDir: "upstream",
+        targetRepo: "upstream",
       },
       jsonConfig: {
         clones_dir: "repos",
-        repo_dir: "upstream",
+        target_repo: "upstream",
         patches_dir: "patches",
       },
     });
 
-    const repoDir = assertDefined(ctx.absoluteRepoDir, "absoluteRepoDir");
+    const repoDir = assertDefined(ctx.absoluteTargetRepo, "absoluteTargetRepo");
 
     await initGitRepoWithCommit(repoDir);
     await writeFileIn(repoDir, "initial.txt", "modified content\n");
@@ -338,16 +338,16 @@ describe("patchy generate", () => {
       createDirectories: {
         patchesDir: "patches",
         clonesDir: "repos",
-        repoDir: "upstream",
+        targetRepo: "upstream",
       },
       jsonConfig: {
         clones_dir: "repos",
-        repo_dir: "upstream",
+        target_repo: "upstream",
         patches_dir: "patches",
       },
     });
 
-    const repoDir = assertDefined(ctx.absoluteRepoDir, "absoluteRepoDir");
+    const repoDir = assertDefined(ctx.absoluteTargetRepo, "absoluteTargetRepo");
     const patchesDir = assertDefined(
       ctx.absolutePatchesDir,
       "absolutePatchesDir",
@@ -380,16 +380,16 @@ describe("patchy generate", () => {
       createDirectories: {
         patchesDir: "patches",
         clonesDir: "repos",
-        repoDir: "upstream",
+        targetRepo: "upstream",
       },
       jsonConfig: {
         clones_dir: "repos",
-        repo_dir: "upstream",
+        target_repo: "upstream",
         patches_dir: "patches",
       },
     });
 
-    const repoDir = assertDefined(ctx.absoluteRepoDir, "absoluteRepoDir");
+    const repoDir = assertDefined(ctx.absoluteTargetRepo, "absoluteTargetRepo");
     const patchesDir = assertDefined(
       ctx.absolutePatchesDir,
       "absolutePatchesDir",
@@ -417,16 +417,16 @@ describe("patchy generate", () => {
       createDirectories: {
         patchesDir: "patches",
         clonesDir: "repos",
-        repoDir: "upstream",
+        targetRepo: "upstream",
       },
       jsonConfig: {
         clones_dir: "repos",
-        repo_dir: "upstream",
+        target_repo: "upstream",
         patches_dir: "patches",
       },
     });
 
-    const repoDir = assertDefined(ctx.absoluteRepoDir, "absoluteRepoDir");
+    const repoDir = assertDefined(ctx.absoluteTargetRepo, "absoluteTargetRepo");
     const patchesDir = assertDefined(
       ctx.absolutePatchesDir,
       "absolutePatchesDir",
@@ -452,16 +452,16 @@ describe("patchy generate", () => {
       createDirectories: {
         patchesDir: "patches",
         clonesDir: "repos",
-        repoDir: "upstream",
+        targetRepo: "upstream",
       },
       jsonConfig: {
         clones_dir: "repos",
-        repo_dir: "upstream",
+        target_repo: "upstream",
         patches_dir: "patches",
       },
     });
 
-    const repoDir = assertDefined(ctx.absoluteRepoDir, "absoluteRepoDir");
+    const repoDir = assertDefined(ctx.absoluteTargetRepo, "absoluteTargetRepo");
     const patchesDir = assertDefined(
       ctx.absolutePatchesDir,
       "absolutePatchesDir",
