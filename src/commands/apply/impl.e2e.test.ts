@@ -1,6 +1,7 @@
 import { describe, expect, it } from "bun:test";
 import { mkdirSync } from "node:fs";
 import path from "node:path";
+import { initGitRepoWithCommit } from "~/testing/git-helpers";
 import {
   generateTmpDir,
   runCli,
@@ -978,5 +979,46 @@ const other = 2;
 
     expect(result).toFailWith("Errors occurred while applying patches:");
     expect(result.stderr).toContain("Patch failed to apply");
+  });
+
+  it("should work with absolute target_repo without clones_dir", async () => {
+    const tmpDir = generateTmpDir();
+
+    // Create standalone git repo (not under clones_dir - that's the point of this test)
+    const absoluteRepoPath = path.join(tmpDir, "standalone-repo");
+    mkdirSync(absoluteRepoPath, { recursive: true });
+    await initGitRepoWithCommit(
+      absoluteRepoPath,
+      "file.txt",
+      "original content",
+    );
+
+    const ctx = await setupTestWithConfig({
+      tmpDir,
+      createDirectories: { patchesDir: "patches" },
+      jsonConfig: {
+        target_repo: absoluteRepoPath,
+        patches_dir: "./patches",
+      },
+    });
+
+    const patchesDir = ctx.absolutePatchesDir as string;
+    await writeFileIn(
+      patchesDir,
+      "file.txt.diff",
+      `--- a/file.txt
++++ b/file.txt
+@@ -1 +1 @@
+-original content
++patched content
+`,
+    );
+
+    const result = await runCli(`patchy apply`, tmpDir);
+
+    expect(result).toSucceed();
+    expect(path.join(absoluteRepoPath, "file.txt")).toHaveFileContent(
+      "patched content",
+    );
   });
 });

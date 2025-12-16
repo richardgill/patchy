@@ -209,6 +209,63 @@ describe("validateConfig", () => {
     },
   ];
 
+  it("should accept a function for requiredFields", () => {
+    const metadata = {
+      field_a: {
+        configField: true,
+        requiredInConfig: false,
+        env: "TEST_FIELD_A",
+        type: "string",
+        name: "Field A",
+        stricliFlag: {
+          "field-a": {
+            kind: "parsed",
+            parse: String,
+            brief: "Field A",
+            optional: true,
+          },
+        },
+        example: "value",
+        defaultValue: undefined,
+      },
+      field_b: {
+        configField: true,
+        requiredInConfig: false,
+        env: "TEST_FIELD_B",
+        type: "string",
+        name: "Field B",
+        stricliFlag: {
+          "field-b": {
+            kind: "parsed",
+            parse: String,
+            brief: "Field B",
+            optional: true,
+          },
+        },
+        example: "value",
+        defaultValue: undefined,
+      },
+    } as const;
+
+    const sources = {
+      flags: {},
+      env: {},
+      json: { field_a: "/absolute/path" },
+    };
+
+    const requiredFields = (): Array<"field_a" | "field_b"> => ["field_a"];
+
+    const result = validateConfig({
+      metadata,
+      mergedConfig: { field_a: "/absolute/path" },
+      requiredFields,
+      configPath: "./test.json",
+      sources,
+    });
+
+    expect(result.success).toBe(true);
+  });
+
   for (const testCase of validateConfigTestCases) {
     it(testCase.name, () => {
       const result = validateConfig({

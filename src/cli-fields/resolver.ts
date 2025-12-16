@@ -5,7 +5,7 @@ import {
   loadConfigFromFile,
   validateConfig,
 } from "~/lib/cli-config";
-import { resolvePath } from "~/lib/fs";
+import { isAbsolutePath, resolvePath } from "~/lib/fs";
 import { formatZodErrorHuman } from "~/lib/zod";
 import { DEFAULT_CONFIG_PATH } from "./defaults";
 import { FLAG_METADATA } from "./metadata";
@@ -19,11 +19,31 @@ import type {
 
 type PatchyConfigSources = ConfigSources<typeof FLAG_METADATA, JsonConfig>;
 
+export const hasAbsoluteTargetRepo = (config: MergedConfig): boolean =>
+  Boolean(config.target_repo && isAbsolutePath(config.target_repo));
+
 type CreateEnrichedMergedConfigParams = {
   flags: SharedFlags;
   cwd: string;
   env?: NodeJS.ProcessEnv;
-  requiredFields: JsonConfigKey[];
+  requiredFields: JsonConfigKey[] | ((config: MergedConfig) => JsonConfigKey[]);
+};
+
+type ResolveTargetRepoParams = {
+  cwd: string;
+  targetRepo: string | undefined;
+  clonesDir: string | undefined;
+};
+
+const resolveTargetRepo = ({
+  cwd,
+  targetRepo,
+  clonesDir,
+}: ResolveTargetRepoParams): string | undefined => {
+  if (!targetRepo) return undefined;
+  if (isAbsolutePath(targetRepo)) return resolvePath(cwd, targetRepo);
+  if (clonesDir) return resolvePath(cwd, join(clonesDir, targetRepo));
+  return undefined;
 };
 
 // Patchy-specific: compute absolute paths from relative config values
@@ -40,10 +60,7 @@ const enrichConfig = (
   return {
     ...config,
     absoluteClonesDir: clonesDir ? resolvePath(cwd, clonesDir) : undefined,
-    absoluteTargetRepo:
-      clonesDir && targetRepo
-        ? resolvePath(cwd, join(clonesDir, targetRepo))
-        : undefined,
+    absoluteTargetRepo: resolveTargetRepo({ cwd, targetRepo, clonesDir }),
     absolutePatchesDir: patchesDir ? resolvePath(cwd, patchesDir) : undefined,
   };
 };

@@ -7,6 +7,10 @@ export const resolvePath = (cwd: string, targetPath: string): string => {
   return path.resolve(cwd, untildify(targetPath));
 };
 
+export const isAbsolutePath = (targetPath: string): boolean => {
+  return path.isAbsolute(untildify(targetPath));
+};
+
 export const isPathWithinDir = (dir: string, targetPath: string): boolean => {
   const absoluteTarget = resolvePath(dir, targetPath);
   const relativePath = path.relative(dir, absoluteTarget);

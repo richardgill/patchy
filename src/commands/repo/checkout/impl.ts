@@ -1,7 +1,11 @@
 import { existsSync } from "node:fs";
 import chalk from "chalk";
+import { compact } from "es-toolkit";
 import { CheckRepoActions } from "simple-git";
-import { createEnrichedMergedConfig } from "~/cli-fields";
+import {
+  createEnrichedMergedConfig,
+  hasAbsoluteTargetRepo,
+} from "~/cli-fields";
 import type { LocalContext } from "~/context";
 import { createGitClient } from "~/lib/git";
 import type { CheckoutFlags } from "./flags";
@@ -31,7 +35,8 @@ export default async function (
 ): Promise<void> {
   const result = createEnrichedMergedConfig({
     flags,
-    requiredFields: ["clones_dir", "target_repo"],
+    requiredFields: (config) =>
+      compact([!hasAbsoluteTargetRepo(config) && "clones_dir", "target_repo"]),
     cwd: this.cwd,
   });
 

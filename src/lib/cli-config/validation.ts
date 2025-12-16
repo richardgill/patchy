@@ -39,7 +39,9 @@ type ValidateConfigParams<
 > = {
   metadata: M;
   mergedConfig: TConfig;
-  requiredFields: DeriveJsonConfigKey<M>[];
+  requiredFields:
+    | DeriveJsonConfigKey<M>[]
+    | ((config: TConfig) => DeriveJsonConfigKey<M>[]);
   configPath: string;
   sources: ConfigSources<M, TJson>;
   // Optional callback to format the "init" hint message
@@ -65,8 +67,13 @@ export const validateConfig = <
   sources,
   formatInitHint,
 }: ValidateConfigParams<M, TJson, TConfig>): ValidateConfigResult => {
+  const resolvedRequiredFields =
+    typeof requiredFields === "function"
+      ? requiredFields(mergedConfig)
+      : requiredFields;
+
   // Check for missing required fields
-  const missingFields = requiredFields.filter((field) => {
+  const missingFields = resolvedRequiredFields.filter((field) => {
     return isNil(mergedConfig[field]);
   });
 
@@ -92,7 +99,7 @@ export const validateConfig = <
   // Run validators
   const validationErrors: string[] = [];
 
-  for (const key of requiredFields) {
+  for (const key of resolvedRequiredFields) {
     const meta = metadata[key];
     if (!("validate" in meta) || !meta.validate) continue;
 

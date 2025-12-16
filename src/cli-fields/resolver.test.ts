@@ -1,5 +1,6 @@
 import { describe, expect, it } from "bun:test";
 import { mkdirSync } from "node:fs";
+import os from "node:os";
 import path from "node:path";
 import {
   generateTmpDir,
@@ -1340,5 +1341,60 @@ describe("createEnrichedMergedConfig", () => {
       "https://github.com/example/json-repo.git",
     );
     expect(result.mergedConfig.ref).toBe("json-ref");
+  });
+
+  it("should use absolute target_repo directly without clones_dir", async () => {
+    const tmpDir = generateTmpDir();
+    const absoluteRepoPath = path.join(tmpDir, "absolute-repo");
+    mkdirSync(absoluteRepoPath, { recursive: true });
+
+    await setupTestWithConfig({
+      tmpDir,
+      createDirectories: {},
+      jsonConfig: {
+        source_repo: "https://github.com/example/repo.git",
+        target_repo: absoluteRepoPath,
+      },
+    });
+
+    const flags: SharedFlags = {};
+    const requiredFields: JsonConfigKey[] = ["source_repo", "target_repo"];
+
+    const result = createEnrichedMergedConfig({
+      flags,
+      requiredFields,
+      cwd: tmpDir,
+    });
+
+    expectSuccessfulMerge(result);
+    expect(result.mergedConfig.absoluteTargetRepo).toBe(absoluteRepoPath);
+    expect(result.mergedConfig.absoluteClonesDir).toBeDefined();
+  });
+
+  it("should use tilde target_repo directly without clones_dir", async () => {
+    const tmpDir = generateTmpDir();
+
+    await setupTestWithConfig({
+      tmpDir,
+      createDirectories: {},
+      jsonConfig: {
+        source_repo: "https://github.com/example/repo.git",
+        target_repo: "~/some-repo-that-may-not-exist",
+      },
+    });
+
+    const flags: SharedFlags = {};
+    const requiredFields: JsonConfigKey[] = ["source_repo"];
+
+    const result = createEnrichedMergedConfig({
+      flags,
+      requiredFields,
+      cwd: tmpDir,
+    });
+
+    expectSuccessfulMerge(result);
+    expect(result.mergedConfig.absoluteTargetRepo).toBe(
+      path.join(os.homedir(), "some-repo-that-may-not-exist"),
+    );
   });
 });
