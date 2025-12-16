@@ -20,6 +20,7 @@
     "changeset-version": "changeset version",
     "dev": "bun run src/cli.ts",
     "knip": "knip-bun",
+    "lint-versions": "syncpack lint",
     "local-ci": "bun run scripts/local-ci.ts",
     "prepare": "[ -n \"$CI\" ] || lefthook install",
     "typecheck": "tsgo --noEmit",
@@ -36,10 +37,11 @@
     "bun-types": "=1.3.4",
     "knip": "=5.73.4",
     "lefthook": "=2.0.11",
+    "syncpack": "=13.0.4",
     "typescript": "=5.9.3"
   },
   "dependencies": {
-    "@clack/prompts": "1.0.0-alpha.8",
+    "@clack/prompts": "=1.0.0-alpha.8",
     "@stricli/core": "=1.2.4",
     "chalk": "=5.6.2",
     "diff": "=8.0.2",
@@ -62,11 +64,11 @@
     "url": "https://github.com/richardgill/patchy"
   },
   "optionalDependencies": {
-    "patchy-cli-linux-x64": "0.0.2",
-    "patchy-cli-linux-arm64": "0.0.2",
-    "patchy-cli-darwin-x64": "0.0.2",
-    "patchy-cli-darwin-arm64": "0.0.2",
-    "patchy-cli-windows-x64": "0.0.2"
+    "patchy-cli-linux-x64": "=0.0.2",
+    "patchy-cli-linux-arm64": "=0.0.2",
+    "patchy-cli-darwin-x64": "=0.0.2",
+    "patchy-cli-darwin-arm64": "=0.0.2",
+    "patchy-cli-windows-x64": "=0.0.2"
   },
   "publishConfig": {
     "access": "public"
