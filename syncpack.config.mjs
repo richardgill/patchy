@@ -1,6 +1,5 @@
-import { defineConfig } from "syncpack";
-
-export default defineConfig({
+export default {
+  lintFormatting: false,
   semverGroups: [
     {
       label: "Peer dependencies allow any range",
@@ -12,7 +11,7 @@ export default defineConfig({
       label: "All other dependencies must be pinned with =",
       packages: ["**"],
       dependencyTypes: ["dev", "prod", "optional"],
-      range: "=",
+      range: "",
     },
   ],
   versionGroups: [
@@ -23,4 +22,4 @@ export default defineConfig({
       isIgnored: true,
     },
   ],
-});
+};
