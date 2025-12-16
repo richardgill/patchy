@@ -74,6 +74,7 @@ echo "new file" > clones/spoon-knife/path/to/newFile.txt
 
 To generate the patches for the changes run `patchy generate`:
 
+Patchy will prompt you to create your first **patch set**, lets's name it: 'first-patch-set'
 
 ```
 ./
@@ -82,10 +83,12 @@ To generate the patches for the changes run `patchy generate`:
 │       ├── path/to/existingFile.txt
 │       └── path/to/newFile.txt
 ├── patches/
-│   ├── path/to/existingFile.txt.diff
-│   └── path/to/newFile.txt
+│   └── 001-first-patch-set/
+│       ├── path/to/existingFile.txt.diff
+│       └── path/to/newFile.txt
 └── patchy.json
 ```
+
 - **Edits** are stored as `.diff` files e.g. `existingFile.txt.diff`.
 - **New files** are copied as regular files e.g. `newFile.txt` (easier to inspect and edit directly). 
 
@@ -99,8 +102,9 @@ Reset the current upstream repo `patchy repo reset main`, which will reset every
 │   └── spoon-knife/  <<< reset
 │       ├── path/to/existingFile.txt
 ├── patches/
-│   ├── path/to/existingFile.txt.diff
-│   └── path/to/newFile.txt
+│   └── 001-first-patch-set/
+│       ├── path/to/existingFile.txt.diff
+│       └── path/to/newFile.txt
 └── patchy.json
 ```
 
@@ -113,8 +117,9 @@ Apply the patches back to the cloned repo with: `patchy apply`
 │       ├── path/to/existingFile.txt (modified)
 │       └── path/to/newFile.txt (added)
 ├── patches/
-│   ├── path/to/existingFile.txt.diff
-│   └── path/to/newFile.txt
+│   └── 001-first-patch-set/
+│       ├── path/to/existingFile.txt.diff
+│       └── path/to/newFile.txt
 └── patchy.json
 ```
 
@@ -182,20 +187,22 @@ The `patches/` directory (customizable via [`patches_dir`](#patchyjson-reference
 ```
 ./
 ├── patches/
-│   ├── path/to/existingFile.txt.diff
-│   └── path/to/newFile.txt
+│   └── 001-first-patch-set/
+│       ├── path/to/existingFile.txt.diff
+│       └── path/to/newFile.txt
 ├── clones/
 │   └── repo-clone-1/
 │       ├── path/to/existingFile.txt (modified)
 │       └── path/to/newFile.txt (added)
 └── patchy.json
 ```
+Patches are grouped into **patch sets** for organizing related changes. Patch sets apply in alphabetical order. Use numeric prefixes (e.g., `001-auth`, `002-ui`).
 
 **Two types of patch files:**
 - **`.diff` files** — For modified existing files (generated via `git diff HEAD`)
 - **Plain files** — For newly added files (copied verbatim for easier inspection and editing)
 
-`patchy generate` automatically removes stale files in `patches/` that no longer correspond to changes in `target_repo`.
+`patchy generate` automatically removes stale files in `patches/<patch-set>` that no longer correspond to changes in `target_repo`.
 
 ## Commands
 
