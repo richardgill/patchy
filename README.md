@@ -199,7 +199,7 @@ The `patches/` directory (customizable via [`patches_dir`](#patchyjson-reference
 │       └── path/to/newFile.txt (added)
 └── patchy.json
 ```
-Patches are grouped into **patch sets** for organizing related changes. Patch sets apply in alphabetical order. Use numeric prefixes (e.g., `001-auth`, `002-ui`).
+Patches are grouped into **patch sets** for organizing related changes. Patch sets have numeric prefixes (e.g., `001-auth`, `002-ui`) and are applied in order.
 
 **Two types of patch files:**
 - **`.diff` files** — For modified existing files (generated via `git diff HEAD`)
@@ -214,7 +214,7 @@ Patches are grouped into **patch sets** for organizing related changes. Patch se
 Generate `.diff` files and new files into `./patches/<patch-set>/` based on current `git diff` in `target_repo`.
 
 ```sh
-patchy generate [--patch-set <name>] [--target-repo] [--patches-dir] [--dry-run]
+patchy generate [--patch-set] [--target-repo] [--patches-dir] [--dry-run]
 ```
 
 If `--patch-set` is not provided (and not set via env/config), prompts to select an existing patch set or create a new one.
