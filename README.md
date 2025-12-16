@@ -83,9 +83,9 @@ Patchy will prompt you to create your first **patch set**, let's name it: 'first
 │       ├── path/to/existingFile.txt
 │       └── path/to/newFile.txt
 ├── patches/
-│   └── 001-first-patch-set/
-│       ├── path/to/existingFile.txt.diff
-│       └── path/to/newFile.txt
+│   └── 001-first-patch-set/ (created)
+│       ├── path/to/existingFile.txt.diff (generated)
+│       └── path/to/newFile.txt (generated)
 └── patchy.json
 ```
 
