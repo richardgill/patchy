@@ -1,5 +1,11 @@
 # patchy-cli
 
+## 0.0.8
+
+### Patch Changes
+
+- [#173](https://github.com/richardgill/patchy/pull/173) [`e7a8011`](https://github.com/richardgill/patchy/commit/e7a80118809fb8ccc2e5417d39d21592d86133e5) Thanks [@richardgill](https://github.com/richardgill)! - Improved README documentation for patch sets ordering and generate command syntax
+
 ## 0.0.7
 
 ### Patch Changes
