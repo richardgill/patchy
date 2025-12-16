@@ -1,5 +1,15 @@
 # patchy-cli
 
+## 0.0.7
+
+### Patch Changes
+
+- [#170](https://github.com/richardgill/patchy/pull/170) [`f83c1b8`](https://github.com/richardgill/patchy/commit/f83c1b8deddd5690b45825251a97fbba8fe80626) Thanks [@richardgill](https://github.com/richardgill)! - Implement patch sets feature with interactive prompts and metadata support
+
+- [#160](https://github.com/richardgill/patchy/pull/160) [`241c621`](https://github.com/richardgill/patchy/commit/241c621596f0f647c030d98e9704c1ebd63ae2c7) Thanks [@richardgill](https://github.com/richardgill)! - Add support for local file paths in repo_url (absolute paths like `/path/to/repo` and relative paths like `./upstream` or `../sibling`)
+
+- [#167](https://github.com/richardgill/patchy/pull/167) [`55b5fea`](https://github.com/richardgill/patchy/commit/55b5fea925649b8bef4a969efec8eb13c64e669f) Thanks [@richardgill](https://github.com/richardgill)! - Rename `repoUrl` config field to `url` for cleaner configuration
+
 ## 0.0.6
 
 ### Patch Changes
