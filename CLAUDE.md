@@ -27,16 +27,13 @@ This is a CLI tool for managing Git patch workflows. It helps maintain curated p
 - Read `src/testing/matchers.ts` and `src/testing/test-utils.ts` before writing tests for available helpers and custom matchers
 - When writing tests, consider whether you could use or create new helpers or custom matchers to optimize for human readability
 
-## Runtime Testing
+## Checking all changes
 
-The CLI uses Bun as its runtime:
-- `bun run test` - Run e2e tests with CLI executing on Bun
-
-The test suite uses bun:test and spawns the actual CLI as a subprocess using `bun`.
+Always run `bun run local-ci` it runs formatter, linter & tests
 
 ## Releasing
 
-Run `bun run changeset` to bump version and generate CHANGELOG
+Use changeset skill
 
 ## Dependencies
 

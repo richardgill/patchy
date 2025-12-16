@@ -1,6 +1,7 @@
 import { existsSync } from "node:fs";
 import chalk from "chalk";
 import type { ValidatorFn } from "~/lib/cli-config";
+import { isAbsolutePath } from "~/lib/fs";
 import { isValidGitUrl } from "~/lib/validation";
 import type { EnrichedFields } from "./enriched-fields";
 
@@ -23,7 +24,16 @@ export const directoryExists: PatchyValidatorFn = (config, key) => {
 };
 
 export const targetRepoExists: PatchyValidatorFn = (config, _key) => {
-  // Skip validation if parent directory doesn't exist (will be caught by clones_dir validator)
+  // If target_repo is absolute, validate it directly
+  const targetRepo = config["target_repo"];
+  if (
+    targetRepo &&
+    typeof targetRepo === "string" &&
+    isAbsolutePath(targetRepo)
+  ) {
+    return checkPathExists(config.absoluteTargetRepo);
+  }
+  // For relative paths, skip if clones_dir doesn't exist (caught by clones_dir validator)
   if (!config.absoluteClonesDir || !existsSync(config.absoluteClonesDir)) {
     return null;
   }
