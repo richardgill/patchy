@@ -45,3 +45,13 @@ jobs:
 
       - name: Knip
         run: bun run knip
+
+  lint-versions:
+    name: Lint versions
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: ./.github/actions/setup
+
+      - name: Lint versions
+        run: bun run lint-versions
