@@ -15,6 +15,9 @@ describe("generateJsonSchema", () => {
           "clones_dir": {
             "type": "string",
           },
+          "patch_set": {
+            "type": "string",
+          },
           "patches_dir": {
             "type": "string",
           },

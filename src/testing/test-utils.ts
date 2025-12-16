@@ -21,6 +21,7 @@ type PromptOptions = {
   promptOutput?: Writable;
   promptHandler?: PromptHandler;
   onPromptRecord?: (prompt: RecordedPrompt) => void;
+  env?: Record<string, string>;
 };
 
 export const runCli = async (
@@ -47,7 +48,7 @@ export const runCli = async (
         stderr += s;
       },
     },
-    env: { ...process.env, NO_COLOR: "1", FORCE_COLOR: "0" },
+    env: { ...process.env, NO_COLOR: "1", FORCE_COLOR: "0", ...options.env },
     exit: (code: number) => {
       exitCode = code;
     },

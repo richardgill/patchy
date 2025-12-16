@@ -20,7 +20,13 @@ type ConfirmMatcher = {
   response: boolean | typeof acceptDefault | typeof cancel;
 };
 
-type InternalMatcher = TextMatcher | ConfirmMatcher;
+type SelectMatcher = {
+  type: "select";
+  pattern: RegExp | string;
+  response: string | typeof acceptDefault | typeof cancel;
+};
+
+type InternalMatcher = TextMatcher | ConfirmMatcher | SelectMatcher;
 
 type TextMatcherConfig = {
   text: RegExp | string;
@@ -32,7 +38,15 @@ type ConfirmMatcherConfig = {
   respond: boolean | typeof acceptDefault | typeof cancel;
 };
 
-type MatcherConfig = TextMatcherConfig | ConfirmMatcherConfig;
+type SelectMatcherConfig = {
+  select: RegExp | string;
+  respond: string | typeof acceptDefault | typeof cancel;
+};
+
+type MatcherConfig =
+  | TextMatcherConfig
+  | ConfirmMatcherConfig
+  | SelectMatcherConfig;
 
 export type PromptBuilder = {
   on: (config: MatcherConfig) => PromptBuilder;
@@ -77,10 +91,12 @@ export const createPromptBuilder = (
     on: (config) => {
       const hasText = "text" in config;
       const hasConfirm = "confirm" in config;
+      const hasSelect = "select" in config;
 
-      if (hasText && hasConfirm) {
+      const count = [hasText, hasConfirm, hasSelect].filter(Boolean).length;
+      if (count !== 1) {
         throw new Error(
-          "Invalid matcher config: must have exactly one of 'text' or 'confirm'",
+          "Invalid matcher config: must have exactly one of 'text', 'confirm', or 'select'",
         );
       }
 
@@ -90,10 +106,16 @@ export const createPromptBuilder = (
           pattern: config.text,
           response: config.respond,
         });
-      } else {
+      } else if (hasConfirm) {
         matchers.push({
           type: "confirm",
           pattern: (config as ConfirmMatcherConfig).confirm,
+          response: config.respond,
+        });
+      } else {
+        matchers.push({
+          type: "select",
+          pattern: (config as SelectMatcherConfig).select,
           response: config.respond,
         });
       }

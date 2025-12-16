@@ -91,3 +91,14 @@ export const findAvailableDirName = (
 
   return `${baseName}-${maxCounter + 1}`;
 };
+
+export const getSortedFolders = (patchesDir: string): string[] => {
+  if (!existsSync(patchesDir)) {
+    return [];
+  }
+  const entries = readdirSync(patchesDir, { withFileTypes: true });
+  return entries
+    .filter((entry) => entry.isDirectory())
+    .map((entry) => entry.name)
+    .sort();
+};

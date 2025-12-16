@@ -1,6 +1,6 @@
 {
   "permissions": {
-    "allow": ["Bash(bd:*)"],
+    "allow": ["Bash(bd:*)", "Skill(add-changeset)"],
     "additionalDirectories": ["/home/rich/code/reference-repos/opencode"]
   },
   "hooks": {
