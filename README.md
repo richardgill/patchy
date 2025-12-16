@@ -199,7 +199,7 @@ The `patches/` directory (customizable via [`patches_dir`](#patchyjson-reference
 │       └── path/to/newFile.txt (added)
 └── patchy.json
 ```
-Patches are grouped into **patch sets** for organizing related changes. Patch sets apply in alphabetical order. Use numeric prefixes (e.g., `001-auth`, `002-ui`).
+Patches are grouped into **patch sets** for organizing related changes. Patch sets have numeric prefixes (e.g., `001-auth`, `002-ui`) and are applied in order.
 
 **Two types of patch files:**
 - **`.diff` files** — For modified existing files (generated via `git diff HEAD`)
