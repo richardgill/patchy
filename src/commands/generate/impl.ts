@@ -1,7 +1,11 @@
 import { existsSync, writeFileSync } from "node:fs";
 import { copyFile } from "node:fs/promises";
 import { dirname, join } from "node:path";
-import { createEnrichedMergedConfig } from "~/cli-fields";
+import { compact } from "es-toolkit";
+import {
+  createEnrichedMergedConfig,
+  hasAbsoluteTargetRepo,
+} from "~/cli-fields";
 import type { LocalContext } from "~/context";
 import {
   ensureDirExists,
@@ -93,7 +97,8 @@ export default async function (
 ): Promise<void> {
   const result = createEnrichedMergedConfig({
     flags,
-    requiredFields: ["clones_dir", "target_repo"],
+    requiredFields: (config) =>
+      compact([!hasAbsoluteTargetRepo(config) && "clones_dir", "target_repo"]),
     cwd: this.cwd,
   });
 

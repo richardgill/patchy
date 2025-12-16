@@ -6,6 +6,7 @@ import { generateTmpDir } from "~/testing/test-utils";
 import {
   findAvailableDirName,
   formatPathForDisplay,
+  isAbsolutePath,
   isPathWithinDir,
   resolvePath,
 } from "./fs";
@@ -107,6 +108,25 @@ describe("resolvePath", () => {
   it("should handle paths without tilde", () => {
     const result = resolvePath("/project", "some/path");
     expect(result).toBe("/project/some/path");
+  });
+});
+
+describe("isAbsolutePath", () => {
+  it("should return true for absolute paths", () => {
+    expect(isAbsolutePath("/tmp/repo")).toBe(true);
+    expect(isAbsolutePath("/home/user/repo")).toBe(true);
+  });
+
+  it("should return true for tilde paths", () => {
+    expect(isAbsolutePath("~/repo")).toBe(true);
+    expect(isAbsolutePath("~/code/my-project")).toBe(true);
+  });
+
+  it("should return false for relative paths", () => {
+    expect(isAbsolutePath("repo")).toBe(false);
+    expect(isAbsolutePath("./repo")).toBe(false);
+    expect(isAbsolutePath("../repo")).toBe(false);
+    expect(isAbsolutePath("some/nested/repo")).toBe(false);
   });
 });
 

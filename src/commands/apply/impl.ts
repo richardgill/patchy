@@ -1,7 +1,12 @@
 import { existsSync } from "node:fs";
 import { copyFile, mkdir, readFile, writeFile } from "node:fs/promises";
 import path from "node:path";
-import { createEnrichedMergedConfig, DEFAULT_FUZZ_FACTOR } from "~/cli-fields";
+import { compact } from "es-toolkit";
+import {
+  createEnrichedMergedConfig,
+  DEFAULT_FUZZ_FACTOR,
+  hasAbsoluteTargetRepo,
+} from "~/cli-fields";
 import type { LocalContext } from "~/context";
 import { formatPathForDisplay, getAllFiles } from "~/lib/fs";
 import { applyDiff } from "./apply-diff";
@@ -89,7 +94,12 @@ export default async function (
   try {
     const result = createEnrichedMergedConfig({
       flags,
-      requiredFields: ["clones_dir", "target_repo", "patches_dir"],
+      requiredFields: (config) =>
+        compact([
+          !hasAbsoluteTargetRepo(config) && "clones_dir",
+          "target_repo",
+          "patches_dir",
+        ]),
       cwd: this.cwd,
     });
 
