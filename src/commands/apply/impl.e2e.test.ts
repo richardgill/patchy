@@ -984,7 +984,7 @@ const other = 2;
   it("should work with absolute target_repo without clones_dir", async () => {
     const tmpDir = generateTmpDir();
 
-    // Create repo at absolute path (outside normal clones_dir structure)
+    // Create standalone git repo (not under clones_dir - that's the point of this test)
     const absoluteRepoPath = path.join(tmpDir, "standalone-repo");
     mkdirSync(absoluteRepoPath, { recursive: true });
     await initGitRepoWithCommit(
@@ -993,10 +993,17 @@ const other = 2;
       "original content",
     );
 
-    // Create patches dir
-    const patchesDir = path.join(tmpDir, "patches");
-    mkdirSync(patchesDir, { recursive: true });
-    await writeTestFile(
+    const ctx = await setupTestWithConfig({
+      tmpDir,
+      createDirectories: { patchesDir: "patches" },
+      jsonConfig: {
+        target_repo: absoluteRepoPath,
+        patches_dir: "./patches",
+      },
+    });
+
+    const patchesDir = ctx.absolutePatchesDir as string;
+    await writeFileIn(
       patchesDir,
       "file.txt.diff",
       `--- a/file.txt
@@ -1006,12 +1013,6 @@ const other = 2;
 +patched content
 `,
     );
-
-    // Config with absolute target_repo, no clones_dir
-    await writeJsonConfig(tmpDir, "patchy.json", {
-      target_repo: absoluteRepoPath,
-      patches_dir: "./patches",
-    });
 
     const result = await runCli(`patchy apply`, tmpDir);
 
