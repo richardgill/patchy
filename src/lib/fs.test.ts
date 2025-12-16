@@ -1,11 +1,12 @@
 import { describe, expect, it } from "bun:test";
-import { mkdirSync } from "node:fs";
+import { mkdirSync, writeFileSync } from "node:fs";
 import os from "node:os";
 import path, { join } from "node:path";
 import { generateTmpDir } from "~/testing/test-utils";
 import {
   findAvailableDirName,
   formatPathForDisplay,
+  getSortedFolders,
   isAbsolutePath,
   isPathWithinDir,
   resolvePath,
@@ -177,5 +178,27 @@ describe("formatPathForDisplay", () => {
     it(`formats "${input}" as "${expected}"`, () => {
       expect(formatPathForDisplay(input)).toBe(expected);
     });
+  });
+});
+
+describe("getSortedFolders", () => {
+  it("returns empty array for non-existent directory", () => {
+    expect(getSortedFolders("/non/existent")).toEqual([]);
+  });
+
+  it("returns sorted directory names", () => {
+    const tmpDir = generateTmpDir();
+    mkdirSync(join(tmpDir, "002-second"), { recursive: true });
+    mkdirSync(join(tmpDir, "001-first"), { recursive: true });
+    writeFileSync(join(tmpDir, "not-a-dir.txt"), "file");
+
+    expect(getSortedFolders(tmpDir)).toEqual(["001-first", "002-second"]);
+  });
+
+  it("returns empty array for empty directory", () => {
+    const tmpDir = generateTmpDir();
+    mkdirSync(tmpDir, { recursive: true });
+
+    expect(getSortedFolders(tmpDir)).toEqual([]);
   });
 });

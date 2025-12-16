@@ -1,14 +1,14 @@
 import { existsSync } from "node:fs";
 import { copyFile, mkdir, readFile, writeFile } from "node:fs/promises";
 import path from "node:path";
-import { compact } from "es-toolkit";
+import { compact, sumBy } from "es-toolkit";
 import {
   createEnrichedMergedConfig,
   DEFAULT_FUZZ_FACTOR,
   hasAbsoluteTargetRepo,
 } from "~/cli-fields";
 import type { LocalContext } from "~/context";
-import { formatPathForDisplay, getAllFiles } from "~/lib/fs";
+import { formatPathForDisplay, getAllFiles, getSortedFolders } from "~/lib/fs";
 import { applyDiff } from "./apply-diff";
 import type { ApplyFlags } from "./flags";
 
@@ -19,14 +19,23 @@ type PatchToApply = {
   targetPath: string;
 };
 
+type PatchSetStats = {
+  name: string;
+  fileCount: number;
+  errors: Array<{ file: string; error: string }>;
+};
+
 const collectPatchToApplys = async (
-  patchesDir: string,
+  patchSetDir: string,
   repoDir: string,
 ): Promise<PatchToApply[]> => {
-  const relativePaths = await getAllFiles(patchesDir);
+  if (!existsSync(patchSetDir)) {
+    return [];
+  }
+  const relativePaths = await getAllFiles(patchSetDir);
 
   return relativePaths.map((relativePath) => {
-    const absolutePath = path.join(patchesDir, relativePath);
+    const absolutePath = path.join(patchSetDir, relativePath);
     const isDiff = relativePath.endsWith(".diff");
     const targetRelativePath = isDiff
       ? relativePath.slice(0, -5)
@@ -53,7 +62,7 @@ const applyPatch = async (
       await mkdir(path.dirname(patchFile.targetPath), { recursive: true });
       await copyFile(patchFile.absolutePath, patchFile.targetPath);
       if (verbose) {
-        stdout.write(`  Copied: ${patchFile.relativePath}\n`);
+        stdout.write(`    Copied: ${patchFile.relativePath}\n`);
       }
     } else {
       if (!existsSync(patchFile.targetPath)) {
@@ -75,7 +84,7 @@ const applyPatch = async (
       await writeFile(patchFile.targetPath, patchedContent);
 
       if (verbose) {
-        stdout.write(`  Applied diff: ${patchFile.relativePath}\n`);
+        stdout.write(`    Applied diff: ${patchFile.relativePath}\n`);
       }
     }
     return { success: true };
@@ -85,6 +94,37 @@ const applyPatch = async (
       error: error instanceof Error ? error.message : String(error),
     };
   }
+};
+
+type FilterResult =
+  | { filtered: string[]; error?: undefined }
+  | { filtered?: undefined; error: string };
+
+const filterPatchSets = (
+  patchSets: string[],
+  only: string | undefined,
+  until: string | undefined,
+): FilterResult => {
+  if (only && until) {
+    return { error: "Cannot use both --only and --until flags together" };
+  }
+
+  if (only) {
+    if (!patchSets.includes(only)) {
+      return { error: `Patch set not found: ${only}` };
+    }
+    return { filtered: [only] };
+  }
+
+  if (until) {
+    const index = patchSets.indexOf(until);
+    if (index === -1) {
+      return { error: `Patch set not found: ${until}` };
+    }
+    return { filtered: patchSets.slice(0, index + 1) };
+  }
+
+  return { filtered: patchSets };
 };
 
 export default async function (
@@ -101,6 +141,7 @@ export default async function (
           "patches_dir",
         ]),
       cwd: this.cwd,
+      env: this.process.env,
     });
 
     if (!result.success) {
@@ -113,57 +154,91 @@ export default async function (
     const absolutePatchesDir = config.absolutePatchesDir ?? "";
     const absoluteTargetRepo = config.absoluteTargetRepo ?? "";
 
-    if (config.dry_run) {
-      this.process.stdout.write(
-        "[DRY RUN] Would apply patches from " +
-          `${formatPathForDisplay(config.patches_dir ?? "")} to ${formatPathForDisplay(config.target_repo ?? "")}\n`,
-      );
-    }
+    const allPatchSets = getSortedFolders(absolutePatchesDir);
 
-    const patchFiles = await collectPatchToApplys(
-      absolutePatchesDir,
-      absoluteTargetRepo,
-    );
-
-    if (patchFiles.length === 0) {
-      this.process.stdout.write("No patch files found.\n");
+    if (allPatchSets.length === 0) {
+      this.process.stdout.write("No patch sets found.\n");
       return;
     }
 
-    if (config.dry_run) {
-      this.process.stdout.write(
-        `\nWould apply ${patchFiles.length} file(s):\n`,
-      );
-      for (const patchFile of patchFiles) {
-        const action = patchFile.type === "copy" ? "Copy" : "Apply diff";
-        this.process.stdout.write(`  ${action}: ${patchFile.relativePath}\n`);
-      }
+    const filterResult = filterPatchSets(allPatchSets, flags.only, flags.until);
+
+    if (filterResult.error !== undefined) {
+      this.process.stderr.write(`${filterResult.error}\n`);
+      this.process.exit(1);
       return;
     }
 
-    this.process.stdout.write(
-      `Applying ${patchFiles.length} patch file(s)...\n`,
-    );
+    const patchSetsToApply = filterResult.filtered;
 
-    const errors: Array<{ file: string; error: string }> = [];
+    if (config.dry_run) {
+      this.process.stdout.write(
+        `[DRY RUN] Would apply patches from ${formatPathForDisplay(config.patches_dir ?? "")} to ${formatPathForDisplay(config.target_repo ?? "")}\n`,
+      );
+    }
 
     const fuzzFactor = flags["fuzz-factor"] ?? DEFAULT_FUZZ_FACTOR;
+    const stats: PatchSetStats[] = [];
 
-    for (const patchFile of patchFiles) {
-      const patchResult = await applyPatch(
-        patchFile,
-        config.verbose,
-        fuzzFactor,
-        this.process.stdout as NodeJS.WriteStream,
+    this.process.stdout.write("Applying patch sets...\n");
+
+    for (const patchSetName of patchSetsToApply) {
+      const patchSetDir = path.join(absolutePatchesDir, patchSetName);
+      const patchFiles = await collectPatchToApplys(
+        patchSetDir,
+        absoluteTargetRepo,
       );
-      if (!patchResult.success && patchResult.error) {
-        errors.push({ file: patchFile.relativePath, error: patchResult.error });
+
+      const patchSetStats: PatchSetStats = {
+        name: patchSetName,
+        fileCount: patchFiles.length,
+        errors: [],
+      };
+
+      if (config.dry_run) {
+        this.process.stdout.write(
+          `  [${patchSetName}] ${patchFiles.length} file(s)\n`,
+        );
+        if (config.verbose) {
+          for (const patchFile of patchFiles) {
+            const action = patchFile.type === "copy" ? "Copy" : "Apply diff";
+            this.process.stdout.write(
+              `    ${action}: ${patchFile.relativePath}\n`,
+            );
+          }
+        }
+        stats.push(patchSetStats);
+        continue;
       }
+
+      this.process.stdout.write(
+        `  [${patchSetName}] ${patchFiles.length} file(s)\n`,
+      );
+
+      for (const patchFile of patchFiles) {
+        const patchResult = await applyPatch(
+          patchFile,
+          config.verbose,
+          fuzzFactor,
+          this.process.stdout as NodeJS.WriteStream,
+        );
+        if (!patchResult.success && patchResult.error) {
+          patchSetStats.errors.push({
+            file: patchFile.relativePath,
+            error: patchResult.error,
+          });
+        }
+      }
+
+      stats.push(patchSetStats);
     }
 
-    if (errors.length > 0) {
+    const totalFiles = sumBy(stats, (s) => s.fileCount);
+    const allErrors = stats.flatMap((s) => s.errors);
+
+    if (allErrors.length > 0) {
       this.process.stderr.write(`\nErrors occurred while applying patches:\n`);
-      for (const { file, error } of errors) {
+      for (const { file, error } of allErrors) {
         this.process.stderr.write(`  ${file}: ${error}\n`);
       }
       this.process.exit(1);
@@ -171,7 +246,7 @@ export default async function (
     }
 
     this.process.stdout.write(
-      `Successfully applied ${patchFiles.length} patch file(s).\n`,
+      `Successfully applied ${totalFiles} patch file(s) across ${stats.length} patch set(s).\n`,
     );
   } catch (error) {
     if (error instanceof Error && error.name === "ProcessExitError") {

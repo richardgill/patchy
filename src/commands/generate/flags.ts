@@ -5,6 +5,7 @@ export const generateFlags = {
   ...FLAG_METADATA.clones_dir.stricliFlag,
   ...FLAG_METADATA.target_repo.stricliFlag,
   ...FLAG_METADATA.patches_dir.stricliFlag,
+  ...FLAG_METADATA.patch_set.stricliFlag,
   ...FLAG_METADATA.source_repo.stricliFlag,
   ...FLAG_METADATA.ref.stricliFlag,
   ...FLAG_METADATA.config.stricliFlag,

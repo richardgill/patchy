@@ -1,6 +1,6 @@
 import { existsSync, writeFileSync } from "node:fs";
 import { copyFile } from "node:fs/promises";
-import { dirname, join } from "node:path";
+import { dirname, join, relative } from "node:path";
 import { compact } from "es-toolkit";
 import {
   createEnrichedMergedConfig,
@@ -11,9 +11,11 @@ import {
   ensureDirExists,
   formatPathForDisplay,
   getAllFiles,
+  getSortedFolders,
   removeFile,
 } from "~/lib/fs";
 import { createGitClient } from "~/lib/git";
+import { canPrompt, createPrompts } from "~/lib/prompts";
 import type { GenerateFlags } from "./flags";
 
 type GitChange = {
@@ -26,6 +28,17 @@ type PatchToGenerate = {
   sourcePath: string;
   destPath: string;
   relativePath: string;
+};
+
+export const CREATE_NEW_OPTION = "_create_new";
+
+const getNextPatchSetPrefix = (patchesDir: string): string => {
+  const folders = getSortedFolders(patchesDir);
+  const maxPrefix = folders.reduce((max, name) => {
+    const match = name.match(/^(\d+)-/);
+    return match ? Math.max(max, parseInt(match[1], 10)) : max;
+  }, 0);
+  return String(maxPrefix + 1).padStart(3, "0");
 };
 
 const getGitChanges = async (repoDir: string): Promise<GitChange[]> => {
@@ -56,21 +69,21 @@ const generateDiff = async (
 const toPatchToGenerates = (
   changes: GitChange[],
   repoDir: string,
-  patchesDir: string,
+  patchSetDir: string,
 ): PatchToGenerate[] =>
   changes.map((change) => {
     if (change.type === "modified") {
       return {
         type: "diff",
         sourcePath: join(repoDir, change.path),
-        destPath: join(patchesDir, `${change.path}.diff`),
+        destPath: join(patchSetDir, `${change.path}.diff`),
         relativePath: change.path,
       };
     }
     return {
       type: "copy",
       sourcePath: join(repoDir, change.path),
-      destPath: join(patchesDir, change.path),
+      destPath: join(patchSetDir, change.path),
       relativePath: change.path,
     };
   });
@@ -79,16 +92,86 @@ const getExpectedPatchPaths = (operations: PatchToGenerate[]): Set<string> =>
   new Set(operations.map((op) => op.destPath));
 
 const getStalePatches = async (
-  patchesDir: string,
+  patchSetDir: string,
   expectedPaths: Set<string>,
 ): Promise<string[]> => {
-  if (!existsSync(patchesDir)) {
+  if (!existsSync(patchSetDir)) {
     return [];
   }
-  const existingPatches = await getAllFiles(patchesDir);
+  const existingPatches = await getAllFiles(patchSetDir);
   return existingPatches
-    .map((relativePath) => join(patchesDir, relativePath))
+    .map((relativePath) => join(patchSetDir, relativePath))
     .filter((absolutePath) => !expectedPaths.has(absolutePath));
+};
+
+const resolvePatchSet = async (
+  context: LocalContext,
+  absolutePatchesDir: string,
+  configPatchSet: string | undefined,
+): Promise<string | undefined> => {
+  if (configPatchSet) {
+    return configPatchSet;
+  }
+
+  const existingPatchSets = getSortedFolders(absolutePatchesDir);
+
+  if (!canPrompt(context)) {
+    context.process.stderr.write(
+      "No patch set specified. Use --patch-set, PATCHY_PATCH_SET env var, or set patch_set in config.\n",
+    );
+    context.process.exit(1);
+    return undefined;
+  }
+
+  const prompts = createPrompts(context);
+
+  if (existingPatchSets.length === 0) {
+    const name = await prompts.text({
+      message: "New patch set name:",
+      placeholder: "e.g., security-fixes",
+      validate: (input) => (input?.trim() ? undefined : "Name is required"),
+    });
+    if (prompts.isCancel(name)) {
+      context.process.stderr.write("Operation cancelled\n");
+      context.process.exit(1);
+      return undefined;
+    }
+    const prefix = getNextPatchSetPrefix(absolutePatchesDir);
+    return `${prefix}-${name}`;
+  }
+
+  const options: Array<{ value: string; label: string }> = [
+    ...existingPatchSets.map((name) => ({ value: name, label: name })),
+    { value: CREATE_NEW_OPTION, label: "Create new patch set" },
+  ];
+
+  const selected = await prompts.select({
+    message: "Select patch set:",
+    options,
+  });
+
+  if (prompts.isCancel(selected)) {
+    context.process.stderr.write("Operation cancelled\n");
+    context.process.exit(1);
+    return undefined;
+  }
+
+  if (selected === CREATE_NEW_OPTION) {
+    const name = await prompts.text({
+      message: "New patch set name:",
+      placeholder: "e.g., security-fixes",
+      validate: (input) => (input?.trim() ? undefined : "Name is required"),
+    });
+    if (prompts.isCancel(name)) {
+      context.process.stderr.write("Operation cancelled\n");
+      context.process.exit(1);
+      return undefined;
+    }
+    const prefix = getNextPatchSetPrefix(absolutePatchesDir);
+    return `${prefix}-${name}`;
+  }
+
+  return selected as string;
 };
 
 export default async function (
@@ -100,6 +183,7 @@ export default async function (
     requiredFields: (config) =>
       compact([!hasAbsoluteTargetRepo(config) && "clones_dir", "target_repo"]),
     cwd: this.cwd,
+    env: this.process.env,
   });
 
   if (!result.success) {
@@ -112,6 +196,15 @@ export default async function (
   const absoluteTargetRepo = config.absoluteTargetRepo ?? "";
   const absolutePatchesDir = config.absolutePatchesDir ?? "";
 
+  const patchSet = await resolvePatchSet(
+    this,
+    absolutePatchesDir,
+    config.patch_set,
+  );
+  if (!patchSet) return;
+
+  const absolutePatchSetDir = join(absolutePatchesDir, patchSet);
+
   const changes = await getGitChanges(absoluteTargetRepo);
 
   if (changes.length === 0) {
@@ -119,13 +212,13 @@ export default async function (
 
     const expectedPaths = new Set<string>();
     const stalePatches = await getStalePatches(
-      absolutePatchesDir,
+      absolutePatchSetDir,
       expectedPaths,
     );
 
     for (const stalePath of stalePatches) {
       removeFile(stalePath);
-      const relativePath = stalePath.replace(`${absolutePatchesDir}/`, "");
+      const relativePath = relative(absolutePatchSetDir, stalePath);
       this.process.stdout.write(`  Removed stale: ${relativePath}\n`);
     }
 
@@ -140,12 +233,12 @@ export default async function (
   const operations = toPatchToGenerates(
     changes,
     absoluteTargetRepo,
-    absolutePatchesDir,
+    absolutePatchSetDir,
   );
 
   if (config.dry_run) {
     this.process.stdout.write(
-      `[DRY RUN] Would generate patches from ${formatPathForDisplay(config.target_repo ?? "")} to ${formatPathForDisplay(config.patches_dir ?? "")}\n`,
+      `[DRY RUN] Would generate patches from ${formatPathForDisplay(config.target_repo ?? "")} to ${formatPathForDisplay(config.patches_dir ?? "")}/${patchSet}/\n`,
     );
     this.process.stdout.write(`Found ${operations.length} change(s):\n`);
     for (const op of operations) {
@@ -156,7 +249,7 @@ export default async function (
 
     const expectedPaths = getExpectedPatchPaths(operations);
     const stalePatches = await getStalePatches(
-      absolutePatchesDir,
+      absolutePatchSetDir,
       expectedPaths,
     );
     if (stalePatches.length > 0) {
@@ -164,7 +257,7 @@ export default async function (
         `\nWould remove ${stalePatches.length} stale patch(es):\n`,
       );
       for (const stalePath of stalePatches) {
-        const relativePath = stalePath.replace(`${absolutePatchesDir}/`, "");
+        const relativePath = relative(absolutePatchSetDir, stalePath);
         this.process.stdout.write(`  remove: ${relativePath}\n`);
       }
     }
@@ -172,10 +265,10 @@ export default async function (
   }
 
   this.process.stdout.write(
-    `Generating patches from ${formatPathForDisplay(config.target_repo ?? "")} to ${formatPathForDisplay(config.patches_dir ?? "")}...\n`,
+    `Generating patches from ${formatPathForDisplay(config.target_repo ?? "")} to ${formatPathForDisplay(config.patches_dir ?? "")}/${patchSet}/...\n`,
   );
 
-  ensureDirExists(absolutePatchesDir);
+  ensureDirExists(absolutePatchSetDir);
 
   for (const op of operations) {
     ensureDirExists(dirname(op.destPath));
@@ -191,11 +284,14 @@ export default async function (
   }
 
   const expectedPaths = getExpectedPatchPaths(operations);
-  const stalePatches = await getStalePatches(absolutePatchesDir, expectedPaths);
+  const stalePatches = await getStalePatches(
+    absolutePatchSetDir,
+    expectedPaths,
+  );
 
   for (const stalePath of stalePatches) {
     removeFile(stalePath);
-    const relativePath = stalePath.replace(`${absolutePatchesDir}/`, "");
+    const relativePath = relative(absolutePatchSetDir, stalePath);
     this.process.stdout.write(`  Removed stale: ${relativePath}\n`);
   }
 

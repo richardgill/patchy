@@ -74,7 +74,7 @@ echo "new file" > clones/spoon-knife/path/to/newFile.txt
 
 To generate the patches for the changes run `patchy generate`:
 
-Patchy will prompt you to create your first **patch set**, lets's name it: 'first-patch-set'
+Patchy will prompt you to create your first **patch set**, let's name it: 'first-patch-set'
 
 ```
 ./
@@ -171,6 +171,9 @@ patchy init
   // Can be relative to clones_dir: <clones_dir>/<target_repo> or absolute.
   "target_repo": "repo", // Override: --target-repo | env: PATCHY_TARGET_REPO
 
+  // Patch set to generate into (subdirectory of patches_dir).
+  // If not set, prompts interactively or errors in non-interactive mode.
+  "patch_set": "001-security-fixes", // Override: --patch-set | env: PATCHY_PATCH_SET
 
   // Git ref to checkout (branch, tag, SHA).
   "ref": "main" // Override: --ref | env: PATCHY_REF
@@ -208,21 +211,28 @@ Patches are grouped into **patch sets** for organizing related changes. Patch se
 
 ### `patchy generate`
 
-Generate `.diff` files and new files into `./patches/` based on current `git diff` in `target_repo`.
+Generate `.diff` files and new files into `./patches/<patch-set>/` based on current `git diff` in `target_repo`.
 
 ```sh
-patchy generate [--target-repo] [--patches-dir] [--dry-run]
+patchy generate [--patch-set <name>] [--target-repo] [--patches-dir] [--dry-run]
 ```
 
-Note: `patchy generate` is destructive and will remove any unneeded files in your `./patches/` folder.
+If `--patch-set` is not provided (and not set via env/config), prompts to select an existing patch set or create a new one.
+
+Note: `patchy generate` is destructive and will remove any unneeded files in the patch set directory.
 
 ### `patchy apply`
 
-Apply patch files from `patches/` into `target_repo`.
+Apply patch files from `patches/` into `target_repo`. Patch sets are applied in alphabetical order.
 
 ```sh
-patchy apply [--target-repo] [--patches-dir] [--dry-run]
+patchy apply [--only <patch-set>] [--until <patch-set>] [--target-repo] [--patches-dir] [--dry-run]
 ```
+
+| Flag | Description |
+|------|-------------|
+| `--only <name>` | Apply only the specified patch set |
+| `--until <name>` | Apply patch sets up to and including the specified one |
 
 ### `patchy repo reset`
 

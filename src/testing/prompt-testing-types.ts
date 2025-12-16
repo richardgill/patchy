@@ -22,7 +22,13 @@ type ConfirmPromptInfo = {
   initialValue?: boolean;
 };
 
-export type PromptInfo = TextPromptInfo | ConfirmPromptInfo;
+type SelectPromptInfo = {
+  type: "select";
+  message: string;
+  options: Array<{ value: string; label: string }>;
+};
+
+export type PromptInfo = TextPromptInfo | ConfirmPromptInfo | SelectPromptInfo;
 
 export type RecordedPrompt = PromptInfo & {
   response: string | boolean | "cancelled" | "default";

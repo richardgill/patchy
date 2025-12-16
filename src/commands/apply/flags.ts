@@ -17,6 +17,18 @@ export const applyFlags = {
       "Fuzz factor for patch application (higher = more lenient) [env: PATCHY_FUZZ_FACTOR]",
     optional: true,
   },
+  only: {
+    kind: "parsed",
+    parse: String,
+    brief: "Apply only the specified patch set",
+    optional: true,
+  },
+  until: {
+    kind: "parsed",
+    parse: String,
+    brief: "Apply patch sets up to and including the specified one",
+    optional: true,
+  },
 } as const;
 
 export type ApplyFlags = ParsedFlags<typeof applyFlags>;
