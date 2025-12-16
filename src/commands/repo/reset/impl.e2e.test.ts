@@ -20,10 +20,13 @@ describe("patchy repo reset", () => {
     const tmpDir = generateTmpDir();
     const ctx = await setupTestWithConfig({
       tmpDir,
-      createDirectories: { clonesDir: "repos", repoDir: "test-repo" },
+      createDirectories: { clonesDir: "repos", targetRepo: "test-repo" },
     });
 
-    const repoPath = assertDefined(ctx.absoluteRepoDir, "absoluteRepoDir");
+    const repoPath = assertDefined(
+      ctx.absoluteTargetRepo,
+      "absoluteTargetRepo",
+    );
     await initGitRepo(repoPath);
     await commitFile(repoPath, "test.txt", "original content");
     await writeFileIn(repoPath, "test.txt", "modified content");
@@ -31,7 +34,7 @@ describe("patchy repo reset", () => {
     expect(join(repoPath, "test.txt")).toHaveFileContent("modified content");
 
     const result = await runCli(
-      `patchy repo reset --clones-dir repos --repo-dir test-repo --yes`,
+      `patchy repo reset --clones-dir repos --target-repo test-repo --yes`,
       tmpDir,
     );
     expect(result).toSucceed();
@@ -43,15 +46,18 @@ describe("patchy repo reset", () => {
     const tmpDir = generateTmpDir();
     const ctx = await setupTestWithConfig({
       tmpDir,
-      createDirectories: { clonesDir: "repos", repoDir: "test-repo" },
+      createDirectories: { clonesDir: "repos", targetRepo: "test-repo" },
     });
 
-    const repoPath = assertDefined(ctx.absoluteRepoDir, "absoluteRepoDir");
+    const repoPath = assertDefined(
+      ctx.absoluteTargetRepo,
+      "absoluteTargetRepo",
+    );
     await initGitRepo(repoPath);
     await commitFile(repoPath, "test.txt", "content");
 
     const result = await runCli(
-      `patchy repo reset --clones-dir repos --repo-dir test-repo --yes`,
+      `patchy repo reset --clones-dir repos --target-repo test-repo --yes`,
       tmpDir,
     );
 
@@ -70,7 +76,7 @@ describe("patchy repo reset", () => {
       });
 
       const result = await runCli(
-        `patchy repo reset --clones-dir repos --repo-dir nonexistent`,
+        `patchy repo reset --clones-dir repos --target-repo nonexistent`,
         tmpDir,
       );
 
@@ -81,11 +87,11 @@ describe("patchy repo reset", () => {
       const tmpDir = generateTmpDir();
       await setupTestWithConfig({
         tmpDir,
-        createDirectories: { clonesDir: "repos", repoDir: "not-a-repo" },
+        createDirectories: { clonesDir: "repos", targetRepo: "not-a-repo" },
       });
 
       const result = await runCli(
-        `patchy repo reset --clones-dir repos --repo-dir not-a-repo`,
+        `patchy repo reset --clones-dir repos --target-repo not-a-repo`,
         tmpDir,
       );
 
@@ -100,7 +106,7 @@ describe("patchy repo reset", () => {
       await setupTestWithConfig({ tmpDir });
 
       const result = await runCli(
-        `patchy repo reset --repo-dir test-repo`,
+        `patchy repo reset --target-repo test-repo`,
         tmpDir,
       );
 
@@ -108,7 +114,7 @@ describe("patchy repo reset", () => {
       expect(result).toFailWith("does not exist");
     });
 
-    it("should fail when repo-dir is missing", async () => {
+    it("should fail when target-repo is missing", async () => {
       const tmpDir = generateTmpDir();
       await setupTestWithConfig({
         tmpDir,
@@ -129,16 +135,19 @@ describe("patchy repo reset", () => {
       const tmpDir = generateTmpDir();
       const ctx = await setupTestWithConfig({
         tmpDir,
-        createDirectories: { clonesDir: "repos", repoDir: "test-repo" },
+        createDirectories: { clonesDir: "repos", targetRepo: "test-repo" },
       });
 
-      const repoPath = assertDefined(ctx.absoluteRepoDir, "absoluteRepoDir");
+      const repoPath = assertDefined(
+        ctx.absoluteTargetRepo,
+        "absoluteTargetRepo",
+      );
       await initGitRepo(repoPath);
       await commitFile(repoPath, "test.txt", "original content");
       await writeFileIn(repoPath, "test.txt", "modified content");
 
       const result = await runCli(
-        `patchy repo reset --clones-dir repos --repo-dir test-repo --dry-run`,
+        `patchy repo reset --clones-dir repos --target-repo test-repo --dry-run`,
         tmpDir,
       );
 
@@ -157,7 +166,7 @@ describe("patchy repo reset", () => {
       });
 
       const result = await runCli(
-        `patchy repo reset --clones-dir repos --repo-dir nonexistent --dry-run`,
+        `patchy repo reset --clones-dir repos --target-repo nonexistent --dry-run`,
         tmpDir,
       );
 
@@ -172,15 +181,18 @@ describe("patchy repo reset", () => {
         tmpDir,
         createDirectories: {
           clonesDir: "repos",
-          repoDir: "my-repo",
+          targetRepo: "my-repo",
         },
         jsonConfig: {
           clones_dir: "repos",
-          repo_dir: "my-repo",
+          target_repo: "my-repo",
         },
       });
 
-      const repoDir = assertDefined(ctx.absoluteRepoDir, "absoluteRepoDir");
+      const repoDir = assertDefined(
+        ctx.absoluteTargetRepo,
+        "absoluteTargetRepo",
+      );
       await initGitRepoWithCommit(repoDir);
 
       // Make uncommitted changes
@@ -210,15 +222,18 @@ describe("patchy repo reset", () => {
         tmpDir,
         createDirectories: {
           clonesDir: "repos",
-          repoDir: "my-repo",
+          targetRepo: "my-repo",
         },
         jsonConfig: {
           clones_dir: "repos",
-          repo_dir: "my-repo",
+          target_repo: "my-repo",
         },
       });
 
-      const repoDir = assertDefined(ctx.absoluteRepoDir, "absoluteRepoDir");
+      const repoDir = assertDefined(
+        ctx.absoluteTargetRepo,
+        "absoluteTargetRepo",
+      );
       await initGitRepoWithCommit(repoDir);
 
       const { result, prompts } = await runCliWithPrompts(
@@ -245,15 +260,18 @@ describe("patchy repo reset", () => {
         tmpDir,
         createDirectories: {
           clonesDir: "repos",
-          repoDir: "my-repo",
+          targetRepo: "my-repo",
         },
         jsonConfig: {
           clones_dir: "repos",
-          repo_dir: "my-repo",
+          target_repo: "my-repo",
         },
       });
 
-      const repoDir = assertDefined(ctx.absoluteRepoDir, "absoluteRepoDir");
+      const repoDir = assertDefined(
+        ctx.absoluteTargetRepo,
+        "absoluteTargetRepo",
+      );
       await initGitRepoWithCommit(repoDir);
 
       const { result, prompts } = await runCliWithPrompts(

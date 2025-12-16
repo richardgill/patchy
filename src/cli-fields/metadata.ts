@@ -1,6 +1,6 @@
 import type { ValidatorFn } from "~/lib/cli-config";
 import type { EnrichedFields } from "./enriched-fields";
-import { directoryExists, gitUrl, repoDirExists } from "./validators";
+import { directoryExists, gitUrl, targetRepoExists } from "./validators";
 
 // Extended metadata entry with optional validator
 type PatchyFlagMetadataEntry = {
@@ -38,38 +38,38 @@ type PatchyFlagMetadataMap = Record<string, PatchyFlagMetadataEntry>;
  * - validate: optional validation function (only for configField: true)
  */
 export const FLAG_METADATA = {
-  repo_url: {
+  source_repo: {
     configField: true,
     requiredInConfig: false,
-    env: "PATCHY_REPO_URL",
+    env: "PATCHY_SOURCE_REPO",
     type: "string",
-    name: "Repository URL",
+    name: "Source repository",
     example: "https://github.com/user/repo.git",
     defaultValue: undefined,
     validate: gitUrl,
     stricliFlag: {
-      "repo-url": {
+      "source-repo": {
         kind: "parsed",
         parse: String,
-        brief: "The upstream repository URL [env: PATCHY_REPO_URL]",
+        brief: "Git URL or local path to clone from [env: PATCHY_SOURCE_REPO]",
         optional: true,
       },
     },
   },
-  repo_dir: {
+  target_repo: {
     configField: true,
     requiredInConfig: false,
-    env: "PATCHY_REPO_DIR",
+    env: "PATCHY_TARGET_REPO",
     type: "string",
-    name: "Repository directory",
-    example: "./repo",
+    name: "Target repository",
+    example: "my-repo",
     defaultValue: undefined,
-    validate: repoDirExists,
+    validate: targetRepoExists,
     stricliFlag: {
-      "repo-dir": {
+      "target-repo": {
         kind: "parsed",
         parse: String,
-        brief: "Path to the Git repo being patched [env: PATCHY_REPO_DIR]",
+        brief: "Path to the Git repo being patched [env: PATCHY_TARGET_REPO]",
         optional: true,
       },
     },

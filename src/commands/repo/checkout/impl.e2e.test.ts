@@ -23,15 +23,15 @@ describe("patchy repo checkout", () => {
       tmpDir,
       createDirectories: {
         clonesDir: "repos",
-        repoDir: "main",
+        targetRepo: "main",
       },
       jsonConfig: {
         clones_dir: "repos",
-        repo_dir: "main",
+        target_repo: "main",
       },
     });
 
-    const repoDir = ctx.absoluteRepoDir as string;
+    const repoDir = ctx.absoluteTargetRepo as string;
     await initGitRepoWithCommit(repoDir, "file.txt", "initial content");
     await createBranch(repoDir, "feature-branch");
 
@@ -51,15 +51,15 @@ describe("patchy repo checkout", () => {
       tmpDir,
       createDirectories: {
         clonesDir: "repos",
-        repoDir: "main",
+        targetRepo: "main",
       },
       jsonConfig: {
         clones_dir: "repos",
-        repo_dir: "main",
+        target_repo: "main",
       },
     });
 
-    const repoDir = ctx.absoluteRepoDir as string;
+    const repoDir = ctx.absoluteTargetRepo as string;
     await initGitRepoWithCommit(repoDir, "file.txt", "initial content");
     await createTag(repoDir, "v1.0.0");
     await createBranch(repoDir, "other-branch");
@@ -76,15 +76,15 @@ describe("patchy repo checkout", () => {
       tmpDir,
       createDirectories: {
         clonesDir: "repos",
-        repoDir: "main",
+        targetRepo: "main",
       },
       jsonConfig: {
         clones_dir: "repos",
-        repo_dir: "main",
+        target_repo: "main",
       },
     });
 
-    const repoDir = ctx.absoluteRepoDir as string;
+    const repoDir = ctx.absoluteTargetRepo as string;
     await initGitRepoWithCommit(repoDir, "file.txt", "initial content");
     const initialCommit = await getCurrentCommit(repoDir);
     await createBranch(repoDir, "other-branch");
@@ -105,15 +105,15 @@ describe("patchy repo checkout", () => {
       tmpDir,
       createDirectories: {
         clonesDir: "repos",
-        repoDir: "main",
+        targetRepo: "main",
       },
       jsonConfig: {
         clones_dir: "repos",
-        repo_dir: "main",
+        target_repo: "main",
       },
     });
 
-    const repoDir = ctx.absoluteRepoDir as string;
+    const repoDir = ctx.absoluteTargetRepo as string;
     await initGitRepoWithCommit(repoDir, "file.txt", "initial content");
 
     const result = await runCli(
@@ -133,15 +133,15 @@ describe("patchy repo checkout", () => {
       tmpDir,
       createDirectories: {
         clonesDir: "repos",
-        repoDir: "main",
+        targetRepo: "main",
       },
       jsonConfig: {
         clones_dir: "repos",
-        repo_dir: "main",
+        target_repo: "main",
       },
     });
 
-    const repoDir = ctx.absoluteRepoDir as string;
+    const repoDir = ctx.absoluteTargetRepo as string;
     await initGitRepoWithCommit(repoDir, "file.txt", "initial content");
     await createBranch(repoDir, "feature-branch");
 
@@ -162,15 +162,15 @@ describe("patchy repo checkout", () => {
       tmpDir,
       createDirectories: {
         clonesDir: "repos",
-        repoDir: "main",
+        targetRepo: "main",
       },
       jsonConfig: {
         clones_dir: "repos",
-        repo_dir: "main",
+        target_repo: "main",
       },
     });
 
-    const repoDir = ctx.absoluteRepoDir as string;
+    const repoDir = ctx.absoluteTargetRepo as string;
     await initGitRepoWithCommit(repoDir, "file.txt", "initial content");
     await createBranch(repoDir, "feature-branch");
 
@@ -184,17 +184,17 @@ describe("patchy repo checkout", () => {
     expect(result).toHaveOutput("feature-branch");
   });
 
-  it("should use repo-dir from CLI flag", async () => {
+  it("should use target-repo from CLI flag", async () => {
     const tmpDir = generateTmpDir();
     await setupTestWithConfig({
       tmpDir,
       createDirectories: {
         clonesDir: "repos",
-        repoDir: "custom-repo",
+        targetRepo: "custom-repo",
       },
       jsonConfig: {
         clones_dir: "repos",
-        repo_dir: "default-repo",
+        target_repo: "default-repo",
       },
     });
 
@@ -203,7 +203,7 @@ describe("patchy repo checkout", () => {
     await createBranch(repoDir, "feature-branch");
 
     const result = await runCli(
-      `patchy repo checkout --ref feature-branch --repo-dir custom-repo`,
+      `patchy repo checkout --ref feature-branch --target-repo custom-repo`,
       tmpDir,
     );
 
@@ -212,14 +212,14 @@ describe("patchy repo checkout", () => {
     expect(await getCurrentBranch(repoDir)).toBe("feature-branch");
   });
 
-  it("should fail when repo_dir is missing", async () => {
+  it("should fail when target_repo is missing", async () => {
     const tmpDir = generateTmpDir();
     await writeTestFile(tmpDir, "patchy.json", "{}");
 
     const result = await runCli(`patchy repo checkout --ref main`, tmpDir);
 
     expect(result).toFailWith("Missing required parameters");
-    expect(result.stderr).toContain("repo_dir");
+    expect(result.stderr).toContain("target_repo");
   });
 
   it("should show --ref as required in help output", async () => {
@@ -239,15 +239,15 @@ describe("patchy repo checkout", () => {
         tmpDir,
         createDirectories: {
           clonesDir: "repos",
-          repoDir: "main",
+          targetRepo: "main",
         },
         jsonConfig: {
           clones_dir: "repos",
-          repo_dir: "main",
+          target_repo: "main",
         },
       });
 
-      const repoDir = ctx.absoluteRepoDir as string;
+      const repoDir = ctx.absoluteTargetRepo as string;
       await initGitRepoWithCommit(repoDir, "file.txt", "initial content");
       await createBranch(repoDir, "feature-branch");
 
@@ -270,15 +270,15 @@ describe("patchy repo checkout", () => {
         tmpDir,
         createDirectories: {
           clonesDir: "repos",
-          repoDir: "main",
+          targetRepo: "main",
         },
         jsonConfig: {
           clones_dir: "repos",
-          repo_dir: "main",
+          target_repo: "main",
         },
       });
 
-      const repoDir = ctx.absoluteRepoDir as string;
+      const repoDir = ctx.absoluteTargetRepo as string;
       await initGitRepoWithCommit(repoDir, "file.txt", "initial content");
 
       const result = await runCli(

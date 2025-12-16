@@ -4,7 +4,7 @@ import type { ParsedFlags } from "~/types/utils";
 
 export const resetFlags = {
   ...FLAG_METADATA.clones_dir.stricliFlag,
-  ...FLAG_METADATA.repo_dir.stricliFlag,
+  ...FLAG_METADATA.target_repo.stricliFlag,
   ...FLAG_METADATA.config.stricliFlag,
   ...FLAG_METADATA.verbose.stricliFlag,
   ...FLAG_METADATA.dry_run.stricliFlag,

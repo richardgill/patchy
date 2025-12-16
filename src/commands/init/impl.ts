@@ -83,13 +83,13 @@ export default async function (
     return;
   }
 
-  if (flags["repo-url"] !== undefined) {
-    if (!flags["repo-url"].trim()) {
+  if (flags["source-repo"] !== undefined) {
+    if (!flags["source-repo"].trim()) {
       this.process.stderr.write("Repository URL is required\n");
       this.process.exit?.(1);
       return;
     }
-    if (!isValidGitUrl(flags["repo-url"])) {
+    if (!isValidGitUrl(flags["source-repo"])) {
       this.process.stderr.write(
         "Please enter a valid Git URL (https://github.com/owner/repo, git@github.com:owner/repo.git, or /path/to/local/repo)\n",
       );
@@ -157,7 +157,7 @@ export default async function (
     }
   }
 
-  if (flags["repo-url"] === undefined) {
+  if (flags["source-repo"] === undefined) {
     const repoUrl = await prompts.text({
       message: "Upstream repository URL:",
       placeholder: "https://github.com/example/repo",
@@ -190,7 +190,7 @@ export default async function (
   }
 
   const finalConfig: JsonConfig = {
-    repo_url: flags["repo-url"] ?? answers.repoUrl ?? "",
+    source_repo: flags["source-repo"] ?? answers.repoUrl ?? "",
     clones_dir: clonesDir,
     patches_dir:
       flags["patches-dir"] ??
@@ -267,7 +267,7 @@ export default async function (
 
   await promptAndRunClone({
     clonesDir,
-    repoUrl: finalConfig.repo_url ?? "",
+    repoUrl: finalConfig.source_repo ?? "",
     context: this,
   });
 }

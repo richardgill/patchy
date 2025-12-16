@@ -14,7 +14,7 @@ export default async function (
   const prompts = createPrompts(this);
   const result = createEnrichedMergedConfig({
     flags,
-    requiredFields: ["clones_dir", "repo_dir"],
+    requiredFields: ["clones_dir", "target_repo"],
     cwd: this.cwd,
   });
 
@@ -25,7 +25,7 @@ export default async function (
   }
 
   const config = result.mergedConfig;
-  const repoDir = config.absoluteRepoDir ?? "";
+  const repoDir = config.absoluteTargetRepo ?? "";
   const dryRun = config.dry_run;
 
   if (!existsSync(repoDir)) {
