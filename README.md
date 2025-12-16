@@ -74,6 +74,7 @@ echo "new file" > clones/spoon-knife/path/to/newFile.txt
 
 To generate the patches for the changes run `patchy generate`:
 
+Patchy will prompt you to create your first **patch set**, let's name it: 'first-patch-set'
 
 ```
 ./
@@ -82,10 +83,12 @@ To generate the patches for the changes run `patchy generate`:
 │       ├── path/to/existingFile.txt
 │       └── path/to/newFile.txt
 ├── patches/
-│   ├── path/to/existingFile.txt.diff
-│   └── path/to/newFile.txt
+│   └── 001-first-patch-set/
+│       ├── path/to/existingFile.txt.diff
+│       └── path/to/newFile.txt
 └── patchy.json
 ```
+
 - **Edits** are stored as `.diff` files e.g. `existingFile.txt.diff`.
 - **New files** are copied as regular files e.g. `newFile.txt` (easier to inspect and edit directly). 
 
@@ -99,8 +102,9 @@ Reset the current upstream repo `patchy repo reset main`, which will reset every
 │   └── spoon-knife/  <<< reset
 │       ├── path/to/existingFile.txt
 ├── patches/
-│   ├── path/to/existingFile.txt.diff
-│   └── path/to/newFile.txt
+│   └── 001-first-patch-set/
+│       ├── path/to/existingFile.txt.diff
+│       └── path/to/newFile.txt
 └── patchy.json
 ```
 
@@ -113,8 +117,9 @@ Apply the patches back to the cloned repo with: `patchy apply`
 │       ├── path/to/existingFile.txt (modified)
 │       └── path/to/newFile.txt (added)
 ├── patches/
-│   ├── path/to/existingFile.txt.diff
-│   └── path/to/newFile.txt
+│   └── 001-first-patch-set/
+│       ├── path/to/existingFile.txt.diff
+│       └── path/to/newFile.txt
 └── patchy.json
 ```
 
@@ -166,6 +171,9 @@ patchy init
   // Can be relative to clones_dir: <clones_dir>/<target_repo> or absolute.
   "target_repo": "repo", // Override: --target-repo | env: PATCHY_TARGET_REPO
 
+  // Patch set to generate into (subdirectory of patches_dir).
+  // If not set, prompts interactively or errors in non-interactive mode.
+  "patch_set": "001-security-fixes", // Override: --patch-set | env: PATCHY_PATCH_SET
 
   // Git ref to checkout (branch, tag, SHA).
   "ref": "main" // Override: --ref | env: PATCHY_REF
@@ -182,40 +190,49 @@ The `patches/` directory (customizable via [`patches_dir`](#patchyjson-reference
 ```
 ./
 ├── patches/
-│   ├── path/to/existingFile.txt.diff
-│   └── path/to/newFile.txt
+│   └── 001-first-patch-set/
+│       ├── path/to/existingFile.txt.diff
+│       └── path/to/newFile.txt
 ├── clones/
 │   └── repo-clone-1/
 │       ├── path/to/existingFile.txt (modified)
 │       └── path/to/newFile.txt (added)
 └── patchy.json
 ```
+Patches are grouped into **patch sets** for organizing related changes. Patch sets apply in alphabetical order. Use numeric prefixes (e.g., `001-auth`, `002-ui`).
 
 **Two types of patch files:**
 - **`.diff` files** — For modified existing files (generated via `git diff HEAD`)
 - **Plain files** — For newly added files (copied verbatim for easier inspection and editing)
 
-`patchy generate` automatically removes stale files in `patches/` that no longer correspond to changes in `target_repo`.
+`patchy generate` automatically removes stale files in `patches/<patch-set>` that no longer correspond to changes in `target_repo`.
 
 ## Commands
 
 ### `patchy generate`
 
-Generate `.diff` files and new files into `./patches/` based on current `git diff` in `target_repo`.
+Generate `.diff` files and new files into `./patches/<patch-set>/` based on current `git diff` in `target_repo`.
 
 ```sh
-patchy generate [--target-repo] [--patches-dir] [--dry-run]
+patchy generate [--patch-set <name>] [--target-repo] [--patches-dir] [--dry-run]
 ```
 
-Note: `patchy generate` is destructive and will remove any unneeded files in your `./patches/` folder.
+If `--patch-set` is not provided (and not set via env/config), prompts to select an existing patch set or create a new one.
+
+Note: `patchy generate` is destructive and will remove any unneeded files in the patch set directory.
 
 ### `patchy apply`
 
-Apply patch files from `patches/` into `target_repo`.
+Apply patch files from `patches/` into `target_repo`. Patch sets are applied in alphabetical order.
 
 ```sh
-patchy apply [--target-repo] [--patches-dir] [--dry-run]
+patchy apply [--only <patch-set>] [--until <patch-set>] [--target-repo] [--patches-dir] [--dry-run]
 ```
+
+| Flag | Description |
+|------|-------------|
+| `--only <name>` | Apply only the specified patch set |
+| `--until <name>` | Apply patch sets up to and including the specified one |
 
 ### `patchy repo reset`
 

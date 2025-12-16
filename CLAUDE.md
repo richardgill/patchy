@@ -33,7 +33,7 @@ Always run `bun run local-ci` it runs formatter, linter & tests
 
 ## Releasing
 
-Use changeset skill
+Use add changeset skill
 
 ## Dependencies
 

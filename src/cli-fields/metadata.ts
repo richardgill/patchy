@@ -111,6 +111,23 @@ export const FLAG_METADATA = {
       },
     },
   },
+  patch_set: {
+    configField: true,
+    requiredInConfig: false,
+    env: "PATCHY_PATCH_SET",
+    type: "string",
+    name: "Patch set",
+    example: "001-security-fixes",
+    defaultValue: undefined,
+    stricliFlag: {
+      "patch-set": {
+        kind: "parsed",
+        parse: String,
+        brief: "Name of the patch set to use [env: PATCHY_PATCH_SET]",
+        optional: true,
+      },
+    },
+  },
   ref: {
     configField: true,
     requiredInConfig: false,

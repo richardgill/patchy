@@ -55,13 +55,22 @@ const enrichConfig = (
     clones_dir: clonesDir,
     target_repo: targetRepo,
     patches_dir: patchesDir,
+    patch_set: patchSet,
   } = config;
+
+  const absolutePatchesDir = patchesDir
+    ? resolvePath(cwd, patchesDir)
+    : undefined;
 
   return {
     ...config,
     absoluteClonesDir: clonesDir ? resolvePath(cwd, clonesDir) : undefined,
     absoluteTargetRepo: resolveTargetRepo({ cwd, targetRepo, clonesDir }),
-    absolutePatchesDir: patchesDir ? resolvePath(cwd, patchesDir) : undefined,
+    absolutePatchesDir,
+    absolutePatchSetDir:
+      absolutePatchesDir && patchSet
+        ? join(absolutePatchesDir, patchSet)
+        : undefined,
   };
 };
 

@@ -4,4 +4,5 @@ export type EnrichedFields = {
   absoluteClonesDir: string | undefined;
   absoluteTargetRepo: string | undefined;
   absolutePatchesDir: string | undefined;
+  absolutePatchSetDir: string | undefined;
 };

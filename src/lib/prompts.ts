@@ -75,6 +75,18 @@ const createTestablePrompts = ({
       return processResponse<boolean>(promptInfo, opts.initialValue);
     },
 
+    select: async (opts: {
+      message: string;
+      options: Array<{ value: string; label: string }>;
+    }) => {
+      const promptInfo: PromptInfo = {
+        type: "select",
+        message: opts.message,
+        options: opts.options,
+      };
+      return processResponse<string>(promptInfo, undefined);
+    },
+
     isCancel: (value: unknown): value is symbol =>
       clackPrompts.isCancel(value) || value === testCancelSymbol,
     log: clackPrompts.log,
@@ -115,6 +127,16 @@ export const createPrompts = (context: LocalContext) => {
         "input" | "output"
       >,
     ) => clackPrompts.confirm({ ...opts, ...streamOpts }),
+
+    select: (opts: {
+      message: string;
+      options: Array<{ value: string; label: string }>;
+    }) =>
+      clackPrompts.select({
+        message: opts.message,
+        options: opts.options.map((o) => ({ value: o.value, label: o.label })),
+        ...streamOpts,
+      }),
 
     isCancel: clackPrompts.isCancel,
     log: clackPrompts.log,
