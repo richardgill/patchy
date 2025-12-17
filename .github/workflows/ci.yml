@@ -16,15 +16,15 @@ jobs:
       - name: Lint
         run: bun run check
 
-  check-test-naming:
-    name: Check test naming
+  misc-checks:
+    name: Misc checks
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
       - uses: ./.github/actions/setup
 
-      - name: Check test naming
-        run: bun run check-test-naming
+      - name: Misc checks
+        run: bun run misc-checks
 
   typecheck:
     name: Typecheck

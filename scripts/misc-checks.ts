@@ -3,7 +3,7 @@
 import { Glob } from "bun";
 import chalk from "chalk";
 
-const VALID_SUFFIXES = [".unit.test.ts", ".e2e.test.ts"];
+const VALID_TEST_SUFFIXES = [".unit.test.ts", ".e2e.test.ts"];
 
 const findInvalidTestFiles = async (): Promise<string[]> => {
   const glob = new Glob("**/*.test.ts");
@@ -12,7 +12,9 @@ const findInvalidTestFiles = async (): Promise<string[]> => {
 
   for (const dir of directories) {
     for await (const file of glob.scan({ cwd: dir })) {
-      const isValid = VALID_SUFFIXES.some((suffix) => file.endsWith(suffix));
+      const isValid = VALID_TEST_SUFFIXES.some((suffix) =>
+        file.endsWith(suffix),
+      );
       if (!isValid) {
         invalidFiles.push(`${dir}/${file}`);
       }
@@ -22,13 +24,15 @@ const findInvalidTestFiles = async (): Promise<string[]> => {
   return invalidFiles.sort();
 };
 
-const main = async () => {
+const checkTestNaming = async (): Promise<boolean> => {
   const invalidFiles = await findInvalidTestFiles();
 
   if (invalidFiles.length === 0) {
     console.log(chalk.green("✓ All test files use valid naming conventions"));
-    console.log(chalk.dim(`  Valid patterns: ${VALID_SUFFIXES.join(", ")}`));
-    process.exit(0);
+    console.log(
+      chalk.dim(`  Valid patterns: ${VALID_TEST_SUFFIXES.join(", ")}`),
+    );
+    return true;
   }
 
   console.log(
@@ -42,10 +46,27 @@ const main = async () => {
   }
 
   console.log(
-    chalk.dim(`\nTest files must end with: ${VALID_SUFFIXES.join(" or ")}`),
+    chalk.dim(
+      `\nTest files must end with: ${VALID_TEST_SUFFIXES.join(" or ")}`,
+    ),
   );
   console.log(chalk.dim("Rename files to use .unit.test.ts or .e2e.test.ts"));
-  process.exit(1);
+  return false;
+};
+
+const main = async () => {
+  console.log(chalk.bold("Running miscellaneous checks...\n"));
+
+  const results = await Promise.all([checkTestNaming()]);
+
+  const allPassed = results.every(Boolean);
+
+  if (!allPassed) {
+    console.log(chalk.red("\n✗ Some checks failed"));
+    process.exit(1);
+  }
+
+  console.log(chalk.green("\n✓ All checks passed"));
 };
 
 main();

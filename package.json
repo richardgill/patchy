@@ -16,7 +16,7 @@
     "build-single": "bun run ./scripts/build.ts --single",
     "check": "bun run scripts/check.ts",
     "check-fix": "biome check --write --error-on-warnings --diagnostic-level=warn",
-    "check-test-naming": "bun run scripts/check-test-naming.ts",
+    "misc-checks": "bun run scripts/misc-checks.ts",
     "changeset": "changeset",
     "changeset-version": "changeset version",
     "dev": "bun run src/cli.ts",

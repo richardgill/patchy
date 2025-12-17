@@ -17,7 +17,7 @@ const runCommand = async (command: string): Promise<CommandResult> => {
 const commands = [
   "bun run typecheck",
   "bun run check",
-  "bun run check-test-naming",
+  "bun run misc-checks",
   "bun run test",
   "bun run knip",
   "bun run lint-versions",
