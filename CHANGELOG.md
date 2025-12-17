@@ -1,5 +1,11 @@
 # patchy-cli
 
+## 0.0.9
+
+### Patch Changes
+
+- [#175](https://github.com/richardgill/patchy/pull/175) [`63c882b`](https://github.com/richardgill/patchy/commit/63c882b9b500b03de5dd1cc351b25060a89ded4f) Thanks [@richardgill](https://github.com/richardgill)! - Fix relative `source_repo` paths (e.g., `./upstream`) to resolve from the config file location instead of `clones_dir`
+
 ## 0.0.8
 
 ### Patch Changes
