@@ -16,8 +16,10 @@ export const initGitRepoWithCommit = async (
   content = "initial content\n",
 ): Promise<void> => {
   await initGitRepo(repoDir);
-  writeFileSync(join(repoDir, filename), content);
   const git = createTestGitClient(repoDir);
+  await git.addConfig("init.defaultBranch", "main");
+  await git.checkout(["-b", "main"]);
+  writeFileSync(join(repoDir, filename), content);
   await git.add(".");
   await git.commit("initial commit");
 };

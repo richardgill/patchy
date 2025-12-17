@@ -22,6 +22,8 @@ import { createPrompts } from "~/lib/prompts";
 import { isValidGitUrl } from "~/lib/validation";
 import type { CloneFlags } from "./flags";
 
+const RELATIVE_PATH_PATTERN = /^\.\.?\//;
+
 type PromptRepoDirSaveParams = {
   repoName: string;
   configPath: string;
@@ -172,9 +174,15 @@ export default async function (
     `Cloning ${repoUrl} to ${formatPathForDisplay(join(config.clones_dir ?? "", targetDirName))}...\n`,
   );
 
+  // Resolve relative local paths relative to cwd (config file location),
+  // not clones_dir where git client runs
+  const resolvedRepoUrl = RELATIVE_PATH_PATTERN.test(repoUrl)
+    ? resolvePath(this.cwd, repoUrl)
+    : repoUrl;
+
   const git = createGitClient(clonesDir);
   try {
-    await git.clone(repoUrl, targetDirName);
+    await git.clone(resolvedRepoUrl, targetDirName);
   } catch (error) {
     const message = error instanceof Error ? error.message : String(error);
     this.process.stderr.write(

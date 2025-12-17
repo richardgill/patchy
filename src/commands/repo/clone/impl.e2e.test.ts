@@ -4,6 +4,7 @@ import path from "node:path";
 import {
   getCurrentBranch,
   initBareRepoWithCommit,
+  initGitRepoWithCommit,
   pushBranchToBareRepo,
 } from "~/testing/git-helpers";
 import {
@@ -36,6 +37,72 @@ describe("patchy repo clone", () => {
     expect(result).toSucceed();
     expect(result).toHaveOutput("Successfully cloned repository");
     expect(path.join(tmpDir, "repos", "bare-repo")).toExist();
+  });
+
+  it("should resolve relative source_repo paths from config location, not clones_dir", async () => {
+    const tmpDir = generateTmpDir();
+
+    // Create the "upstream" source repo at project root level
+    const sourceRepoDir = path.join(tmpDir, "upstream");
+    mkdirSync(sourceRepoDir, { recursive: true });
+    await initGitRepoWithCommit(sourceRepoDir, "SOURCE_MARKER.txt", "correct");
+
+    // Create a DIFFERENT repo inside clones_dir with same name
+    // This simulates the bug scenario where wrong repo gets cloned
+    const wrongRepoDir = path.join(tmpDir, "clones", "upstream");
+    mkdirSync(wrongRepoDir, { recursive: true });
+    await initGitRepoWithCommit(wrongRepoDir, "WRONG_MARKER.txt", "wrong");
+
+    await setupTestWithConfig({
+      tmpDir,
+      createDirectories: { clonesDir: "clones" },
+      jsonConfig: {
+        source_repo: "./upstream",
+        clones_dir: "./clones/",
+      },
+    });
+
+    const result = await runCli(`patchy repo clone`, tmpDir);
+
+    expect(result).toSucceed();
+    expect(result).toHaveOutput("Successfully cloned repository");
+
+    // Verify clone came from the correct source (has SOURCE_MARKER, not WRONG_MARKER)
+    const clonedRepoDir = path.join(tmpDir, "clones", "upstream-1");
+    expect(clonedRepoDir).toExist();
+    expect(path.join(clonedRepoDir, "SOURCE_MARKER.txt")).toExist();
+    expect(path.join(clonedRepoDir, "WRONG_MARKER.txt")).not.toExist();
+  });
+
+  it("should resolve parent directory relative paths correctly", async () => {
+    const tmpDir = generateTmpDir();
+
+    // Create source at parent level
+    const sourceRepoDir = path.join(tmpDir, "upstream");
+    mkdirSync(sourceRepoDir, { recursive: true });
+    await initGitRepoWithCommit(sourceRepoDir, "PARENT.txt", "parent");
+
+    // Create project subdirectory with config
+    const projectDir = path.join(tmpDir, "project");
+    mkdirSync(projectDir, { recursive: true });
+
+    await setupTestWithConfig({
+      tmpDir: projectDir,
+      createDirectories: { clonesDir: "clones" },
+      jsonConfig: {
+        source_repo: "../upstream",
+        clones_dir: "./clones/",
+      },
+    });
+
+    const result = await runCli(`patchy repo clone`, projectDir);
+
+    expect(result).toSucceed();
+    expect(result).toHaveOutput("Successfully cloned repository");
+
+    const clonedRepoDir = path.join(projectDir, "clones", "upstream");
+    expect(clonedRepoDir).toExist();
+    expect(path.join(clonedRepoDir, "PARENT.txt")).toExist();
   });
 
   it("should clone a repository with ref checkout", async () => {
