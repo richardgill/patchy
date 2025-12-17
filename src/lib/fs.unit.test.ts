@@ -2,7 +2,7 @@ import { describe, expect, it } from "bun:test";
 import { mkdirSync, writeFileSync } from "node:fs";
 import os from "node:os";
 import path, { join } from "node:path";
-import { generateTmpDir } from "~/testing/test-utils";
+import { generateTmpDir } from "~/testing/fs-test-utils";
 import {
   findAvailableDirName,
   formatPathForDisplay,

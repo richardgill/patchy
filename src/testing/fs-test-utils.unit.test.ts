@@ -2,9 +2,9 @@ import { describe, expect, it } from "bun:test";
 import { mkdtempSync, readFileSync, rmSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
-import { stabilizeTempDir, writeTestConfig } from "~/testing/test-utils";
+import { stabilizeTempDir, writeTestConfig } from "~/testing/fs-test-utils";
 
-describe("test-utils", () => {
+describe("fs-test-utils", () => {
   describe("writeTestConfig", () => {
     it("should generate JSON content correctly", async () => {
       const tempDir = mkdtempSync(join(tmpdir(), "test-utils-"));

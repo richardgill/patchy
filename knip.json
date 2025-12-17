@@ -4,8 +4,9 @@
     "src/cli.ts",
     "src/testing/matchers.ts",
     "src/testing/setup.ts",
-    "src/testing/test-utils.ts",
-    "src/**/*.test.ts",
+    "src/testing/fs-test-utils.ts",
+    "src/testing/e2e-utils.ts",
+    "src/**/*.{unit,e2e}.test.ts",
     "scripts/*.ts"
   ],
   "project": ["src/**/*.ts", "scripts/**/*.ts"],

@@ -1,19 +1,17 @@
 import { describe, expect, it } from "bun:test";
 import { join } from "node:path";
 import { assertDefined } from "~/lib/assert";
+import { cancel, runCli, runCliWithPrompts } from "~/testing/e2e-utils";
+import {
+  generateTmpDir,
+  setupTestWithConfig,
+  writeFileIn,
+} from "~/testing/fs-test-utils";
 import {
   commitFile,
   initGitRepo,
   initGitRepoWithCommit,
 } from "~/testing/git-helpers";
-import {
-  cancel,
-  generateTmpDir,
-  runCli,
-  runCliWithPrompts,
-  setupTestWithConfig,
-  writeFileIn,
-} from "~/testing/test-utils";
 
 describe("patchy repo reset", () => {
   it("should reset repository and discard local changes", async () => {

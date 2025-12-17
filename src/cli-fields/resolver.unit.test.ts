@@ -9,7 +9,7 @@ import {
   stabilizeTempDir,
   writeJsonConfig,
   writeTestFile,
-} from "~/testing/test-utils";
+} from "~/testing/fs-test-utils";
 import { createEnrichedMergedConfig } from "./resolver";
 import type { EnrichedMergedConfig, JsonConfigKey, SharedFlags } from "./types";
 
