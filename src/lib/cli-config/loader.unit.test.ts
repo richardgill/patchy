@@ -5,7 +5,7 @@ import {
   generateTmpDir,
   writeJsonConfig,
   writeTestFile,
-} from "~/testing/test-utils";
+} from "~/testing/fs-test-utils";
 import { loadConfigFromFile } from "./loader";
 import type { FlagMetadataMap } from "./types";
 

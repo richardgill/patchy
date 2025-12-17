@@ -1,15 +1,15 @@
 import { describe, expect, it } from "bun:test";
 import { mkdirSync } from "node:fs";
 import path from "node:path";
-import { initGitRepoWithCommit } from "~/testing/git-helpers";
+import { runCli } from "~/testing/e2e-utils";
 import {
   generateTmpDir,
-  runCli,
   setupTestWithConfig,
   writeFileIn,
   writeJsonConfig,
   writeTestFile,
-} from "~/testing/test-utils";
+} from "~/testing/fs-test-utils";
+import { initGitRepoWithCommit } from "~/testing/git-helpers";
 
 describe("patchy apply", () => {
   describe("config validation", () => {

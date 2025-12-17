@@ -3,15 +3,14 @@ import { mkdirSync, readFileSync } from "node:fs";
 import path from "node:path";
 import { CREATE_NEW_OPTION } from "~/commands/generate/impl";
 import { assertDefined } from "~/lib/assert";
-import { initGitRepoWithCommit } from "~/testing/git-helpers";
-import { cancel } from "~/testing/prompt-testing-types";
+import { runCli, runCliWithPrompts } from "~/testing/e2e-utils";
 import {
   generateTmpDir,
-  runCli,
-  runCliWithPrompts,
   setupTestWithConfig,
   writeFileIn,
-} from "~/testing/test-utils";
+} from "~/testing/fs-test-utils";
+import { initGitRepoWithCommit } from "~/testing/git-helpers";
+import { cancel } from "~/testing/prompt-testing-types";
 
 describe("patchy generate", () => {
   it("should detect and generate diff for modified files", async () => {

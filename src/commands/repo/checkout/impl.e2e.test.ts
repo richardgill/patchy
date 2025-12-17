@@ -1,6 +1,13 @@
 import { describe, expect, it } from "bun:test";
 import { mkdirSync } from "node:fs";
 import path from "node:path";
+import { runCli } from "~/testing/e2e-utils";
+import {
+  generateTmpDir,
+  setupTestWithConfig,
+  writeFileIn,
+  writeTestFile,
+} from "~/testing/fs-test-utils";
 import {
   createBranch,
   createTag,
@@ -8,13 +15,6 @@ import {
   getCurrentCommit,
   initGitRepoWithCommit,
 } from "~/testing/git-helpers";
-import {
-  generateTmpDir,
-  runCli,
-  setupTestWithConfig,
-  writeFileIn,
-  writeTestFile,
-} from "~/testing/test-utils";
 
 describe("patchy repo checkout", () => {
   it("should checkout a branch", async () => {

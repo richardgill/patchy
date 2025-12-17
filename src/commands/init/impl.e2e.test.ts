@@ -1,15 +1,14 @@
 import { describe, expect, it } from "bun:test";
 import { existsSync, mkdirSync, readFileSync } from "node:fs";
 import path, { join } from "node:path";
-import { initBareRepoWithCommit } from "~/testing/git-helpers";
 import {
   acceptDefault,
   cancel,
-  generateTmpDir,
   runCli,
   runCliWithPrompts,
-  setupTestWithConfig,
-} from "~/testing/test-utils";
+} from "~/testing/e2e-utils";
+import { generateTmpDir, setupTestWithConfig } from "~/testing/fs-test-utils";
+import { initBareRepoWithCommit } from "~/testing/git-helpers";
 import { getSchemaUrl } from "~/version";
 
 describe("patchy init", () => {
