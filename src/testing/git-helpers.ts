@@ -60,14 +60,6 @@ export const commitFile = async (
   await git.commit(message);
 };
 
-export const createTag = async (
-  repoDir: string,
-  tagName: string,
-): Promise<void> => {
-  const git = createTestGitClient(repoDir);
-  await git.addTag(tagName);
-};
-
 export const getCurrentBranch = async (repoDir: string): Promise<string> => {
   const git = createTestGitClient(repoDir);
   const branch = await git.revparse(["--abbrev-ref", "HEAD"]);

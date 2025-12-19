@@ -9,7 +9,6 @@ import {
   writeTestFile,
 } from "~/testing/fs-test-utils";
 import {
-  createTag,
   getCurrentBranch,
   getCurrentCommit,
   initBareRepoWithCommit,
@@ -176,8 +175,10 @@ describe("patchy repo clone", () => {
     const tmpWorkDir = path.join(tmpDir, "tmp-work");
     const git = createTestGitClient(tmpDir);
     await git.clone(bareRepoDir, "tmp-work");
-    await createTag(tmpWorkDir, "v1.0.0");
     const workGit = createTestGitClient(tmpWorkDir);
+    await workGit.addConfig("user.email", "test@test.com");
+    await workGit.addConfig("user.name", "Test User");
+    await workGit.addTag("v1.0.0");
     await workGit.push(["--tags"]);
 
     const bareRepoUrl = `file://${bareRepoDir}`;
