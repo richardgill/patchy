@@ -14,8 +14,14 @@ import {
 import type { LocalContext } from "~/context";
 import { formatPathForDisplay, isPathWithinDir, resolvePath } from "~/lib/fs";
 import { extractRepoName, normalizeGitignoreEntry } from "~/lib/git";
-import { fetchRemoteRefs, getBranches, getLatestTags } from "~/lib/git-remote";
-import { canPrompt, createPrompts } from "~/lib/prompts";
+import {
+  buildBaseRevisionOptions,
+  fetchRemoteRefs,
+  getBranches,
+  getLatestTags,
+  MANUAL_SHA_OPTION,
+} from "~/lib/git-remote";
+import { canPrompt, createPrompts, promptForManualSha } from "~/lib/prompts";
 import { isValidGitUrl, validateGitUrl } from "~/lib/validation";
 import { getSchemaUrl } from "~/version";
 import type { InitFlags } from "./flags";
@@ -223,19 +229,9 @@ export default async function (
     if (remoteRefs.length > 0) {
       const tags = getLatestTags(remoteRefs);
       const branches = getBranches(remoteRefs);
-      const MANUAL_SHA = "_manual";
-
-      const baseOptions: Array<{ value: string; label: string }> = [
-        ...tags.map((t) => ({
-          value: t.sha,
-          label: `${t.name} (${t.sha.slice(0, 7)})`,
-        })),
-        ...branches.slice(0, 3).map((b) => ({
-          value: b.sha,
-          label: `${b.name} branch tip (${b.sha.slice(0, 7)}) - Warning: will change`,
-        })),
-        { value: MANUAL_SHA, label: "Enter SHA manually" },
-      ];
+      const baseOptions = buildBaseRevisionOptions(tags, branches, {
+        manualLabel: "Enter SHA manually",
+      });
 
       const selectedBase = await prompts.select({
         message: "Select base revision:",
@@ -248,24 +244,13 @@ export default async function (
         return;
       }
 
-      if (selectedBase === MANUAL_SHA) {
-        const manualSha = await prompts.text({
-          message: "Enter commit SHA or tag:",
-          placeholder: "e.g., abc123def or v1.0.0",
-          validate: (sha) => {
-            if (!sha || sha.trim().length === 0) {
-              return "Please enter a valid SHA or tag";
-            }
-            return undefined;
-          },
-        });
-
+      if (selectedBase === MANUAL_SHA_OPTION) {
+        const manualSha = await promptForManualSha(prompts);
         if (prompts.isCancel(manualSha)) {
           this.process.stderr.write("Initialization cancelled\n");
           this.process.exit?.(1);
           return;
         }
-
         answers.baseRevision = manualSha;
       } else {
         answers.baseRevision = selectedBase;

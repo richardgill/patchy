@@ -185,6 +185,27 @@ describe("patchy base", () => {
       expect(result.stderr).toContain("cancelled");
       expect(prompts).toHaveLength(1);
     });
+
+    it("should allow cancelling during manual SHA entry", async () => {
+      const tmpDir = generateTmpDir();
+      await setupTestWithConfig({
+        tmpDir,
+        jsonConfig: {
+          source_repo: "https://github.com/facebook/react",
+          base_revision: "v18.0.0",
+          upstream_branch: "main",
+        },
+      });
+
+      const { result, prompts } = await runCliWithPrompts(`patchy base`, tmpDir)
+        .on({ select: /Select new base/, respond: "_manual" })
+        .on({ text: /Enter commit SHA/, respond: cancel })
+        .run();
+
+      expect(result).toFail();
+      expect(result.stderr).toContain("cancelled");
+      expect(prompts).toHaveLength(2);
+    });
   });
 
   describe("error cases", () => {

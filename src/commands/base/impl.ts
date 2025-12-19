@@ -8,9 +8,15 @@ import {
   jsonConfigSchema,
 } from "~/cli-fields";
 import type { LocalContext } from "~/context";
-import { fetchRemoteRefs, getBranches, getLatestTags } from "~/lib/git-remote";
+import {
+  buildBaseRevisionOptions,
+  fetchRemoteRefs,
+  getBranches,
+  getLatestTags,
+  MANUAL_SHA_OPTION,
+} from "~/lib/git-remote";
 import { parseJsonc, updateJsoncField } from "~/lib/jsonc";
-import { canPrompt, createPrompts } from "~/lib/prompts";
+import { canPrompt, createPrompts, promptForManualSha } from "~/lib/prompts";
 import type { BaseFlags } from "./flags";
 
 export default async function (
@@ -68,6 +74,94 @@ export default async function (
   );
 }
 
+const fetchAndValidateRemoteRefs = async (
+  context: LocalContext,
+  prompts: ReturnType<typeof createPrompts>,
+  sourceRepo: string,
+): Promise<Awaited<ReturnType<typeof fetchRemoteRefs>> | undefined> => {
+  prompts.log.step(`Fetching upstream refs from ${chalk.cyan(sourceRepo)}...`);
+
+  try {
+    return await fetchRemoteRefs(sourceRepo);
+  } catch (error) {
+    const message = error instanceof Error ? error.message : String(error);
+    context.process.stderr.write(
+      chalk.red(`Failed to fetch remote refs: ${message}\n`),
+    );
+    context.process.exit?.(1);
+    return undefined;
+  }
+};
+
+const promptForBaseRevision = async (
+  context: LocalContext,
+  prompts: ReturnType<typeof createPrompts>,
+  remoteRefs: Awaited<ReturnType<typeof fetchRemoteRefs>>,
+  currentBase: string,
+): Promise<string | undefined> => {
+  const tags = getLatestTags(remoteRefs, 10);
+  const branches = getBranches(remoteRefs);
+  const baseOptions = buildBaseRevisionOptions(tags, branches);
+
+  const selectedBase = await prompts.select({
+    message: `Select new base revision (current: ${currentBase}):`,
+    options: baseOptions,
+  });
+
+  if (prompts.isCancel(selectedBase)) {
+    context.process.stderr.write("Operation cancelled\n");
+    context.process.exit?.(1);
+    return undefined;
+  }
+
+  if (selectedBase === MANUAL_SHA_OPTION) {
+    const manualSha = await promptForManualSha(prompts);
+    if (prompts.isCancel(manualSha)) {
+      context.process.stderr.write("Operation cancelled\n");
+      context.process.exit?.(1);
+      return undefined;
+    }
+    return manualSha;
+  }
+
+  return selectedBase;
+};
+
+const writeConfigUpdate = async (
+  context: LocalContext,
+  prompts: ReturnType<typeof createPrompts> | undefined,
+  configPath: string,
+  content: string,
+  newBase: string,
+): Promise<boolean> => {
+  const updateResult = updateJsoncField(content, "base_revision", newBase);
+
+  if (!updateResult.success) {
+    context.process.stderr.write(chalk.red(`${updateResult.error}\n`));
+    context.process.exit?.(1);
+    return false;
+  }
+
+  try {
+    await writeFile(configPath, updateResult.content, "utf8");
+    if (prompts) {
+      prompts.outro(chalk.green(`Updated base_revision to: ${newBase}`));
+    } else {
+      context.process.stdout.write(
+        chalk.green(`Updated base_revision to: ${newBase}\n`),
+      );
+    }
+    return true;
+  } catch (error) {
+    const errorMessage = error instanceof Error ? error.message : String(error);
+    context.process.stderr.write(
+      chalk.red(`Failed to update config: ${errorMessage}\n`),
+    );
+    context.process.exit?.(1);
+    return false;
+  }
+};
+
 const updateBaseRevisionDirect = async (
   context: LocalContext,
   configPath: string,
@@ -81,26 +175,7 @@ const updateBaseRevisionDirect = async (
     context.process.stdout.write(`New base_revision: ${newBase}\n`);
   }
 
-  const updateResult = updateJsoncField(content, "base_revision", newBase);
-
-  if (!updateResult.success) {
-    context.process.stderr.write(chalk.red(`${updateResult.error}\n`));
-    context.process.exit?.(1);
-    return;
-  }
-
-  try {
-    await writeFile(configPath, updateResult.content, "utf8");
-    context.process.stdout.write(
-      chalk.green(`Updated base_revision to: ${newBase}\n`),
-    );
-  } catch (error) {
-    const errorMessage = error instanceof Error ? error.message : String(error);
-    context.process.stderr.write(
-      chalk.red(`Failed to update config: ${errorMessage}\n`),
-    );
-    context.process.exit?.(1);
-  }
+  await writeConfigUpdate(context, undefined, configPath, content, newBase);
 };
 
 const updateBaseRevisionInteractive = async (
@@ -139,95 +214,25 @@ const updateBaseRevisionInteractive = async (
 
   const prompts = createPrompts(context);
 
-  prompts.log.step(
-    `Fetching upstream refs from ${chalk.cyan(config.source_repo)}...`,
+  const remoteRefs = await fetchAndValidateRemoteRefs(
+    context,
+    prompts,
+    config.source_repo,
   );
+  if (!remoteRefs) return;
 
-  let remoteRefs: Awaited<ReturnType<typeof fetchRemoteRefs>>;
-  try {
-    remoteRefs = await fetchRemoteRefs(config.source_repo);
-  } catch (error) {
-    const message = error instanceof Error ? error.message : String(error);
-    context.process.stderr.write(
-      chalk.red(`Failed to fetch remote refs: ${message}\n`),
-    );
-    context.process.exit?.(1);
-    return;
-  }
-
-  const tags = getLatestTags(remoteRefs, 10);
-  const branches = getBranches(remoteRefs);
-  const MANUAL_SHA = "_manual";
-
-  const baseOptions: Array<{ value: string; label: string }> = [
-    ...tags.map((t) => ({
-      value: t.sha,
-      label: `${t.name} (${t.sha.slice(0, 7)})`,
-    })),
-    ...branches.slice(0, 3).map((b) => ({
-      value: b.sha,
-      label: `${b.name} branch tip (${b.sha.slice(0, 7)}) - Warning: will change`,
-    })),
-    { value: MANUAL_SHA, label: "Enter SHA or tag manually" },
-  ];
-
-  const selectedBase = await prompts.select({
-    message: `Select new base revision (current: ${currentBase}):`,
-    options: baseOptions,
-  });
-
-  if (prompts.isCancel(selectedBase)) {
-    context.process.stderr.write("Operation cancelled\n");
-    context.process.exit?.(1);
-    return;
-  }
-
-  let newBase: string;
-
-  if (selectedBase === MANUAL_SHA) {
-    const manualSha = await prompts.text({
-      message: "Enter commit SHA or tag:",
-      placeholder: "e.g., abc123def or v1.0.0",
-      validate: (sha) => {
-        if (!sha || sha.trim().length === 0) {
-          return "Please enter a valid SHA or tag";
-        }
-        return undefined;
-      },
-    });
-
-    if (prompts.isCancel(manualSha)) {
-      context.process.stderr.write("Operation cancelled\n");
-      context.process.exit?.(1);
-      return;
-    }
-
-    newBase = manualSha;
-  } else {
-    newBase = selectedBase;
-  }
+  const newBase = await promptForBaseRevision(
+    context,
+    prompts,
+    remoteRefs,
+    currentBase,
+  );
+  if (!newBase) return;
 
   if (verbose) {
     context.process.stdout.write(`\nCurrent base_revision: ${currentBase}\n`);
     context.process.stdout.write(`New base_revision: ${newBase}\n\n`);
   }
 
-  const updateResult = updateJsoncField(content, "base_revision", newBase);
-
-  if (!updateResult.success) {
-    context.process.stderr.write(chalk.red(`${updateResult.error}\n`));
-    context.process.exit?.(1);
-    return;
-  }
-
-  try {
-    await writeFile(configPath, updateResult.content, "utf8");
-    prompts.outro(chalk.green(`Updated base_revision to: ${newBase}`));
-  } catch (error) {
-    const errorMessage = error instanceof Error ? error.message : String(error);
-    context.process.stderr.write(
-      chalk.red(`Failed to update config: ${errorMessage}\n`),
-    );
-    context.process.exit?.(1);
-  }
+  await writeConfigUpdate(context, prompts, configPath, content, newBase);
 };

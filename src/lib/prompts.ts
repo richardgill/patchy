@@ -103,6 +103,23 @@ export const canPrompt = (context: LocalContext): boolean => {
   return isTTY || hasPromptHandler;
 };
 
+export const promptForManualSha = async (
+  prompts: ReturnType<typeof createPrompts>,
+): Promise<string | symbol> => {
+  const manualSha = await prompts.text({
+    message: "Enter commit SHA or tag:",
+    placeholder: "e.g., abc123def or v1.0.0",
+    validate: (sha) => {
+      if (!sha || sha.trim().length === 0) {
+        return "Please enter a valid SHA or tag";
+      }
+      return undefined;
+    },
+  });
+
+  return manualSha;
+};
+
 export const createPrompts = (context: LocalContext) => {
   if (context.promptHandler) {
     return createTestablePrompts({
