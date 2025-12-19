@@ -507,7 +507,7 @@ describe("patchy init", () => {
         .on({ text: /repository URL/, respond: bareRepoUrl })
         .on({ select: /upstream branch/, respond: "_none" })
         .on({ select: /base revision/, respond: "_manual" })
-        .on({ text: /commit SHA or tag/, respond: "HEAD" })
+        .on({ text: /commit SHA or tag/, respond: "main" })
         .on({ confirm: /Clone bare-repo/, respond: true })
         .on({ confirm: /Save target_repo/, respond: true })
         .run();
