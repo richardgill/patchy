@@ -1,12 +1,17 @@
 import { describe, expect, it } from "bun:test";
-import { readFileSync } from "node:fs";
-import { join } from "node:path";
+import { mkdirSync, readFileSync } from "node:fs";
+import path, { join } from "node:path";
 import { cancel, runCli, runCliWithPrompts } from "~/testing/e2e-utils";
 import {
   generateTmpDir,
   setupTestWithConfig,
   writeJsonConfig,
 } from "~/testing/fs-test-utils";
+import {
+  createTagInBareRepo,
+  initBareRepoWithCommit,
+  pushBranchToBareRepo,
+} from "~/testing/git-helpers";
 
 describe("patchy base", () => {
   describe("direct mode (with argument)", () => {
@@ -205,6 +210,105 @@ describe("patchy base", () => {
       expect(result).toFail();
       expect(result.stderr).toContain("cancelled");
       expect(prompts).toHaveLength(2);
+    });
+
+    it("should update config when selecting a tag from remote", async () => {
+      const tmpDir = generateTmpDir();
+      const bareRepoDir = path.join(tmpDir, "bare-repo.git");
+      mkdirSync(bareRepoDir, { recursive: true });
+      await initBareRepoWithCommit(bareRepoDir);
+      const tagSha = await createTagInBareRepo(bareRepoDir, "v1.2.3");
+      const bareRepoUrl = `file://${bareRepoDir}`;
+
+      await setupTestWithConfig({
+        tmpDir,
+        jsonConfig: {
+          source_repo: bareRepoUrl,
+          base_revision: "old-revision",
+          upstream_branch: "main",
+        },
+      });
+
+      const { result, prompts } = await runCliWithPrompts(`patchy base`, tmpDir)
+        .on({ select: /Select new base/, respond: tagSha })
+        .run();
+
+      expect(result).toSucceed();
+
+      const configPath = path.join(tmpDir, "patchy.json");
+      const config = JSON.parse(readFileSync(configPath, "utf-8"));
+      expect(config.base_revision).toBe(tagSha);
+
+      expect(prompts).toMatchObject([
+        { type: "select", message: expect.stringMatching(/Select new base/) },
+      ]);
+    });
+
+    it("should update config when selecting a branch from remote", async () => {
+      const tmpDir = generateTmpDir();
+      const bareRepoDir = path.join(tmpDir, "bare-repo.git");
+      mkdirSync(bareRepoDir, { recursive: true });
+      await initBareRepoWithCommit(bareRepoDir);
+      const developSha = await pushBranchToBareRepo(bareRepoDir, "develop");
+      const bareRepoUrl = `file://${bareRepoDir}`;
+
+      await setupTestWithConfig({
+        tmpDir,
+        jsonConfig: {
+          source_repo: bareRepoUrl,
+          base_revision: "old-revision",
+          upstream_branch: "main",
+        },
+      });
+
+      const { result, prompts } = await runCliWithPrompts(`patchy base`, tmpDir)
+        .on({ select: /Select new base/, respond: developSha })
+        .run();
+
+      expect(result).toSucceed();
+
+      const configPath = path.join(tmpDir, "patchy.json");
+      const config = JSON.parse(readFileSync(configPath, "utf-8"));
+      expect(config.base_revision).toBe(developSha);
+
+      expect(prompts).toMatchObject([
+        { type: "select", message: expect.stringMatching(/Select new base/) },
+      ]);
+    });
+
+    it("should update config when entering manual SHA", async () => {
+      const tmpDir = generateTmpDir();
+      const bareRepoDir = path.join(tmpDir, "bare-repo.git");
+      mkdirSync(bareRepoDir, { recursive: true });
+      await initBareRepoWithCommit(bareRepoDir);
+      const bareRepoUrl = `file://${bareRepoDir}`;
+
+      await setupTestWithConfig({
+        tmpDir,
+        jsonConfig: {
+          source_repo: bareRepoUrl,
+          base_revision: "old-revision",
+          upstream_branch: "main",
+        },
+      });
+
+      const manualSha = "abc123def456";
+
+      const { result, prompts } = await runCliWithPrompts(`patchy base`, tmpDir)
+        .on({ select: /Select new base/, respond: "_manual" })
+        .on({ text: /Enter commit SHA/, respond: manualSha })
+        .run();
+
+      expect(result).toSucceed();
+
+      const configPath = path.join(tmpDir, "patchy.json");
+      const config = JSON.parse(readFileSync(configPath, "utf-8"));
+      expect(config.base_revision).toBe(manualSha);
+
+      expect(prompts).toMatchObject([
+        { type: "select", message: expect.stringMatching(/Select new base/) },
+        { type: "text", message: expect.stringMatching(/Enter commit SHA/) },
+      ]);
     });
   });
 

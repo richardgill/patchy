@@ -8,7 +8,10 @@ import {
   runCliWithPrompts,
 } from "~/testing/e2e-utils";
 import { generateTmpDir, setupTestWithConfig } from "~/testing/fs-test-utils";
-import { initBareRepoWithCommit } from "~/testing/git-helpers";
+import {
+  createTagInBareRepo,
+  initBareRepoWithCommit,
+} from "~/testing/git-helpers";
 import { getSchemaUrl } from "~/version";
 
 describe("patchy init", () => {
@@ -594,6 +597,73 @@ describe("patchy init", () => {
       const config = JSON.parse(readFileSync(configPath, "utf-8"));
       expect(config).not.toHaveProperty("upstream_branch");
       expect(config.base_revision).toBe("abc123");
+    });
+
+    it("should save selected branch as upstream_branch", async () => {
+      const tmpDir = generateTmpDir();
+      const bareRepoDir = path.join(tmpDir, "bare-repo.git");
+      mkdirSync(bareRepoDir, { recursive: true });
+      await initBareRepoWithCommit(bareRepoDir);
+      const bareRepoUrl = `file://${bareRepoDir}`;
+
+      const { result, prompts } = await runCliWithPrompts(
+        "patchy init --force",
+        tmpDir,
+      )
+        .on({ text: /patch files/, respond: acceptDefault })
+        .on({ text: /cloned repos/, respond: acceptDefault })
+        .on({ confirm: /gitignore/, respond: true })
+        .on({ text: /repository URL/, respond: bareRepoUrl })
+        .on({ select: /upstream branch/, respond: "main" })
+        .on({ select: /base revision/, respond: "_manual" })
+        .on({ text: /commit SHA or tag/, respond: "abc123" })
+        .on({ confirm: /Clone bare-repo/, respond: false })
+        .run();
+
+      expect(result).toSucceed();
+
+      const configPath = path.join(tmpDir, "patchy.json");
+      const config = JSON.parse(readFileSync(configPath, "utf-8"));
+      expect(config.upstream_branch).toBe("main");
+      expect(config.base_revision).toBe("abc123");
+
+      const upstreamPrompt = prompts.find(
+        (p) => p.type === "select" && p.message.includes("upstream"),
+      );
+      expect(upstreamPrompt).toBeDefined();
+    });
+
+    it("should save selected tag as base_revision", async () => {
+      const tmpDir = generateTmpDir();
+      const bareRepoDir = path.join(tmpDir, "bare-repo.git");
+      mkdirSync(bareRepoDir, { recursive: true });
+      await initBareRepoWithCommit(bareRepoDir);
+      const tagSha = await createTagInBareRepo(bareRepoDir, "v1.0.0");
+      const bareRepoUrl = `file://${bareRepoDir}`;
+
+      const { result, prompts } = await runCliWithPrompts(
+        "patchy init --force",
+        tmpDir,
+      )
+        .on({ text: /patch files/, respond: acceptDefault })
+        .on({ text: /cloned repos/, respond: acceptDefault })
+        .on({ confirm: /gitignore/, respond: true })
+        .on({ text: /repository URL/, respond: bareRepoUrl })
+        .on({ select: /upstream branch/, respond: "_none" })
+        .on({ select: /base revision/, respond: tagSha })
+        .on({ confirm: /Clone bare-repo/, respond: false })
+        .run();
+
+      expect(result).toSucceed();
+
+      const configPath = path.join(tmpDir, "patchy.json");
+      const config = JSON.parse(readFileSync(configPath, "utf-8"));
+      expect(config.base_revision).toBe(tagSha);
+
+      const baseRevisionPrompt = prompts.find(
+        (p) => p.type === "select" && p.message.includes("base revision"),
+      );
+      expect(baseRevisionPrompt).toBeDefined();
     });
 
     it("should fallback to text input when remote fetch fails", async () => {
