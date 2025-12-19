@@ -160,8 +160,11 @@ const checkWorkingTreeClean = async (
     }
 
     return { clean: true };
-  } catch {
-    return { clean: true };
+  } catch (error) {
+    return {
+      clean: false,
+      error: `Failed to check working tree status: ${error instanceof Error ? error.message : String(error)}`,
+    };
   }
 };
 
