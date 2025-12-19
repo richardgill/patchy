@@ -142,9 +142,8 @@ describe("patchy repo clone", () => {
     await initBareRepoWithCommit(bareRepoDir);
 
     const tmpWorkDir = path.join(tmpDir, "tmp-work");
-    mkdirSync(tmpWorkDir, { recursive: true });
-    const git = createTestGitClient(tmpWorkDir);
-    await git.clone(bareRepoDir, ".");
+    const git = createTestGitClient(tmpDir);
+    await git.clone(bareRepoDir, "tmp-work");
     const commitSha = await getCurrentCommit(tmpWorkDir);
 
     const bareRepoUrl = `file://${bareRepoDir}`;
@@ -175,11 +174,11 @@ describe("patchy repo clone", () => {
     await initBareRepoWithCommit(bareRepoDir);
 
     const tmpWorkDir = path.join(tmpDir, "tmp-work");
-    mkdirSync(tmpWorkDir, { recursive: true });
-    const git = createTestGitClient(tmpWorkDir);
-    await git.clone(bareRepoDir, ".");
+    const git = createTestGitClient(tmpDir);
+    await git.clone(bareRepoDir, "tmp-work");
     await createTag(tmpWorkDir, "v1.0.0");
-    await git.push(["--tags"]);
+    const workGit = createTestGitClient(tmpWorkDir);
+    await workGit.push(["--tags"]);
 
     const bareRepoUrl = `file://${bareRepoDir}`;
 
