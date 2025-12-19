@@ -11,6 +11,7 @@ export const resetCommand = buildCommand({
     },
   },
   docs: {
-    brief: "Hard reset the Git working tree of target_repo",
+    brief:
+      "Hard reset target_repo to base_revision, discarding all commits and changes",
   },
 });

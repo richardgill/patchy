@@ -12,6 +12,9 @@ describe("generateJsonSchema", () => {
           "$schema": {
             "type": "string",
           },
+          "base_revision": {
+            "type": "string",
+          },
           "clones_dir": {
             "type": "string",
           },
@@ -21,13 +24,13 @@ describe("generateJsonSchema", () => {
           "patches_dir": {
             "type": "string",
           },
-          "ref": {
-            "type": "string",
-          },
           "source_repo": {
             "type": "string",
           },
           "target_repo": {
+            "type": "string",
+          },
+          "upstream_branch": {
             "type": "string",
           },
           "verbose": {

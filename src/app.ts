@@ -1,5 +1,6 @@
 import { buildApplication, buildRouteMap } from "@stricli/core";
 import { applyCommand } from "./commands/apply/command";
+import { baseCommand } from "./commands/base/command";
 import { generateCommand } from "./commands/generate/command";
 import { initCommand } from "./commands/init/command";
 import { repoRoutes } from "./commands/repo/routes";
@@ -10,6 +11,7 @@ const routes = buildRouteMap({
     init: initCommand,
     apply: applyCommand,
     generate: generateCommand,
+    base: baseCommand,
     repo: repoRoutes,
   },
   docs: {

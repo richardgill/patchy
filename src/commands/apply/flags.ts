@@ -6,7 +6,7 @@ export const applyFlags = {
   ...FLAG_METADATA.target_repo.stricliFlag,
   ...FLAG_METADATA.patches_dir.stricliFlag,
   ...FLAG_METADATA.source_repo.stricliFlag,
-  ...FLAG_METADATA.ref.stricliFlag,
+  ...FLAG_METADATA.base_revision.stricliFlag,
   ...FLAG_METADATA.config.stricliFlag,
   ...FLAG_METADATA.verbose.stricliFlag,
   ...FLAG_METADATA.dry_run.stricliFlag,
@@ -27,6 +27,16 @@ export const applyFlags = {
     kind: "parsed",
     parse: String,
     brief: "Apply patch sets up to and including the specified one",
+    optional: true,
+  },
+  all: {
+    kind: "boolean",
+    brief: "Automatically commit all patch sets without prompting",
+    optional: true,
+  },
+  edit: {
+    kind: "boolean",
+    brief: "Leave the last patch set uncommitted for manual review",
     optional: true,
   },
 } as const;

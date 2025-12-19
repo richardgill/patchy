@@ -47,7 +47,7 @@ describe("createEnrichedMergedConfig", () => {
         source_repo: "https://github.com/example/test-repo.git",
         clones_dir: "clonesDir1",
         target_repo: "repoDir1",
-        ref: "main",
+        base_revision: "main",
         verbose: true,
       },
     });
@@ -77,7 +77,7 @@ describe("createEnrichedMergedConfig", () => {
         "target_repo": "repoDir1",
         "clones_dir": "clonesDir1",
         "patches_dir": "./patches/",
-        "ref": "main",
+        "base_revision": "main",
         "verbose": true,
         "dry_run": true,
         "config": "./patchy.json",
@@ -163,7 +163,7 @@ describe("createEnrichedMergedConfig", () => {
         "target_repo": "repoDir1",
         "clones_dir": "clonesDir1",
         "patches_dir": "./patches/",
-        "ref": "main",
+        "base_revision": "main",
         "verbose": false,
         "dry_run": false,
         "config": "./patchy.json",
@@ -274,7 +274,7 @@ describe("createEnrichedMergedConfig", () => {
         clones_dir: "json-base",
         target_repo: "json-repo",
         patches_dir: "json-patches",
-        ref: "json-ref",
+        base_revision: "json-ref",
         verbose: false,
       },
     });
@@ -284,7 +284,7 @@ describe("createEnrichedMergedConfig", () => {
       "clones-dir": "flag-base",
       "target-repo": "flag-repo",
       "patches-dir": "flag-patches",
-      ref: "flag-ref",
+      "base-revision": "flag-ref",
       verbose: true,
     };
     const requiredFields: JsonConfigKey[] = [
@@ -308,7 +308,7 @@ describe("createEnrichedMergedConfig", () => {
         "target_repo": "flag-repo",
         "clones_dir": "flag-base",
         "patches_dir": "flag-patches",
-        "ref": "flag-ref",
+        "base_revision": "flag-ref",
         "verbose": true,
         "dry_run": false,
         "config": "./patchy.json",
@@ -359,7 +359,7 @@ describe("createEnrichedMergedConfig", () => {
         "target_repo": "repo",
         "clones_dir": "base",
         "patches_dir": "patches",
-        "ref": "main",
+        "base_revision": "main",
         "verbose": false,
         "dry_run": false,
         "config": "./patchy.json",
@@ -395,7 +395,7 @@ describe("createEnrichedMergedConfig", () => {
         "source_repo": "https://github.com/example/repo.git",
         "clones_dir": "./clones/",
         "patches_dir": "./patches/",
-        "ref": "main",
+        "base_revision": "main",
         "verbose": false,
         "dry_run": false,
         "config": "<TEST_DIR>/empty.json",
@@ -505,7 +505,7 @@ describe("createEnrichedMergedConfig", () => {
         "target_repo": "repo",
         "clones_dir": "base",
         "patches_dir": "./patches/",
-        "ref": "main",
+        "base_revision": "main",
         "verbose": true,
         "dry_run": true,
         "config": "./patchy.json",
@@ -553,7 +553,7 @@ describe("createEnrichedMergedConfig", () => {
         "target_repo": "my-repo/nested-repo",
         "clones_dir": "my-base/nested",
         "patches_dir": "./patches/",
-        "ref": "main",
+        "base_revision": "main",
         "verbose": false,
         "dry_run": false,
         "config": "./patchy.json",
@@ -580,7 +580,7 @@ describe("createEnrichedMergedConfig", () => {
         source_repo: "https://github.com/example/custom.git",
         clones_dir: "base",
         target_repo: "repo",
-        ref: "custom-branch",
+        base_revision: "custom-branch",
       },
     });
 
@@ -607,7 +607,7 @@ describe("createEnrichedMergedConfig", () => {
         "target_repo": "repo",
         "clones_dir": "base",
         "patches_dir": "./patches/",
-        "ref": "custom-branch",
+        "base_revision": "custom-branch",
         "verbose": false,
         "dry_run": false,
         "config": "<TEST_DIR>/custom/config.json",
@@ -658,7 +658,7 @@ describe("createEnrichedMergedConfig", () => {
         "target_repo": "repo",
         "clones_dir": "base",
         "patches_dir": "./patches/",
-        "ref": "main",
+        "base_revision": "main",
         "verbose": false,
         "dry_run": false,
         "config": "./patchy.json",
@@ -708,7 +708,7 @@ describe("createEnrichedMergedConfig", () => {
         "target_repo": "repo",
         "clones_dir": "base",
         "patches_dir": "./patches/",
-        "ref": "main",
+        "base_revision": "main",
         "verbose": false,
         "dry_run": false,
         "config": "./patchy.json",
@@ -725,7 +725,7 @@ describe("createEnrichedMergedConfig", () => {
     await writeJsonConfig(tmpDir, "invalid-structure.json", {
       source_repo: 123,
       verbose: "not-a-boolean",
-      ref: ["array", "not", "string"],
+      base_revision: ["array", "not", "string"],
     });
     const invalidJsonPath = path.join(tmpDir, "invalid-structure.json");
 
@@ -786,7 +786,7 @@ describe("createEnrichedMergedConfig", () => {
     const tmpDir = generateTmpDir();
     await writeJsonConfig(tmpDir, "empty-strings.json", {
       source_repo: "",
-      ref: "",
+      base_revision: "",
       clones_dir: "",
     });
     const jsonPath = path.join(tmpDir, "empty-strings.json");
@@ -806,7 +806,7 @@ describe("createEnrichedMergedConfig", () => {
     // Config values override defaults, so empty strings take precedence
     expectSuccessfulMerge(result);
     expect(result.mergedConfig.source_repo).toBe("");
-    expect(result.mergedConfig.ref).toBe("");
+    expect(result.mergedConfig.base_revision).toBe("");
     expect(result.mergedConfig.clones_dir).toBe("");
   });
 
@@ -894,7 +894,7 @@ describe("createEnrichedMergedConfig", () => {
     const tmpDir = generateTmpDir();
     await writeJsonConfig(tmpDir, "array-values.json", {
       source_repo: ["https://github.com/user/repo.git"],
-      ref: ["main", "develop"],
+      base_revision: ["main", "develop"],
       patches_dir: ["./patches"],
     });
     const jsonPath = path.join(tmpDir, "array-values.json");
@@ -914,7 +914,7 @@ describe("createEnrichedMergedConfig", () => {
     expect(result.error).toMatchInlineSnapshot(`
       "source_repo: Invalid input: expected string, received array
       patches_dir: Invalid input: expected string, received array
-      ref: Invalid input: expected string, received array"
+      base_revision: Invalid input: expected string, received array"
     `);
   });
 
@@ -948,7 +948,7 @@ describe("createEnrichedMergedConfig", () => {
     const tmpDir = generateTmpDir();
     await writeJsonConfig(tmpDir, "mixed-errors.json", {
       source_repo: 123,
-      ref: true,
+      base_revision: true,
       clones_dir: ["base"],
       target_repo: null,
       patches_dir: {},
@@ -974,7 +974,7 @@ describe("createEnrichedMergedConfig", () => {
       target_repo: Invalid input: expected string, received null
       clones_dir: Invalid input: expected string, received array
       patches_dir: Invalid input: expected string, received object
-      ref: Invalid input: expected string, received boolean
+      base_revision: Invalid input: expected string, received boolean
       verbose: Invalid input: expected boolean, received string
       Unrecognized key: "dry_run""
     `);
@@ -1004,7 +1004,7 @@ describe("createEnrichedMergedConfig", () => {
       PATCHY_CLONES_DIR: "env-base",
       PATCHY_TARGET_REPO: "env-repo",
       PATCHY_PATCHES_DIR: "env-patches",
-      PATCHY_REF: "env-branch",
+      PATCHY_BASE_REVISION: "env-branch",
       PATCHY_VERBOSE: "true",
       PATCHY_DRY_RUN: "1",
     };
@@ -1024,7 +1024,7 @@ describe("createEnrichedMergedConfig", () => {
         "target_repo": "env-repo",
         "clones_dir": "env-base",
         "patches_dir": "env-patches",
-        "ref": "env-branch",
+        "base_revision": "env-branch",
         "verbose": true,
         "dry_run": true,
         "config": "./patchy.json",
@@ -1053,7 +1053,7 @@ describe("createEnrichedMergedConfig", () => {
       "clones-dir": "flag-base",
       "target-repo": "flag-repo",
       "patches-dir": "flag-patches",
-      ref: "flag-ref",
+      "base-revision": "flag-ref",
       verbose: true,
       "dry-run": true,
     };
@@ -1068,7 +1068,7 @@ describe("createEnrichedMergedConfig", () => {
       PATCHY_CLONES_DIR: "env-base",
       PATCHY_TARGET_REPO: "env-repo",
       PATCHY_PATCHES_DIR: "env-patches",
-      PATCHY_REF: "env-branch",
+      PATCHY_BASE_REVISION: "env-branch",
       PATCHY_VERBOSE: "false",
       PATCHY_DRY_RUN: "false",
     };
@@ -1088,7 +1088,7 @@ describe("createEnrichedMergedConfig", () => {
         "target_repo": "flag-repo",
         "clones_dir": "flag-base",
         "patches_dir": "flag-patches",
-        "ref": "flag-ref",
+        "base_revision": "flag-ref",
         "verbose": true,
         "dry_run": true,
         "config": "./patchy.json",
@@ -1114,7 +1114,7 @@ describe("createEnrichedMergedConfig", () => {
         clones_dir: "json-base",
         target_repo: "json-repo",
         patches_dir: "json-patches",
-        ref: "json-ref",
+        base_revision: "json-ref",
         verbose: false,
       },
     });
@@ -1131,7 +1131,7 @@ describe("createEnrichedMergedConfig", () => {
       PATCHY_CLONES_DIR: "env-base",
       PATCHY_TARGET_REPO: "env-repo",
       PATCHY_PATCHES_DIR: "env-patches",
-      PATCHY_REF: "env-branch",
+      PATCHY_BASE_REVISION: "env-branch",
       PATCHY_VERBOSE: "true",
     };
 
@@ -1150,7 +1150,7 @@ describe("createEnrichedMergedConfig", () => {
         "target_repo": "env-repo",
         "clones_dir": "env-base",
         "patches_dir": "env-patches",
-        "ref": "env-branch",
+        "base_revision": "env-branch",
         "verbose": true,
         "dry_run": false,
         "config": "./patchy.json",
@@ -1177,7 +1177,7 @@ describe("createEnrichedMergedConfig", () => {
         source_repo: "https://github.com/example/env-config.git",
         clones_dir: "base",
         target_repo: "repo",
-        ref: "env-config-branch",
+        base_revision: "env-config-branch",
       },
     });
 
@@ -1206,7 +1206,7 @@ describe("createEnrichedMergedConfig", () => {
         "target_repo": "repo",
         "clones_dir": "base",
         "patches_dir": "./patches/",
-        "ref": "env-config-branch",
+        "base_revision": "env-config-branch",
         "verbose": false,
         "dry_run": false,
         "config": "<TEST_DIR>/custom-env/env-config.json",
@@ -1314,7 +1314,7 @@ describe("createEnrichedMergedConfig", () => {
         source_repo: "https://github.com/example/json-repo.git",
         clones_dir: "json-base",
         target_repo: "json-repo",
-        ref: "json-ref",
+        base_revision: "json-ref",
       },
     });
 
@@ -1326,7 +1326,7 @@ describe("createEnrichedMergedConfig", () => {
     ];
     const env = {
       PATCHY_SOURCE_REPO: "",
-      PATCHY_REF: "",
+      PATCHY_BASE_REVISION: "",
     };
 
     const result = createEnrichedMergedConfig({
@@ -1340,7 +1340,7 @@ describe("createEnrichedMergedConfig", () => {
     expect(result.mergedConfig.source_repo).toBe(
       "https://github.com/example/json-repo.git",
     );
-    expect(result.mergedConfig.ref).toBe("json-ref");
+    expect(result.mergedConfig.base_revision).toBe("json-ref");
   });
 
   it("should use absolute target_repo directly without clones_dir", async () => {

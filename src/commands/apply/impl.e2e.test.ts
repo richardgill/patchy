@@ -1,7 +1,8 @@
 import { describe, expect, it } from "bun:test";
 import { mkdirSync } from "node:fs";
 import path from "node:path";
-import { runCli } from "~/testing/e2e-utils";
+import { createTestGitClient } from "~/lib/git";
+import { runCli, runCliWithPrompts } from "~/testing/e2e-utils";
 import {
   generateTmpDir,
   setupTestWithConfig,
@@ -97,7 +98,7 @@ describe("patchy apply", () => {
       await writeJsonConfig(tmpDir, "invalid-structure.json", {
         source_repo: 123,
         verbose: "not-a-boolean",
-        ref: ["array", "not", "string"],
+        base_revision: ["array", "not", "string"],
       });
 
       const result = await runCli(
@@ -912,7 +913,7 @@ const other = 2;
           target_repo: "config-repo",
           clones_dir: `${tmpDir}/repos`,
           patches_dir: "config-patches",
-          ref: "main",
+          base_revision: "main",
         },
       });
 
@@ -928,6 +929,384 @@ const other = 2;
       expect(result).toHaveOutput(
         "[DRY RUN] Would apply patches from ./cli-patches to ./cli-repo",
       );
+    });
+  });
+
+  describe("commit behavior", () => {
+    it("should fail when working tree is dirty", async () => {
+      const tmpDir = generateTmpDir();
+      const ctx = await setupTestWithConfig({
+        tmpDir,
+        createDirectories: {
+          clonesDir: "repos",
+          targetRepo: "main",
+          patchesDir: "patches",
+        },
+        jsonConfig: {
+          source_repo: "https://github.com/example/test-repo.git",
+          clones_dir: "repos",
+          target_repo: "main",
+        },
+      });
+
+      const repoDir = ctx.absoluteTargetRepo as string;
+      const patchesDir = ctx.absolutePatchesDir as string;
+
+      await initGitRepoWithCommit(repoDir);
+
+      await writeFileIn(repoDir, "dirty.txt", "uncommitted changes");
+
+      await writeFileIn(patchesDir, "001-first/new.ts", "content");
+
+      const result = await runCli(`patchy apply`, tmpDir);
+
+      expect(result).toFail();
+      expect(result.stderr).toContain("Working tree is dirty");
+    });
+
+    it("should auto-commit all except last patch set by default in TTY", async () => {
+      const tmpDir = generateTmpDir();
+      const ctx = await setupTestWithConfig({
+        tmpDir,
+        createDirectories: {
+          clonesDir: "repos",
+          targetRepo: "main",
+          patchesDir: "patches",
+        },
+        jsonConfig: {
+          source_repo: "https://github.com/example/test-repo.git",
+          clones_dir: "repos",
+          target_repo: "main",
+        },
+      });
+
+      const repoDir = ctx.absoluteTargetRepo as string;
+      const patchesDir = ctx.absolutePatchesDir as string;
+
+      await initGitRepoWithCommit(repoDir);
+      await writeFileIn(patchesDir, "001-first/file1.ts", "content1");
+      await writeFileIn(patchesDir, "002-second/file2.ts", "content2");
+      await writeFileIn(patchesDir, "003-third/file3.ts", "content3");
+
+      const { result } = await runCliWithPrompts(
+        `patchy apply --verbose`,
+        tmpDir,
+      )
+        .on({
+          confirm: /Commit changes from patch set "003-third"/,
+          respond: true,
+        })
+        .run();
+
+      expect(result).toSucceed();
+      expect(result.stdout).toContain("Committed patch set: 001-first");
+      expect(result.stdout).toContain("Committed patch set: 002-second");
+      expect(result.stdout).toContain("Committed patch set: 003-third");
+
+      const git = createTestGitClient(repoDir);
+      const log = await git.log();
+      expect(log.all.length).toBeGreaterThan(1);
+      expect(log.all[0]?.message).toBe("Apply patch set: 003-third");
+      expect(log.all[1]?.message).toBe("Apply patch set: 002-second");
+      expect(log.all[2]?.message).toBe("Apply patch set: 001-first");
+    });
+
+    it("should prompt for last patch set and handle rejection", async () => {
+      const tmpDir = generateTmpDir();
+      const ctx = await setupTestWithConfig({
+        tmpDir,
+        createDirectories: {
+          clonesDir: "repos",
+          targetRepo: "main",
+          patchesDir: "patches",
+        },
+        jsonConfig: {
+          source_repo: "https://github.com/example/test-repo.git",
+          clones_dir: "repos",
+          target_repo: "main",
+        },
+      });
+
+      const repoDir = ctx.absoluteTargetRepo as string;
+      const patchesDir = ctx.absolutePatchesDir as string;
+
+      await initGitRepoWithCommit(repoDir);
+      await writeFileIn(patchesDir, "001-first/file1.ts", "content1");
+      await writeFileIn(patchesDir, "002-second/file2.ts", "content2");
+
+      const { result } = await runCliWithPrompts(
+        `patchy apply --verbose`,
+        tmpDir,
+      )
+        .on({
+          confirm: /Commit changes from patch set "002-second"/,
+          respond: false,
+        })
+        .run();
+
+      expect(result).toSucceed();
+      expect(result.stdout).toContain("Committed patch set: 001-first");
+      expect(result.stdout).toContain("Left patch set uncommitted: 002-second");
+
+      const git = createTestGitClient(repoDir);
+      const log = await git.log();
+      expect(log.all[0]?.message).toBe("Apply patch set: 001-first");
+
+      const status = await git.status();
+      expect(status.files.some((f) => f.path === "file2.ts")).toBe(true);
+    });
+
+    it("should commit all patch sets with --all flag", async () => {
+      const tmpDir = generateTmpDir();
+      const ctx = await setupTestWithConfig({
+        tmpDir,
+        createDirectories: {
+          clonesDir: "repos",
+          targetRepo: "main",
+          patchesDir: "patches",
+        },
+        jsonConfig: {
+          source_repo: "https://github.com/example/test-repo.git",
+          clones_dir: "repos",
+          target_repo: "main",
+        },
+      });
+
+      const repoDir = ctx.absoluteTargetRepo as string;
+      const patchesDir = ctx.absolutePatchesDir as string;
+
+      await initGitRepoWithCommit(repoDir);
+      await writeFileIn(patchesDir, "001-first/file1.ts", "content1");
+      await writeFileIn(patchesDir, "002-second/file2.ts", "content2");
+
+      const result = await runCli(`patchy apply --all --verbose`, tmpDir);
+
+      expect(result).toSucceed();
+      expect(result.stdout).toContain("Committed patch set: 001-first");
+      expect(result.stdout).toContain("Committed patch set: 002-second");
+
+      const git = createTestGitClient(repoDir);
+      const log = await git.log();
+      expect(log.all[0]?.message).toBe("Apply patch set: 002-second");
+      expect(log.all[1]?.message).toBe("Apply patch set: 001-first");
+    });
+
+    it("should leave last patch set uncommitted with --edit flag", async () => {
+      const tmpDir = generateTmpDir();
+      const ctx = await setupTestWithConfig({
+        tmpDir,
+        createDirectories: {
+          clonesDir: "repos",
+          targetRepo: "main",
+          patchesDir: "patches",
+        },
+        jsonConfig: {
+          source_repo: "https://github.com/example/test-repo.git",
+          clones_dir: "repos",
+          target_repo: "main",
+        },
+      });
+
+      const repoDir = ctx.absoluteTargetRepo as string;
+      const patchesDir = ctx.absolutePatchesDir as string;
+
+      await initGitRepoWithCommit(repoDir);
+      await writeFileIn(patchesDir, "001-first/file1.ts", "content1");
+      await writeFileIn(patchesDir, "002-second/file2.ts", "content2");
+
+      const result = await runCli(`patchy apply --edit --verbose`, tmpDir);
+
+      expect(result).toSucceed();
+      expect(result.stdout).toContain("Committed patch set: 001-first");
+      expect(result.stdout).toContain("Left patch set uncommitted: 002-second");
+
+      const git = createTestGitClient(repoDir);
+      const log = await git.log();
+      expect(log.all[0]?.message).toBe("Apply patch set: 001-first");
+
+      const status = await git.status();
+      expect(status.files.some((f) => f.path === "file2.ts")).toBe(true);
+    });
+
+    it("should fail when both --all and --edit are provided", async () => {
+      const tmpDir = generateTmpDir();
+      await setupTestWithConfig({
+        tmpDir,
+        createDirectories: {
+          clonesDir: "repos",
+          targetRepo: "main",
+          patchesDir: "patches",
+        },
+        jsonConfig: {
+          source_repo: "https://github.com/example/test-repo.git",
+          clones_dir: "repos",
+          target_repo: "main",
+        },
+      });
+
+      const result = await runCli(`patchy apply --all --edit`, tmpDir);
+
+      expect(result).toFail();
+      expect(result.stderr).toContain(
+        "Cannot use both --all and --edit flags together",
+      );
+    });
+
+    it("should work with --only flag treating it as the last patch set", async () => {
+      const tmpDir = generateTmpDir();
+      const ctx = await setupTestWithConfig({
+        tmpDir,
+        createDirectories: {
+          clonesDir: "repos",
+          targetRepo: "main",
+          patchesDir: "patches",
+        },
+        jsonConfig: {
+          source_repo: "https://github.com/example/test-repo.git",
+          clones_dir: "repos",
+          target_repo: "main",
+        },
+      });
+
+      const repoDir = ctx.absoluteTargetRepo as string;
+      const patchesDir = ctx.absolutePatchesDir as string;
+
+      await initGitRepoWithCommit(repoDir);
+      await writeFileIn(patchesDir, "001-first/file1.ts", "content1");
+      await writeFileIn(patchesDir, "002-second/file2.ts", "content2");
+
+      const { result } = await runCliWithPrompts(
+        `patchy apply --only 001-first --verbose`,
+        tmpDir,
+      )
+        .on({
+          confirm: /Commit changes from patch set "001-first"/,
+          respond: true,
+        })
+        .run();
+
+      expect(result).toSucceed();
+      expect(result.stdout).toContain("Committed patch set: 001-first");
+
+      const git = createTestGitClient(repoDir);
+      const log = await git.log();
+      expect(log.all[0]?.message).toBe("Apply patch set: 001-first");
+    });
+
+    it("should work with --until flag treating last one as the last patch set", async () => {
+      const tmpDir = generateTmpDir();
+      const ctx = await setupTestWithConfig({
+        tmpDir,
+        createDirectories: {
+          clonesDir: "repos",
+          targetRepo: "main",
+          patchesDir: "patches",
+        },
+        jsonConfig: {
+          source_repo: "https://github.com/example/test-repo.git",
+          clones_dir: "repos",
+          target_repo: "main",
+        },
+      });
+
+      const repoDir = ctx.absoluteTargetRepo as string;
+      const patchesDir = ctx.absolutePatchesDir as string;
+
+      await initGitRepoWithCommit(repoDir);
+      await writeFileIn(patchesDir, "001-first/file1.ts", "content1");
+      await writeFileIn(patchesDir, "002-second/file2.ts", "content2");
+      await writeFileIn(patchesDir, "003-third/file3.ts", "content3");
+
+      const { result } = await runCliWithPrompts(
+        `patchy apply --until 002-second --verbose`,
+        tmpDir,
+      )
+        .on({
+          confirm: /Commit changes from patch set "002-second"/,
+          respond: false,
+        })
+        .run();
+
+      expect(result).toSucceed();
+      expect(result.stdout).toContain("Committed patch set: 001-first");
+      expect(result.stdout).toContain("Left patch set uncommitted: 002-second");
+
+      const git = createTestGitClient(repoDir);
+      const log = await git.log();
+      expect(log.all[0]?.message).toBe("Apply patch set: 001-first");
+    });
+
+    it("should not commit anything in dry-run mode", async () => {
+      const tmpDir = generateTmpDir();
+      const ctx = await setupTestWithConfig({
+        tmpDir,
+        createDirectories: {
+          clonesDir: "repos",
+          targetRepo: "main",
+          patchesDir: "patches",
+        },
+        jsonConfig: {
+          source_repo: "https://github.com/example/test-repo.git",
+          clones_dir: "repos",
+          target_repo: "main",
+        },
+      });
+
+      const repoDir = ctx.absoluteTargetRepo as string;
+      const patchesDir = ctx.absolutePatchesDir as string;
+
+      await initGitRepoWithCommit(repoDir);
+      await writeFileIn(patchesDir, "001-first/file1.ts", "content1");
+
+      const result = await runCli(`patchy apply --dry-run --verbose`, tmpDir);
+
+      expect(result).toSucceed();
+      expect(result.stdout).toContain("[DRY RUN]");
+      expect(result.stdout).not.toContain("Committed");
+
+      const git = createTestGitClient(repoDir);
+      const log = await git.log();
+      expect(log.all.length).toBe(1);
+    });
+
+    it("should commit single patch set with prompt in TTY", async () => {
+      const tmpDir = generateTmpDir();
+      const ctx = await setupTestWithConfig({
+        tmpDir,
+        createDirectories: {
+          clonesDir: "repos",
+          targetRepo: "main",
+          patchesDir: "patches",
+        },
+        jsonConfig: {
+          source_repo: "https://github.com/example/test-repo.git",
+          clones_dir: "repos",
+          target_repo: "main",
+        },
+      });
+
+      const repoDir = ctx.absoluteTargetRepo as string;
+      const patchesDir = ctx.absolutePatchesDir as string;
+
+      await initGitRepoWithCommit(repoDir);
+      await writeFileIn(patchesDir, "001-only/file1.ts", "content1");
+
+      const { result } = await runCliWithPrompts(
+        `patchy apply --verbose`,
+        tmpDir,
+      )
+        .on({
+          confirm: /Commit changes from patch set "001-only"/,
+          respond: true,
+        })
+        .run();
+
+      expect(result).toSucceed();
+      expect(result.stdout).toContain("Committed patch set: 001-only");
+
+      const git = createTestGitClient(repoDir);
+      const log = await git.log();
+      expect(log.all[0]?.message).toBe("Apply patch set: 001-only");
     });
   });
 });

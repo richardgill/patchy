@@ -35,6 +35,23 @@ const TEST_METADATA = {
     example: "10",
     defaultValue: "5",
   },
+  base_revision: {
+    configField: true,
+    requiredInConfig: false,
+    env: "TEST_BASE_REVISION",
+    type: "string",
+    name: "Base revision",
+    stricliFlag: {
+      "base-revision": {
+        kind: "parsed",
+        parse: String,
+        brief: "Base revision",
+        optional: true,
+      },
+    },
+    example: "abc123",
+    defaultValue: undefined,
+  },
   verbose: {
     configField: true,
     requiredInConfig: false,
@@ -69,6 +86,7 @@ const testSchema = z
   .object({
     name: z.string().optional(),
     count: z.string().optional(),
+    base_revision: z.string().optional(),
     verbose: z.boolean().optional(),
   })
   .strict();
@@ -81,6 +99,7 @@ describe("loadConfigFromFile", () => {
     setup: (tmpDir: string) => Promise<void> | void;
     flags: Record<string, unknown>;
     env?: Record<string, string | undefined>;
+    migrate?: (json: TestJson) => TestJson;
     expectedSuccess: boolean;
     expectedError?: string;
     expectedConfig?: Partial<Record<string, unknown>>;
@@ -219,6 +238,27 @@ describe("loadConfigFromFile", () => {
       expectedSuccess: true,
       expectedConfig: { name: "with-comments", verbose: true },
     },
+    {
+      name: "applies migration function to transform config",
+      setup: async (dir) => {
+        await writeJsonConfig(dir, "test.json", {
+          name: "test-name",
+        });
+      },
+      flags: {},
+      migrate: (json: TestJson) => {
+        // Example migration: set default base_revision if missing
+        if (!json.base_revision) {
+          return { ...json, base_revision: "default-revision" };
+        }
+        return json;
+      },
+      expectedSuccess: true,
+      expectedConfig: {
+        name: "test-name",
+        base_revision: "default-revision",
+      },
+    },
   ];
 
   for (const testCase of loadTestCases) {
@@ -235,6 +275,7 @@ describe("loadConfigFromFile", () => {
         defaultConfigPath: "./test.json",
         configFlagKey: "config",
         schema: testSchema,
+        migrate: testCase.migrate,
       });
 
       expect(result.success).toBe(testCase.expectedSuccess);

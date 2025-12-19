@@ -60,23 +60,6 @@ export const commitFile = async (
   await git.commit(message);
 };
 
-export const createBranch = async (
-  repoDir: string,
-  branchName: string,
-  filename = "branch-file.txt",
-  content?: string,
-): Promise<void> => {
-  const git = createTestGitClient(repoDir);
-  await git.checkoutLocalBranch(branchName);
-  writeFileSync(
-    join(repoDir, filename),
-    content ?? `content from ${branchName}`,
-  );
-  await git.add(".");
-  await git.commit(`commit on ${branchName}`);
-  await git.checkout("-");
-};
-
 export const createTag = async (
   repoDir: string,
   tagName: string,

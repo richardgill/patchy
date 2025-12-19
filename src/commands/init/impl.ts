@@ -14,6 +14,7 @@ import {
 import type { LocalContext } from "~/context";
 import { formatPathForDisplay, isPathWithinDir, resolvePath } from "~/lib/fs";
 import { extractRepoName, normalizeGitignoreEntry } from "~/lib/git";
+import { fetchRemoteRefs, getBranches, getLatestTags } from "~/lib/git-remote";
 import { canPrompt, createPrompts } from "~/lib/prompts";
 import { isValidGitUrl, validateGitUrl } from "~/lib/validation";
 import { getSchemaUrl } from "~/version";
@@ -24,7 +25,8 @@ type PromptAnswers = {
   clonesDir?: string;
   addToGitignore?: boolean;
   repoUrl?: string;
-  ref?: string;
+  baseRevision?: string;
+  upstreamBranch?: string;
 };
 
 type PromptCloneParams = {
@@ -175,18 +177,112 @@ export default async function (
     answers.repoUrl = repoUrl;
   }
 
-  if (flags.ref === undefined) {
-    const ref = await prompts.text({
-      message: "Git ref to track:",
-      placeholder: "Branch, tag, or commit to compare against",
-      initialValue: getDefaultValue("ref"),
+  const repoUrl = flags["source-repo"] ?? answers.repoUrl ?? "";
+
+  let remoteRefs: Awaited<ReturnType<typeof fetchRemoteRefs>> = [];
+  const shouldFetchRemote =
+    repoUrl &&
+    (flags["upstream-branch"] === undefined ||
+      flags["base-revision"] === undefined);
+
+  if (shouldFetchRemote && canPrompt(this)) {
+    try {
+      prompts.log.step("Fetching repository information...");
+      remoteRefs = await fetchRemoteRefs(repoUrl);
+    } catch (_error) {
+      prompts.log.warn(
+        "Could not fetch remote refs. You can enter values manually.",
+      );
+    }
+  }
+
+  if (flags["upstream-branch"] === undefined && remoteRefs.length > 0) {
+    const branches = getBranches(remoteRefs);
+    const NONE_VALUE = "_none";
+    const branchOptions: Array<{ value: string; label: string }> = [
+      { value: NONE_VALUE, label: "None (manual updates only)" },
+      ...branches.map((b) => ({ value: b.name, label: b.name })),
+    ];
+
+    const selectedBranch = await prompts.select({
+      message: "Select upstream branch to track:",
+      options: branchOptions,
     });
-    if (prompts.isCancel(ref)) {
+
+    if (prompts.isCancel(selectedBranch)) {
       this.process.stderr.write("Initialization cancelled\n");
       this.process.exit?.(1);
       return;
     }
-    answers.ref = ref;
+
+    answers.upstreamBranch =
+      selectedBranch === NONE_VALUE ? undefined : selectedBranch;
+  }
+
+  if (flags["base-revision"] === undefined) {
+    if (remoteRefs.length > 0) {
+      const tags = getLatestTags(remoteRefs);
+      const branches = getBranches(remoteRefs);
+      const MANUAL_SHA = "_manual";
+
+      const baseOptions: Array<{ value: string; label: string }> = [
+        ...tags.map((t) => ({
+          value: t.sha,
+          label: `${t.name} (${t.sha.slice(0, 7)})`,
+        })),
+        ...branches.slice(0, 3).map((b) => ({
+          value: b.sha,
+          label: `${b.name} branch tip (${b.sha.slice(0, 7)}) - Warning: will change`,
+        })),
+        { value: MANUAL_SHA, label: "Enter SHA manually" },
+      ];
+
+      const selectedBase = await prompts.select({
+        message: "Select base revision:",
+        options: baseOptions,
+      });
+
+      if (prompts.isCancel(selectedBase)) {
+        this.process.stderr.write("Initialization cancelled\n");
+        this.process.exit?.(1);
+        return;
+      }
+
+      if (selectedBase === MANUAL_SHA) {
+        const manualSha = await prompts.text({
+          message: "Enter commit SHA or tag:",
+          placeholder: "e.g., abc123def or v1.0.0",
+          validate: (sha) => {
+            if (!sha || sha.trim().length === 0) {
+              return "Please enter a valid SHA or tag";
+            }
+            return undefined;
+          },
+        });
+
+        if (prompts.isCancel(manualSha)) {
+          this.process.stderr.write("Initialization cancelled\n");
+          this.process.exit?.(1);
+          return;
+        }
+
+        answers.baseRevision = manualSha;
+      } else {
+        answers.baseRevision = selectedBase;
+      }
+    } else {
+      const baseRevision = await prompts.text({
+        message: "Base revision (SHA or tag):",
+        placeholder: "Git ref to pin the base to",
+        initialValue: getDefaultValue("base_revision"),
+      });
+      if (prompts.isCancel(baseRevision)) {
+        this.process.stderr.write("Initialization cancelled\n");
+        this.process.exit?.(1);
+        return;
+      }
+      answers.baseRevision = baseRevision;
+    }
   }
 
   const finalConfig: JsonConfig = {
@@ -197,7 +293,16 @@ export default async function (
       answers.patchesDir ??
       getDefaultValue("patches_dir") ??
       "",
-    ref: flags.ref ?? answers.ref ?? getDefaultValue("ref") ?? "",
+    base_revision:
+      flags["base-revision"] ??
+      answers.baseRevision ??
+      getDefaultValue("base_revision") ??
+      "",
+    ...(flags["upstream-branch"] !== undefined
+      ? { upstream_branch: flags["upstream-branch"] }
+      : answers.upstreamBranch !== undefined
+        ? { upstream_branch: answers.upstreamBranch }
+        : {}),
   };
 
   const absolutePatchesDir = resolvePath(

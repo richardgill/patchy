@@ -7,6 +7,7 @@ import {
   hasAbsoluteTargetRepo,
 } from "~/cli-fields";
 import type { LocalContext } from "~/context";
+import { assertDefined } from "~/lib/assert";
 import { createGitClient } from "~/lib/git";
 import { createPrompts } from "~/lib/prompts";
 import type { ResetFlags } from "./flags";
@@ -31,7 +32,9 @@ export default async function (
 
   const config = result.mergedConfig;
   const repoDir = config.absoluteTargetRepo ?? "";
+  const baseRevision = assertDefined(config.base_revision, "base_revision");
   const dryRun = config.dry_run;
+  const verbose = config.verbose;
 
   if (!existsSync(repoDir)) {
     this.process.stderr.write(
@@ -49,16 +52,21 @@ export default async function (
     return;
   }
 
+  if (verbose) {
+    this.process.stdout.write(`Repository directory: ${repoDir}\n`);
+    this.process.stdout.write(`Base revision: ${baseRevision}\n`);
+  }
+
   if (dryRun) {
     this.process.stdout.write(
-      `[DRY RUN] Would hard reset repository: ${repoDir}\n`,
+      `[DRY RUN] Would hard reset repository to ${baseRevision}: ${repoDir}\n`,
     );
     return;
   }
 
   if (!flags.yes) {
     const confirmed = await prompts.confirm({
-      message: `This will discard all uncommitted changes in ${repoDir}. Continue?`,
+      message: `This will reset ${repoDir} to ${baseRevision}, discarding all commits and uncommitted changes. Continue?`,
       initialValue: false,
     });
 
@@ -69,8 +77,21 @@ export default async function (
     }
   }
 
-  await git.reset(["--hard"]);
-  this.process.stdout.write(
-    chalk.green(`Successfully reset repository: ${repoDir}\n`),
-  );
+  try {
+    await git.reset(["--hard", baseRevision]);
+    this.process.stdout.write(
+      chalk.green(
+        `Successfully reset repository to ${baseRevision}: ${repoDir}\n`,
+      ),
+    );
+  } catch (error) {
+    const message = error instanceof Error ? error.message : String(error);
+    this.process.stderr.write(
+      chalk.red(
+        `Failed to reset to base_revision "${baseRevision}": ${message}\n`,
+      ),
+    );
+    this.process.exit(1);
+    return;
+  }
 }

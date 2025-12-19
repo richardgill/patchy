@@ -9,6 +9,8 @@ import {
 } from "~/cli-fields";
 import type { LocalContext } from "~/context";
 import { formatPathForDisplay, getAllFiles, getSortedFolders } from "~/lib/fs";
+import { createGitClient } from "~/lib/git";
+import { canPrompt, createPrompts } from "~/lib/prompts";
 import { applyDiff } from "./apply-diff";
 import type { ApplyFlags } from "./flags";
 
@@ -127,6 +129,83 @@ const filterPatchSets = (
   return { filtered: patchSets };
 };
 
+const validateCommitFlags = (
+  all: boolean | undefined,
+  edit: boolean | undefined,
+): { error?: string } => {
+  if (all && edit) {
+    return { error: "Cannot use both --all and --edit flags together" };
+  }
+  return {};
+};
+
+const checkWorkingTreeClean = async (
+  repoDir: string,
+): Promise<{ clean: boolean; error?: string }> => {
+  const gitDir = path.join(repoDir, ".git");
+  if (!existsSync(gitDir)) {
+    return { clean: true };
+  }
+
+  try {
+    const git = createGitClient(repoDir);
+    const status = await git.status();
+
+    if (status.files.length > 0) {
+      return {
+        clean: false,
+        error:
+          "Working tree is dirty. Please commit or stash changes before applying patches.",
+      };
+    }
+
+    return { clean: true };
+  } catch {
+    return { clean: true };
+  }
+};
+
+const commitPatchSet = async (
+  repoDir: string,
+  patchSetName: string,
+  stdout: NodeJS.WriteStream,
+): Promise<{ success: boolean; error?: string }> => {
+  try {
+    const git = createGitClient(repoDir);
+    await git.add(".");
+    await git.commit(`Apply patch set: ${patchSetName}`);
+    stdout.write(`  Committed patch set: ${patchSetName}\n`);
+    return { success: true };
+  } catch (error) {
+    return {
+      success: false,
+      error: error instanceof Error ? error.message : String(error),
+    };
+  }
+};
+
+type CommitMode = "auto" | "prompt" | "skip";
+
+const determineCommitMode = (
+  context: LocalContext,
+  flags: ApplyFlags,
+  isLastPatchSet: boolean,
+): CommitMode => {
+  if (flags.all) {
+    return "auto";
+  }
+
+  if (flags.edit) {
+    return isLastPatchSet ? "skip" : "auto";
+  }
+
+  if (isLastPatchSet) {
+    return canPrompt(context) ? "prompt" : "auto";
+  }
+
+  return "auto";
+};
+
 export default async function (
   this: LocalContext,
   flags: ApplyFlags,
@@ -154,6 +233,13 @@ export default async function (
     const absolutePatchesDir = config.absolutePatchesDir ?? "";
     const absoluteTargetRepo = config.absoluteTargetRepo ?? "";
 
+    const flagValidation = validateCommitFlags(flags.all, flags.edit);
+    if (flagValidation.error !== undefined) {
+      this.process.stderr.write(`${flagValidation.error}\n`);
+      this.process.exit(1);
+      return;
+    }
+
     const allPatchSets = getSortedFolders(absolutePatchesDir);
 
     if (allPatchSets.length === 0) {
@@ -177,12 +263,23 @@ export default async function (
       );
     }
 
+    if (!config.dry_run) {
+      const treeCheck = await checkWorkingTreeClean(absoluteTargetRepo);
+      if (!treeCheck.clean && treeCheck.error) {
+        this.process.stderr.write(`${treeCheck.error}\n`);
+        this.process.exit(1);
+        return;
+      }
+    }
+
     const fuzzFactor = flags["fuzz-factor"] ?? DEFAULT_FUZZ_FACTOR;
     const stats: PatchSetStats[] = [];
 
     this.process.stdout.write("Applying patch sets...\n");
 
-    for (const patchSetName of patchSetsToApply) {
+    for (let i = 0; i < patchSetsToApply.length; i++) {
+      const patchSetName = patchSetsToApply[i];
+      const isLastPatchSet = i === patchSetsToApply.length - 1;
       const patchSetDir = path.join(absolutePatchesDir, patchSetName);
       const patchFiles = await collectPatchToApplys(
         patchSetDir,
@@ -231,6 +328,56 @@ export default async function (
       }
 
       stats.push(patchSetStats);
+
+      if (patchSetStats.errors.length === 0) {
+        const commitMode = determineCommitMode(this, flags, isLastPatchSet);
+
+        if (commitMode === "auto") {
+          const commitResult = await commitPatchSet(
+            absoluteTargetRepo,
+            patchSetName,
+            this.process.stdout as NodeJS.WriteStream,
+          );
+          if (!commitResult.success && commitResult.error) {
+            this.process.stderr.write(
+              `Warning: Could not commit patch set: ${commitResult.error}\n`,
+            );
+          }
+        } else if (commitMode === "prompt") {
+          const prompts = createPrompts(this);
+          const shouldCommit = await prompts.confirm({
+            message: `Commit changes from patch set "${patchSetName}"?`,
+            initialValue: true,
+          });
+
+          if (prompts.isCancel(shouldCommit)) {
+            this.process.stderr.write("Apply cancelled\n");
+            this.process.exit(1);
+            return;
+          }
+
+          if (shouldCommit) {
+            const commitResult = await commitPatchSet(
+              absoluteTargetRepo,
+              patchSetName,
+              this.process.stdout as NodeJS.WriteStream,
+            );
+            if (!commitResult.success && commitResult.error) {
+              this.process.stderr.write(
+                `Warning: Could not commit patch set: ${commitResult.error}\n`,
+              );
+            }
+          } else {
+            this.process.stdout.write(
+              `  Left patch set uncommitted: ${patchSetName}\n`,
+            );
+          }
+        } else {
+          this.process.stdout.write(
+            `  Left patch set uncommitted: ${patchSetName}\n`,
+          );
+        }
+      }
     }
 
     const totalFiles = sumBy(stats, (s) => s.fileCount);

@@ -242,14 +242,6 @@ Hard reset the Git working tree of `target_repo`. Discards local changes.
 patchy repo reset [--target-repo]
 ```
 
-### `patchy repo checkout --ref <git-ref>`
-
-Check out a specific Git ref (branch, tag, or SHA) in `target_repo`.
-
-```sh
-patchy repo checkout --ref main [--target-repo]
-```
-
 ### `patchy repo clone`
 
 Clone a repository into a subdirectory of `clones_dir`. The target directory is derived from the repo name.
