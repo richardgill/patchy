@@ -12,25 +12,19 @@ export const fetchRemoteRefs = async (
   const git = simpleGit();
   const result = await git.listRemote(["--refs", repoUrl]);
 
-  const refs: RemoteRef[] = [];
-  for (const line of result.split("\n").filter(Boolean)) {
-    const [sha, ref] = line.split("\t");
-    if (ref.startsWith("refs/heads/")) {
-      refs.push({
-        sha,
-        name: ref.replace("refs/heads/", ""),
-        type: "branch",
-      });
-    } else if (ref.startsWith("refs/tags/")) {
-      refs.push({
-        sha,
-        name: ref.replace("refs/tags/", ""),
-        type: "tag",
-      });
-    }
-  }
-
-  return refs;
+  return result
+    .split("\n")
+    .filter(Boolean)
+    .flatMap((line): RemoteRef[] => {
+      const [sha, ref] = line.split("\t");
+      if (ref.startsWith("refs/heads/")) {
+        return [{ sha, name: ref.replace("refs/heads/", ""), type: "branch" }];
+      }
+      if (ref.startsWith("refs/tags/")) {
+        return [{ sha, name: ref.replace("refs/tags/", ""), type: "tag" }];
+      }
+      return [];
+    });
 };
 
 export const getLatestTags = (refs: RemoteRef[], limit = 10): RemoteRef[] => {

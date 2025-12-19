@@ -46,7 +46,8 @@ Create a folder for the fork: `mkdir spoon-knife-fork && cd spoon-knife-fork`
   "patches_dir": "./patches/",
   "clones_dir": "./clones/",
   "target_repo": "spoon-knife",
-  "ref": "main"
+  "base_revision": "d0dd1f61b33d64e29d8bc1372a94ef6a2fee76a9",
+  "upstream_branch": "main"
 }
 ```
 
@@ -94,7 +95,7 @@ Patchy will prompt you to create your first **patch set**, let's name it: 'first
 
 ### Reapplying patches:
 
-Reset the current upstream repo `patchy repo reset main`, which will reset everything to `main`:
+Reset the current upstream repo with `patchy repo reset`, which will reset everything to `base_revision`:
 
 ```
 ./
@@ -175,8 +176,11 @@ patchy init
   // If not set, prompts interactively or errors in non-interactive mode.
   "patch_set": "001-security-fixes", // Override: --patch-set | env: PATCHY_PATCH_SET
 
-  // Git ref to checkout (branch, tag, SHA).
-  "ref": "main" // Override: --ref | env: PATCHY_REF
+  // Git SHA or tag to use as the base for patches.
+  "base_revision": "abc123def", // Override: --base-revision | env: PATCHY_BASE_REVISION
+
+  // Remote branch to track for updates (e.g., "main"). Used by `patchy base` to find new commits/tags.
+  "upstream_branch": "main" // Override: --upstream-branch | env: PATCHY_UPSTREAM_BRANCH
 }
 ```
 Precedence: CLI flags > Environment variables > `patchy.json`
@@ -223,31 +227,42 @@ Note: `patchy generate` is destructive and will remove any unneeded files in the
 
 ### `patchy apply`
 
-Apply patch files from `patches/` into `target_repo`. Patch sets are applied in alphabetical order.
+Apply patch files from `patches/` into `target_repo`. Patch sets are applied in alphabetical order, with each patch set committed automatically.
 
 ```sh
-patchy apply [--only <patch-set>] [--until <patch-set>] [--target-repo] [--patches-dir] [--dry-run]
+patchy apply [--only <patch-set>] [--until <patch-set>] [--all] [--edit] [--target-repo] [--patches-dir] [--dry-run]
 ```
 
 | Flag | Description |
 |------|-------------|
 | `--only <name>` | Apply only the specified patch set |
 | `--until <name>` | Apply patch sets up to and including the specified one |
+| `--all` | Commit all patch sets without prompting |
+| `--edit` | Leave the last patch set uncommitted for manual review |
 
 ### `patchy repo reset`
 
-Hard reset the Git working tree of `target_repo`. Discards local changes.
+Hard reset the Git working tree of `target_repo` to `base_revision`. Discards all local changes and patch commits.
 
 ```sh
-patchy repo reset [--target-repo]
+patchy repo reset [--base-revision] [--target-repo]
 ```
 
 ### `patchy repo clone`
 
-Clone a repository into a subdirectory of `clones_dir`. The target directory is derived from the repo name.
+Clone a repository into a subdirectory of `clones_dir` and checkout `base_revision`. The target directory is derived from the repo name.
 
 ```sh
-patchy repo clone [--source-repo] [--clones-dir] [--ref]
+patchy repo clone [--source-repo] [--clones-dir] [--base-revision]
+```
+
+### `patchy base [revision]`
+
+View or update the `base_revision` in config.
+
+```sh
+patchy base              # Interactive
+patchy base abc123def    # Set base_revision to the specified SHA or tag
 ```
 
 ## License

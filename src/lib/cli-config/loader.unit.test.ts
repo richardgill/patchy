@@ -99,7 +99,6 @@ describe("loadConfigFromFile", () => {
     setup: (tmpDir: string) => Promise<void> | void;
     flags: Record<string, unknown>;
     env?: Record<string, string | undefined>;
-    migrate?: (json: TestJson) => TestJson;
     expectedSuccess: boolean;
     expectedError?: string;
     expectedConfig?: Partial<Record<string, unknown>>;
@@ -238,27 +237,6 @@ describe("loadConfigFromFile", () => {
       expectedSuccess: true,
       expectedConfig: { name: "with-comments", verbose: true },
     },
-    {
-      name: "applies migration function to transform config",
-      setup: async (dir) => {
-        await writeJsonConfig(dir, "test.json", {
-          name: "test-name",
-        });
-      },
-      flags: {},
-      migrate: (json: TestJson) => {
-        // Example migration: set default base_revision if missing
-        if (!json.base_revision) {
-          return { ...json, base_revision: "default-revision" };
-        }
-        return json;
-      },
-      expectedSuccess: true,
-      expectedConfig: {
-        name: "test-name",
-        base_revision: "default-revision",
-      },
-    },
   ];
 
   for (const testCase of loadTestCases) {
@@ -275,7 +253,6 @@ describe("loadConfigFromFile", () => {
         defaultConfigPath: "./test.json",
         configFlagKey: "config",
         schema: testSchema,
-        migrate: testCase.migrate,
       });
 
       expect(result.success).toBe(testCase.expectedSuccess);

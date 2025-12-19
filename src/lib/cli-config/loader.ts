@@ -11,10 +11,6 @@ import type {
 } from "./type-derivations";
 import type { FlagMetadataMap } from "./types";
 
-type MigrateConfigFn<TJson extends Partial<Record<string, unknown>>> = (
-  json: TJson,
-) => TJson;
-
 type LoadConfigParams<
   M extends FlagMetadataMap,
   TJson extends Partial<Record<DeriveJsonConfigKey<M>, unknown>>,
@@ -27,7 +23,6 @@ type LoadConfigParams<
   configFlagKey: keyof M; // Key in metadata for the config flag (e.g., "config")
   schema: ZodSchema<TJson>;
   formatZodError?: (error: ZodError) => string;
-  migrate?: MigrateConfigFn<TJson>;
 };
 
 type LoadConfigSuccess<
@@ -57,7 +52,6 @@ export const loadConfigFromFile = <
   configFlagKey,
   schema,
   formatZodError = (e) => e.message,
-  migrate,
 }: LoadConfigParams<M, TJson>): LoadConfigResult<M, TJson> => {
   // Get config path from flag → env → default
   const configMeta = metadata[configFlagKey];
@@ -110,15 +104,12 @@ export const loadConfigFromFile = <
     return { success: false, error: formatZodError(zodResult.error) };
   }
 
-  // Apply migration if provided
-  const json = migrate ? migrate(zodResult.data) : zodResult.data;
-
   // Create merged config
   const { mergedConfig, sources } = createMergedConfig({
     metadata,
     flags,
     env,
-    json,
+    json: zodResult.data,
   });
 
   return { success: true, mergedConfig, configPath, sources };
