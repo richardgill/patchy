@@ -140,10 +140,14 @@ describe("patchy repo clone", () => {
     mkdirSync(bareRepoDir, { recursive: true });
     await initBareRepoWithCommit(bareRepoDir);
 
-    const tmpWorkDir = path.join(tmpDir, "tmp-work");
+    // Get SHA using ls-remote instead of cloning
     const git = createTestGitClient(tmpDir);
-    await git.clone(bareRepoDir, "tmp-work");
-    const commitSha = await getCurrentCommit(tmpWorkDir);
+    const lsRemoteOutput = await git.raw([
+      "ls-remote",
+      bareRepoDir,
+      "refs/heads/main",
+    ]);
+    const commitSha = lsRemoteOutput.split("\t")[0];
 
     const bareRepoUrl = `file://${bareRepoDir}`;
 
@@ -172,14 +176,18 @@ describe("patchy repo clone", () => {
     mkdirSync(bareRepoDir, { recursive: true });
     await initBareRepoWithCommit(bareRepoDir);
 
-    const tmpWorkDir = path.join(tmpDir, "tmp-work");
+    // Get SHA and create tag directly on bare repo
     const git = createTestGitClient(tmpDir);
-    await git.clone(bareRepoDir, "tmp-work");
-    const workGit = createTestGitClient(tmpWorkDir);
-    await workGit.addConfig("user.email", "test@test.com");
-    await workGit.addConfig("user.name", "Test User");
-    await workGit.addTag("v1.0.0");
-    await workGit.push(["--tags"]);
+    const lsRemoteOutput = await git.raw([
+      "ls-remote",
+      bareRepoDir,
+      "refs/heads/main",
+    ]);
+    const commitSha = lsRemoteOutput.split("\t")[0];
+
+    // Create lightweight tag directly in bare repo using update-ref
+    const bareGit = createTestGitClient(bareRepoDir);
+    await bareGit.raw(["update-ref", "refs/tags/v1.0.0", commitSha]);
 
     const bareRepoUrl = `file://${bareRepoDir}`;
 
