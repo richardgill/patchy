@@ -964,6 +964,67 @@ const other = 2;
       expect(result.stderr).toContain("Working tree is dirty");
     });
 
+    it("should fail when git status check fails", async () => {
+      const tmpDir = generateTmpDir();
+      const ctx = await setupTestWithConfig({
+        tmpDir,
+        createDirectories: {
+          clonesDir: "repos",
+          targetRepo: "main",
+          patchesDir: "patches",
+        },
+        jsonConfig: {
+          source_repo: "https://github.com/example/test-repo.git",
+          clones_dir: "repos",
+          target_repo: "main",
+        },
+      });
+
+      const repoDir = ctx.absoluteTargetRepo as string;
+      const patchesDir = ctx.absolutePatchesDir as string;
+
+      await writeFileIn(repoDir, ".git", "not a valid git directory");
+
+      await writeFileIn(patchesDir, "001-first/new.ts", "content");
+
+      const result = await runCli(`patchy apply`, tmpDir);
+
+      expect(result).toFail();
+      expect(result.stderr).toContain("Failed to check working tree status");
+    });
+
+    it("should fail when commit fails", async () => {
+      const tmpDir = generateTmpDir();
+      const ctx = await setupTestWithConfig({
+        tmpDir,
+        createDirectories: {
+          clonesDir: "repos",
+          targetRepo: "main",
+          patchesDir: "patches",
+        },
+        jsonConfig: {
+          source_repo: "https://github.com/example/test-repo.git",
+          clones_dir: "repos",
+          target_repo: "main",
+        },
+      });
+
+      const repoDir = ctx.absoluteTargetRepo as string;
+      const patchesDir = ctx.absolutePatchesDir as string;
+
+      await initGitRepoWithCommit(repoDir);
+
+      await writeFileIn(repoDir, ".git/index.lock", "locked");
+
+      await writeFileIn(patchesDir, "001-first/file1.ts", "content1");
+      await writeFileIn(patchesDir, "002-second/file2.ts", "content2");
+
+      const result = await runCli(`patchy apply --all`, tmpDir);
+
+      expect(result).toFail();
+      expect(result.stderr).toContain("Could not commit patch set");
+    });
+
     it("should auto-commit all except last patch set by default in TTY", async () => {
       const tmpDir = generateTmpDir();
       const ctx = await setupTestWithConfig({

@@ -9,7 +9,7 @@ import {
 } from "~/cli-fields";
 import type { LocalContext } from "~/context";
 import { formatPathForDisplay, getAllFiles, getSortedFolders } from "~/lib/fs";
-import { createGitClient } from "~/lib/git";
+import { createGitClient, isGitRepo } from "~/lib/git";
 import { canPrompt, createPrompts } from "~/lib/prompts";
 import { applyDiff } from "./apply-diff";
 import type { ApplyFlags } from "./flags";
@@ -142,8 +142,7 @@ const validateCommitFlags = (
 const checkWorkingTreeClean = async (
   repoDir: string,
 ): Promise<{ clean: boolean; error?: string }> => {
-  const gitDir = path.join(repoDir, ".git");
-  if (!existsSync(gitDir)) {
+  if (!isGitRepo(repoDir)) {
     return { clean: true };
   }
 
@@ -173,6 +172,10 @@ const commitPatchSet = async (
   patchSetName: string,
   stdout: NodeJS.WriteStream,
 ): Promise<{ success: boolean; error?: string }> => {
+  if (!isGitRepo(repoDir)) {
+    return { success: true };
+  }
+
   try {
     const git = createGitClient(repoDir);
     await git.add(".");
@@ -341,10 +344,12 @@ export default async function (
             patchSetName,
             this.process.stdout as NodeJS.WriteStream,
           );
-          if (!commitResult.success && commitResult.error) {
+          if (!commitResult.success) {
             this.process.stderr.write(
-              `Warning: Could not commit patch set: ${commitResult.error}\n`,
+              `Error: Could not commit patch set: ${commitResult.error}\n`,
             );
+            this.process.exit(1);
+            return;
           }
         } else if (commitMode === "prompt") {
           const prompts = createPrompts(this);
@@ -365,10 +370,12 @@ export default async function (
               patchSetName,
               this.process.stdout as NodeJS.WriteStream,
             );
-            if (!commitResult.success && commitResult.error) {
+            if (!commitResult.success) {
               this.process.stderr.write(
-                `Warning: Could not commit patch set: ${commitResult.error}\n`,
+                `Error: Could not commit patch set: ${commitResult.error}\n`,
               );
+              this.process.exit(1);
+              return;
             }
           } else {
             this.process.stdout.write(
