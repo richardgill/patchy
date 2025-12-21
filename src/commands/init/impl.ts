@@ -16,10 +16,13 @@ import { formatPathForDisplay, isPathWithinDir, resolvePath } from "~/lib/fs";
 import { extractRepoName, normalizeGitignoreEntry } from "~/lib/git";
 import {
   buildBaseRevisionOptions,
+  buildUpstreamBranchOptions,
   fetchRemoteRefs,
+  filterBranchesForBaseRevision,
   getBranches,
   getLatestTags,
   MANUAL_SHA_OPTION,
+  NONE_UPSTREAM_VALUE,
 } from "~/lib/git-remote";
 import { canPrompt, createPrompts, promptForManualSha } from "~/lib/prompts";
 import { isValidGitUrl, validateGitUrl } from "~/lib/validation";
@@ -204,11 +207,7 @@ export default async function (
 
   if (flags["upstream-branch"] === undefined && remoteRefs.length > 0) {
     const branches = getBranches(remoteRefs);
-    const NONE_VALUE = "_none";
-    const branchOptions: Array<{ value: string; label: string }> = [
-      { value: NONE_VALUE, label: "None (manual updates only)" },
-      ...branches.map((b) => ({ value: b.name, label: b.name })),
-    ];
+    const branchOptions = buildUpstreamBranchOptions(branches);
 
     const selectedBranch = await prompts.select({
       message: "Select upstream branch to track:",
@@ -222,13 +221,18 @@ export default async function (
     }
 
     answers.upstreamBranch =
-      selectedBranch === NONE_VALUE ? undefined : selectedBranch;
+      selectedBranch === NONE_UPSTREAM_VALUE ? undefined : selectedBranch;
   }
 
   if (flags["base-revision"] === undefined) {
     if (remoteRefs.length > 0) {
       const tags = getLatestTags(remoteRefs);
-      const branches = getBranches(remoteRefs);
+      const selectedUpstream =
+        flags["upstream-branch"] ?? answers.upstreamBranch;
+      const branches = filterBranchesForBaseRevision(
+        getBranches(remoteRefs),
+        selectedUpstream,
+      );
       const baseOptions = buildBaseRevisionOptions(tags, branches, {
         manualLabel: "Enter SHA manually",
       });

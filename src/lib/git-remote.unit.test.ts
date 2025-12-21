@@ -1,9 +1,12 @@
 import { describe, expect, it } from "bun:test";
 import {
   buildBaseRevisionOptions,
+  buildUpstreamBranchOptions,
+  filterBranchesForBaseRevision,
   getBranches,
   getLatestTags,
   MANUAL_SHA_OPTION,
+  NONE_UPSTREAM_VALUE,
   type RemoteRef,
 } from "./git-remote";
 
@@ -175,6 +178,88 @@ describe("git-remote helpers", () => {
       const emptyOptions = buildBaseRevisionOptions([], []);
       expect(emptyOptions).toHaveLength(1);
       expect(emptyOptions[0].value).toBe(MANUAL_SHA_OPTION);
+    });
+  });
+
+  describe("buildUpstreamBranchOptions", () => {
+    const testCases = [
+      {
+        name: "main first, then None, then others",
+        branches: ["develop", "main", "feature"],
+        expected: ["main", NONE_UPSTREAM_VALUE, "develop", "feature"],
+      },
+      {
+        name: "master first when no main",
+        branches: ["develop", "master", "feature"],
+        expected: ["master", NONE_UPSTREAM_VALUE, "develop", "feature"],
+      },
+      {
+        name: "both main and master first when both exist",
+        branches: ["develop", "master", "main"],
+        expected: ["master", "main", NONE_UPSTREAM_VALUE, "develop"],
+      },
+      {
+        name: "only None when no branches",
+        branches: [],
+        expected: [NONE_UPSTREAM_VALUE],
+      },
+      {
+        name: "preserves order of other branches",
+        branches: ["zebra", "alpha", "beta"],
+        expected: [NONE_UPSTREAM_VALUE, "zebra", "alpha", "beta"],
+      },
+    ];
+
+    testCases.forEach(({ name, branches, expected }) => {
+      it(name, () => {
+        const branchRefs: RemoteRef[] = branches.map((name) => ({
+          sha: "abc",
+          name,
+          type: "branch",
+        }));
+
+        const options = buildUpstreamBranchOptions(branchRefs);
+
+        expect(options.map((o) => o.value)).toEqual(expected);
+      });
+    });
+  });
+
+  describe("filterBranchesForBaseRevision", () => {
+    const branches: RemoteRef[] = [
+      { sha: "aaa", name: "main", type: "branch" },
+      { sha: "bbb", name: "develop", type: "branch" },
+      { sha: "ccc", name: "feature", type: "branch" },
+    ];
+
+    const testCases = [
+      {
+        name: "returns only selected upstream branch",
+        upstream: "main",
+        expected: [{ sha: "aaa", name: "main", type: "branch" }],
+      },
+      {
+        name: "returns all branches when upstream is undefined",
+        upstream: undefined,
+        expected: branches,
+      },
+      {
+        name: "returns empty array when upstream not found",
+        upstream: "nonexistent",
+        expected: [],
+      },
+      {
+        name: "returns all branches when upstream is empty string",
+        upstream: "",
+        expected: branches,
+      },
+    ];
+
+    testCases.forEach(({ name, upstream, expected }) => {
+      it(name, () => {
+        const filtered = filterBranchesForBaseRevision(branches, upstream);
+        expect(filtered).toEqual(expected);
+      });
     });
   });
 });
