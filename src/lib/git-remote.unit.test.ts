@@ -236,7 +236,7 @@ describe("git-remote helpers", () => {
       {
         name: "returns only selected upstream branch",
         upstream: "main",
-        expected: [{ sha: "aaa", name: "main", type: "branch" }],
+        expected: [{ sha: "aaa", name: "main", type: "branch" as const }],
       },
       {
         name: "returns all branches when upstream is undefined",
@@ -246,7 +246,7 @@ describe("git-remote helpers", () => {
       {
         name: "returns empty array when upstream not found",
         upstream: "nonexistent",
-        expected: [],
+        expected: [] as RemoteRef[],
       },
       {
         name: "returns all branches when upstream is empty string",
