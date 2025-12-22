@@ -1,8 +1,13 @@
 import { describe, expect, it } from "bun:test";
 import { mkdirSync } from "node:fs";
+import { mkdir } from "node:fs/promises";
 import path from "node:path";
 import { runCli } from "~/testing/e2e-utils";
-import { generateTmpDir, setupTestWithConfig } from "~/testing/fs-test-utils";
+import {
+  generateTmpDir,
+  setupTestWithConfig,
+  writeFileIn,
+} from "~/testing/fs-test-utils";
 import { initGitRepoWithCommit } from "~/testing/git-helpers";
 import { scenario } from "~/testing/scenario";
 
@@ -594,10 +599,8 @@ const other = 2;
         },
       });
 
-      const { mkdir } = await import("node:fs/promises");
       await mkdir(path.join(tmpDir, "cli-patches"), { recursive: true });
       await mkdir(path.join(tmpDir, "repos", "cli-repo"), { recursive: true });
-      const { writeFileIn } = await import("~/testing/fs-test-utils");
       await writeFileIn(
         path.join(tmpDir, "cli-patches"),
         "001-my-set/file.ts",
