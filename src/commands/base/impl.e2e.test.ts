@@ -1,6 +1,7 @@
 import { describe, expect, it } from "bun:test";
 import { mkdirSync, readFileSync } from "node:fs";
 import path, { join } from "node:path";
+import { MANUAL_SHA_OPTION } from "~/lib/git-remote";
 import { cancel, runCli, runCliWithPrompts } from "~/testing/e2e-utils";
 import {
   generateTmpDir,
@@ -309,6 +310,46 @@ describe("patchy base", () => {
         { type: "select", message: expect.stringMatching(/Select new base/) },
         { type: "text", message: expect.stringMatching(/Enter commit SHA/) },
       ]);
+    });
+
+    it("should expose select options in recorded prompts", async () => {
+      const tmpDir = generateTmpDir();
+      await setupTestWithConfig({
+        tmpDir,
+        jsonConfig: {
+          source_repo: "https://github.com/facebook/react",
+          base_revision: "v18.0.0",
+          upstream_branch: "main",
+        },
+      });
+
+      const { prompts } = await runCliWithPrompts(`patchy base`, tmpDir)
+        .on({ select: /Select new base/, respond: cancel })
+        .run();
+
+      expect(prompts).toHaveLength(1);
+      const selectPrompt = prompts[0];
+      expect(selectPrompt.type).toBe("select");
+
+      if (selectPrompt.type === "select") {
+        // Verify that options array is exposed and accessible
+        expect(Array.isArray(selectPrompt.options)).toBe(true);
+
+        // Should always have at least the manual option
+        expect(selectPrompt.options).toEqual(
+          expect.arrayContaining([
+            { value: MANUAL_SHA_OPTION, label: "Enter SHA or tag manually" },
+          ]),
+        );
+
+        // Verify each option has the expected structure
+        for (const opt of selectPrompt.options) {
+          expect(opt).toHaveProperty("value");
+          expect(opt).toHaveProperty("label");
+          expect(typeof opt.value).toBe("string");
+          expect(typeof opt.label).toBe("string");
+        }
+      }
     });
   });
 

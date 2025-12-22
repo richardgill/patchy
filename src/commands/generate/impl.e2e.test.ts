@@ -810,6 +810,47 @@ describe("patchy generate", () => {
     expect(result.stderr).toContain("Operation cancelled");
   });
 
+  it("should expose patch set options in recorded prompts", async () => {
+    const tmpDir = generateTmpDir();
+    const ctx = await setupTestWithConfig({
+      tmpDir,
+      createDirectories: {
+        patchesDir: "patches",
+        clonesDir: "repos",
+        targetRepo: "upstream",
+      },
+      jsonConfig: {
+        clones_dir: "repos",
+        target_repo: "upstream",
+        patches_dir: "patches",
+      },
+    });
+
+    const patchesDir = assertDefined(
+      ctx.absolutePatchesDir,
+      "absolutePatchesDir",
+    );
+    mkdirSync(path.join(patchesDir, "001-first-patch"), { recursive: true });
+    mkdirSync(path.join(patchesDir, "002-second-patch"), { recursive: true });
+
+    const { prompts } = await runCliWithPrompts(`patchy generate`, tmpDir)
+      .on({ select: "Select patch set:", respond: cancel })
+      .run();
+
+    expect(prompts).toHaveLength(1);
+    const selectPrompt = prompts[0];
+    expect(selectPrompt.type).toBe("select");
+
+    if (selectPrompt.type === "select") {
+      // Verify options include existing patch sets and create new option
+      expect(selectPrompt.options).toEqual([
+        { value: "001-first-patch", label: "001-first-patch" },
+        { value: "002-second-patch", label: "002-second-patch" },
+        { value: CREATE_NEW_OPTION, label: "Create new patch set" },
+      ]);
+    }
+  });
+
   it("should only clean stale patches within the target patch set", async () => {
     const tmpDir = generateTmpDir();
     const ctx = await setupTestWithConfig({
