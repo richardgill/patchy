@@ -1,3 +1,4 @@
+import { partition } from "es-toolkit";
 import { simpleGit } from "simple-git";
 
 export type RemoteRef = {
@@ -64,4 +65,36 @@ export const buildBaseRevisionOptions = (
     })),
     { value: MANUAL_SHA_OPTION, label: manualLabel },
   ];
+};
+
+export const NONE_UPSTREAM_VALUE = "_none";
+
+type UpstreamBranchOption = {
+  value: string;
+  label: string;
+};
+
+export const buildUpstreamBranchOptions = (
+  branches: RemoteRef[],
+): UpstreamBranchOption[] => {
+  const [primaryBranches, otherBranches] = partition(
+    branches,
+    (b) => b.name === "main" || b.name === "master",
+  );
+
+  return [
+    ...primaryBranches.map((b) => ({ value: b.name, label: b.name })),
+    { value: NONE_UPSTREAM_VALUE, label: "None (manual updates only)" },
+    ...otherBranches.map((b) => ({ value: b.name, label: b.name })),
+  ];
+};
+
+export const filterBranchesForBaseRevision = (
+  branches: RemoteRef[],
+  selectedUpstream: string | undefined,
+): RemoteRef[] => {
+  if (!selectedUpstream) {
+    return branches;
+  }
+  return branches.filter((b) => b.name === selectedUpstream);
 };
