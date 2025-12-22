@@ -6,3 +6,5 @@ export type CLIResult = {
   command: string;
   cwd: string;
 };
+
+export type FileMap = Record<string, string>;

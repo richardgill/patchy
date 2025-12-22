@@ -1,7 +1,7 @@
 import { describe, expect, it } from "bun:test";
 import { mkdirSync } from "node:fs";
 import path from "node:path";
-import simpleGit from "simple-git";
+import { createTestGitClient } from "~/lib/git";
 import { generateTmpDir } from "~/testing/fs-test-utils";
 import {
   createTagInBareRepo,
@@ -25,7 +25,7 @@ const setupBareRepo = async (setup: RepoSetup): Promise<string> => {
   mkdirSync(bareRepoDir, { recursive: true });
 
   if (setup.init === "empty") {
-    await simpleGit(bareRepoDir).init(true);
+    await createTestGitClient(bareRepoDir).init(true);
   } else {
     await initBareRepoWithCommit(bareRepoDir);
     for (const branch of setup.branches) {
