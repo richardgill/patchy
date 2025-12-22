@@ -30,7 +30,7 @@
       "optionalDependencies": {
         "patchy-cli-darwin-arm64": "=0.0.2",
         "patchy-cli-darwin-x64": "=0.0.2",
-        "patchy-cli-linux-arm64": "=0.0.2",
+        "patchy-cli-linux-arm64": "=0.0.9",
         "patchy-cli-linux-x64": "=0.0.2",
         "patchy-cli-windows-x64": "=0.0.2",
       },
@@ -411,7 +411,7 @@
 
     "patchy-cli-darwin-x64": ["patchy-cli-darwin-x64@0.0.2", "", { "os": "darwin", "cpu": "x64" }, "sha512-mXMsPnRpXcWe1+h0puiF1xfF1xoicnWWP9B39JeVobsc4Dwc+ge7cP271q71LyWD6MNsE1Fbw4ctXOMPoNC7+w=="],
 
-    "patchy-cli-linux-arm64": ["patchy-cli-linux-arm64@0.0.2", "", { "os": "linux", "cpu": "arm64" }, "sha512-W569+6351XeL4jAFtgoJGlJyP9bIELtUHQq9cX85lgPnwS6JdVWfkiEjzH6CbDEE50QTzX/GHaa9qlUuyYUMfA=="],
+    "patchy-cli-linux-arm64": ["patchy-cli-linux-arm64@0.0.9", "", { "os": "linux", "cpu": "arm64" }, "sha512-ppNl0Tozs7eP9zCEwSUAfY24D4dW3RsBzcIGazJccTg0l6eQ/f9w38GaMa11Zp5EeveepPpOT/LdFGiWuKNLaQ=="],
 
     "patchy-cli-linux-x64": ["patchy-cli-linux-x64@0.0.2", "", { "os": "linux", "cpu": "x64" }, "sha512-swiGUsBd7RVNw77imTK52JGuiPHJAMuLj4yr33cd0JCXAZw36uprq/9oyeb+uwVjMjlJFF3hDkHDiwPTfW3jeg=="],
 
