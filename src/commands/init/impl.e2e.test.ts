@@ -2,33 +2,23 @@ import { describe, expect, it } from "bun:test";
 import { existsSync, mkdirSync, readFileSync } from "node:fs";
 import path, { join } from "node:path";
 import {
-  acceptDefault,
-  cancel,
-  runCli,
-  runCliWithPrompts,
-} from "~/testing/e2e-utils";
-import { generateTmpDir, setupTestWithConfig } from "~/testing/fs-test-utils";
-import {
   createTagInBareRepo,
   initBareRepoWithCommit,
 } from "~/testing/git-helpers";
+import { acceptDefault, cancel, scenario } from "~/testing/scenario";
 import { getSchemaUrl } from "~/version";
 
 describe("patchy init", () => {
   it("should initialize patchy with all flags", async () => {
-    const tmpDir = generateTmpDir();
-    await setupTestWithConfig({
-      tmpDir,
-      createDirectories: { clonesDir: "clones" },
-    });
+    const ctx = await scenario({ noConfig: true });
+    mkdirSync(join(ctx.tmpDir, "clones"), { recursive: true });
 
-    const result = await runCli(
+    const { result } = await ctx.runCli(
       `patchy init --source-repo https://github.com/example/test-repo.git --clones-dir clones --patches-dir patches --base-revision main --upstream-branch main --config patchy.json --force`,
-      tmpDir,
     );
 
     expect(result).toSucceed();
-    const configPath = join(tmpDir, "patchy.json");
+    const configPath = join(ctx.tmpDir, "patchy.json");
     expect(configPath).toExist();
     const jsonContent = readFileSync(configPath, "utf-8").trim();
 
@@ -44,57 +34,45 @@ describe("patchy init", () => {
   });
 
   it("should not include target_repo in config", async () => {
-    const tmpDir = generateTmpDir();
-    await setupTestWithConfig({
-      tmpDir,
-      createDirectories: { clonesDir: "clones" },
-    });
+    const ctx = await scenario({ noConfig: true });
+    mkdirSync(join(ctx.tmpDir, "clones"), { recursive: true });
 
-    const result = await runCli(
+    const { result } = await ctx.runCli(
       `patchy init --source-repo https://github.com/example/test-repo.git --clones-dir clones --patches-dir patches --base-revision main --force`,
-      tmpDir,
     );
 
     expect(result).toSucceed();
-    const configPath = join(tmpDir, "patchy.json");
+    const configPath = join(ctx.tmpDir, "patchy.json");
     const config = JSON.parse(readFileSync(configPath, "utf-8"));
     expect(config).not.toHaveProperty("target_repo");
   });
 
   describe("gitignore", () => {
     it("should add to .gitignore with --gitignore flag", async () => {
-      const tmpDir = generateTmpDir();
-      await setupTestWithConfig({
-        tmpDir,
-        createDirectories: { clonesDir: "clones" },
-      });
+      const ctx = await scenario({ noConfig: true });
+      mkdirSync(join(ctx.tmpDir, "clones"), { recursive: true });
 
-      const result = await runCli(
+      const { result } = await ctx.runCli(
         `patchy init --source-repo https://github.com/example/repo.git --clones-dir clones --patches-dir patches --base-revision main --gitignore --force`,
-        tmpDir,
       );
 
       expect(result).toSucceed();
-      const gitignorePath = join(tmpDir, ".gitignore");
+      const gitignorePath = join(ctx.tmpDir, ".gitignore");
       expect(gitignorePath).toExist();
       const content = readFileSync(gitignorePath, "utf-8");
       expect(content).toContain("clones/");
     });
 
     it("should strip ./ prefix from .gitignore entry", async () => {
-      const tmpDir = generateTmpDir();
-      await setupTestWithConfig({
-        tmpDir,
-        createDirectories: { clonesDir: "clones" },
-      });
+      const ctx = await scenario({ noConfig: true });
+      mkdirSync(join(ctx.tmpDir, "clones"), { recursive: true });
 
-      const result = await runCli(
+      const { result } = await ctx.runCli(
         `patchy init --source-repo https://github.com/example/repo.git --clones-dir ./clones --patches-dir patches --base-revision main --gitignore --force`,
-        tmpDir,
       );
 
       expect(result).toSucceed();
-      const gitignorePath = join(tmpDir, ".gitignore");
+      const gitignorePath = join(ctx.tmpDir, ".gitignore");
       expect(gitignorePath).toExist();
       const content = readFileSync(gitignorePath, "utf-8");
       expect(content).toBe("clones/\n");
@@ -102,122 +80,92 @@ describe("patchy init", () => {
     });
 
     it("should strip multiple ./ prefixes from .gitignore entry", async () => {
-      const tmpDir = generateTmpDir();
-      await setupTestWithConfig({
-        tmpDir,
-        createDirectories: { clonesDir: "clones" },
-      });
+      const ctx = await scenario({ noConfig: true });
+      mkdirSync(join(ctx.tmpDir, "clones"), { recursive: true });
 
-      const result = await runCli(
+      const { result } = await ctx.runCli(
         `patchy init --source-repo https://github.com/example/repo.git --clones-dir ././clones --patches-dir patches --base-revision main --gitignore --force`,
-        tmpDir,
       );
 
       expect(result).toSucceed();
-      const gitignorePath = join(tmpDir, ".gitignore");
+      const gitignorePath = join(ctx.tmpDir, ".gitignore");
       const content = readFileSync(gitignorePath, "utf-8");
       expect(content).toBe("clones/\n");
       expect(content).not.toContain("./");
     });
 
     it("should handle ./ prefix with existing trailing slash", async () => {
-      const tmpDir = generateTmpDir();
-      await setupTestWithConfig({
-        tmpDir,
-        createDirectories: { clonesDir: "clones" },
-      });
+      const ctx = await scenario({ noConfig: true });
+      mkdirSync(join(ctx.tmpDir, "clones"), { recursive: true });
 
-      const result = await runCli(
+      const { result } = await ctx.runCli(
         `patchy init --source-repo https://github.com/example/repo.git --clones-dir ./clones/ --patches-dir patches --base-revision main --gitignore --force`,
-        tmpDir,
       );
 
       expect(result).toSucceed();
-      const gitignorePath = join(tmpDir, ".gitignore");
+      const gitignorePath = join(ctx.tmpDir, ".gitignore");
       const content = readFileSync(gitignorePath, "utf-8");
       expect(content).toBe("clones/\n");
     });
 
     it("should not modify .gitignore with --no-gitignore flag", async () => {
-      const tmpDir = generateTmpDir();
-      await setupTestWithConfig({
-        tmpDir,
-        createDirectories: { clonesDir: "clones" },
-      });
+      const ctx = await scenario({ noConfig: true });
+      mkdirSync(join(ctx.tmpDir, "clones"), { recursive: true });
 
-      const result = await runCli(
+      const { result } = await ctx.runCli(
         `patchy init --source-repo https://github.com/example/repo.git --clones-dir clones --patches-dir patches --base-revision main --no-gitignore --force`,
-        tmpDir,
       );
 
       expect(result).toSucceed();
-      const gitignorePath = join(tmpDir, ".gitignore");
+      const gitignorePath = join(ctx.tmpDir, ".gitignore");
       expect(existsSync(gitignorePath)).toBe(false);
     });
 
     it("should not modify .gitignore without flag in non-interactive mode", async () => {
-      const tmpDir = generateTmpDir();
-      await setupTestWithConfig({
-        tmpDir,
-        createDirectories: { clonesDir: "clones" },
-      });
+      const ctx = await scenario({ noConfig: true });
+      mkdirSync(join(ctx.tmpDir, "clones"), { recursive: true });
 
-      const result = await runCli(
+      const { result } = await ctx.runCli(
         `patchy init --source-repo https://github.com/example/repo.git --clones-dir clones --patches-dir patches --base-revision main --force`,
-        tmpDir,
       );
 
       expect(result).toSucceed();
-      const gitignorePath = join(tmpDir, ".gitignore");
+      const gitignorePath = join(ctx.tmpDir, ".gitignore");
       expect(existsSync(gitignorePath)).toBe(false);
     });
 
     it("should not modify .gitignore when path is outside cwd with --gitignore flag", async () => {
-      const tmpDir = generateTmpDir();
-      await setupTestWithConfig({
-        tmpDir,
-        createDirectories: {},
-      });
+      const ctx = await scenario({ noConfig: true });
 
-      const result = await runCli(
+      const { result } = await ctx.runCli(
         `patchy init --source-repo https://github.com/example/repo.git --clones-dir /tmp/some-other-clones --patches-dir patches --base-revision main --gitignore --force`,
-        tmpDir,
       );
 
       expect(result).toSucceed();
-      const gitignorePath = join(tmpDir, ".gitignore");
+      const gitignorePath = join(ctx.tmpDir, ".gitignore");
       expect(existsSync(gitignorePath)).toBe(false);
     });
 
     it("should not modify .gitignore when path is outside cwd with relative path", async () => {
-      const tmpDir = generateTmpDir();
-      await setupTestWithConfig({
-        tmpDir,
-        createDirectories: {},
-      });
+      const ctx = await scenario({ noConfig: true });
 
-      const result = await runCli(
+      const { result } = await ctx.runCli(
         `patchy init --source-repo https://github.com/example/repo.git --clones-dir ../outside-clones --patches-dir patches --base-revision main --gitignore --force`,
-        tmpDir,
       );
 
       expect(result).toSucceed();
-      const gitignorePath = join(tmpDir, ".gitignore");
+      const gitignorePath = join(ctx.tmpDir, ".gitignore");
       expect(existsSync(gitignorePath)).toBe(false);
     });
   });
 
   describe("error cases", () => {
     it("should fail with malformed repo url - missing protocol", async () => {
-      const tmpDir = generateTmpDir();
-      await setupTestWithConfig({
-        tmpDir,
-        createDirectories: { clonesDir: "clones" },
-      });
+      const ctx = await scenario({ noConfig: true });
+      mkdirSync(join(ctx.tmpDir, "clones"), { recursive: true });
 
-      const result = await runCli(
+      const { result } = await ctx.runCli(
         `patchy init --source-repo github.com/example/repo --clones-dir clones --patches-dir patches --base-revision main --config patchy.json --force`,
-        tmpDir,
       );
 
       expect(result).toFail();
@@ -227,15 +175,11 @@ describe("patchy init", () => {
     });
 
     it("should fail with malformed repo url - invalid domain", async () => {
-      const tmpDir = generateTmpDir();
-      await setupTestWithConfig({
-        tmpDir,
-        createDirectories: { clonesDir: "clones" },
-      });
+      const ctx = await scenario({ noConfig: true });
+      mkdirSync(join(ctx.tmpDir, "clones"), { recursive: true });
 
-      const result = await runCli(
+      const { result } = await ctx.runCli(
         `patchy init --source-repo https://invalid_domain/repo --clones-dir clones --patches-dir patches --base-revision main --config patchy.json --force`,
-        tmpDir,
       );
 
       expect(result).toFail();
@@ -245,15 +189,11 @@ describe("patchy init", () => {
     });
 
     it("should fail with malformed repo url - incomplete path", async () => {
-      const tmpDir = generateTmpDir();
-      await setupTestWithConfig({
-        tmpDir,
-        createDirectories: { clonesDir: "clones" },
-      });
+      const ctx = await scenario({ noConfig: true });
+      mkdirSync(join(ctx.tmpDir, "clones"), { recursive: true });
 
-      const result = await runCli(
+      const { result } = await ctx.runCli(
         `patchy init --source-repo https://github.com/ --clones-dir clones --patches-dir patches --base-revision main --config patchy.json --force`,
-        tmpDir,
       );
 
       expect(result).toFail();
@@ -261,21 +201,15 @@ describe("patchy init", () => {
     });
 
     it("should fail when config file exists without force flag", async () => {
-      const tmpDir = generateTmpDir();
-      await setupTestWithConfig({
-        tmpDir,
-        createDirectories: { clonesDir: "clones" },
-        jsonConfig: { hello: "world" },
-      });
+      const ctx = await scenario({ noConfig: true });
+      mkdirSync(join(ctx.tmpDir, "clones"), { recursive: true });
 
-      await runCli(
+      await ctx.runCli(
         `patchy init --source-repo https://github.com/example/repo.git --clones-dir clones --patches-dir patches --base-revision main --config patchy.json --force`,
-        tmpDir,
       );
 
-      const result = await runCli(
+      const { result } = await ctx.runCli(
         `patchy init --source-repo https://github.com/example/another-repo.git --clones-dir clones --patches-dir patches --base-revision main --config patchy.json`,
-        tmpDir,
       );
 
       expect(result).toFail();
@@ -288,15 +222,11 @@ describe("patchy init", () => {
     });
 
     it("should fail with validation error for empty source_repo", async () => {
-      const tmpDir = generateTmpDir();
-      await setupTestWithConfig({
-        tmpDir,
-        createDirectories: { clonesDir: "clones" },
-      });
+      const ctx = await scenario({ noConfig: true });
+      mkdirSync(join(ctx.tmpDir, "clones"), { recursive: true });
 
-      const result = await runCli(
+      const { result } = await ctx.runCli(
         `patchy init --source-repo "" --clones-dir clones --patches-dir patches --base-revision main --config patchy.json --force`,
-        tmpDir,
       );
 
       expect(result).toFail();
@@ -308,27 +238,21 @@ describe("patchy init", () => {
 
   describe("interactive prompts", () => {
     it("should complete init with interactive prompts", async () => {
-      const tmpDir = generateTmpDir();
-      await setupTestWithConfig({
-        tmpDir,
-        createDirectories: {},
-        jsonConfig: {},
-      });
+      const ctx = await scenario({ noConfig: true });
 
-      const { result, prompts } = await runCliWithPrompts(
-        "patchy init --force",
-        tmpDir,
-      )
-        .on({ text: /patch files/, respond: acceptDefault })
-        .on({ text: /cloned repos/, respond: acceptDefault })
-        .on({ confirm: /gitignore/, respond: true })
-        .on({
-          text: /repository URL/,
-          respond: "https://github.com/example/repo.git",
-        })
-        .on({ text: /[Bb]ase revision/, respond: acceptDefault })
-        .on({ confirm: /Clone repo/, respond: false })
-        .run();
+      const { result, prompts } = await ctx
+        .withPrompts(
+          { text: /patch files/, respond: acceptDefault },
+          { text: /cloned repos/, respond: acceptDefault },
+          { confirm: /gitignore/, respond: true },
+          {
+            text: /repository URL/,
+            respond: "https://github.com/example/repo.git",
+          },
+          { text: /[Bb]ase revision/, respond: acceptDefault },
+          { confirm: /Clone repo/, respond: false },
+        )
+        .runCli("patchy init --force");
 
       expect(result).toSucceed();
       expect(prompts).toMatchObject([
@@ -364,24 +288,16 @@ describe("patchy init", () => {
         },
       ]);
 
-      const configPath = join(tmpDir, "patchy.json");
+      const configPath = join(ctx.tmpDir, "patchy.json");
       expect(configPath).toExist();
     });
 
     it("should handle cancel during prompts", async () => {
-      const tmpDir = generateTmpDir();
-      await setupTestWithConfig({
-        tmpDir,
-        createDirectories: {},
-        jsonConfig: {},
-      });
+      const ctx = await scenario({ noConfig: true });
 
-      const { result, prompts } = await runCliWithPrompts(
-        "patchy init --force",
-        tmpDir,
-      )
-        .on({ text: /patch files/, respond: cancel })
-        .run();
+      const { result, prompts } = await ctx
+        .withPrompts({ text: /patch files/, respond: cancel })
+        .runCli("patchy init --force");
 
       expect(result).toFail();
       expect(result.stderr).toContain("cancelled");
@@ -395,25 +311,19 @@ describe("patchy init", () => {
     });
 
     it("should not prompt for gitignore when clonesDir is outside cwd", async () => {
-      const tmpDir = generateTmpDir();
-      await setupTestWithConfig({
-        tmpDir,
-        createDirectories: {},
-        jsonConfig: {},
-      });
+      const ctx = await scenario({ noConfig: true });
 
-      const { result, prompts } = await runCliWithPrompts(
-        "patchy init --force",
-        tmpDir,
-      )
-        .on({ text: /patch files/, respond: acceptDefault })
-        .on({ text: /cloned repos/, respond: "/tmp/external-clones" })
-        .on({
-          text: /repository URL/,
-          respond: "https://github.com/example/repo.git",
-        })
-        .on({ text: /[Bb]ase revision/, respond: acceptDefault })
-        .run();
+      const { result, prompts } = await ctx
+        .withPrompts(
+          { text: /patch files/, respond: acceptDefault },
+          { text: /cloned repos/, respond: "/tmp/external-clones" },
+          {
+            text: /repository URL/,
+            respond: "https://github.com/example/repo.git",
+          },
+          { text: /[Bb]ase revision/, respond: acceptDefault },
+        )
+        .runCli("patchy init --force");
 
       expect(result).toSucceed();
       expect(prompts).toMatchObject([
@@ -439,33 +349,26 @@ describe("patchy init", () => {
         },
       ]);
 
-      const gitignorePath = join(tmpDir, ".gitignore");
+      const gitignorePath = join(ctx.tmpDir, ".gitignore");
       expect(existsSync(gitignorePath)).toBe(false);
     });
 
     it("should not prompt for gitignore when clonesDir uses tilde path", async () => {
-      const tmpDir = generateTmpDir();
-      await setupTestWithConfig({
-        tmpDir,
-        createDirectories: {},
-        jsonConfig: {},
-      });
+      const ctx = await scenario({ noConfig: true });
 
-      const { result, prompts } = await runCliWithPrompts(
-        "patchy init --force",
-        tmpDir,
-      )
-        .on({ text: /patch files/, respond: acceptDefault })
-        .on({ text: /cloned repos/, respond: "~/code/test-clones" })
-        .on({
-          text: /repository URL/,
-          respond: "https://github.com/example/repo.git",
-        })
-        .on({ text: /[Bb]ase revision/, respond: acceptDefault })
-        .run();
+      const { result, prompts } = await ctx
+        .withPrompts(
+          { text: /patch files/, respond: acceptDefault },
+          { text: /cloned repos/, respond: "~/code/test-clones" },
+          {
+            text: /repository URL/,
+            respond: "https://github.com/example/repo.git",
+          },
+          { text: /[Bb]ase revision/, respond: acceptDefault },
+        )
+        .runCli("patchy init --force");
 
       expect(result).toSucceed();
-      // Should NOT have a gitignore prompt since ~/code/test-clones is outside the project
       expect(prompts).toMatchObject([
         {
           type: "text",
@@ -489,31 +392,30 @@ describe("patchy init", () => {
         },
       ]);
 
-      const gitignorePath = join(tmpDir, ".gitignore");
+      const gitignorePath = join(ctx.tmpDir, ".gitignore");
       expect(existsSync(gitignorePath)).toBe(false);
     });
 
     it("should prompt to clone and run clone when user accepts", async () => {
-      const tmpDir = generateTmpDir();
-      const bareRepoDir = path.join(tmpDir, "bare-repo.git");
+      const ctx = await scenario({ noConfig: true });
+      const bareRepoDir = path.join(ctx.tmpDir, "bare-repo.git");
       mkdirSync(bareRepoDir, { recursive: true });
       await initBareRepoWithCommit(bareRepoDir);
       const bareRepoUrl = `file://${bareRepoDir}`;
 
-      const { result, prompts } = await runCliWithPrompts(
-        "patchy init --force",
-        tmpDir,
-      )
-        .on({ text: /patch files/, respond: acceptDefault })
-        .on({ text: /cloned repos/, respond: acceptDefault })
-        .on({ confirm: /gitignore/, respond: true })
-        .on({ text: /repository URL/, respond: bareRepoUrl })
-        .on({ select: /upstream branch/, respond: "_none" })
-        .on({ select: /base revision/, respond: "_manual" })
-        .on({ text: /commit SHA or tag/, respond: "main" })
-        .on({ confirm: /Clone bare-repo/, respond: true })
-        .on({ confirm: /Save target_repo/, respond: true })
-        .run();
+      const { result, prompts } = await ctx
+        .withPrompts(
+          { text: /patch files/, respond: acceptDefault },
+          { text: /cloned repos/, respond: acceptDefault },
+          { confirm: /gitignore/, respond: true },
+          { text: /repository URL/, respond: bareRepoUrl },
+          { select: /upstream branch/, respond: "_none" },
+          { select: /base revision/, respond: "_manual" },
+          { text: /commit SHA or tag/, respond: "main" },
+          { confirm: /Clone bare-repo/, respond: true },
+          { confirm: /Save target_repo/, respond: true },
+        )
+        .runCli("patchy init --force");
 
       expect(result).toSucceed();
       expect(result).toHaveOutput("Successfully cloned repository");
@@ -531,28 +433,26 @@ describe("patchy init", () => {
         { type: "confirm", message: expect.stringMatching(/Save target_repo/) },
       ]);
 
-      // Verify clone actually happened
-      const clonedDir = path.join(tmpDir, "clones", "bare-repo");
+      const clonedDir = path.join(ctx.tmpDir, "clones", "bare-repo");
       expect(existsSync(clonedDir)).toBe(true);
     });
 
     it("should show manual clone instructions when user declines clone prompt", async () => {
-      const tmpDir = generateTmpDir();
+      const ctx = await scenario({ noConfig: true });
 
-      const { result, prompts } = await runCliWithPrompts(
-        "patchy init --force",
-        tmpDir,
-      )
-        .on({ text: /patch files/, respond: acceptDefault })
-        .on({ text: /cloned repos/, respond: acceptDefault })
-        .on({ confirm: /gitignore/, respond: true })
-        .on({
-          text: /repository URL/,
-          respond: "https://github.com/example/repo.git",
-        })
-        .on({ text: /[Bb]ase revision/, respond: acceptDefault })
-        .on({ confirm: /Clone repo/, respond: false })
-        .run();
+      const { result, prompts } = await ctx
+        .withPrompts(
+          { text: /patch files/, respond: acceptDefault },
+          { text: /cloned repos/, respond: acceptDefault },
+          { confirm: /gitignore/, respond: true },
+          {
+            text: /repository URL/,
+            respond: "https://github.com/example/repo.git",
+          },
+          { text: /[Bb]ase revision/, respond: acceptDefault },
+          { confirm: /Clone repo/, respond: false },
+        )
+        .runCli("patchy init --force");
 
       expect(result).toSucceed();
       expect(result).toHaveOutput("patchy repo clone");
@@ -574,55 +474,56 @@ describe("patchy init", () => {
     });
 
     it("should allow selecting None for upstream branch", async () => {
-      const tmpDir = generateTmpDir();
-      const bareRepoDir = path.join(tmpDir, "bare-repo.git");
+      const ctx = await scenario({ noConfig: true });
+      const bareRepoDir = path.join(ctx.tmpDir, "bare-repo.git");
       mkdirSync(bareRepoDir, { recursive: true });
       await initBareRepoWithCommit(bareRepoDir);
       const bareRepoUrl = `file://${bareRepoDir}`;
 
-      const { result } = await runCliWithPrompts("patchy init --force", tmpDir)
-        .on({ text: /patch files/, respond: acceptDefault })
-        .on({ text: /cloned repos/, respond: acceptDefault })
-        .on({ confirm: /gitignore/, respond: true })
-        .on({ text: /repository URL/, respond: bareRepoUrl })
-        .on({ select: /upstream branch/, respond: "_none" })
-        .on({ select: /base revision/, respond: "_manual" })
-        .on({ text: /commit SHA or tag/, respond: "abc123" })
-        .on({ confirm: /Clone bare-repo/, respond: false })
-        .run();
+      const { result } = await ctx
+        .withPrompts(
+          { text: /patch files/, respond: acceptDefault },
+          { text: /cloned repos/, respond: acceptDefault },
+          { confirm: /gitignore/, respond: true },
+          { text: /repository URL/, respond: bareRepoUrl },
+          { select: /upstream branch/, respond: "_none" },
+          { select: /base revision/, respond: "_manual" },
+          { text: /commit SHA or tag/, respond: "abc123" },
+          { confirm: /Clone bare-repo/, respond: false },
+        )
+        .runCli("patchy init --force");
 
       expect(result).toSucceed();
 
-      const configPath = path.join(tmpDir, "patchy.json");
+      const configPath = path.join(ctx.tmpDir, "patchy.json");
       const config = JSON.parse(readFileSync(configPath, "utf-8"));
       expect(config).not.toHaveProperty("upstream_branch");
       expect(config.base_revision).toBe("abc123");
     });
 
     it("should save selected branch as upstream_branch", async () => {
-      const tmpDir = generateTmpDir();
-      const bareRepoDir = path.join(tmpDir, "bare-repo.git");
+      const ctx = await scenario({ noConfig: true });
+      const bareRepoDir = path.join(ctx.tmpDir, "bare-repo.git");
       mkdirSync(bareRepoDir, { recursive: true });
       await initBareRepoWithCommit(bareRepoDir);
       const bareRepoUrl = `file://${bareRepoDir}`;
 
-      const { result, prompts } = await runCliWithPrompts(
-        "patchy init --force",
-        tmpDir,
-      )
-        .on({ text: /patch files/, respond: acceptDefault })
-        .on({ text: /cloned repos/, respond: acceptDefault })
-        .on({ confirm: /gitignore/, respond: true })
-        .on({ text: /repository URL/, respond: bareRepoUrl })
-        .on({ select: /upstream branch/, respond: "main" })
-        .on({ select: /base revision/, respond: "_manual" })
-        .on({ text: /commit SHA or tag/, respond: "abc123" })
-        .on({ confirm: /Clone bare-repo/, respond: false })
-        .run();
+      const { result, prompts } = await ctx
+        .withPrompts(
+          { text: /patch files/, respond: acceptDefault },
+          { text: /cloned repos/, respond: acceptDefault },
+          { confirm: /gitignore/, respond: true },
+          { text: /repository URL/, respond: bareRepoUrl },
+          { select: /upstream branch/, respond: "main" },
+          { select: /base revision/, respond: "_manual" },
+          { text: /commit SHA or tag/, respond: "abc123" },
+          { confirm: /Clone bare-repo/, respond: false },
+        )
+        .runCli("patchy init --force");
 
       expect(result).toSucceed();
 
-      const configPath = path.join(tmpDir, "patchy.json");
+      const configPath = path.join(ctx.tmpDir, "patchy.json");
       const config = JSON.parse(readFileSync(configPath, "utf-8"));
       expect(config.upstream_branch).toBe("main");
       expect(config.base_revision).toBe("abc123");
@@ -634,29 +535,28 @@ describe("patchy init", () => {
     });
 
     it("should save selected tag as base_revision", async () => {
-      const tmpDir = generateTmpDir();
-      const bareRepoDir = path.join(tmpDir, "bare-repo.git");
+      const ctx = await scenario({ noConfig: true });
+      const bareRepoDir = path.join(ctx.tmpDir, "bare-repo.git");
       mkdirSync(bareRepoDir, { recursive: true });
       await initBareRepoWithCommit(bareRepoDir);
       const tagSha = await createTagInBareRepo(bareRepoDir, "v1.0.0");
       const bareRepoUrl = `file://${bareRepoDir}`;
 
-      const { result, prompts } = await runCliWithPrompts(
-        "patchy init --force",
-        tmpDir,
-      )
-        .on({ text: /patch files/, respond: acceptDefault })
-        .on({ text: /cloned repos/, respond: acceptDefault })
-        .on({ confirm: /gitignore/, respond: true })
-        .on({ text: /repository URL/, respond: bareRepoUrl })
-        .on({ select: /upstream branch/, respond: "_none" })
-        .on({ select: /base revision/, respond: tagSha })
-        .on({ confirm: /Clone bare-repo/, respond: false })
-        .run();
+      const { result, prompts } = await ctx
+        .withPrompts(
+          { text: /patch files/, respond: acceptDefault },
+          { text: /cloned repos/, respond: acceptDefault },
+          { confirm: /gitignore/, respond: true },
+          { text: /repository URL/, respond: bareRepoUrl },
+          { select: /upstream branch/, respond: "_none" },
+          { select: /base revision/, respond: tagSha },
+          { confirm: /Clone bare-repo/, respond: false },
+        )
+        .runCli("patchy init --force");
 
       expect(result).toSucceed();
 
-      const configPath = path.join(tmpDir, "patchy.json");
+      const configPath = path.join(ctx.tmpDir, "patchy.json");
       const config = JSON.parse(readFileSync(configPath, "utf-8"));
       expect(config.base_revision).toBe(tagSha);
 
@@ -667,22 +567,21 @@ describe("patchy init", () => {
     });
 
     it("should fallback to text input when remote fetch fails", async () => {
-      const tmpDir = generateTmpDir();
+      const ctx = await scenario({ noConfig: true });
 
-      const { result, prompts } = await runCliWithPrompts(
-        "patchy init --force",
-        tmpDir,
-      )
-        .on({ text: /patch files/, respond: acceptDefault })
-        .on({ text: /cloned repos/, respond: acceptDefault })
-        .on({ confirm: /gitignore/, respond: true })
-        .on({
-          text: /repository URL/,
-          respond: "/nonexistent/invalid/path",
-        })
-        .on({ text: /[Bb]ase revision/, respond: "main" })
-        .on({ confirm: /Clone/, respond: false })
-        .run();
+      const { result, prompts } = await ctx
+        .withPrompts(
+          { text: /patch files/, respond: acceptDefault },
+          { text: /cloned repos/, respond: acceptDefault },
+          { confirm: /gitignore/, respond: true },
+          {
+            text: /repository URL/,
+            respond: "/nonexistent/invalid/path",
+          },
+          { text: /[Bb]ase revision/, respond: "main" },
+          { confirm: /Clone/, respond: false },
+        )
+        .runCli("patchy init --force");
 
       expect(result).toSucceed();
 
@@ -692,24 +591,21 @@ describe("patchy init", () => {
       expect(baseRevisionPrompt).toBeDefined();
       expect(baseRevisionPrompt?.type).toBe("text");
 
-      const configPath = path.join(tmpDir, "patchy.json");
+      const configPath = path.join(ctx.tmpDir, "patchy.json");
       const config = JSON.parse(readFileSync(configPath, "utf-8"));
       expect(config.base_revision).toBe("main");
     });
   });
 
   it("should show manual clone instructions in non-interactive mode", async () => {
-    const tmpDir = generateTmpDir();
+    const ctx = await scenario({ noConfig: true });
 
-    const result = await runCli(
+    const { result } = await ctx.runCli(
       `patchy init --force --patches-dir patches --clones-dir clones --source-repo https://github.com/example/repo.git --base-revision main --gitignore`,
-      tmpDir,
     );
 
     expect(result).toSucceed();
-    // In non-interactive mode, clone prompt is skipped and manual instructions are shown
     expect(result).toHaveOutput("patchy repo clone");
-    // Should NOT contain the next-steps message since clone wasn't run
     expect(result).not.toHaveOutput("patchy generate");
   });
 });

@@ -2,7 +2,6 @@ import type { Readable, Writable } from "node:stream";
 import { run } from "@stricli/core";
 import { app } from "~/app";
 import type { LocalContext } from "~/context";
-import type { CLIResult } from "./cli-types";
 import { stabilizeTempDir } from "./fs-test-utils";
 import {
   acceptDefault,
@@ -10,8 +9,8 @@ import {
   createPromptBuilder,
   type PromptBuilder,
 } from "./prompt-builder";
-
 import type { PromptHandler, RecordedPrompt } from "./prompt-testing-types";
+import type { CLIResult } from "./testing-types";
 
 type PromptOptions = {
   promptInput?: Readable;
@@ -34,6 +33,13 @@ export const runCli = async (
   let stderr = "";
   let exitCode = 0;
 
+  class MockProcessExit extends Error {
+    constructor(public code: number) {
+      super(`Process exited with code ${code}`);
+      this.name = "MockProcessExit";
+    }
+  }
+
   const mockProcess = {
     stdout: {
       write: (s: string) => {
@@ -46,8 +52,9 @@ export const runCli = async (
       },
     },
     env: { ...process.env, NO_COLOR: "1", FORCE_COLOR: "0", ...options.env },
-    exit: (code: number) => {
+    exit: (code: number): never => {
       exitCode = code;
+      throw new MockProcessExit(code);
     },
     cwd: () => cwd,
   };
@@ -63,16 +70,24 @@ export const runCli = async (
 
   try {
     await run(app, args, context);
-  } catch {
-    if (exitCode === 0) {
+  } catch (error) {
+    if (error instanceof MockProcessExit) {
+      // Expected exit - exitCode already set
+    } else if (exitCode === 0) {
       exitCode = 1;
     }
   }
 
+  // Clean up stderr: remove MockProcessExit error messages that stricli captures
+  const cleanedStderr = stderr
+    .replace(/\n?Error: MockProcessExit:[\s\S]*$/, "")
+    .replace(/\nCommand failed, MockProcessExit:[\s\S]*$/, "")
+    .replace(/^Command failed, MockProcessExit:[\s\S]*$/, "");
+
   // Stabilize output by replacing temp dir paths with <TEST_DIR> for snapshot consistency
   return {
     stdout: stabilizeTempDir(stdout.trim()) ?? "",
-    stderr: stabilizeTempDir(stderr.trim()) ?? "",
+    stderr: stabilizeTempDir(cleanedStderr.trim()) ?? "",
     exitCode,
     failed: exitCode !== 0,
     command,

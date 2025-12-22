@@ -1,4 +1,4 @@
-import type { CLIResult } from "./cli-types";
+import type { CLIResult } from "./testing-types";
 
 export const acceptDefault = Symbol("acceptDefault");
 export const cancel = Symbol("cancel");

@@ -7,6 +7,7 @@ import {
   hasAbsoluteTargetRepo,
 } from "~/cli-fields";
 import type { LocalContext } from "~/context";
+import { exit } from "~/lib/exit";
 import { ensureDirExists, formatPathForDisplay, removeFile } from "~/lib/fs";
 import type { GenerateFlags } from "./flags";
 import { generateDiff, getGitChanges } from "./git-changes";
@@ -32,9 +33,7 @@ export default async function (
   });
 
   if (!result.success) {
-    this.process.stderr.write(result.error);
-    this.process.exit(1);
-    return;
+    return exit(this, { exitCode: 1, stderr: result.error });
   }
 
   const config = result.mergedConfig;

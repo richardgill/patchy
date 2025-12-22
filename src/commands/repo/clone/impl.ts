@@ -10,6 +10,7 @@ import {
 } from "~/cli-fields";
 import type { LocalContext } from "~/context";
 import { assertDefined } from "~/lib/assert";
+import { exit } from "~/lib/exit";
 import {
   ensureDirExists,
   findAvailableDirName,
@@ -106,9 +107,7 @@ export default async function (
   });
 
   if (!result.success) {
-    this.process.stderr.write(result.error);
-    this.process.exit(1);
-    return;
+    return exit(this, { exitCode: 1, stderr: result.error });
   }
 
   const config = result.mergedConfig;
@@ -118,34 +117,33 @@ export default async function (
   const verbose = config.verbose;
 
   if (!config.clones_dir) {
-    this.process.stderr.write(
-      chalk.red(
-        `Missing required parameter: clones_dir\nSet --clones-dir flag, ${FLAG_METADATA.clones_dir.env} env var, or clones_dir in config file.\n`,
+    return exit(this, {
+      exitCode: 1,
+      stderr: chalk.red(
+        `Missing required parameter: clones_dir\nSet --clones-dir flag, ${FLAG_METADATA.clones_dir.env} env var, or clones_dir in config file.`,
       ),
-    );
-    this.process.exit(1);
-    return;
+    });
   }
 
   const clonesDir = resolvePath(this.cwd, config.clones_dir);
 
   if (!isValidGitUrl(repoUrl)) {
-    this.process.stderr.write(
-      chalk.red(
-        `Invalid Git URL: ${repoUrl}\nExample: https://github.com/user/repo, git@github.com:user/repo.git, or /path/to/local/repo\n`,
+    return exit(this, {
+      exitCode: 1,
+      stderr: chalk.red(
+        `Invalid Git URL: ${repoUrl}\nExample: https://github.com/user/repo, git@github.com:user/repo.git, or /path/to/local/repo`,
       ),
-    );
-    this.process.exit(1);
-    return;
+    });
   }
 
   const repoName = extractRepoName(repoUrl);
   if (!repoName) {
-    this.process.stderr.write(
-      chalk.red(`Could not extract repository name from URL: ${repoUrl}\n`),
-    );
-    this.process.exit(1);
-    return;
+    return exit(this, {
+      exitCode: 1,
+      stderr: chalk.red(
+        `Could not extract repository name from URL: ${repoUrl}`,
+      ),
+    });
   }
 
   const targetDirName = findAvailableDirName(clonesDir, repoName);
@@ -187,11 +185,10 @@ export default async function (
     await git.clone(resolvedRepoUrl, targetDirName);
   } catch (error) {
     const message = error instanceof Error ? error.message : String(error);
-    this.process.stderr.write(
-      chalk.red(`Failed to clone repository: ${message}\n`),
-    );
-    this.process.exit(1);
-    return;
+    return exit(this, {
+      exitCode: 1,
+      stderr: chalk.red(`Failed to clone repository: ${message}`),
+    });
   }
 
   if (baseRevision) {
@@ -201,13 +198,12 @@ export default async function (
       await repoGit.checkout(baseRevision);
     } catch (error) {
       const message = error instanceof Error ? error.message : String(error);
-      this.process.stderr.write(
-        chalk.red(
-          `Failed to checkout base_revision "${baseRevision}": ${message}\n`,
+      return exit(this, {
+        exitCode: 1,
+        stderr: chalk.red(
+          `Failed to checkout base_revision "${baseRevision}": ${message}`,
         ),
-      );
-      this.process.exit(1);
-      return;
+      });
     }
   }
 

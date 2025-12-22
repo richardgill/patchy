@@ -1,7 +1,9 @@
+import { randomUUID } from "node:crypto";
 import { mkdirSync, rmSync, writeFileSync } from "node:fs";
 import { writeFile } from "node:fs/promises";
 import { join } from "node:path";
 import { createTestGitClient } from "~/lib/git";
+import type { FileMap } from "./testing-types";
 
 export const initGitRepo = async (repoDir: string): Promise<void> => {
   const git = createTestGitClient(repoDir);
@@ -26,12 +28,11 @@ export const initGitRepoWithCommit = async (
 
 export const initBareRepoWithCommit = async (
   bareRepoDir: string,
-  filename = "initial.txt",
-  content = "initial content\n",
+  files: FileMap = { "initial.txt": "initial content\n" },
 ): Promise<void> => {
   const git = createTestGitClient(bareRepoDir);
   await git.init(true);
-  const tmpWorkDir = join(bareRepoDir, "..", `tmp-work-${Date.now()}`);
+  const tmpWorkDir = join(bareRepoDir, "..", `tmp-work-${randomUUID()}`);
   mkdirSync(tmpWorkDir, { recursive: true });
   const workGit = createTestGitClient(tmpWorkDir);
   await workGit.init();
@@ -39,7 +40,9 @@ export const initBareRepoWithCommit = async (
   await workGit.addConfig("user.name", "Test User");
   await workGit.addConfig("init.defaultBranch", "main");
   await workGit.checkout(["-b", "main"]);
-  writeFileSync(join(tmpWorkDir, filename), content);
+  for (const [filename, content] of Object.entries(files)) {
+    writeFileSync(join(tmpWorkDir, filename), content as string);
+  }
   await workGit.add(".");
   await workGit.commit("initial commit");
   await workGit.addRemote("origin", bareRepoDir);
@@ -76,7 +79,7 @@ export const pushBranchToBareRepo = async (
   bareRepoDir: string,
   branchName: string,
 ): Promise<string> => {
-  const tmpWorkDir = join(bareRepoDir, "..", `tmp-work-${Date.now()}`);
+  const tmpWorkDir = join(bareRepoDir, "..", `tmp-work-${randomUUID()}`);
   mkdirSync(tmpWorkDir, { recursive: true });
   const workGit = createTestGitClient(tmpWorkDir);
   await workGit.clone(bareRepoDir, ".");
@@ -99,7 +102,7 @@ export const createTagInBareRepo = async (
   bareRepoDir: string,
   tagName: string,
 ): Promise<string> => {
-  const tmpWorkDir = join(bareRepoDir, "..", `tmp-work-tag-${Date.now()}`);
+  const tmpWorkDir = join(bareRepoDir, "..", `tmp-work-tag-${randomUUID()}`);
   mkdirSync(tmpWorkDir, { recursive: true });
   const workGit = createTestGitClient(tmpWorkDir);
   await workGit.clone(bareRepoDir, ".");
