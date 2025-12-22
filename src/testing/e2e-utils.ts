@@ -2,7 +2,6 @@ import type { Readable, Writable } from "node:stream";
 import { run } from "@stricli/core";
 import { app } from "~/app";
 import type { LocalContext } from "~/context";
-import type { CLIResult } from "./cli-types";
 import { stabilizeTempDir } from "./fs-test-utils";
 import {
   acceptDefault,
@@ -10,8 +9,8 @@ import {
   createPromptBuilder,
   type PromptBuilder,
 } from "./prompt-builder";
-
 import type { PromptHandler, RecordedPrompt } from "./prompt-testing-types";
+import type { CLIResult } from "./testing-types";
 
 type PromptOptions = {
   promptInput?: Readable;

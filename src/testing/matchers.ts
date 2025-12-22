@@ -1,6 +1,6 @@
 import { expect } from "bun:test";
 import { existsSync, readFileSync } from "node:fs";
-import type { CLIResult } from "./cli-types";
+import type { CLIResult } from "./testing-types";
 
 export const cliMatchers = {
   toSucceed(expected: unknown) {

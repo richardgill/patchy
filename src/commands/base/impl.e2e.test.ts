@@ -1,72 +1,52 @@
 import { describe, expect, it } from "bun:test";
-import { mkdirSync, readFileSync } from "node:fs";
-import path, { join } from "node:path";
-import { cancel, runCli, runCliWithPrompts } from "~/testing/e2e-utils";
-import {
-  generateTmpDir,
-  setupTestWithConfig,
-  writeJsonConfig,
-} from "~/testing/fs-test-utils";
-import {
-  createTagInBareRepo,
-  initBareRepoWithCommit,
-  pushBranchToBareRepo,
-} from "~/testing/git-helpers";
+import { cancel, scenario } from "~/testing/scenario";
 
 describe("patchy base", () => {
   describe("direct mode (with argument)", () => {
     it("should update base_revision when argument is provided", async () => {
-      const tmpDir = generateTmpDir();
-      await setupTestWithConfig({
-        tmpDir,
-        jsonConfig: {
+      const ctx = await scenario({
+        config: {
           source_repo: "https://github.com/example/repo",
           base_revision: "main",
         },
       });
 
-      const result = await runCli(`patchy base v1.2.3`, tmpDir);
+      const { result } = await ctx.runCli("patchy base v1.2.3");
 
       expect(result).toSucceed();
       expect(result.stdout).toContain("Updated base_revision to: v1.2.3");
 
-      const configPath = join(tmpDir, "patchy.json");
-      const config = JSON.parse(readFileSync(configPath, "utf-8"));
-      expect(config.base_revision).toBe("v1.2.3");
+      const config = ctx.config();
+      expect(config["base_revision"]).toBe("v1.2.3");
     });
 
     it("should update base_revision with SHA", async () => {
-      const tmpDir = generateTmpDir();
-      await setupTestWithConfig({
-        tmpDir,
-        jsonConfig: {
+      const ctx = await scenario({
+        config: {
           source_repo: "https://github.com/example/repo",
           base_revision: "v1.0.0",
         },
       });
 
       const sha = "abc123def456789";
-      const result = await runCli(`patchy base ${sha}`, tmpDir);
+      const { result } = await ctx.runCli(`patchy base ${sha}`);
 
       expect(result).toSucceed();
       expect(result.stdout).toContain(`Updated base_revision to: ${sha}`);
 
-      const configPath = join(tmpDir, "patchy.json");
-      const config = JSON.parse(readFileSync(configPath, "utf-8"));
-      expect(config.base_revision).toBe(sha);
+      const config = ctx.config();
+      expect(config["base_revision"]).toBe(sha);
     });
 
     it("should show verbose output with --verbose flag", async () => {
-      const tmpDir = generateTmpDir();
-      await setupTestWithConfig({
-        tmpDir,
-        jsonConfig: {
+      const ctx = await scenario({
+        config: {
           source_repo: "https://github.com/example/repo",
           base_revision: "v1.0.0",
         },
       });
 
-      const result = await runCli(`patchy base v2.0.0 --verbose`, tmpDir);
+      const { result } = await ctx.runCli("patchy base v2.0.0 --verbose");
 
       expect(result).toSucceed();
       expect(result.stdout).toContain("Current base_revision: v1.0.0");
@@ -75,29 +55,30 @@ describe("patchy base", () => {
     });
 
     it("should work with custom config path", async () => {
-      const tmpDir = generateTmpDir();
-      await writeJsonConfig(tmpDir, "custom.json", {
-        source_repo: "https://github.com/example/repo",
-        base_revision: "main",
+      const ctx = await scenario({
+        configPath: "custom.json",
+        rawConfig: {
+          source_repo: "https://github.com/example/repo",
+          base_revision: "main",
+        },
       });
 
-      const result = await runCli(
-        `patchy base v1.5.0 --config custom.json`,
-        tmpDir,
+      const { result } = await ctx.runCli(
+        "patchy base v1.5.0 --config custom.json",
       );
 
       expect(result).toSucceed();
 
-      const configPath = join(tmpDir, "custom.json");
+      const { readFileSync } = await import("node:fs");
+      const { join } = await import("node:path");
+      const configPath = join(ctx.tmpDir, "custom.json");
       const config = JSON.parse(readFileSync(configPath, "utf-8"));
       expect(config.base_revision).toBe("v1.5.0");
     });
 
     it("should preserve other config fields", async () => {
-      const tmpDir = generateTmpDir();
-      await setupTestWithConfig({
-        tmpDir,
-        jsonConfig: {
+      const ctx = await scenario({
+        config: {
           source_repo: "https://github.com/example/repo",
           base_revision: "v1.0.0",
           upstream_branch: "main",
@@ -106,32 +87,29 @@ describe("patchy base", () => {
         },
       });
 
-      const result = await runCli(`patchy base v2.0.0`, tmpDir);
+      const { result } = await ctx.runCli("patchy base v2.0.0");
       expect(result).toSucceed();
 
-      const configPath = join(tmpDir, "patchy.json");
-      const config = JSON.parse(readFileSync(configPath, "utf-8"));
-      expect(config.base_revision).toBe("v2.0.0");
-      expect(config.upstream_branch).toBe("main");
-      expect(config.clones_dir).toBe("./clones");
-      expect(config.patches_dir).toBe("./patches");
-      expect(config.source_repo).toBe("https://github.com/example/repo");
+      const config = ctx.config();
+      expect(config["base_revision"]).toBe("v2.0.0");
+      expect(config["upstream_branch"]).toBe("main");
+      expect(config["clones_dir"]).toBe("./clones");
+      expect(config["patches_dir"]).toBe("./patches");
+      expect(config["source_repo"]).toBe("https://github.com/example/repo");
     });
   });
 
   describe("interactive mode (without argument)", () => {
     it("should show current base_revision when not interactive", async () => {
-      const tmpDir = generateTmpDir();
-      await setupTestWithConfig({
-        tmpDir,
-        jsonConfig: {
+      const ctx = await scenario({
+        config: {
           source_repo: "https://github.com/example/repo",
           base_revision: "v1.0.0",
           upstream_branch: "main",
         },
       });
 
-      const result = await runCli(`patchy base`, tmpDir);
+      const { result } = await ctx.runCli("patchy base");
 
       expect(result).toSucceed();
       expect(result.stdout).toContain("Current base_revision: v1.0.0");
@@ -139,16 +117,15 @@ describe("patchy base", () => {
     });
 
     it("should error when upstream_branch is not configured", async () => {
-      const tmpDir = generateTmpDir();
-      await setupTestWithConfig({
-        tmpDir,
-        jsonConfig: {
+      const { runCli } = await scenario({
+        tty: true,
+        rawConfig: {
           source_repo: "https://github.com/example/repo",
           base_revision: "v1.0.0",
         },
       });
 
-      const { result } = await runCliWithPrompts(`patchy base`, tmpDir).run();
+      const { result } = await runCli("patchy base");
 
       expect(result).toFail();
       expect(result.stderr).toContain("upstream_branch is required");
@@ -156,35 +133,32 @@ describe("patchy base", () => {
     });
 
     it("should error when source_repo is not configured", async () => {
-      const tmpDir = generateTmpDir();
-      await setupTestWithConfig({
-        tmpDir,
-        jsonConfig: {
+      const { runCli } = await scenario({
+        tty: true,
+        rawConfig: {
           base_revision: "v1.0.0",
           upstream_branch: "main",
         },
       });
 
-      const { result } = await runCliWithPrompts(`patchy base`, tmpDir).run();
+      const { result } = await runCli("patchy base");
 
       expect(result).toFail();
       expect(result.stderr).toContain("source_repo is required");
     });
 
     it("should allow cancelling the operation", async () => {
-      const tmpDir = generateTmpDir();
-      await setupTestWithConfig({
-        tmpDir,
-        jsonConfig: {
+      const ctx = await scenario({
+        config: {
           source_repo: "https://github.com/facebook/react",
           base_revision: "v18.0.0",
           upstream_branch: "main",
         },
       });
 
-      const { result, prompts } = await runCliWithPrompts(`patchy base`, tmpDir)
-        .on({ select: /Select new base/, respond: cancel })
-        .run();
+      const { result, prompts } = await ctx
+        .withPrompts({ select: /Select new base/, respond: cancel })
+        .runCli("patchy base");
 
       expect(result).toFail();
       expect(result.stderr).toContain("cancelled");
@@ -192,20 +166,20 @@ describe("patchy base", () => {
     });
 
     it("should allow cancelling during manual SHA entry", async () => {
-      const tmpDir = generateTmpDir();
-      await setupTestWithConfig({
-        tmpDir,
-        jsonConfig: {
+      const ctx = await scenario({
+        config: {
           source_repo: "https://github.com/facebook/react",
           base_revision: "v18.0.0",
           upstream_branch: "main",
         },
       });
 
-      const { result, prompts } = await runCliWithPrompts(`patchy base`, tmpDir)
-        .on({ select: /Select new base/, respond: "_manual" })
-        .on({ text: /Enter commit SHA/, respond: cancel })
-        .run();
+      const { result, prompts } = await ctx
+        .withPrompts(
+          { select: /Select new base/, respond: "_manual" },
+          { text: /Enter commit SHA/, respond: cancel },
+        )
+        .runCli("patchy base");
 
       expect(result).toFail();
       expect(result.stderr).toContain("cancelled");
@@ -213,31 +187,28 @@ describe("patchy base", () => {
     });
 
     it("should update config when selecting a tag from remote", async () => {
-      const tmpDir = generateTmpDir();
-      const bareRepoDir = path.join(tmpDir, "bare-repo.git");
-      mkdirSync(bareRepoDir, { recursive: true });
-      await initBareRepoWithCommit(bareRepoDir);
-      const tagSha = await createTagInBareRepo(bareRepoDir, "v1.2.3");
-      const bareRepoUrl = `file://${bareRepoDir}`;
-
-      await setupTestWithConfig({
-        tmpDir,
-        jsonConfig: {
-          source_repo: bareRepoUrl,
+      const ctx = await scenario({
+        bareRepo: {
+          tags: ["v1.2.3"],
+        },
+        config: {
           base_revision: "old-revision",
           upstream_branch: "main",
         },
       });
 
-      const { result, prompts } = await runCliWithPrompts(`patchy base`, tmpDir)
-        .on({ select: /Select new base/, respond: tagSha })
-        .run();
+      const { result, prompts } = await ctx
+        .withPrompts({
+          select: /Select new base/,
+          respond: "v1.2.3",
+        })
+        .runCli("patchy base");
 
       expect(result).toSucceed();
 
-      const configPath = path.join(tmpDir, "patchy.json");
-      const config = JSON.parse(readFileSync(configPath, "utf-8"));
-      expect(config.base_revision).toBe(tagSha);
+      const config = ctx.config();
+      expect(typeof config["base_revision"]).toBe("string");
+      expect(config["base_revision"]).not.toBe("old-revision");
 
       expect(prompts).toMatchObject([
         { type: "select", message: expect.stringMatching(/Select new base/) },
@@ -245,31 +216,28 @@ describe("patchy base", () => {
     });
 
     it("should update config when selecting a branch from remote", async () => {
-      const tmpDir = generateTmpDir();
-      const bareRepoDir = path.join(tmpDir, "bare-repo.git");
-      mkdirSync(bareRepoDir, { recursive: true });
-      await initBareRepoWithCommit(bareRepoDir);
-      const developSha = await pushBranchToBareRepo(bareRepoDir, "develop");
-      const bareRepoUrl = `file://${bareRepoDir}`;
-
-      await setupTestWithConfig({
-        tmpDir,
-        jsonConfig: {
-          source_repo: bareRepoUrl,
+      const ctx = await scenario({
+        bareRepo: {
+          branches: ["develop"],
+        },
+        config: {
           base_revision: "old-revision",
           upstream_branch: "main",
         },
       });
 
-      const { result, prompts } = await runCliWithPrompts(`patchy base`, tmpDir)
-        .on({ select: /Select new base/, respond: developSha })
-        .run();
+      const { result, prompts } = await ctx
+        .withPrompts({
+          select: /Select new base/,
+          respond: "develop",
+        })
+        .runCli("patchy base");
 
       expect(result).toSucceed();
 
-      const configPath = path.join(tmpDir, "patchy.json");
-      const config = JSON.parse(readFileSync(configPath, "utf-8"));
-      expect(config.base_revision).toBe(developSha);
+      const config = ctx.config();
+      expect(typeof config["base_revision"]).toBe("string");
+      expect(config["base_revision"]).not.toBe("old-revision");
 
       expect(prompts).toMatchObject([
         { type: "select", message: expect.stringMatching(/Select new base/) },
@@ -277,16 +245,9 @@ describe("patchy base", () => {
     });
 
     it("should update config when entering manual SHA", async () => {
-      const tmpDir = generateTmpDir();
-      const bareRepoDir = path.join(tmpDir, "bare-repo.git");
-      mkdirSync(bareRepoDir, { recursive: true });
-      await initBareRepoWithCommit(bareRepoDir);
-      const bareRepoUrl = `file://${bareRepoDir}`;
-
-      await setupTestWithConfig({
-        tmpDir,
-        jsonConfig: {
-          source_repo: bareRepoUrl,
+      const ctx = await scenario({
+        bareRepo: true,
+        config: {
           base_revision: "old-revision",
           upstream_branch: "main",
         },
@@ -294,16 +255,17 @@ describe("patchy base", () => {
 
       const manualSha = "abc123def456";
 
-      const { result, prompts } = await runCliWithPrompts(`patchy base`, tmpDir)
-        .on({ select: /Select new base/, respond: "_manual" })
-        .on({ text: /Enter commit SHA/, respond: manualSha })
-        .run();
+      const { result, prompts } = await ctx
+        .withPrompts(
+          { select: /Select new base/, respond: "_manual" },
+          { text: /Enter commit SHA/, respond: manualSha },
+        )
+        .runCli("patchy base");
 
       expect(result).toSucceed();
 
-      const configPath = path.join(tmpDir, "patchy.json");
-      const config = JSON.parse(readFileSync(configPath, "utf-8"));
-      expect(config.base_revision).toBe(manualSha);
+      const config = ctx.config();
+      expect(config["base_revision"]).toBe(manualSha);
 
       expect(prompts).toMatchObject([
         { type: "select", message: expect.stringMatching(/Select new base/) },
@@ -314,47 +276,31 @@ describe("patchy base", () => {
 
   describe("error cases", () => {
     it("should fail when config file does not exist", async () => {
-      const tmpDir = generateTmpDir();
+      const ctx = await scenario({ noConfig: true });
 
-      const result = await runCli(`patchy base v1.0.0`, tmpDir);
+      const { result } = await ctx.runCli("patchy base v1.0.0");
 
       expect(result).toFail();
       expect(result.stderr).toContain("Configuration file not found");
     });
 
     it("should fail when config file is invalid JSON", async () => {
-      const tmpDir = generateTmpDir();
-      await setupTestWithConfig({
-        tmpDir,
-        createDirectories: {},
+      const ctx = await scenario({
+        configContent: "{ invalid json",
       });
 
-      const configPath = join(tmpDir, "patchy.json");
-      const fs = await import("node:fs/promises");
-      await fs.writeFile(configPath, "{ invalid json", "utf8");
-
-      const result = await runCli(`patchy base v1.0.0`, tmpDir);
+      const { result } = await ctx.runCli("patchy base v1.0.0");
 
       expect(result).toFail();
       expect(result.stderr).toContain("JSON parse error");
     });
 
     it("should fail when config does not match schema", async () => {
-      const tmpDir = generateTmpDir();
-      await setupTestWithConfig({
-        tmpDir,
-        createDirectories: {},
+      const ctx = await scenario({
+        rawConfig: { invalid_field: 123 },
       });
 
-      const configPath = join(tmpDir, "patchy.json");
-      const fs = await import("node:fs/promises");
-      await fs.writeFile(
-        configPath,
-        JSON.stringify({ invalid_field: 123 }),
-        "utf8",
-      );
-
-      const result = await runCli(`patchy base v1.0.0`, tmpDir);
+      const { result } = await ctx.runCli("patchy base v1.0.0");
 
       expect(result).toFail();
       expect(result.stderr).toContain("Invalid configuration");

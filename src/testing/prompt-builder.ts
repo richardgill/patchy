@@ -1,4 +1,3 @@
-import type { CLIResult } from "./cli-types";
 import {
   acceptDefault,
   cancel,
@@ -7,6 +6,7 @@ import {
   type PromptResponse,
   type RecordedPrompt,
 } from "./prompt-testing-types";
+import type { CLIResult } from "./testing-types";
 
 type TextMatcher = {
   type: "text";

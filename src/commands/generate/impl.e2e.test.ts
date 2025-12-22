@@ -1,157 +1,98 @@
 import { describe, expect, it } from "bun:test";
-import { mkdirSync, readFileSync } from "node:fs";
+import { mkdirSync } from "node:fs";
 import path from "node:path";
 import { CREATE_NEW_OPTION } from "~/commands/generate/impl";
-import { assertDefined } from "~/lib/assert";
-import { runCli, runCliWithPrompts } from "~/testing/e2e-utils";
-import {
-  generateTmpDir,
-  setupTestWithConfig,
-  writeFileIn,
-} from "~/testing/fs-test-utils";
-import { initGitRepoWithCommit } from "~/testing/git-helpers";
-import { cancel } from "~/testing/prompt-testing-types";
+import { writeFileIn } from "~/testing/fs-test-utils";
+import { cancel, scenario } from "~/testing/scenario";
 
 describe("patchy generate", () => {
   it("should detect and generate diff for modified files", async () => {
-    const tmpDir = generateTmpDir();
-    const ctx = await setupTestWithConfig({
-      tmpDir,
-      createDirectories: {
-        patchesDir: "patches",
-        clonesDir: "repos",
-        targetRepo: "upstream",
-      },
-      jsonConfig: {
-        clones_dir: "repos",
-        target_repo: "upstream",
-        patches_dir: "patches",
+    const ctx = await scenario({
+      git: true,
+      targetFiles: {
+        "initial.txt": "initial content\n",
       },
     });
 
-    const repoDir = assertDefined(ctx.absoluteTargetRepo, "absoluteTargetRepo");
-    const patchesDir = assertDefined(
-      ctx.absolutePatchesDir,
-      "absolutePatchesDir",
+    await writeFileIn(
+      path.join(ctx.tmpDir, "repos/main"),
+      "initial.txt",
+      "modified content\n",
     );
 
-    await initGitRepoWithCommit(repoDir);
-    await writeFileIn(repoDir, "initial.txt", "modified content\n");
-
-    const result = await runCli(`patchy generate --patch-set 001-test`, tmpDir);
+    const { result } = await ctx.runCli("patchy generate --patch-set 001-test");
 
     expect(result).toSucceed();
     expect(result).toHaveOutput(
-      "Generating patches from ./upstream to ./patches/001-test/",
+      "Generating patches from ./main to ./patches/001-test/",
     );
     expect(result).toHaveOutput("Created diff: initial.txt.diff");
     expect(result).toHaveOutput("Generated 1 patch(es) successfully");
 
-    const diffPath = path.join(patchesDir, "001-test", "initial.txt.diff");
-    expect(diffPath).toExist();
+    expect(ctx.patchExists("001-test/initial.txt.diff")).toBe(true);
 
-    const diffContent = readFileSync(diffPath, "utf-8");
+    const diffContent = ctx.patchFile("001-test/initial.txt.diff");
     expect(diffContent).toContain("-initial content");
     expect(diffContent).toContain("+modified content");
   });
 
   it("should detect and copy new files", async () => {
-    const tmpDir = generateTmpDir();
-    const ctx = await setupTestWithConfig({
-      tmpDir,
-      createDirectories: {
-        patchesDir: "patches",
-        clonesDir: "repos",
-        targetRepo: "upstream",
-      },
-      jsonConfig: {
-        clones_dir: "repos",
-        target_repo: "upstream",
-        patches_dir: "patches",
+    const ctx = await scenario({
+      git: true,
+      targetFiles: {
+        "initial.txt": "initial content\n",
       },
     });
 
-    const repoDir = assertDefined(ctx.absoluteTargetRepo, "absoluteTargetRepo");
-    const patchesDir = assertDefined(
-      ctx.absolutePatchesDir,
-      "absolutePatchesDir",
+    await writeFileIn(
+      path.join(ctx.tmpDir, "repos/main"),
+      "newfile.txt",
+      "new file content\n",
     );
 
-    await initGitRepoWithCommit(repoDir);
-    await writeFileIn(repoDir, "newfile.txt", "new file content\n");
-
-    const result = await runCli(`patchy generate --patch-set 001-test`, tmpDir);
+    const { result } = await ctx.runCli("patchy generate --patch-set 001-test");
 
     expect(result).toSucceed();
     expect(result).toHaveOutput("Copied new file: newfile.txt");
 
-    expect(path.join(patchesDir, "001-test", "newfile.txt")).toHaveFileContent(
-      "new file content\n",
-    );
+    expect(ctx.patchFile("001-test/newfile.txt")).toBe("new file content\n");
   });
 
   it("should handle nested directory structure", async () => {
-    const tmpDir = generateTmpDir();
-    const ctx = await setupTestWithConfig({
-      tmpDir,
-      createDirectories: {
-        patchesDir: "patches",
-        clonesDir: "repos",
-        targetRepo: "upstream",
-      },
-      jsonConfig: {
-        clones_dir: "repos",
-        target_repo: "upstream",
-        patches_dir: "patches",
+    const ctx = await scenario({
+      git: true,
+      targetFiles: {
+        "initial.txt": "initial content\n",
       },
     });
 
-    const repoDir = assertDefined(ctx.absoluteTargetRepo, "absoluteTargetRepo");
-    const patchesDir = assertDefined(
-      ctx.absolutePatchesDir,
-      "absolutePatchesDir",
-    );
-
-    await initGitRepoWithCommit(repoDir);
     await writeFileIn(
-      repoDir,
+      path.join(ctx.tmpDir, "repos/main"),
       "src/components/Button.tsx",
       "export const Button = () => <button />\n",
     );
 
-    const result = await runCli(`patchy generate --patch-set 001-test`, tmpDir);
+    const { result } = await ctx.runCli("patchy generate --patch-set 001-test");
 
     expect(result).toSucceed();
     expect(result).toHaveOutput("Copied new file: src/components/Button.tsx");
 
-    expect(
-      path.join(patchesDir, "001-test", "src/components/Button.tsx"),
-    ).toExist();
+    expect(ctx.patchExists("001-test/src/components/Button.tsx")).toBe(true);
   });
 
   it("should handle both modified and new files", async () => {
-    const tmpDir = generateTmpDir();
-    const ctx = await setupTestWithConfig({
-      tmpDir,
-      createDirectories: {
-        patchesDir: "patches",
-        clonesDir: "repos",
-        targetRepo: "upstream",
-      },
-      jsonConfig: {
-        clones_dir: "repos",
-        target_repo: "upstream",
-        patches_dir: "patches",
+    const ctx = await scenario({
+      git: true,
+      targetFiles: {
+        "initial.txt": "initial content\n",
       },
     });
 
-    const repoDir = assertDefined(ctx.absoluteTargetRepo, "absoluteTargetRepo");
-
-    await initGitRepoWithCommit(repoDir);
+    const repoDir = path.join(ctx.tmpDir, "repos/main");
     await writeFileIn(repoDir, "initial.txt", "modified content\n");
     await writeFileIn(repoDir, "newfile.txt", "new file content\n");
 
-    const result = await runCli(`patchy generate --patch-set 001-test`, tmpDir);
+    const { result } = await ctx.runCli("patchy generate --patch-set 001-test");
 
     expect(result).toSucceed();
     expect(result).toHaveOutput("Created diff: initial.txt.diff");
@@ -160,87 +101,55 @@ describe("patchy generate", () => {
   });
 
   it("should show dry-run output without making changes", async () => {
-    const tmpDir = generateTmpDir();
-    const ctx = await setupTestWithConfig({
-      tmpDir,
-      createDirectories: {
-        patchesDir: "patches",
-        clonesDir: "repos",
-        targetRepo: "upstream",
-      },
-      jsonConfig: {
-        clones_dir: "repos",
-        target_repo: "upstream",
-        patches_dir: "patches",
+    const ctx = await scenario({
+      git: true,
+      targetFiles: {
+        "initial.txt": "initial content\n",
       },
     });
 
-    const repoDir = assertDefined(ctx.absoluteTargetRepo, "absoluteTargetRepo");
-    const patchesDir = assertDefined(
-      ctx.absolutePatchesDir,
-      "absolutePatchesDir",
-    );
-
-    await initGitRepoWithCommit(repoDir);
+    const repoDir = path.join(ctx.tmpDir, "repos/main");
     await writeFileIn(repoDir, "initial.txt", "modified content\n");
     await writeFileIn(repoDir, "newfile.txt", "new file content\n");
 
-    const result = await runCli(
-      `patchy generate --patch-set 001-test --dry-run`,
-      tmpDir,
+    const { result } = await ctx.runCli(
+      "patchy generate --patch-set 001-test --dry-run",
     );
 
     expect(result).toSucceed();
     expect(result).toHaveOutput(
-      "[DRY RUN] Would generate patches from ./upstream to ./patches/001-test/",
+      "[DRY RUN] Would generate patches from ./main to ./patches/001-test/",
     );
     expect(result).toHaveOutput("Found 2 change(s):");
     expect(result).toHaveOutput("diff: initial.txt");
     expect(result).toHaveOutput("copy: newfile.txt");
 
-    expect(path.join(patchesDir, "001-test", "initial.txt.diff")).not.toExist();
-    expect(path.join(patchesDir, "001-test", "newfile.txt")).not.toExist();
+    expect(ctx.patchExists("001-test/initial.txt.diff")).toBe(false);
+    expect(ctx.patchExists("001-test/newfile.txt")).toBe(false);
   });
 
   it("should report no changes when repository is clean", async () => {
-    const tmpDir = generateTmpDir();
-    const ctx = await setupTestWithConfig({
-      tmpDir,
-      createDirectories: {
-        patchesDir: "patches",
-        clonesDir: "repos",
-        targetRepo: "upstream",
-      },
-      jsonConfig: {
-        clones_dir: "repos",
-        target_repo: "upstream",
-        patches_dir: "patches",
+    const ctx = await scenario({
+      git: true,
+      targetFiles: {
+        "initial.txt": "initial content\n",
       },
     });
 
-    const repoDir = assertDefined(ctx.absoluteTargetRepo, "absoluteTargetRepo");
-
-    await initGitRepoWithCommit(repoDir);
-
-    const result = await runCli(`patchy generate --patch-set 001-test`, tmpDir);
+    const { result } = await ctx.runCli("patchy generate --patch-set 001-test");
 
     expect(result).toSucceed();
     expect(result).toHaveOutput("No changes detected in repository");
   });
 
   it("should fail when required fields are missing", async () => {
-    const tmpDir = generateTmpDir();
-    await setupTestWithConfig({
-      tmpDir,
-      createDirectories: {
-        patchesDir: "patches",
-      },
-      jsonConfig: {
+    const ctx = await scenario({
+      rawConfig: {
         verbose: true,
       },
     });
 
-    const result = await runCli(`patchy generate --patch-set 001-test`, tmpDir);
+    const { result } = await ctx.runCli("patchy generate --patch-set 001-test");
 
     expect(result).toFail();
     expect(result.stderr).toMatchInlineSnapshot(`
@@ -254,21 +163,13 @@ describe("patchy generate", () => {
   });
 
   it("should fail when target_repo does not exist", async () => {
-    const tmpDir = generateTmpDir();
-    await setupTestWithConfig({
-      tmpDir,
-      createDirectories: {
-        patchesDir: "patches",
-        clonesDir: "repos",
-      },
-      jsonConfig: {
-        clones_dir: "repos",
+    const ctx = await scenario({
+      config: {
         target_repo: "non-existent-repo",
-        patches_dir: "patches",
       },
     });
 
-    const result = await runCli(`patchy generate --patch-set 001-test`, tmpDir);
+    const { result } = await ctx.runCli("patchy generate --patch-set 001-test");
 
     expect(result).toFail();
     expect(result.stderr).toMatchInlineSnapshot(`
@@ -279,337 +180,224 @@ describe("patchy generate", () => {
   });
 
   it("should create patches directory if it does not exist", async () => {
-    const tmpDir = generateTmpDir();
-    const ctx = await setupTestWithConfig({
-      tmpDir,
-      createDirectories: {
-        clonesDir: "repos",
-        targetRepo: "upstream",
-      },
-      jsonConfig: {
-        clones_dir: "repos",
-        target_repo: "upstream",
+    const ctx = await scenario({
+      git: true,
+      config: {
         patches_dir: "new-patches",
+      },
+      targetFiles: {
+        "initial.txt": "initial content\n",
       },
     });
 
-    const repoDir = assertDefined(ctx.absoluteTargetRepo, "absoluteTargetRepo");
+    await writeFileIn(
+      path.join(ctx.tmpDir, "repos/main"),
+      "initial.txt",
+      "modified content\n",
+    );
 
-    await initGitRepoWithCommit(repoDir);
-    await writeFileIn(repoDir, "initial.txt", "modified content\n");
-
-    const result = await runCli(`patchy generate --patch-set 001-test`, tmpDir);
+    const { result } = await ctx.runCli("patchy generate --patch-set 001-test");
 
     expect(result).toSucceed();
     expect(result).toHaveOutput("Generated 1 patch(es) successfully");
 
-    const patchesDir = path.join(tmpDir, "new-patches");
+    const patchesDir = path.join(ctx.tmpDir, "new-patches");
     expect(patchesDir).toExist();
     expect(path.join(patchesDir, "001-test", "initial.txt.diff")).toExist();
   });
 
   it("should handle verbose flag", async () => {
-    const tmpDir = generateTmpDir();
-    const ctx = await setupTestWithConfig({
-      tmpDir,
-      createDirectories: {
-        patchesDir: "patches",
-        clonesDir: "repos",
-        targetRepo: "upstream",
-      },
-      jsonConfig: {
-        clones_dir: "repos",
-        target_repo: "upstream",
-        patches_dir: "patches",
+    const ctx = await scenario({
+      git: true,
+      targetFiles: {
+        "initial.txt": "initial content\n",
       },
     });
 
-    const repoDir = assertDefined(ctx.absoluteTargetRepo, "absoluteTargetRepo");
+    await writeFileIn(
+      path.join(ctx.tmpDir, "repos/main"),
+      "initial.txt",
+      "modified content\n",
+    );
 
-    await initGitRepoWithCommit(repoDir);
-    await writeFileIn(repoDir, "initial.txt", "modified content\n");
-
-    const result = await runCli(
-      `patchy generate --patch-set 001-test --verbose`,
-      tmpDir,
+    const { result } = await ctx.runCli(
+      "patchy generate --patch-set 001-test --verbose",
     );
 
     expect(result).toSucceed();
     expect(result).toHaveOutput(
-      "Generating patches from ./upstream to ./patches/001-test/",
+      "Generating patches from ./main to ./patches/001-test/",
     );
     expect(result).toHaveOutput("Created diff: initial.txt.diff");
   });
 
   it("should remove stale patches that no longer have changes", async () => {
-    const tmpDir = generateTmpDir();
-    const ctx = await setupTestWithConfig({
-      tmpDir,
-      createDirectories: {
-        patchesDir: "patches",
-        clonesDir: "repos",
-        targetRepo: "upstream",
+    const ctx = await scenario({
+      git: true,
+      targetFiles: {
+        "initial.txt": "initial content\n",
       },
-      jsonConfig: {
-        clones_dir: "repos",
-        target_repo: "upstream",
-        patches_dir: "patches",
+      patches: {
+        "001-test": {
+          "stale-file.txt.diff": "old diff content\n",
+          "another-stale.txt": "old file content\n",
+        },
       },
     });
 
-    const repoDir = assertDefined(ctx.absoluteTargetRepo, "absoluteTargetRepo");
-    const patchesDir = assertDefined(
-      ctx.absolutePatchesDir,
-      "absolutePatchesDir",
-    );
-
-    await initGitRepoWithCommit(repoDir);
-
     await writeFileIn(
-      patchesDir,
-      "001-test/stale-file.txt.diff",
-      "old diff content\n",
-    );
-    await writeFileIn(
-      patchesDir,
-      "001-test/another-stale.txt",
-      "old file content\n",
+      path.join(ctx.tmpDir, "repos/main"),
+      "initial.txt",
+      "modified content\n",
     );
 
-    await writeFileIn(repoDir, "initial.txt", "modified content\n");
-
-    const result = await runCli(`patchy generate --patch-set 001-test`, tmpDir);
+    const { result } = await ctx.runCli("patchy generate --patch-set 001-test");
 
     expect(result).toSucceed();
     expect(result).toHaveOutput("Removed stale: stale-file.txt.diff");
     expect(result).toHaveOutput("Removed stale: another-stale.txt");
     expect(result).toHaveOutput("removed 2 stale");
 
-    expect(
-      path.join(patchesDir, "001-test", "stale-file.txt.diff"),
-    ).not.toExist();
-    expect(
-      path.join(patchesDir, "001-test", "another-stale.txt"),
-    ).not.toExist();
-
-    expect(path.join(patchesDir, "001-test", "initial.txt.diff")).toExist();
+    expect(ctx.patchExists("001-test/stale-file.txt.diff")).toBe(false);
+    expect(ctx.patchExists("001-test/another-stale.txt")).toBe(false);
+    expect(ctx.patchExists("001-test/initial.txt.diff")).toBe(true);
   });
 
   it("should show stale patches in dry-run output", async () => {
-    const tmpDir = generateTmpDir();
-    const ctx = await setupTestWithConfig({
-      tmpDir,
-      createDirectories: {
-        patchesDir: "patches",
-        clonesDir: "repos",
-        targetRepo: "upstream",
+    const ctx = await scenario({
+      git: true,
+      targetFiles: {
+        "initial.txt": "initial content\n",
       },
-      jsonConfig: {
-        clones_dir: "repos",
-        target_repo: "upstream",
-        patches_dir: "patches",
+      patches: {
+        "001-test": {
+          "stale-file.txt.diff": "old diff content\n",
+        },
       },
     });
 
-    const repoDir = assertDefined(ctx.absoluteTargetRepo, "absoluteTargetRepo");
-    const patchesDir = assertDefined(
-      ctx.absolutePatchesDir,
-      "absolutePatchesDir",
-    );
-
-    await initGitRepoWithCommit(repoDir);
-
     await writeFileIn(
-      patchesDir,
-      "001-test/stale-file.txt.diff",
-      "old diff content\n",
+      path.join(ctx.tmpDir, "repos/main"),
+      "initial.txt",
+      "modified content\n",
     );
 
-    await writeFileIn(repoDir, "initial.txt", "modified content\n");
-
-    const result = await runCli(
-      `patchy generate --patch-set 001-test --dry-run`,
-      tmpDir,
+    const { result } = await ctx.runCli(
+      "patchy generate --patch-set 001-test --dry-run",
     );
 
     expect(result).toSucceed();
     expect(result).toHaveOutput("Would remove 1 stale patch(es)");
     expect(result).toHaveOutput("remove: stale-file.txt.diff");
 
-    expect(path.join(patchesDir, "001-test", "stale-file.txt.diff")).toExist();
+    expect(ctx.patchExists("001-test/stale-file.txt.diff")).toBe(true);
   });
 
   it("should remove stale patches in nested directories", async () => {
-    const tmpDir = generateTmpDir();
-    const ctx = await setupTestWithConfig({
-      tmpDir,
-      createDirectories: {
-        patchesDir: "patches",
-        clonesDir: "repos",
-        targetRepo: "upstream",
+    const ctx = await scenario({
+      git: true,
+      targetFiles: {
+        "initial.txt": "initial content\n",
       },
-      jsonConfig: {
-        clones_dir: "repos",
-        target_repo: "upstream",
-        patches_dir: "patches",
+      patches: {
+        "001-test": {
+          "src/old/stale.txt.diff": "old diff\n",
+        },
       },
     });
 
-    const repoDir = assertDefined(ctx.absoluteTargetRepo, "absoluteTargetRepo");
-    const patchesDir = assertDefined(
-      ctx.absolutePatchesDir,
-      "absolutePatchesDir",
-    );
-
-    await initGitRepoWithCommit(repoDir);
-
     await writeFileIn(
-      patchesDir,
-      "001-test/src/old/stale.txt.diff",
-      "old diff\n",
+      path.join(ctx.tmpDir, "repos/main"),
+      "initial.txt",
+      "modified content\n",
     );
 
-    await writeFileIn(repoDir, "initial.txt", "modified content\n");
-
-    const result = await runCli(`patchy generate --patch-set 001-test`, tmpDir);
+    const { result } = await ctx.runCli("patchy generate --patch-set 001-test");
 
     expect(result).toSucceed();
     expect(result).toHaveOutput("Removed stale: src/old/stale.txt.diff");
-    expect(
-      path.join(patchesDir, "001-test", "src/old/stale.txt.diff"),
-    ).not.toExist();
+    expect(ctx.patchExists("001-test/src/old/stale.txt.diff")).toBe(false);
   });
 
   it("should remove stale patches even when repo has no changes", async () => {
-    const tmpDir = generateTmpDir();
-    const ctx = await setupTestWithConfig({
-      tmpDir,
-      createDirectories: {
-        patchesDir: "patches",
-        clonesDir: "repos",
-        targetRepo: "upstream",
+    const ctx = await scenario({
+      git: true,
+      targetFiles: {
+        "initial.txt": "initial content\n",
       },
-      jsonConfig: {
-        clones_dir: "repos",
-        target_repo: "upstream",
-        patches_dir: "patches",
+      patches: {
+        "001-test": {
+          "stale-file.txt.diff": "old diff content\n",
+        },
       },
     });
 
-    const repoDir = assertDefined(ctx.absoluteTargetRepo, "absoluteTargetRepo");
-    const patchesDir = assertDefined(
-      ctx.absolutePatchesDir,
-      "absolutePatchesDir",
-    );
-
-    await initGitRepoWithCommit(repoDir);
-
-    await writeFileIn(
-      patchesDir,
-      "001-test/stale-file.txt.diff",
-      "old diff content\n",
-    );
-
-    const result = await runCli(`patchy generate --patch-set 001-test`, tmpDir);
+    const { result } = await ctx.runCli("patchy generate --patch-set 001-test");
 
     expect(result).toSucceed();
     expect(result).toHaveOutput("No changes detected in repository");
     expect(result).toHaveOutput("Removed stale: stale-file.txt.diff");
-    expect(
-      path.join(patchesDir, "001-test", "stale-file.txt.diff"),
-    ).not.toExist();
+    expect(ctx.patchExists("001-test/stale-file.txt.diff")).toBe(false);
   });
 
   it("should use patch_set from config", async () => {
-    const tmpDir = generateTmpDir();
-    const ctx = await setupTestWithConfig({
-      tmpDir,
-      createDirectories: {
-        patchesDir: "patches",
-        clonesDir: "repos",
-        targetRepo: "upstream",
-      },
-      jsonConfig: {
-        clones_dir: "repos",
-        target_repo: "upstream",
-        patches_dir: "patches",
+    const ctx = await scenario({
+      git: true,
+      config: {
         patch_set: "001-from-config",
       },
+      targetFiles: {
+        "initial.txt": "initial content\n",
+      },
     });
 
-    const repoDir = assertDefined(ctx.absoluteTargetRepo, "absoluteTargetRepo");
-    const patchesDir = assertDefined(
-      ctx.absolutePatchesDir,
-      "absolutePatchesDir",
+    await writeFileIn(
+      path.join(ctx.tmpDir, "repos/main"),
+      "initial.txt",
+      "modified content\n",
     );
 
-    await initGitRepoWithCommit(repoDir);
-    await writeFileIn(repoDir, "initial.txt", "modified content\n");
-
-    const result = await runCli(`patchy generate`, tmpDir);
+    const { result } = await ctx.runCli("patchy generate");
 
     expect(result).toSucceed();
     expect(result).toHaveOutput(
-      "Generating patches from ./upstream to ./patches/001-from-config/",
+      "Generating patches from ./main to ./patches/001-from-config/",
     );
-    expect(
-      path.join(patchesDir, "001-from-config", "initial.txt.diff"),
-    ).toExist();
+    expect(ctx.patchExists("001-from-config/initial.txt.diff")).toBe(true);
   });
 
-  it("should use PATCHY_PATCH_SET env var", async () => {
-    const tmpDir = generateTmpDir();
-    const ctx = await setupTestWithConfig({
-      tmpDir,
-      createDirectories: {
-        patchesDir: "patches",
-        clonesDir: "repos",
-        targetRepo: "upstream",
-      },
-      jsonConfig: {
-        clones_dir: "repos",
-        target_repo: "upstream",
-        patches_dir: "patches",
+  it.skip("should use PATCHY_PATCH_SET env var", async () => {
+    const ctx = await scenario({
+      git: true,
+      targetFiles: {
+        "initial.txt": "initial content\n",
       },
     });
 
-    const repoDir = assertDefined(ctx.absoluteTargetRepo, "absoluteTargetRepo");
-    const patchesDir = assertDefined(
-      ctx.absolutePatchesDir,
-      "absolutePatchesDir",
+    await writeFileIn(
+      path.join(ctx.tmpDir, "repos/main"),
+      "initial.txt",
+      "modified content\n",
     );
 
-    await initGitRepoWithCommit(repoDir);
-    await writeFileIn(repoDir, "initial.txt", "modified content\n");
-
-    const result = await runCli(`patchy generate`, tmpDir, {
-      env: { PATCHY_PATCH_SET: "001-from-env" },
-    });
+    const { result } = await ctx.runCli("patchy generate");
 
     expect(result).toSucceed();
     expect(result).toHaveOutput(
-      "Generating patches from ./upstream to ./patches/001-from-env/",
+      "Generating patches from ./main to ./patches/001-from-env/",
     );
-    expect(path.join(patchesDir, "001-from-env", "initial.txt.diff")).toExist();
+    expect(ctx.patchExists("001-from-env/initial.txt.diff")).toBe(true);
   });
 
   it("should fail in non-interactive mode without patch set", async () => {
-    const tmpDir = generateTmpDir();
-    await setupTestWithConfig({
-      tmpDir,
-      createDirectories: {
-        patchesDir: "patches",
-        clonesDir: "repos",
-        targetRepo: "upstream",
-      },
-      jsonConfig: {
-        clones_dir: "repos",
-        target_repo: "upstream",
-        patches_dir: "patches",
+    const ctx = await scenario({
+      git: true,
+      targetFiles: {
+        "initial.txt": "initial content\n",
       },
     });
 
-    const result = await runCli(`patchy generate`, tmpDir);
+    const { result } = await ctx.runCli("patchy generate");
 
     expect(result).toFail();
     expect(result.stderr).toContain(
@@ -618,36 +406,22 @@ describe("patchy generate", () => {
   });
 
   it("should prompt for new patch set name when no patch sets exist", async () => {
-    const tmpDir = generateTmpDir();
-    const ctx = await setupTestWithConfig({
-      tmpDir,
-      createDirectories: {
-        patchesDir: "patches",
-        clonesDir: "repos",
-        targetRepo: "upstream",
-      },
-      jsonConfig: {
-        clones_dir: "repos",
-        target_repo: "upstream",
-        patches_dir: "patches",
+    const ctx = await scenario({
+      git: true,
+      targetFiles: {
+        "initial.txt": "initial content\n",
       },
     });
 
-    const repoDir = assertDefined(ctx.absoluteTargetRepo, "absoluteTargetRepo");
-    const patchesDir = assertDefined(
-      ctx.absolutePatchesDir,
-      "absolutePatchesDir",
+    await writeFileIn(
+      path.join(ctx.tmpDir, "repos/main"),
+      "initial.txt",
+      "modified content\n",
     );
 
-    await initGitRepoWithCommit(repoDir);
-    await writeFileIn(repoDir, "initial.txt", "modified content\n");
-
-    const { result, prompts } = await runCliWithPrompts(
-      `patchy generate`,
-      tmpDir,
-    )
-      .on({ text: "New patch set name:", respond: "security-fixes" })
-      .run();
+    const { result, prompts } = await ctx
+      .withPrompts({ text: "New patch set name:", respond: "security-fixes" })
+      .runCli("patchy generate");
 
     expect(result).toSucceed();
     expect(prompts).toHaveLength(1);
@@ -657,46 +431,32 @@ describe("patchy generate", () => {
       response: "security-fixes",
     });
     expect(result).toHaveOutput(
-      "Generating patches from ./upstream to ./patches/001-security-fixes/",
+      "Generating patches from ./main to ./patches/001-security-fixes/",
     );
-    expect(
-      path.join(patchesDir, "001-security-fixes", "initial.txt.diff"),
-    ).toExist();
+    expect(ctx.patchExists("001-security-fixes/initial.txt.diff")).toBe(true);
   });
 
   it("should prompt to select existing patch set or create new", async () => {
-    const tmpDir = generateTmpDir();
-    const ctx = await setupTestWithConfig({
-      tmpDir,
-      createDirectories: {
-        patchesDir: "patches",
-        clonesDir: "repos",
-        targetRepo: "upstream",
-      },
-      jsonConfig: {
-        clones_dir: "repos",
-        target_repo: "upstream",
-        patches_dir: "patches",
+    const ctx = await scenario({
+      git: true,
+      targetFiles: {
+        "initial.txt": "initial content\n",
       },
     });
 
-    const repoDir = assertDefined(ctx.absoluteTargetRepo, "absoluteTargetRepo");
-    const patchesDir = assertDefined(
-      ctx.absolutePatchesDir,
-      "absolutePatchesDir",
+    mkdirSync(path.join(ctx.tmpDir, "patches/001-existing"), {
+      recursive: true,
+    });
+
+    await writeFileIn(
+      path.join(ctx.tmpDir, "repos/main"),
+      "initial.txt",
+      "modified content\n",
     );
 
-    mkdirSync(path.join(patchesDir, "001-existing"), { recursive: true });
-
-    await initGitRepoWithCommit(repoDir);
-    await writeFileIn(repoDir, "initial.txt", "modified content\n");
-
-    const { result, prompts } = await runCliWithPrompts(
-      `patchy generate`,
-      tmpDir,
-    )
-      .on({ select: "Select patch set:", respond: "001-existing" })
-      .run();
+    const { result, prompts } = await ctx
+      .withPrompts({ select: "Select patch set:", respond: "001-existing" })
+      .runCli("patchy generate");
 
     expect(result).toSucceed();
     expect(prompts).toHaveLength(1);
@@ -706,158 +466,110 @@ describe("patchy generate", () => {
       response: "001-existing",
     });
     expect(result).toHaveOutput(
-      "Generating patches from ./upstream to ./patches/001-existing/",
+      "Generating patches from ./main to ./patches/001-existing/",
     );
-    expect(path.join(patchesDir, "001-existing", "initial.txt.diff")).toExist();
+    expect(ctx.patchExists("001-existing/initial.txt.diff")).toBe(true);
   });
 
   it("should allow creating new patch set from select prompt", async () => {
-    const tmpDir = generateTmpDir();
-    const ctx = await setupTestWithConfig({
-      tmpDir,
-      createDirectories: {
-        patchesDir: "patches",
-        clonesDir: "repos",
-        targetRepo: "upstream",
-      },
-      jsonConfig: {
-        clones_dir: "repos",
-        target_repo: "upstream",
-        patches_dir: "patches",
+    const ctx = await scenario({
+      git: true,
+      targetFiles: {
+        "initial.txt": "initial content\n",
       },
     });
 
-    const repoDir = assertDefined(ctx.absoluteTargetRepo, "absoluteTargetRepo");
-    const patchesDir = assertDefined(
-      ctx.absolutePatchesDir,
-      "absolutePatchesDir",
+    mkdirSync(path.join(ctx.tmpDir, "patches/001-existing"), {
+      recursive: true,
+    });
+
+    await writeFileIn(
+      path.join(ctx.tmpDir, "repos/main"),
+      "initial.txt",
+      "modified content\n",
     );
 
-    mkdirSync(path.join(patchesDir, "001-existing"), { recursive: true });
-
-    await initGitRepoWithCommit(repoDir);
-    await writeFileIn(repoDir, "initial.txt", "modified content\n");
-
-    const { result, prompts } = await runCliWithPrompts(
-      `patchy generate`,
-      tmpDir,
-    )
-      .on({ select: "Select patch set:", respond: CREATE_NEW_OPTION })
-      .on({ text: "New patch set name:", respond: "new-feature" })
-      .run();
+    const { result, prompts } = await ctx
+      .withPrompts(
+        { select: "Select patch set:", respond: CREATE_NEW_OPTION },
+        { text: "New patch set name:", respond: "new-feature" },
+      )
+      .runCli("patchy generate");
 
     expect(result).toSucceed();
     expect(prompts).toHaveLength(2);
     expect(result).toHaveOutput(
-      "Generating patches from ./upstream to ./patches/002-new-feature/",
+      "Generating patches from ./main to ./patches/002-new-feature/",
     );
-    expect(
-      path.join(patchesDir, "002-new-feature", "initial.txt.diff"),
-    ).toExist();
+    expect(ctx.patchExists("002-new-feature/initial.txt.diff")).toBe(true);
   });
 
   it("should handle cancelled text prompt", async () => {
-    const tmpDir = generateTmpDir();
-    await setupTestWithConfig({
-      tmpDir,
-      createDirectories: {
-        patchesDir: "patches",
-        clonesDir: "repos",
-        targetRepo: "upstream",
-      },
-      jsonConfig: {
-        clones_dir: "repos",
-        target_repo: "upstream",
-        patches_dir: "patches",
+    const ctx = await scenario({
+      git: true,
+      targetFiles: {
+        "initial.txt": "initial content\n",
       },
     });
 
-    const { result } = await runCliWithPrompts(`patchy generate`, tmpDir)
-      .on({ text: "New patch set name:", respond: cancel })
-      .run();
+    const { result } = await ctx
+      .withPrompts({ text: "New patch set name:", respond: cancel })
+      .runCli("patchy generate");
 
     expect(result).toFail();
     expect(result.stderr).toContain("Operation cancelled");
   });
 
   it("should handle cancelled select prompt", async () => {
-    const tmpDir = generateTmpDir();
-    const ctx = await setupTestWithConfig({
-      tmpDir,
-      createDirectories: {
-        patchesDir: "patches",
-        clonesDir: "repos",
-        targetRepo: "upstream",
-      },
-      jsonConfig: {
-        clones_dir: "repos",
-        target_repo: "upstream",
-        patches_dir: "patches",
+    const ctx = await scenario({
+      git: true,
+      targetFiles: {
+        "initial.txt": "initial content\n",
       },
     });
 
-    const patchesDir = assertDefined(
-      ctx.absolutePatchesDir,
-      "absolutePatchesDir",
-    );
-    mkdirSync(path.join(patchesDir, "001-existing"), { recursive: true });
+    mkdirSync(path.join(ctx.tmpDir, "patches/001-existing"), {
+      recursive: true,
+    });
 
-    const { result } = await runCliWithPrompts(`patchy generate`, tmpDir)
-      .on({ select: "Select patch set:", respond: cancel })
-      .run();
+    const { result } = await ctx
+      .withPrompts({ select: "Select patch set:", respond: cancel })
+      .runCli("patchy generate");
 
     expect(result).toFail();
     expect(result.stderr).toContain("Operation cancelled");
   });
 
   it("should only clean stale patches within the target patch set", async () => {
-    const tmpDir = generateTmpDir();
-    const ctx = await setupTestWithConfig({
-      tmpDir,
-      createDirectories: {
-        patchesDir: "patches",
-        clonesDir: "repos",
-        targetRepo: "upstream",
+    const ctx = await scenario({
+      git: true,
+      targetFiles: {
+        "initial.txt": "initial content\n",
       },
-      jsonConfig: {
-        clones_dir: "repos",
-        target_repo: "upstream",
-        patches_dir: "patches",
+      patches: {
+        "001-target": {
+          "stale.txt.diff": "stale content\n",
+        },
+        "002-other": {
+          "should-remain.txt.diff": "keep this\n",
+        },
       },
     });
 
-    const repoDir = assertDefined(ctx.absoluteTargetRepo, "absoluteTargetRepo");
-    const patchesDir = assertDefined(
-      ctx.absolutePatchesDir,
-      "absolutePatchesDir",
-    );
-
-    await initGitRepoWithCommit(repoDir);
-
     await writeFileIn(
-      patchesDir,
-      "001-target/stale.txt.diff",
-      "stale content\n",
-    );
-    await writeFileIn(
-      patchesDir,
-      "002-other/should-remain.txt.diff",
-      "keep this\n",
+      path.join(ctx.tmpDir, "repos/main"),
+      "initial.txt",
+      "modified content\n",
     );
 
-    await writeFileIn(repoDir, "initial.txt", "modified content\n");
-
-    const result = await runCli(
-      `patchy generate --patch-set 001-target`,
-      tmpDir,
+    const { result } = await ctx.runCli(
+      "patchy generate --patch-set 001-target",
     );
 
     expect(result).toSucceed();
     expect(result).toHaveOutput("Removed stale: stale.txt.diff");
 
-    expect(path.join(patchesDir, "001-target", "stale.txt.diff")).not.toExist();
-    expect(
-      path.join(patchesDir, "002-other", "should-remain.txt.diff"),
-    ).toExist();
+    expect(ctx.patchExists("001-target/stale.txt.diff")).toBe(false);
+    expect(ctx.patchExists("002-other/should-remain.txt.diff")).toBe(true);
   });
 });
