@@ -8,6 +8,7 @@ import {
   hasAbsoluteTargetRepo,
 } from "~/cli-fields";
 import type { LocalContext } from "~/context";
+import { exit } from "~/lib/exit";
 import { formatPathForDisplay, getAllFiles, getSortedFolders } from "~/lib/fs";
 import { createGitClient, isGitRepo } from "~/lib/git";
 import { canPrompt, createPrompts } from "~/lib/prompts";
@@ -98,9 +99,7 @@ const applyPatch = async (
   }
 };
 
-type FilterResult =
-  | { filtered: string[]; error?: undefined }
-  | { filtered?: undefined; error: string };
+type FilterResult = { filtered: string[] } | { error: string };
 
 const filterPatchSets = (
   patchSets: string[],
@@ -212,204 +211,285 @@ const determineCommitMode = (
   return "auto";
 };
 
+const resolvePatchSetsToApply = (
+  context: LocalContext,
+  absolutePatchesDir: string,
+  flags: Pick<ApplyFlags, "only" | "until">,
+): string[] => {
+  const allPatchSets = getSortedFolders(absolutePatchesDir);
+
+  if (allPatchSets.length === 0) {
+    context.process.stdout.write("No patch sets found.\n");
+    return [];
+  }
+
+  const result = filterPatchSets(allPatchSets, flags.only, flags.until);
+
+  if ("error" in result) {
+    return exit(context, { exitCode: 1, stderr: result.error });
+  }
+
+  return result.filtered;
+};
+
+const ensureCleanWorkingTree = async (
+  context: LocalContext,
+  repoDir: string,
+): Promise<void> => {
+  const result = await checkWorkingTreeClean(repoDir);
+  if (!result.clean && result.error) {
+    exit(context, { exitCode: 1, stderr: result.error });
+  }
+};
+
+const applySinglePatchSet = async (
+  context: LocalContext,
+  patchSetDir: string,
+  repoDir: string,
+  patchSetName: string,
+  config: { verbose: boolean; fuzzFactor: number },
+): Promise<PatchSetStats> => {
+  const patchFiles = await collectPatchToApplys(patchSetDir, repoDir);
+  const errors: Array<{ file: string; error: string }> = [];
+
+  context.process.stdout.write(
+    `  [${patchSetName}] ${patchFiles.length} file(s)\n`,
+  );
+
+  for (const patchFile of patchFiles) {
+    const result = await applyPatch(
+      patchFile,
+      config.verbose,
+      config.fuzzFactor,
+      context.process.stdout as NodeJS.WriteStream,
+    );
+    if (!result.success && result.error) {
+      errors.push({ file: patchFile.relativePath, error: result.error });
+    }
+  }
+
+  return { name: patchSetName, fileCount: patchFiles.length, errors };
+};
+
+const commitPatchSetIfNeeded = async (
+  context: LocalContext,
+  repoDir: string,
+  patchSetName: string,
+  flags: ApplyFlags,
+  isLastPatchSet: boolean,
+  hasErrors: boolean,
+): Promise<{ committed: boolean; cancelled?: boolean }> => {
+  if (hasErrors) {
+    return { committed: false };
+  }
+
+  const mode = determineCommitMode(context, flags, isLastPatchSet);
+
+  if (mode === "skip") {
+    context.process.stdout.write(
+      `  Left patch set uncommitted: ${patchSetName}\n`,
+    );
+    return { committed: false };
+  }
+
+  if (mode === "auto") {
+    const result = await commitPatchSet(
+      repoDir,
+      patchSetName,
+      context.process.stdout as NodeJS.WriteStream,
+    );
+    if (!result.success) {
+      exit(context, {
+        exitCode: 1,
+        stderr: `Could not commit patch set: ${result.error}`,
+      });
+    }
+    return { committed: true };
+  }
+
+  const prompts = createPrompts(context);
+  const shouldCommit = await prompts.confirm({
+    message: `Commit changes from patch set "${patchSetName}"?`,
+    initialValue: true,
+  });
+
+  if (prompts.isCancel(shouldCommit)) {
+    context.process.stderr.write("Apply cancelled\n");
+    return { committed: false, cancelled: true };
+  }
+
+  if (shouldCommit) {
+    const result = await commitPatchSet(
+      repoDir,
+      patchSetName,
+      context.process.stdout as NodeJS.WriteStream,
+    );
+    if (!result.success) {
+      exit(context, {
+        exitCode: 1,
+        stderr: `Could not commit patch set: ${result.error}`,
+      });
+    }
+    return { committed: true };
+  }
+
+  context.process.stdout.write(
+    `  Left patch set uncommitted: ${patchSetName}\n`,
+  );
+  return { committed: false };
+};
+
+const printDryRunPatchSet = async (
+  context: LocalContext,
+  patchSetDir: string,
+  repoDir: string,
+  patchSetName: string,
+  verbose: boolean,
+): Promise<PatchSetStats> => {
+  const patchFiles = await collectPatchToApplys(patchSetDir, repoDir);
+
+  context.process.stdout.write(
+    `  [${patchSetName}] ${patchFiles.length} file(s)\n`,
+  );
+
+  if (verbose) {
+    for (const patchFile of patchFiles) {
+      const action = patchFile.type === "copy" ? "Copy" : "Apply diff";
+      context.process.stdout.write(
+        `    ${action}: ${patchFile.relativePath}\n`,
+      );
+    }
+  }
+
+  return { name: patchSetName, fileCount: patchFiles.length, errors: [] };
+};
+
+const reportResults = (context: LocalContext, stats: PatchSetStats[]): void => {
+  const totalFiles = sumBy(stats, (s) => s.fileCount);
+  const allErrors = stats.flatMap((s) => s.errors);
+
+  if (allErrors.length > 0) {
+    context.process.stderr.write(`\nErrors occurred while applying patches:\n`);
+    for (const { file, error } of allErrors) {
+      context.process.stderr.write(`  ${file}: ${error}\n`);
+    }
+    exit(context, { exitCode: 1 });
+  }
+
+  context.process.stdout.write(
+    `Successfully applied ${totalFiles} patch file(s) across ${stats.length} patch set(s).\n`,
+  );
+};
+
+type ApplyConfig = {
+  absolutePatchesDir: string;
+  absoluteTargetRepo: string;
+  patches_dir: string;
+  target_repo: string;
+  dry_run: boolean;
+  verbose: boolean;
+  fuzzFactor: number;
+};
+
+const loadAndValidateConfig = (
+  context: LocalContext,
+  flags: ApplyFlags,
+): ApplyConfig => {
+  const result = createEnrichedMergedConfig({
+    flags,
+    requiredFields: (config) =>
+      compact([
+        !hasAbsoluteTargetRepo(config) && "clones_dir",
+        "target_repo",
+        "patches_dir",
+      ]),
+    cwd: context.cwd,
+    env: context.process.env,
+  });
+
+  if (!result.success) {
+    return exit(context, { exitCode: 1, stderr: result.error });
+  }
+
+  const flagValidation = validateCommitFlags(flags.all, flags.edit);
+  if (flagValidation.error !== undefined) {
+    return exit(context, { exitCode: 1, stderr: flagValidation.error });
+  }
+
+  const config = result.mergedConfig;
+  return {
+    absolutePatchesDir: config.absolutePatchesDir ?? "",
+    absoluteTargetRepo: config.absoluteTargetRepo ?? "",
+    patches_dir: config.patches_dir ?? "",
+    target_repo: config.target_repo ?? "",
+    dry_run: config.dry_run,
+    verbose: config.verbose,
+    fuzzFactor: flags["fuzz-factor"] ?? DEFAULT_FUZZ_FACTOR,
+  };
+};
+
 export default async function (
   this: LocalContext,
   flags: ApplyFlags,
 ): Promise<void> {
-  try {
-    const result = createEnrichedMergedConfig({
-      flags,
-      requiredFields: (config) =>
-        compact([
-          !hasAbsoluteTargetRepo(config) && "clones_dir",
-          "target_repo",
-          "patches_dir",
-        ]),
-      cwd: this.cwd,
-      env: this.process.env,
-    });
+  const config = loadAndValidateConfig(this, flags);
 
-    if (!result.success) {
-      this.process.stderr.write(result.error);
-      this.process.exit(1);
-      return;
-    }
+  const patchSets = resolvePatchSetsToApply(
+    this,
+    config.absolutePatchesDir,
+    flags,
+  );
+  if (patchSets.length === 0) return;
 
-    const config = result.mergedConfig;
-    const absolutePatchesDir = config.absolutePatchesDir ?? "";
-    const absoluteTargetRepo = config.absoluteTargetRepo ?? "";
+  if (config.dry_run) {
+    this.process.stdout.write(
+      `[DRY RUN] Would apply patches from ${formatPathForDisplay(config.patches_dir)} to ${formatPathForDisplay(config.target_repo)}\n`,
+    );
+  } else {
+    await ensureCleanWorkingTree(this, config.absoluteTargetRepo);
+  }
 
-    const flagValidation = validateCommitFlags(flags.all, flags.edit);
-    if (flagValidation.error !== undefined) {
-      this.process.stderr.write(`${flagValidation.error}\n`);
-      this.process.exit(1);
-      return;
-    }
+  this.process.stdout.write("Applying patch sets...\n");
 
-    const allPatchSets = getSortedFolders(absolutePatchesDir);
+  const stats: PatchSetStats[] = [];
 
-    if (allPatchSets.length === 0) {
-      this.process.stdout.write("No patch sets found.\n");
-      return;
-    }
+  for (let i = 0; i < patchSets.length; i++) {
+    const patchSetName = patchSets[i];
+    const isLast = i === patchSets.length - 1;
+    const patchSetDir = path.join(config.absolutePatchesDir, patchSetName);
 
-    const filterResult = filterPatchSets(allPatchSets, flags.only, flags.until);
-
-    if (filterResult.error !== undefined) {
-      this.process.stderr.write(`${filterResult.error}\n`);
-      this.process.exit(1);
-      return;
-    }
-
-    const patchSetsToApply = filterResult.filtered;
-
-    if (config.dry_run) {
-      this.process.stdout.write(
-        `[DRY RUN] Would apply patches from ${formatPathForDisplay(config.patches_dir ?? "")} to ${formatPathForDisplay(config.target_repo ?? "")}\n`,
-      );
-    }
+    const result = config.dry_run
+      ? await printDryRunPatchSet(
+          this,
+          patchSetDir,
+          config.absoluteTargetRepo,
+          patchSetName,
+          config.verbose,
+        )
+      : await applySinglePatchSet(
+          this,
+          patchSetDir,
+          config.absoluteTargetRepo,
+          patchSetName,
+          config,
+        );
 
     if (!config.dry_run) {
-      const treeCheck = await checkWorkingTreeClean(absoluteTargetRepo);
-      if (!treeCheck.clean && treeCheck.error) {
-        this.process.stderr.write(`${treeCheck.error}\n`);
-        this.process.exit(1);
-        return;
-      }
-    }
-
-    const fuzzFactor = flags["fuzz-factor"] ?? DEFAULT_FUZZ_FACTOR;
-    const stats: PatchSetStats[] = [];
-
-    this.process.stdout.write("Applying patch sets...\n");
-
-    for (let i = 0; i < patchSetsToApply.length; i++) {
-      const patchSetName = patchSetsToApply[i];
-      const isLastPatchSet = i === patchSetsToApply.length - 1;
-      const patchSetDir = path.join(absolutePatchesDir, patchSetName);
-      const patchFiles = await collectPatchToApplys(
-        patchSetDir,
-        absoluteTargetRepo,
+      const commitResult = await commitPatchSetIfNeeded(
+        this,
+        config.absoluteTargetRepo,
+        patchSetName,
+        flags,
+        isLast,
+        result.errors.length > 0,
       );
-
-      const patchSetStats: PatchSetStats = {
-        name: patchSetName,
-        fileCount: patchFiles.length,
-        errors: [],
-      };
-
-      if (config.dry_run) {
-        this.process.stdout.write(
-          `  [${patchSetName}] ${patchFiles.length} file(s)\n`,
-        );
-        if (config.verbose) {
-          for (const patchFile of patchFiles) {
-            const action = patchFile.type === "copy" ? "Copy" : "Apply diff";
-            this.process.stdout.write(
-              `    ${action}: ${patchFile.relativePath}\n`,
-            );
-          }
-        }
-        stats.push(patchSetStats);
-        continue;
-      }
-
-      this.process.stdout.write(
-        `  [${patchSetName}] ${patchFiles.length} file(s)\n`,
-      );
-
-      for (const patchFile of patchFiles) {
-        const patchResult = await applyPatch(
-          patchFile,
-          config.verbose,
-          fuzzFactor,
-          this.process.stdout as NodeJS.WriteStream,
-        );
-        if (!patchResult.success && patchResult.error) {
-          patchSetStats.errors.push({
-            file: patchFile.relativePath,
-            error: patchResult.error,
-          });
-        }
-      }
-
-      stats.push(patchSetStats);
-
-      if (patchSetStats.errors.length === 0) {
-        const commitMode = determineCommitMode(this, flags, isLastPatchSet);
-
-        if (commitMode === "auto") {
-          const commitResult = await commitPatchSet(
-            absoluteTargetRepo,
-            patchSetName,
-            this.process.stdout as NodeJS.WriteStream,
-          );
-          if (!commitResult.success) {
-            this.process.stderr.write(
-              `Error: Could not commit patch set: ${commitResult.error}\n`,
-            );
-            this.process.exit(1);
-            return;
-          }
-        } else if (commitMode === "prompt") {
-          const prompts = createPrompts(this);
-          const shouldCommit = await prompts.confirm({
-            message: `Commit changes from patch set "${patchSetName}"?`,
-            initialValue: true,
-          });
-
-          if (prompts.isCancel(shouldCommit)) {
-            this.process.stderr.write("Apply cancelled\n");
-            this.process.exit(1);
-            return;
-          }
-
-          if (shouldCommit) {
-            const commitResult = await commitPatchSet(
-              absoluteTargetRepo,
-              patchSetName,
-              this.process.stdout as NodeJS.WriteStream,
-            );
-            if (!commitResult.success) {
-              this.process.stderr.write(
-                `Error: Could not commit patch set: ${commitResult.error}\n`,
-              );
-              this.process.exit(1);
-              return;
-            }
-          } else {
-            this.process.stdout.write(
-              `  Left patch set uncommitted: ${patchSetName}\n`,
-            );
-          }
-        } else {
-          this.process.stdout.write(
-            `  Left patch set uncommitted: ${patchSetName}\n`,
-          );
-        }
+      if (commitResult.cancelled) {
+        exit(this, { exitCode: 1 });
       }
     }
 
-    const totalFiles = sumBy(stats, (s) => s.fileCount);
-    const allErrors = stats.flatMap((s) => s.errors);
-
-    if (allErrors.length > 0) {
-      this.process.stderr.write(`\nErrors occurred while applying patches:\n`);
-      for (const { file, error } of allErrors) {
-        this.process.stderr.write(`  ${file}: ${error}\n`);
-      }
-      this.process.exit(1);
-      return;
-    }
-
-    this.process.stdout.write(
-      `Successfully applied ${totalFiles} patch file(s) across ${stats.length} patch set(s).\n`,
-    );
-  } catch (error) {
-    if (error instanceof Error && error.name === "ProcessExitError") {
-      throw error;
-    }
-    this.process.stderr.write(`Error: ${error}\n`);
-    this.process.exit(1);
+    stats.push(result);
   }
+
+  reportResults(this, stats);
 }
