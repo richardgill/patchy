@@ -8,6 +8,7 @@ import {
   hasAbsoluteTargetRepo,
 } from "~/cli-fields";
 import type { LocalContext } from "~/context";
+import { exit } from "~/lib/exit";
 import { formatPathForDisplay, getAllFiles, getSortedFolders } from "~/lib/fs";
 import { createGitClient, isGitRepo } from "~/lib/git";
 import { canPrompt, createPrompts } from "~/lib/prompts";
@@ -230,9 +231,7 @@ export default async function (
     });
 
     if (!result.success) {
-      this.process.stderr.write(result.error);
-      this.process.exit(1);
-      return;
+      return exit(this, { exitCode: 1, stderr: result.error });
     }
 
     const config = result.mergedConfig;
@@ -241,9 +240,7 @@ export default async function (
 
     const flagValidation = validateCommitFlags(flags.all, flags.edit);
     if (flagValidation.error !== undefined) {
-      this.process.stderr.write(`${flagValidation.error}\n`);
-      this.process.exit(1);
-      return;
+      return exit(this, { exitCode: 1, stderr: flagValidation.error });
     }
 
     const allPatchSets = getSortedFolders(absolutePatchesDir);
@@ -256,9 +253,7 @@ export default async function (
     const filterResult = filterPatchSets(allPatchSets, flags.only, flags.until);
 
     if (filterResult.error !== undefined) {
-      this.process.stderr.write(`${filterResult.error}\n`);
-      this.process.exit(1);
-      return;
+      return exit(this, { exitCode: 1, stderr: filterResult.error });
     }
 
     const patchSetsToApply = filterResult.filtered;
@@ -272,9 +267,7 @@ export default async function (
     if (!config.dry_run) {
       const treeCheck = await checkWorkingTreeClean(absoluteTargetRepo);
       if (!treeCheck.clean && treeCheck.error) {
-        this.process.stderr.write(`${treeCheck.error}\n`);
-        this.process.exit(1);
-        return;
+        return exit(this, { exitCode: 1, stderr: treeCheck.error });
       }
     }
 
@@ -345,11 +338,10 @@ export default async function (
             this.process.stdout as NodeJS.WriteStream,
           );
           if (!commitResult.success) {
-            this.process.stderr.write(
-              `Error: Could not commit patch set: ${commitResult.error}\n`,
-            );
-            this.process.exit(1);
-            return;
+            return exit(this, {
+              exitCode: 1,
+              stderr: `Error: Could not commit patch set: ${commitResult.error}`,
+            });
           }
         } else if (commitMode === "prompt") {
           const prompts = createPrompts(this);
@@ -359,9 +351,7 @@ export default async function (
           });
 
           if (prompts.isCancel(shouldCommit)) {
-            this.process.stderr.write("Apply cancelled\n");
-            this.process.exit(1);
-            return;
+            return exit(this, { exitCode: 1, stderr: "Apply cancelled" });
           }
 
           if (shouldCommit) {
@@ -371,11 +361,10 @@ export default async function (
               this.process.stdout as NodeJS.WriteStream,
             );
             if (!commitResult.success) {
-              this.process.stderr.write(
-                `Error: Could not commit patch set: ${commitResult.error}\n`,
-              );
-              this.process.exit(1);
-              return;
+              return exit(this, {
+                exitCode: 1,
+                stderr: `Error: Could not commit patch set: ${commitResult.error}`,
+              });
             }
           } else {
             this.process.stdout.write(
@@ -394,12 +383,13 @@ export default async function (
     const allErrors = stats.flatMap((s) => s.errors);
 
     if (allErrors.length > 0) {
-      this.process.stderr.write(`\nErrors occurred while applying patches:\n`);
-      for (const { file, error } of allErrors) {
-        this.process.stderr.write(`  ${file}: ${error}\n`);
-      }
-      this.process.exit(1);
-      return;
+      const errorLines = allErrors.map(
+        ({ file, error }) => `  ${file}: ${error}`,
+      );
+      return exit(this, {
+        exitCode: 1,
+        stderr: `\nErrors occurred while applying patches:\n${errorLines.join("\n")}`,
+      });
     }
 
     this.process.stdout.write(
@@ -409,7 +399,6 @@ export default async function (
     if (error instanceof Error && error.name === "ProcessExitError") {
       throw error;
     }
-    this.process.stderr.write(`Error: ${error}\n`);
-    this.process.exit(1);
+    return exit(this, { exitCode: 1, stderr: `Error: ${error}` });
   }
 }

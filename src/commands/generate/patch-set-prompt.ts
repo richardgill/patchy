@@ -1,4 +1,5 @@
 import type { LocalContext } from "~/context";
+import { exit } from "~/lib/exit";
 import { getSortedFolders } from "~/lib/fs";
 import { canPrompt, createPrompts } from "~/lib/prompts";
 
@@ -26,11 +27,11 @@ export const resolvePatchSet = async (
   const existingPatchSets = getSortedFolders(absolutePatchesDir);
 
   if (!canPrompt(context)) {
-    context.process.stderr.write(
-      "No patch set specified. Use --patch-set, PATCHY_PATCH_SET env var, or set patch_set in config.\n",
-    );
-    context.process.exit(1);
-    return undefined;
+    return exit(context, {
+      exitCode: 1,
+      stderr:
+        "No patch set specified. Use --patch-set, PATCHY_PATCH_SET env var, or set patch_set in config.",
+    });
   }
 
   const prompts = createPrompts(context);
@@ -42,9 +43,7 @@ export const resolvePatchSet = async (
       validate: (input) => (input?.trim() ? undefined : "Name is required"),
     });
     if (prompts.isCancel(name)) {
-      context.process.stderr.write("Operation cancelled\n");
-      context.process.exit(1);
-      return undefined;
+      return exit(context, { exitCode: 1, stderr: "Operation cancelled" });
     }
     const prefix = getNextPatchSetPrefix(absolutePatchesDir);
     return `${prefix}-${name}`;
@@ -61,9 +60,7 @@ export const resolvePatchSet = async (
   });
 
   if (prompts.isCancel(selected)) {
-    context.process.stderr.write("Operation cancelled\n");
-    context.process.exit(1);
-    return undefined;
+    return exit(context, { exitCode: 1, stderr: "Operation cancelled" });
   }
 
   if (selected === CREATE_NEW_OPTION) {
@@ -73,9 +70,7 @@ export const resolvePatchSet = async (
       validate: (input) => (input?.trim() ? undefined : "Name is required"),
     });
     if (prompts.isCancel(name)) {
-      context.process.stderr.write("Operation cancelled\n");
-      context.process.exit(1);
-      return undefined;
+      return exit(context, { exitCode: 1, stderr: "Operation cancelled" });
     }
     const prefix = getNextPatchSetPrefix(absolutePatchesDir);
     return `${prefix}-${name}`;

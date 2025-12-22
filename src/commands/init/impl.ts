@@ -12,6 +12,7 @@ import {
   jsonConfigSchema,
 } from "~/cli-fields";
 import type { LocalContext } from "~/context";
+import { exit } from "~/lib/exit";
 import { formatPathForDisplay, isPathWithinDir, resolvePath } from "~/lib/fs";
 import { extractRepoName, normalizeGitignoreEntry } from "~/lib/git";
 import {
@@ -83,26 +84,22 @@ export default async function (
   const configPath = resolve(this.cwd, flags.config ?? DEFAULT_CONFIG_PATH);
 
   if (!flags.force && existsSync(configPath)) {
-    this.process.stderr.write(
-      `Configuration file already exists at ${configPath}\n`,
-    );
-    this.process.stderr.write("Use --force to overwrite\n");
-    this.process.exit?.(1);
-    return;
+    return exit(this, {
+      exitCode: 1,
+      stderr: `Configuration file already exists at ${configPath}\nUse --force to overwrite`,
+    });
   }
 
   if (flags["source-repo"] !== undefined) {
     if (!flags["source-repo"].trim()) {
-      this.process.stderr.write("Repository URL is required\n");
-      this.process.exit?.(1);
-      return;
+      return exit(this, { exitCode: 1, stderr: "Repository URL is required" });
     }
     if (!isValidGitUrl(flags["source-repo"])) {
-      this.process.stderr.write(
-        "Please enter a valid Git URL (https://github.com/owner/repo, git@github.com:owner/repo.git, or /path/to/local/repo)\n",
-      );
-      this.process.exit?.(1);
-      return;
+      return exit(this, {
+        exitCode: 1,
+        stderr:
+          "Please enter a valid Git URL (https://github.com/owner/repo, git@github.com:owner/repo.git, or /path/to/local/repo)",
+      });
     }
   }
 
@@ -118,9 +115,7 @@ export default async function (
       initialValue: getDefaultValue("patches_dir"),
     });
     if (prompts.isCancel(patchesDir)) {
-      this.process.stderr.write("Initialization cancelled\n");
-      this.process.exit?.(1);
-      return;
+      return exit(this, { exitCode: 1, stderr: "Initialization cancelled" });
     }
     answers.patchesDir = patchesDir;
   }
@@ -132,9 +127,7 @@ export default async function (
       initialValue: getDefaultValue("clones_dir"),
     });
     if (prompts.isCancel(clonesDir)) {
-      this.process.stderr.write("Initialization cancelled\n");
-      this.process.exit?.(1);
-      return;
+      return exit(this, { exitCode: 1, stderr: "Initialization cancelled" });
     }
     answers.clonesDir = clonesDir;
   }
@@ -157,9 +150,7 @@ export default async function (
         initialValue: true,
       });
       if (prompts.isCancel(addToGitignore)) {
-        this.process.stderr.write("Initialization cancelled\n");
-        this.process.exit?.(1);
-        return;
+        return exit(this, { exitCode: 1, stderr: "Initialization cancelled" });
       }
       answers.addToGitignore = addToGitignore;
     }
@@ -176,9 +167,7 @@ export default async function (
       },
     });
     if (prompts.isCancel(repoUrl)) {
-      this.process.stderr.write("Initialization cancelled\n");
-      this.process.exit?.(1);
-      return;
+      return exit(this, { exitCode: 1, stderr: "Initialization cancelled" });
     }
     answers.repoUrl = repoUrl;
   }
@@ -216,9 +205,7 @@ export default async function (
     });
 
     if (prompts.isCancel(selectedBranch)) {
-      this.process.stderr.write("Initialization cancelled\n");
-      this.process.exit?.(1);
-      return;
+      return exit(this, { exitCode: 1, stderr: "Initialization cancelled" });
     }
 
     answers.upstreamBranch =
@@ -239,17 +226,16 @@ export default async function (
       });
 
       if (prompts.isCancel(selectedBase)) {
-        this.process.stderr.write("Initialization cancelled\n");
-        this.process.exit?.(1);
-        return;
+        return exit(this, { exitCode: 1, stderr: "Initialization cancelled" });
       }
 
       if (selectedBase === MANUAL_SHA_OPTION) {
         const manualSha = await promptForManualSha(prompts);
         if (prompts.isCancel(manualSha)) {
-          this.process.stderr.write("Initialization cancelled\n");
-          this.process.exit?.(1);
-          return;
+          return exit(this, {
+            exitCode: 1,
+            stderr: "Initialization cancelled",
+          });
         }
         answers.baseRevision = manualSha;
       } else {
@@ -262,9 +248,7 @@ export default async function (
         initialValue: getDefaultValue("base_revision"),
       });
       if (prompts.isCancel(baseRevision)) {
-        this.process.stderr.write("Initialization cancelled\n");
-        this.process.exit?.(1);
-        return;
+        return exit(this, { exitCode: 1, stderr: "Initialization cancelled" });
       }
       answers.baseRevision = baseRevision;
     }
@@ -301,11 +285,10 @@ export default async function (
         `Created patches directory: ${chalk.cyan(formatPathForDisplay(finalConfig.patches_dir ?? ""))}`,
       );
     } catch (error) {
-      this.process.stderr.write(
-        `Failed to create patches directory: ${error}\n`,
-      );
-      this.process.exit?.(1);
-      return;
+      return exit(this, {
+        exitCode: 1,
+        stderr: `Failed to create patches directory: ${error}`,
+      });
     }
   }
 
@@ -317,11 +300,10 @@ export default async function (
         `Created clones directory: ${chalk.cyan(formatPathForDisplay(clonesDir))}`,
       );
     } catch (error) {
-      this.process.stderr.write(
-        `Failed to create clones directory: ${error}\n`,
-      );
-      this.process.exit?.(1);
-      return;
+      return exit(this, {
+        exitCode: 1,
+        stderr: `Failed to create clones directory: ${error}`,
+      });
     }
   }
 
@@ -332,9 +314,10 @@ export default async function (
         `Added ${chalk.cyan(formatPathForDisplay(clonesDir))} to ${chalk.cyan(".gitignore")}`,
       );
     } catch (error) {
-      this.process.stderr.write(`Failed to update .gitignore: ${error}\n`);
-      this.process.exit?.(1);
-      return;
+      return exit(this, {
+        exitCode: 1,
+        stderr: `Failed to update .gitignore: ${error}`,
+      });
     }
   }
 
@@ -346,11 +329,10 @@ export default async function (
       `Created configuration file: ${chalk.cyan(flags.config ?? DEFAULT_CONFIG_PATH)}`,
     );
   } catch (error) {
-    this.process.stderr.write(
-      `Failed to create configuration file: ${error}\n`,
-    );
-    this.process.exit?.(1);
-    return;
+    return exit(this, {
+      exitCode: 1,
+      stderr: `Failed to create configuration file: ${error}`,
+    });
   }
 
   prompts.outro(chalk.green("Patchy initialized successfully!"));

@@ -8,6 +8,7 @@ import {
   jsonConfigSchema,
 } from "~/cli-fields";
 import type { LocalContext } from "~/context";
+import { exit } from "~/lib/exit";
 import {
   buildBaseRevisionOptions,
   fetchRemoteRefs,
@@ -27,26 +28,22 @@ export default async function (
   const configPath = resolve(this.cwd, flags.config ?? DEFAULT_CONFIG_PATH);
 
   if (!existsSync(configPath)) {
-    this.process.stderr.write(`Configuration file not found: ${configPath}\n`);
-    this.process.exit?.(1);
-    return;
+    return exit(this, {
+      exitCode: 1,
+      stderr: `Configuration file not found: ${configPath}`,
+    });
   }
 
   const content = readFileSync(configPath, "utf8");
   const parseResult = parseJsonc<JsonConfig>(content);
 
   if (!parseResult.success) {
-    this.process.stderr.write(parseResult.error);
-    this.process.stderr.write("\n");
-    this.process.exit?.(1);
-    return;
+    return exit(this, { exitCode: 1, stderr: parseResult.error });
   }
 
   const zodResult = jsonConfigSchema.safeParse(parseResult.json);
   if (!zodResult.success) {
-    this.process.stderr.write("Invalid configuration file\n");
-    this.process.exit?.(1);
-    return;
+    return exit(this, { exitCode: 1, stderr: "Invalid configuration file" });
   }
 
   const config = zodResult.data;
@@ -85,11 +82,10 @@ const fetchAndValidateRemoteRefs = async (
     return await fetchRemoteRefs(sourceRepo);
   } catch (error) {
     const message = error instanceof Error ? error.message : String(error);
-    context.process.stderr.write(
-      chalk.red(`Failed to fetch remote refs: ${message}\n`),
-    );
-    context.process.exit?.(1);
-    return undefined;
+    return exit(context, {
+      exitCode: 1,
+      stderr: chalk.red(`Failed to fetch remote refs: ${message}`),
+    });
   }
 };
 
@@ -109,17 +105,13 @@ const promptForBaseRevision = async (
   });
 
   if (prompts.isCancel(selectedBase)) {
-    context.process.stderr.write("Operation cancelled\n");
-    context.process.exit?.(1);
-    return undefined;
+    return exit(context, { exitCode: 1, stderr: "Operation cancelled" });
   }
 
   if (selectedBase === MANUAL_SHA_OPTION) {
     const manualSha = await promptForManualSha(prompts);
     if (prompts.isCancel(manualSha)) {
-      context.process.stderr.write("Operation cancelled\n");
-      context.process.exit?.(1);
-      return undefined;
+      return exit(context, { exitCode: 1, stderr: "Operation cancelled" });
     }
     return manualSha;
   }
@@ -137,9 +129,10 @@ const writeConfigUpdate = async (
   const updateResult = updateJsoncField(content, "base_revision", newBase);
 
   if (!updateResult.success) {
-    context.process.stderr.write(chalk.red(`${updateResult.error}\n`));
-    context.process.exit?.(1);
-    return false;
+    return exit(context, {
+      exitCode: 1,
+      stderr: chalk.red(updateResult.error),
+    });
   }
 
   try {
@@ -154,11 +147,10 @@ const writeConfigUpdate = async (
     return true;
   } catch (error) {
     const errorMessage = error instanceof Error ? error.message : String(error);
-    context.process.stderr.write(
-      chalk.red(`Failed to update config: ${errorMessage}\n`),
-    );
-    context.process.exit?.(1);
-    return false;
+    return exit(context, {
+      exitCode: 1,
+      stderr: chalk.red(`Failed to update config: ${errorMessage}`),
+    });
   }
 };
 
@@ -195,21 +187,19 @@ const updateBaseRevisionInteractive = async (
   }
 
   if (!config.upstream_branch) {
-    context.process.stderr.write(
-      chalk.red(
-        "upstream_branch is required for interactive mode. Set it in your config or use direct mode: patchy base <revision>\n",
+    return exit(context, {
+      exitCode: 1,
+      stderr: chalk.red(
+        "upstream_branch is required for interactive mode. Set it in your config or use direct mode: patchy base <revision>",
       ),
-    );
-    context.process.exit?.(1);
-    return;
+    });
   }
 
   if (!config.source_repo) {
-    context.process.stderr.write(
-      chalk.red("source_repo is required to fetch upstream refs\n"),
-    );
-    context.process.exit?.(1);
-    return;
+    return exit(context, {
+      exitCode: 1,
+      stderr: chalk.red("source_repo is required to fetch upstream refs"),
+    });
   }
 
   const prompts = createPrompts(context);

@@ -8,6 +8,7 @@ import {
 } from "~/cli-fields";
 import type { LocalContext } from "~/context";
 import { assertDefined } from "~/lib/assert";
+import { exit } from "~/lib/exit";
 import { createGitClient } from "~/lib/git";
 import { createPrompts } from "~/lib/prompts";
 import type { ResetFlags } from "./flags";
@@ -25,9 +26,7 @@ export default async function (
   });
 
   if (!result.success) {
-    this.process.stderr.write(result.error);
-    this.process.exit(1);
-    return;
+    return exit(this, { exitCode: 1, stderr: result.error });
   }
 
   const config = result.mergedConfig;
@@ -37,19 +36,19 @@ export default async function (
   const verbose = config.verbose;
 
   if (!existsSync(repoDir)) {
-    this.process.stderr.write(
-      chalk.red(`Repository directory does not exist: ${repoDir}\n`),
-    );
-    this.process.exit(1);
-    return;
+    return exit(this, {
+      exitCode: 1,
+      stderr: chalk.red(`Repository directory does not exist: ${repoDir}`),
+    });
   }
 
   const git = createGitClient(repoDir);
   const isRepo = await git.checkIsRepo(CheckRepoActions.IS_REPO_ROOT);
   if (!isRepo) {
-    this.process.stderr.write(chalk.red(`Not a Git repository: ${repoDir}\n`));
-    this.process.exit(1);
-    return;
+    return exit(this, {
+      exitCode: 1,
+      stderr: chalk.red(`Not a Git repository: ${repoDir}`),
+    });
   }
 
   if (verbose) {
@@ -71,9 +70,7 @@ export default async function (
     });
 
     if (prompts.isCancel(confirmed) || !confirmed) {
-      this.process.stderr.write("Reset cancelled\n");
-      this.process.exit(1);
-      return;
+      return exit(this, { exitCode: 1, stderr: "Reset cancelled" });
     }
   }
 
@@ -86,12 +83,11 @@ export default async function (
     );
   } catch (error) {
     const message = error instanceof Error ? error.message : String(error);
-    this.process.stderr.write(
-      chalk.red(
-        `Failed to reset to base_revision "${baseRevision}": ${message}\n`,
+    return exit(this, {
+      exitCode: 1,
+      stderr: chalk.red(
+        `Failed to reset to base_revision "${baseRevision}": ${message}`,
       ),
-    );
-    this.process.exit(1);
-    return;
+    });
   }
 }
