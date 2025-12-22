@@ -2,17 +2,5 @@
   "permissions": {
     "allow": ["Bash(bd:*)", "Skill(add-changeset)"],
     "additionalDirectories": ["/home/rich/code/reference-repos/opencode"]
-  },
-  "hooks": {
-    "Stop": [
-      {
-        "hooks": [
-          {
-            "type": "command",
-            "command": "\"$CLAUDE_PROJECT_DIR\"/.claude/hooks/stop/local-ci.sh"
-          }
-        ]
-      }
-    ]
   }
 }
