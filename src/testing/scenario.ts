@@ -37,6 +37,9 @@ type ScenarioOptions = {
   config?: Record<string, string | boolean | number>;
   rawConfig?: Record<string, unknown>;
   noConfig?: boolean;
+  configPath?: string;
+  configContent?: string;
+  tty?: boolean;
 };
 
 type PromptMatcher = string | RegExp;
@@ -162,15 +165,19 @@ const setupConfig = async (
   bareRepoDir: string,
   options: ScenarioOptions,
 ): Promise<void> => {
-  const configToWrite = options.rawConfig ?? {
-    ...DEFAULT_CONFIG,
-    ...(options.bareRepo ? { source_repo: `file://${bareRepoDir}` } : {}),
-    ...options.config,
-  };
-  await writeFile(
-    join(tmpDir, "patchy.json"),
-    JSON.stringify(configToWrite, null, 2),
-  );
+  const configFilename = options.configPath ?? "patchy.json";
+  const content =
+    options.configContent ??
+    JSON.stringify(
+      options.rawConfig ?? {
+        ...DEFAULT_CONFIG,
+        ...(options.bareRepo ? { source_repo: `file://${bareRepoDir}` } : {}),
+        ...options.config,
+      },
+      null,
+      2,
+    );
+  await writeFile(join(tmpDir, configFilename), content);
 };
 
 const setupPatches = async (
@@ -276,11 +283,12 @@ const createContextHelpers = (
 const createRunCli = (
   tmpDir: string,
   expectations: PromptExpectation[],
+  ttyMode: boolean,
 ): ((command: string) => Promise<PromptedCliResult>) => {
   return async (command: string): Promise<PromptedCliResult> => {
     const recorded: RecordedPrompt[] = [];
 
-    if (expectations.length === 0) {
+    if (!ttyMode) {
       const result = await baseRunCli(command, tmpDir);
       return { result, prompts: recorded };
     }
@@ -328,14 +336,14 @@ export const scenario = async (
   ): ScenarioContext => {
     return {
       ...helpers,
-      runCli: createRunCli(paths.tmpDir, expectations),
+      runCli: createRunCli(paths.tmpDir, expectations, true),
       withPrompts,
     };
   };
 
   return {
     ...helpers,
-    runCli: createRunCli(paths.tmpDir, []),
+    runCli: createRunCli(paths.tmpDir, [], options.tty ?? false),
     withPrompts,
   };
 };

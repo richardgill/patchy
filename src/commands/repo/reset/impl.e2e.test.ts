@@ -1,34 +1,20 @@
 import { describe, expect, it } from "bun:test";
 import { join } from "node:path";
-import { assertDefined } from "~/lib/assert";
 import { createGitClient } from "~/lib/git";
-import { cancel, runCli, runCliWithPrompts } from "~/testing/e2e-utils";
-import {
-  generateTmpDir,
-  setupTestWithConfig,
-  writeFileIn,
-} from "~/testing/fs-test-utils";
-import {
-  commitFile,
-  initGitRepo,
-  initGitRepoWithCommit,
-} from "~/testing/git-helpers";
+import { writeFileIn } from "~/testing/fs-test-utils";
+import { commitFile } from "~/testing/git-helpers";
+import { cancel, scenario } from "~/testing/scenario";
 
 describe("patchy repo reset", () => {
   it("should reset repository and discard local changes", async () => {
-    const tmpDir = generateTmpDir();
-    const ctx = await setupTestWithConfig({
-      tmpDir,
-      createDirectories: { clonesDir: "repos", targetRepo: "test-repo" },
+    const ctx = await scenario({
+      git: true,
+      targetFiles: {
+        "test.txt": "original content",
+      },
     });
 
-    const repoPath = assertDefined(
-      ctx.absoluteTargetRepo,
-      "absoluteTargetRepo",
-    );
-    await initGitRepo(repoPath);
-    await commitFile(repoPath, "test.txt", "original content");
-
+    const repoPath = join(ctx.tmpDir, "repos", "main");
     const git = createGitClient(repoPath);
     const baseCommit = (await git.revparse(["HEAD"])).trim();
 
@@ -36,9 +22,8 @@ describe("patchy repo reset", () => {
 
     expect(join(repoPath, "test.txt")).toHaveFileContent("modified content");
 
-    const result = await runCli(
-      `patchy repo reset --clones-dir repos --target-repo test-repo --base-revision ${baseCommit} --yes`,
-      tmpDir,
+    const { result } = await ctx.runCli(
+      `patchy repo reset --base-revision ${baseCommit} --yes`,
     );
     expect(result).toSucceed();
 
@@ -46,25 +31,19 @@ describe("patchy repo reset", () => {
   });
 
   it("should show success message after reset", async () => {
-    const tmpDir = generateTmpDir();
-    const ctx = await setupTestWithConfig({
-      tmpDir,
-      createDirectories: { clonesDir: "repos", targetRepo: "test-repo" },
+    const ctx = await scenario({
+      git: true,
+      targetFiles: {
+        "test.txt": "content",
+      },
     });
 
-    const repoPath = assertDefined(
-      ctx.absoluteTargetRepo,
-      "absoluteTargetRepo",
-    );
-    await initGitRepo(repoPath);
-    await commitFile(repoPath, "test.txt", "content");
-
+    const repoPath = join(ctx.tmpDir, "repos", "main");
     const git = createGitClient(repoPath);
     const baseCommit = (await git.revparse(["HEAD"])).trim();
 
-    const result = await runCli(
-      `patchy repo reset --clones-dir repos --target-repo test-repo --base-revision ${baseCommit} --yes`,
-      tmpDir,
+    const { result } = await ctx.runCli(
+      `patchy repo reset --base-revision ${baseCommit} --yes`,
     );
 
     expect(result).toSucceed();
@@ -73,19 +52,14 @@ describe("patchy repo reset", () => {
   });
 
   it("should reset to base_revision and remove patch commits", async () => {
-    const tmpDir = generateTmpDir();
-    const ctx = await setupTestWithConfig({
-      tmpDir,
-      createDirectories: { clonesDir: "repos", targetRepo: "test-repo" },
+    const ctx = await scenario({
+      git: true,
+      targetFiles: {
+        "base.txt": "base content",
+      },
     });
 
-    const repoPath = assertDefined(
-      ctx.absoluteTargetRepo,
-      "absoluteTargetRepo",
-    );
-    await initGitRepo(repoPath);
-    await commitFile(repoPath, "base.txt", "base content");
-
+    const repoPath = join(ctx.tmpDir, "repos", "main");
     const git = createGitClient(repoPath);
     const baseCommit = (await git.revparse(["HEAD"])).trim();
 
@@ -97,9 +71,8 @@ describe("patchy repo reset", () => {
     const logBefore = await git.log();
     expect(logBefore.total).toBe(3);
 
-    const result = await runCli(
-      `patchy repo reset --clones-dir repos --target-repo test-repo --base-revision ${baseCommit} --yes`,
-      tmpDir,
+    const { result } = await ctx.runCli(
+      `patchy repo reset --base-revision ${baseCommit} --yes`,
     );
     expect(result).toSucceed();
 
@@ -118,45 +91,37 @@ describe("patchy repo reset", () => {
 
   describe("error cases", () => {
     it("should fail when repo directory does not exist", async () => {
-      const tmpDir = generateTmpDir();
-      await setupTestWithConfig({
-        tmpDir,
-        createDirectories: { clonesDir: "repos" },
+      const ctx = await scenario({
+        config: {
+          clones_dir: "repos",
+        },
       });
 
-      const result = await runCli(
+      const { result } = await ctx.runCli(
         `patchy repo reset --clones-dir repos --target-repo nonexistent --base-revision main`,
-        tmpDir,
       );
 
       expect(result).toFailWith("does not exist");
     });
 
     it("should fail when directory is not a git repository", async () => {
-      const tmpDir = generateTmpDir();
-      await setupTestWithConfig({
-        tmpDir,
-        createDirectories: { clonesDir: "repos", targetRepo: "not-a-repo" },
-      });
+      const ctx = await scenario({});
 
-      const result = await runCli(
-        `patchy repo reset --clones-dir repos --target-repo not-a-repo --base-revision main`,
-        tmpDir,
+      const { result } = await ctx.runCli(
+        `patchy repo reset --base-revision main`,
       );
 
       expect(result).toFail();
       expect(result.stderr).toMatchInlineSnapshot(
-        `"Not a Git repository: <TEST_DIR>/repos/not-a-repo"`,
+        `"Not a Git repository: <TEST_DIR>/repos/main"`,
       );
     });
 
     it("should fail when clones-dir directory does not exist", async () => {
-      const tmpDir = generateTmpDir();
-      await setupTestWithConfig({ tmpDir });
+      const ctx = await scenario({});
 
-      const result = await runCli(
+      const { result } = await ctx.runCli(
         `patchy repo reset --target-repo test-repo --base-revision main`,
-        tmpDir,
       );
 
       // Uses default ./clones/, which doesn't exist
@@ -164,33 +129,26 @@ describe("patchy repo reset", () => {
     });
 
     it("should fail when target-repo is missing", async () => {
-      const tmpDir = generateTmpDir();
-      await setupTestWithConfig({
-        tmpDir,
-        createDirectories: { clonesDir: "repos" },
+      const ctx = await scenario({
+        rawConfig: {
+          clones_dir: "repos",
+        },
       });
 
-      const result = await runCli(
+      const { result } = await ctx.runCli(
         `patchy repo reset --clones-dir repos --base-revision main`,
-        tmpDir,
       );
 
       expect(result).toFailWith("Missing");
     });
 
     it("should fail when base-revision does not exist", async () => {
-      const tmpDir = generateTmpDir();
-      await setupTestWithConfig({
-        tmpDir,
-        createDirectories: { clonesDir: "repos", targetRepo: "test-repo" },
+      const ctx = await scenario({
+        git: true,
       });
 
-      const repoPath = join(tmpDir, "repos", "test-repo");
-      await initGitRepoWithCommit(repoPath);
-
-      const result = await runCli(
-        `patchy repo reset --clones-dir repos --target-repo test-repo --base-revision nonexistent-sha --yes`,
-        tmpDir,
+      const { result } = await ctx.runCli(
+        `patchy repo reset --base-revision nonexistent-sha --yes`,
       );
 
       expect(result).toFail();
@@ -201,27 +159,21 @@ describe("patchy repo reset", () => {
 
   describe("dry-run", () => {
     it("should not reset when --dry-run is set", async () => {
-      const tmpDir = generateTmpDir();
-      const ctx = await setupTestWithConfig({
-        tmpDir,
-        createDirectories: { clonesDir: "repos", targetRepo: "test-repo" },
+      const ctx = await scenario({
+        git: true,
+        targetFiles: {
+          "test.txt": "original content",
+        },
       });
 
-      const repoPath = assertDefined(
-        ctx.absoluteTargetRepo,
-        "absoluteTargetRepo",
-      );
-      await initGitRepo(repoPath);
-      await commitFile(repoPath, "test.txt", "original content");
-
+      const repoPath = join(ctx.tmpDir, "repos", "main");
       const git = createGitClient(repoPath);
       const baseCommit = (await git.revparse(["HEAD"])).trim();
 
       await writeFileIn(repoPath, "test.txt", "modified content");
 
-      const result = await runCli(
-        `patchy repo reset --clones-dir repos --target-repo test-repo --base-revision ${baseCommit} --dry-run`,
-        tmpDir,
+      const { result } = await ctx.runCli(
+        `patchy repo reset --base-revision ${baseCommit} --dry-run`,
       );
 
       expect(result).toSucceed();
@@ -233,15 +185,14 @@ describe("patchy repo reset", () => {
     });
 
     it("should still validate repo exists in dry-run mode", async () => {
-      const tmpDir = generateTmpDir();
-      await setupTestWithConfig({
-        tmpDir,
-        createDirectories: { clonesDir: "repos" },
+      const ctx = await scenario({
+        config: {
+          clones_dir: "repos",
+        },
       });
 
-      const result = await runCli(
+      const { result } = await ctx.runCli(
         `patchy repo reset --clones-dir repos --target-repo nonexistent --base-revision main --dry-run`,
-        tmpDir,
       );
 
       expect(result).toFailWith("does not exist");
@@ -250,40 +201,26 @@ describe("patchy repo reset", () => {
 
   describe("confirmation prompt", () => {
     it("should reset when user confirms", async () => {
-      const tmpDir = generateTmpDir();
-      const ctx = await setupTestWithConfig({
-        tmpDir,
-        createDirectories: {
-          clonesDir: "repos",
-          targetRepo: "my-repo",
-        },
-        jsonConfig: {
-          clones_dir: "repos",
-          target_repo: "my-repo",
+      const ctx = await scenario({
+        git: true,
+        targetFiles: {
+          "initial.txt": "initial content",
         },
       });
 
-      const repoDir = assertDefined(
-        ctx.absoluteTargetRepo,
-        "absoluteTargetRepo",
-      );
-      await initGitRepoWithCommit(repoDir);
-
-      const git = createGitClient(repoDir);
+      const repoPath = join(ctx.tmpDir, "repos", "main");
+      const git = createGitClient(repoPath);
       const baseCommit = (await git.revparse(["HEAD"])).trim();
 
       // Make uncommitted changes
-      await writeFileIn(repoDir, "dirty.txt", "uncommitted changes");
+      await writeFileIn(repoPath, "dirty.txt", "uncommitted changes");
 
-      const { result, prompts } = await runCliWithPrompts(
-        `patchy repo reset --base-revision ${baseCommit}`,
-        tmpDir,
-      )
-        .on({
+      const { result, prompts } = await ctx
+        .withPrompts({
           confirm: /discarding all commits and uncommitted changes/,
           respond: true,
         })
-        .run();
+        .runCli(`patchy repo reset --base-revision ${baseCommit}`);
 
       expect(result).toSucceed();
       expect(result).toHaveOutput("Successfully reset");
@@ -299,37 +236,23 @@ describe("patchy repo reset", () => {
     });
 
     it("should cancel when user declines", async () => {
-      const tmpDir = generateTmpDir();
-      const ctx = await setupTestWithConfig({
-        tmpDir,
-        createDirectories: {
-          clonesDir: "repos",
-          targetRepo: "my-repo",
-        },
-        jsonConfig: {
-          clones_dir: "repos",
-          target_repo: "my-repo",
+      const ctx = await scenario({
+        git: true,
+        targetFiles: {
+          "initial.txt": "initial content",
         },
       });
 
-      const repoDir = assertDefined(
-        ctx.absoluteTargetRepo,
-        "absoluteTargetRepo",
-      );
-      await initGitRepoWithCommit(repoDir);
-
-      const git = createGitClient(repoDir);
+      const repoPath = join(ctx.tmpDir, "repos", "main");
+      const git = createGitClient(repoPath);
       const baseCommit = (await git.revparse(["HEAD"])).trim();
 
-      const { result, prompts } = await runCliWithPrompts(
-        `patchy repo reset --base-revision ${baseCommit}`,
-        tmpDir,
-      )
-        .on({
+      const { result, prompts } = await ctx
+        .withPrompts({
           confirm: /discarding all commits and uncommitted changes/,
           respond: false,
         })
-        .run();
+        .runCli(`patchy repo reset --base-revision ${baseCommit}`);
 
       expect(result).toFail();
       expect(result.stderr).toContain("cancelled");
@@ -345,37 +268,23 @@ describe("patchy repo reset", () => {
     });
 
     it("should cancel when user cancels prompt", async () => {
-      const tmpDir = generateTmpDir();
-      const ctx = await setupTestWithConfig({
-        tmpDir,
-        createDirectories: {
-          clonesDir: "repos",
-          targetRepo: "my-repo",
-        },
-        jsonConfig: {
-          clones_dir: "repos",
-          target_repo: "my-repo",
+      const ctx = await scenario({
+        git: true,
+        targetFiles: {
+          "initial.txt": "initial content",
         },
       });
 
-      const repoDir = assertDefined(
-        ctx.absoluteTargetRepo,
-        "absoluteTargetRepo",
-      );
-      await initGitRepoWithCommit(repoDir);
-
-      const git = createGitClient(repoDir);
+      const repoPath = join(ctx.tmpDir, "repos", "main");
+      const git = createGitClient(repoPath);
       const baseCommit = (await git.revparse(["HEAD"])).trim();
 
-      const { result, prompts } = await runCliWithPrompts(
-        `patchy repo reset --base-revision ${baseCommit}`,
-        tmpDir,
-      )
-        .on({
+      const { result, prompts } = await ctx
+        .withPrompts({
           confirm: /discarding all commits and uncommitted changes/,
           respond: cancel,
         })
-        .run();
+        .runCli(`patchy repo reset --base-revision ${baseCommit}`);
 
       expect(result).toFail();
       expect(result.stderr).toContain("cancelled");
