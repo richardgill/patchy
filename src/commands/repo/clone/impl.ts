@@ -113,7 +113,7 @@ export default async function (
 
   const config = result.mergedConfig;
   const repoUrl = assertDefined(config.source_repo, "source_repo");
-  const ref = config.ref;
+  const baseRevision = config.base_revision;
   const dryRun = config.dry_run;
   const verbose = config.verbose;
 
@@ -155,15 +155,17 @@ export default async function (
     this.process.stdout.write(`Repository URL: ${repoUrl}\n`);
     this.process.stdout.write(`Clones directory: ${clonesDir}\n`);
     this.process.stdout.write(`Target directory: ${targetDir}\n`);
-    this.process.stdout.write(`Git ref: ${ref}\n`);
+    this.process.stdout.write(`Base revision: ${baseRevision}\n`);
   }
 
   if (dryRun) {
     this.process.stdout.write(
       `[DRY RUN] Would clone ${repoUrl} to ${formatPathForDisplay(join(config.clones_dir ?? "", targetDirName))}\n`,
     );
-    if (ref) {
-      this.process.stdout.write(`[DRY RUN] Would checkout ref: ${ref}\n`);
+    if (baseRevision) {
+      this.process.stdout.write(
+        `[DRY RUN] Would checkout base_revision: ${baseRevision}\n`,
+      );
     }
     return;
   }
@@ -192,15 +194,17 @@ export default async function (
     return;
   }
 
-  if (ref) {
-    this.process.stdout.write(`Checking out ${ref}...\n`);
+  if (baseRevision) {
+    this.process.stdout.write(`Checking out ${baseRevision}...\n`);
     const repoGit = createGitClient(targetDir);
     try {
-      await repoGit.checkout(ref);
+      await repoGit.checkout(baseRevision);
     } catch (error) {
       const message = error instanceof Error ? error.message : String(error);
       this.process.stderr.write(
-        chalk.red(`Failed to checkout ref "${ref}": ${message}\n`),
+        chalk.red(
+          `Failed to checkout base_revision "${baseRevision}": ${message}\n`,
+        ),
       );
       this.process.exit(1);
       return;

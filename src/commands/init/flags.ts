@@ -5,7 +5,8 @@ export const initFlags = {
   ...FLAG_METADATA.clones_dir.stricliFlag,
   ...FLAG_METADATA.patches_dir.stricliFlag,
   ...FLAG_METADATA.source_repo.stricliFlag,
-  ...FLAG_METADATA.ref.stricliFlag,
+  ...FLAG_METADATA.base_revision.stricliFlag,
+  ...FLAG_METADATA.upstream_branch.stricliFlag,
   ...FLAG_METADATA.config.stricliFlag,
   ...FLAG_METADATA.verbose.stricliFlag,
   force: {

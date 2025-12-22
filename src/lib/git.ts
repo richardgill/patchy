@@ -1,4 +1,9 @@
+import { existsSync } from "node:fs";
+import path from "node:path";
 import { type SimpleGit, simpleGit } from "simple-git";
+
+export const isGitRepo = (dir: string): boolean =>
+  existsSync(path.join(dir, ".git"));
 
 const getCleanGitEnv = (): NodeJS.ProcessEnv =>
   Object.fromEntries(

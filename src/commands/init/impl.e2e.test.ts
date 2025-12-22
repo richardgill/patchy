@@ -8,7 +8,10 @@ import {
   runCliWithPrompts,
 } from "~/testing/e2e-utils";
 import { generateTmpDir, setupTestWithConfig } from "~/testing/fs-test-utils";
-import { initBareRepoWithCommit } from "~/testing/git-helpers";
+import {
+  createTagInBareRepo,
+  initBareRepoWithCommit,
+} from "~/testing/git-helpers";
 import { getSchemaUrl } from "~/version";
 
 describe("patchy init", () => {
@@ -20,7 +23,7 @@ describe("patchy init", () => {
     });
 
     const result = await runCli(
-      `patchy init --source-repo https://github.com/example/test-repo.git --clones-dir clones --patches-dir patches --ref main --config patchy.json --force`,
+      `patchy init --source-repo https://github.com/example/test-repo.git --clones-dir clones --patches-dir patches --base-revision main --upstream-branch main --config patchy.json --force`,
       tmpDir,
     );
 
@@ -33,7 +36,8 @@ describe("patchy init", () => {
     expect(config).toEqual({
       $schema: await getSchemaUrl(),
       source_repo: "https://github.com/example/test-repo.git",
-      ref: "main",
+      base_revision: "main",
+      upstream_branch: "main",
       clones_dir: "clones",
       patches_dir: "patches",
     });
@@ -47,7 +51,7 @@ describe("patchy init", () => {
     });
 
     const result = await runCli(
-      `patchy init --source-repo https://github.com/example/test-repo.git --clones-dir clones --patches-dir patches --ref main --force`,
+      `patchy init --source-repo https://github.com/example/test-repo.git --clones-dir clones --patches-dir patches --base-revision main --force`,
       tmpDir,
     );
 
@@ -66,7 +70,7 @@ describe("patchy init", () => {
       });
 
       const result = await runCli(
-        `patchy init --source-repo https://github.com/example/repo.git --clones-dir clones --patches-dir patches --ref main --gitignore --force`,
+        `patchy init --source-repo https://github.com/example/repo.git --clones-dir clones --patches-dir patches --base-revision main --gitignore --force`,
         tmpDir,
       );
 
@@ -85,7 +89,7 @@ describe("patchy init", () => {
       });
 
       const result = await runCli(
-        `patchy init --source-repo https://github.com/example/repo.git --clones-dir ./clones --patches-dir patches --ref main --gitignore --force`,
+        `patchy init --source-repo https://github.com/example/repo.git --clones-dir ./clones --patches-dir patches --base-revision main --gitignore --force`,
         tmpDir,
       );
 
@@ -105,7 +109,7 @@ describe("patchy init", () => {
       });
 
       const result = await runCli(
-        `patchy init --source-repo https://github.com/example/repo.git --clones-dir ././clones --patches-dir patches --ref main --gitignore --force`,
+        `patchy init --source-repo https://github.com/example/repo.git --clones-dir ././clones --patches-dir patches --base-revision main --gitignore --force`,
         tmpDir,
       );
 
@@ -124,7 +128,7 @@ describe("patchy init", () => {
       });
 
       const result = await runCli(
-        `patchy init --source-repo https://github.com/example/repo.git --clones-dir ./clones/ --patches-dir patches --ref main --gitignore --force`,
+        `patchy init --source-repo https://github.com/example/repo.git --clones-dir ./clones/ --patches-dir patches --base-revision main --gitignore --force`,
         tmpDir,
       );
 
@@ -142,7 +146,7 @@ describe("patchy init", () => {
       });
 
       const result = await runCli(
-        `patchy init --source-repo https://github.com/example/repo.git --clones-dir clones --patches-dir patches --ref main --no-gitignore --force`,
+        `patchy init --source-repo https://github.com/example/repo.git --clones-dir clones --patches-dir patches --base-revision main --no-gitignore --force`,
         tmpDir,
       );
 
@@ -159,7 +163,7 @@ describe("patchy init", () => {
       });
 
       const result = await runCli(
-        `patchy init --source-repo https://github.com/example/repo.git --clones-dir clones --patches-dir patches --ref main --force`,
+        `patchy init --source-repo https://github.com/example/repo.git --clones-dir clones --patches-dir patches --base-revision main --force`,
         tmpDir,
       );
 
@@ -176,7 +180,7 @@ describe("patchy init", () => {
       });
 
       const result = await runCli(
-        `patchy init --source-repo https://github.com/example/repo.git --clones-dir /tmp/some-other-clones --patches-dir patches --ref main --gitignore --force`,
+        `patchy init --source-repo https://github.com/example/repo.git --clones-dir /tmp/some-other-clones --patches-dir patches --base-revision main --gitignore --force`,
         tmpDir,
       );
 
@@ -193,7 +197,7 @@ describe("patchy init", () => {
       });
 
       const result = await runCli(
-        `patchy init --source-repo https://github.com/example/repo.git --clones-dir ../outside-clones --patches-dir patches --ref main --gitignore --force`,
+        `patchy init --source-repo https://github.com/example/repo.git --clones-dir ../outside-clones --patches-dir patches --base-revision main --gitignore --force`,
         tmpDir,
       );
 
@@ -212,7 +216,7 @@ describe("patchy init", () => {
       });
 
       const result = await runCli(
-        `patchy init --source-repo github.com/example/repo --clones-dir clones --patches-dir patches --ref main --config patchy.json --force`,
+        `patchy init --source-repo github.com/example/repo --clones-dir clones --patches-dir patches --base-revision main --config patchy.json --force`,
         tmpDir,
       );
 
@@ -230,7 +234,7 @@ describe("patchy init", () => {
       });
 
       const result = await runCli(
-        `patchy init --source-repo https://invalid_domain/repo --clones-dir clones --patches-dir patches --ref main --config patchy.json --force`,
+        `patchy init --source-repo https://invalid_domain/repo --clones-dir clones --patches-dir patches --base-revision main --config patchy.json --force`,
         tmpDir,
       );
 
@@ -248,7 +252,7 @@ describe("patchy init", () => {
       });
 
       const result = await runCli(
-        `patchy init --source-repo https://github.com/ --clones-dir clones --patches-dir patches --ref main --config patchy.json --force`,
+        `patchy init --source-repo https://github.com/ --clones-dir clones --patches-dir patches --base-revision main --config patchy.json --force`,
         tmpDir,
       );
 
@@ -265,12 +269,12 @@ describe("patchy init", () => {
       });
 
       await runCli(
-        `patchy init --source-repo https://github.com/example/repo.git --clones-dir clones --patches-dir patches --ref main --config patchy.json --force`,
+        `patchy init --source-repo https://github.com/example/repo.git --clones-dir clones --patches-dir patches --base-revision main --config patchy.json --force`,
         tmpDir,
       );
 
       const result = await runCli(
-        `patchy init --source-repo https://github.com/example/another-repo.git --clones-dir clones --patches-dir patches --ref main --config patchy.json`,
+        `patchy init --source-repo https://github.com/example/another-repo.git --clones-dir clones --patches-dir patches --base-revision main --config patchy.json`,
         tmpDir,
       );
 
@@ -291,7 +295,7 @@ describe("patchy init", () => {
       });
 
       const result = await runCli(
-        `patchy init --source-repo "" --clones-dir clones --patches-dir patches --ref main --config patchy.json --force`,
+        `patchy init --source-repo "" --clones-dir clones --patches-dir patches --base-revision main --config patchy.json --force`,
         tmpDir,
       );
 
@@ -322,7 +326,7 @@ describe("patchy init", () => {
           text: /repository URL/,
           respond: "https://github.com/example/repo.git",
         })
-        .on({ text: /ref/, respond: acceptDefault })
+        .on({ text: /[Bb]ase revision/, respond: acceptDefault })
         .on({ confirm: /Clone repo/, respond: false })
         .run();
 
@@ -350,7 +354,7 @@ describe("patchy init", () => {
         },
         {
           type: "text",
-          message: expect.stringMatching(/ref/),
+          message: expect.stringMatching(/[Bb]ase revision/),
           response: "default",
         },
         {
@@ -408,7 +412,7 @@ describe("patchy init", () => {
           text: /repository URL/,
           respond: "https://github.com/example/repo.git",
         })
-        .on({ text: /ref/, respond: acceptDefault })
+        .on({ text: /[Bb]ase revision/, respond: acceptDefault })
         .run();
 
       expect(result).toSucceed();
@@ -430,7 +434,7 @@ describe("patchy init", () => {
         },
         {
           type: "text",
-          message: expect.stringMatching(/ref/),
+          message: expect.stringMatching(/[Bb]ase revision/),
           response: "default",
         },
       ]);
@@ -457,7 +461,7 @@ describe("patchy init", () => {
           text: /repository URL/,
           respond: "https://github.com/example/repo.git",
         })
-        .on({ text: /ref/, respond: acceptDefault })
+        .on({ text: /[Bb]ase revision/, respond: acceptDefault })
         .run();
 
       expect(result).toSucceed();
@@ -480,7 +484,7 @@ describe("patchy init", () => {
         },
         {
           type: "text",
-          message: expect.stringMatching(/ref/),
+          message: expect.stringMatching(/[Bb]ase revision/),
           response: "default",
         },
       ]);
@@ -504,7 +508,9 @@ describe("patchy init", () => {
         .on({ text: /cloned repos/, respond: acceptDefault })
         .on({ confirm: /gitignore/, respond: true })
         .on({ text: /repository URL/, respond: bareRepoUrl })
-        .on({ text: /ref/, respond: acceptDefault })
+        .on({ select: /upstream branch/, respond: "_none" })
+        .on({ select: /base revision/, respond: "_manual" })
+        .on({ text: /commit SHA or tag/, respond: "main" })
         .on({ confirm: /Clone bare-repo/, respond: true })
         .on({ confirm: /Save target_repo/, respond: true })
         .run();
@@ -518,7 +524,9 @@ describe("patchy init", () => {
         { type: "text", message: expect.stringMatching(/cloned repos/) },
         { type: "confirm", message: expect.stringMatching(/gitignore/) },
         { type: "text", message: expect.stringMatching(/repository URL/) },
-        { type: "text", message: expect.stringMatching(/ref/) },
+        { type: "select", message: expect.stringMatching(/upstream branch/) },
+        { type: "select", message: expect.stringMatching(/base revision/) },
+        { type: "text", message: expect.stringMatching(/commit SHA or tag/) },
         { type: "confirm", message: expect.stringMatching(/Clone bare-repo/) },
         { type: "confirm", message: expect.stringMatching(/Save target_repo/) },
       ]);
@@ -542,7 +550,7 @@ describe("patchy init", () => {
           text: /repository URL/,
           respond: "https://github.com/example/repo.git",
         })
-        .on({ text: /ref/, respond: acceptDefault })
+        .on({ text: /[Bb]ase revision/, respond: acceptDefault })
         .on({ confirm: /Clone repo/, respond: false })
         .run();
 
@@ -556,7 +564,7 @@ describe("patchy init", () => {
         { type: "text", message: expect.stringMatching(/cloned repos/) },
         { type: "confirm", message: expect.stringMatching(/gitignore/) },
         { type: "text", message: expect.stringMatching(/repository URL/) },
-        { type: "text", message: expect.stringMatching(/ref/) },
+        { type: "text", message: expect.stringMatching(/[Bb]ase revision/) },
         {
           type: "confirm",
           message: expect.stringMatching(/Clone repo/),
@@ -564,13 +572,137 @@ describe("patchy init", () => {
         },
       ]);
     });
+
+    it("should allow selecting None for upstream branch", async () => {
+      const tmpDir = generateTmpDir();
+      const bareRepoDir = path.join(tmpDir, "bare-repo.git");
+      mkdirSync(bareRepoDir, { recursive: true });
+      await initBareRepoWithCommit(bareRepoDir);
+      const bareRepoUrl = `file://${bareRepoDir}`;
+
+      const { result } = await runCliWithPrompts("patchy init --force", tmpDir)
+        .on({ text: /patch files/, respond: acceptDefault })
+        .on({ text: /cloned repos/, respond: acceptDefault })
+        .on({ confirm: /gitignore/, respond: true })
+        .on({ text: /repository URL/, respond: bareRepoUrl })
+        .on({ select: /upstream branch/, respond: "_none" })
+        .on({ select: /base revision/, respond: "_manual" })
+        .on({ text: /commit SHA or tag/, respond: "abc123" })
+        .on({ confirm: /Clone bare-repo/, respond: false })
+        .run();
+
+      expect(result).toSucceed();
+
+      const configPath = path.join(tmpDir, "patchy.json");
+      const config = JSON.parse(readFileSync(configPath, "utf-8"));
+      expect(config).not.toHaveProperty("upstream_branch");
+      expect(config.base_revision).toBe("abc123");
+    });
+
+    it("should save selected branch as upstream_branch", async () => {
+      const tmpDir = generateTmpDir();
+      const bareRepoDir = path.join(tmpDir, "bare-repo.git");
+      mkdirSync(bareRepoDir, { recursive: true });
+      await initBareRepoWithCommit(bareRepoDir);
+      const bareRepoUrl = `file://${bareRepoDir}`;
+
+      const { result, prompts } = await runCliWithPrompts(
+        "patchy init --force",
+        tmpDir,
+      )
+        .on({ text: /patch files/, respond: acceptDefault })
+        .on({ text: /cloned repos/, respond: acceptDefault })
+        .on({ confirm: /gitignore/, respond: true })
+        .on({ text: /repository URL/, respond: bareRepoUrl })
+        .on({ select: /upstream branch/, respond: "main" })
+        .on({ select: /base revision/, respond: "_manual" })
+        .on({ text: /commit SHA or tag/, respond: "abc123" })
+        .on({ confirm: /Clone bare-repo/, respond: false })
+        .run();
+
+      expect(result).toSucceed();
+
+      const configPath = path.join(tmpDir, "patchy.json");
+      const config = JSON.parse(readFileSync(configPath, "utf-8"));
+      expect(config.upstream_branch).toBe("main");
+      expect(config.base_revision).toBe("abc123");
+
+      const upstreamPrompt = prompts.find(
+        (p) => p.type === "select" && p.message.includes("upstream"),
+      );
+      expect(upstreamPrompt).toBeDefined();
+    });
+
+    it("should save selected tag as base_revision", async () => {
+      const tmpDir = generateTmpDir();
+      const bareRepoDir = path.join(tmpDir, "bare-repo.git");
+      mkdirSync(bareRepoDir, { recursive: true });
+      await initBareRepoWithCommit(bareRepoDir);
+      const tagSha = await createTagInBareRepo(bareRepoDir, "v1.0.0");
+      const bareRepoUrl = `file://${bareRepoDir}`;
+
+      const { result, prompts } = await runCliWithPrompts(
+        "patchy init --force",
+        tmpDir,
+      )
+        .on({ text: /patch files/, respond: acceptDefault })
+        .on({ text: /cloned repos/, respond: acceptDefault })
+        .on({ confirm: /gitignore/, respond: true })
+        .on({ text: /repository URL/, respond: bareRepoUrl })
+        .on({ select: /upstream branch/, respond: "_none" })
+        .on({ select: /base revision/, respond: tagSha })
+        .on({ confirm: /Clone bare-repo/, respond: false })
+        .run();
+
+      expect(result).toSucceed();
+
+      const configPath = path.join(tmpDir, "patchy.json");
+      const config = JSON.parse(readFileSync(configPath, "utf-8"));
+      expect(config.base_revision).toBe(tagSha);
+
+      const baseRevisionPrompt = prompts.find(
+        (p) => p.type === "select" && p.message.includes("base revision"),
+      );
+      expect(baseRevisionPrompt).toBeDefined();
+    });
+
+    it("should fallback to text input when remote fetch fails", async () => {
+      const tmpDir = generateTmpDir();
+
+      const { result, prompts } = await runCliWithPrompts(
+        "patchy init --force",
+        tmpDir,
+      )
+        .on({ text: /patch files/, respond: acceptDefault })
+        .on({ text: /cloned repos/, respond: acceptDefault })
+        .on({ confirm: /gitignore/, respond: true })
+        .on({
+          text: /repository URL/,
+          respond: "/nonexistent/invalid/path",
+        })
+        .on({ text: /[Bb]ase revision/, respond: "main" })
+        .on({ confirm: /Clone/, respond: false })
+        .run();
+
+      expect(result).toSucceed();
+
+      const baseRevisionPrompt = prompts.find(
+        (p) => p.type === "text" && p.message.toLowerCase().includes("base"),
+      );
+      expect(baseRevisionPrompt).toBeDefined();
+      expect(baseRevisionPrompt?.type).toBe("text");
+
+      const configPath = path.join(tmpDir, "patchy.json");
+      const config = JSON.parse(readFileSync(configPath, "utf-8"));
+      expect(config.base_revision).toBe("main");
+    });
   });
 
   it("should show manual clone instructions in non-interactive mode", async () => {
     const tmpDir = generateTmpDir();
 
     const result = await runCli(
-      `patchy init --force --patches-dir patches --clones-dir clones --source-repo https://github.com/example/repo.git --ref main --gitignore`,
+      `patchy init --force --patches-dir patches --clones-dir clones --source-repo https://github.com/example/repo.git --base-revision main --gitignore`,
       tmpDir,
     );
 

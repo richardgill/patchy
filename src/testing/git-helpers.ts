@@ -60,31 +60,6 @@ export const commitFile = async (
   await git.commit(message);
 };
 
-export const createBranch = async (
-  repoDir: string,
-  branchName: string,
-  filename = "branch-file.txt",
-  content?: string,
-): Promise<void> => {
-  const git = createTestGitClient(repoDir);
-  await git.checkoutLocalBranch(branchName);
-  writeFileSync(
-    join(repoDir, filename),
-    content ?? `content from ${branchName}`,
-  );
-  await git.add(".");
-  await git.commit(`commit on ${branchName}`);
-  await git.checkout("-");
-};
-
-export const createTag = async (
-  repoDir: string,
-  tagName: string,
-): Promise<void> => {
-  const git = createTestGitClient(repoDir);
-  await git.addTag(tagName);
-};
-
 export const getCurrentBranch = async (repoDir: string): Promise<string> => {
   const git = createTestGitClient(repoDir);
   const branch = await git.revparse(["--abbrev-ref", "HEAD"]);
@@ -100,7 +75,7 @@ export const getCurrentCommit = async (repoDir: string): Promise<string> => {
 export const pushBranchToBareRepo = async (
   bareRepoDir: string,
   branchName: string,
-): Promise<void> => {
+): Promise<string> => {
   const tmpWorkDir = join(bareRepoDir, "..", `tmp-work-${Date.now()}`);
   mkdirSync(tmpWorkDir, { recursive: true });
   const workGit = createTestGitClient(tmpWorkDir);
@@ -115,5 +90,30 @@ export const pushBranchToBareRepo = async (
   await workGit.add(".");
   await workGit.commit(`commit on ${branchName}`);
   await workGit.push("origin", branchName);
+  const sha = await workGit.revparse(["HEAD"]);
   rmSync(tmpWorkDir, { recursive: true, force: true });
+  return sha.trim();
+};
+
+export const createTagInBareRepo = async (
+  bareRepoDir: string,
+  tagName: string,
+): Promise<string> => {
+  const tmpWorkDir = join(bareRepoDir, "..", `tmp-work-tag-${Date.now()}`);
+  mkdirSync(tmpWorkDir, { recursive: true });
+  const workGit = createTestGitClient(tmpWorkDir);
+  await workGit.clone(bareRepoDir, ".");
+  await workGit.addConfig("user.email", "test@test.com");
+  await workGit.addConfig("user.name", "Test User");
+  writeFileSync(
+    join(tmpWorkDir, `${tagName}-file.txt`),
+    `content for ${tagName}`,
+  );
+  await workGit.add(".");
+  await workGit.commit(`commit for ${tagName}`);
+  await workGit.addTag(tagName);
+  await workGit.push("origin", tagName);
+  const sha = await workGit.revparse(["HEAD"]);
+  rmSync(tmpWorkDir, { recursive: true, force: true });
+  return sha.trim();
 };

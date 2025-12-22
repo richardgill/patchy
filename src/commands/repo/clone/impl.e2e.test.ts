@@ -1,6 +1,7 @@
 import { describe, expect, it } from "bun:test";
 import { mkdirSync, readFileSync } from "node:fs";
 import path from "node:path";
+import { createTestGitClient } from "~/lib/git";
 import { runCli, runCliWithPrompts } from "~/testing/e2e-utils";
 import {
   generateTmpDir,
@@ -9,6 +10,7 @@ import {
 } from "~/testing/fs-test-utils";
 import {
   getCurrentBranch,
+  getCurrentCommit,
   initBareRepoWithCommit,
   initGitRepoWithCommit,
   pushBranchToBareRepo,
@@ -120,7 +122,7 @@ describe("patchy repo clone", () => {
     });
 
     const result = await runCli(
-      `patchy repo clone --source-repo ${bareRepoUrl} --ref feature-branch`,
+      `patchy repo clone --source-repo ${bareRepoUrl} --base-revision feature-branch`,
       tmpDir,
     );
 
@@ -130,6 +132,84 @@ describe("patchy repo clone", () => {
 
     const clonedRepoDir = path.join(tmpDir, "repos", "bare-repo");
     expect(await getCurrentBranch(clonedRepoDir)).toBe("feature-branch");
+  });
+
+  it("should clone a repository with base_revision SHA", async () => {
+    const tmpDir = generateTmpDir();
+    const bareRepoDir = path.join(tmpDir, "bare-repo.git");
+    mkdirSync(bareRepoDir, { recursive: true });
+    await initBareRepoWithCommit(bareRepoDir);
+
+    // Get SHA using ls-remote instead of cloning
+    const git = createTestGitClient(tmpDir);
+    const lsRemoteOutput = await git.raw([
+      "ls-remote",
+      bareRepoDir,
+      "refs/heads/main",
+    ]);
+    const commitSha = lsRemoteOutput.split("\t")[0];
+
+    const bareRepoUrl = `file://${bareRepoDir}`;
+
+    await setupTestWithConfig({
+      tmpDir,
+      createDirectories: { clonesDir: "repos" },
+      jsonConfig: { clones_dir: "repos" },
+    });
+
+    const result = await runCli(
+      `patchy repo clone --source-repo ${bareRepoUrl} --base-revision ${commitSha}`,
+      tmpDir,
+    );
+
+    expect(result).toSucceed();
+    expect(result).toHaveOutput("Successfully cloned repository");
+    expect(result).toHaveOutput(`Checking out ${commitSha}`);
+
+    const clonedRepoDir = path.join(tmpDir, "repos", "bare-repo");
+    expect(await getCurrentCommit(clonedRepoDir)).toBe(commitSha);
+  });
+
+  it("should clone a repository with base_revision tag", async () => {
+    const tmpDir = generateTmpDir();
+    const bareRepoDir = path.join(tmpDir, "bare-repo.git");
+    mkdirSync(bareRepoDir, { recursive: true });
+    await initBareRepoWithCommit(bareRepoDir);
+
+    // Get SHA and create tag directly on bare repo
+    const git = createTestGitClient(tmpDir);
+    const lsRemoteOutput = await git.raw([
+      "ls-remote",
+      bareRepoDir,
+      "refs/heads/main",
+    ]);
+    const commitSha = lsRemoteOutput.split("\t")[0];
+
+    // Create lightweight tag directly in bare repo using update-ref
+    const bareGit = createTestGitClient(bareRepoDir);
+    await bareGit.raw(["update-ref", "refs/tags/v1.0.0", commitSha]);
+
+    const bareRepoUrl = `file://${bareRepoDir}`;
+
+    await setupTestWithConfig({
+      tmpDir,
+      createDirectories: { clonesDir: "repos" },
+      jsonConfig: { clones_dir: "repos" },
+    });
+
+    const result = await runCli(
+      `patchy repo clone --source-repo ${bareRepoUrl} --base-revision v1.0.0`,
+      tmpDir,
+    );
+
+    expect(result).toSucceed();
+    expect(result).toHaveOutput("Successfully cloned repository");
+    expect(result).toHaveOutput("Checking out v1.0.0");
+
+    const clonedRepoDir = path.join(tmpDir, "repos", "bare-repo");
+    const git2 = createTestGitClient(clonedRepoDir);
+    const tagInfo = await git2.raw(["describe", "--tags", "--exact-match"]);
+    expect(tagInfo.trim()).toBe("v1.0.0");
   });
 
   it("should use verbose output when --verbose is set", async () => {
@@ -180,7 +260,7 @@ describe("patchy repo clone", () => {
       expect(path.join(tmpDir, "repos", "bare-repo")).not.toExist();
     });
 
-    it("should show ref in dry-run output when --ref is set", async () => {
+    it("should show base_revision in dry-run output when --base-revision is set", async () => {
       const tmpDir = generateTmpDir();
       const bareRepoDir = path.join(tmpDir, "bare-repo.git");
       mkdirSync(bareRepoDir, { recursive: true });
@@ -194,12 +274,14 @@ describe("patchy repo clone", () => {
       });
 
       const result = await runCli(
-        `patchy repo clone --source-repo ${bareRepoUrl} --ref v1.0.0 --dry-run`,
+        `patchy repo clone --source-repo ${bareRepoUrl} --base-revision v1.0.0 --dry-run`,
         tmpDir,
       );
 
       expect(result).toSucceed();
-      expect(result).toHaveOutput("[DRY RUN] Would checkout ref: v1.0.0");
+      expect(result).toHaveOutput(
+        "[DRY RUN] Would checkout base_revision: v1.0.0",
+      );
     });
   });
 
@@ -300,7 +382,7 @@ describe("patchy repo clone", () => {
       expect(result).toFailWith("Failed to clone repository");
     });
 
-    it("should fail when ref does not exist", async () => {
+    it("should fail when base_revision does not exist", async () => {
       const tmpDir = generateTmpDir();
       const bareRepoDir = path.join(tmpDir, "bare-repo.git");
       mkdirSync(bareRepoDir, { recursive: true });
@@ -314,11 +396,11 @@ describe("patchy repo clone", () => {
       });
 
       const result = await runCli(
-        `patchy repo clone --source-repo ${bareRepoUrl} --ref non-existent-ref`,
+        `patchy repo clone --source-repo ${bareRepoUrl} --base-revision non-existent-ref`,
         tmpDir,
       );
 
-      expect(result).toFailWith("Failed to checkout ref");
+      expect(result).toFailWith("Failed to checkout base_revision");
     });
   });
 

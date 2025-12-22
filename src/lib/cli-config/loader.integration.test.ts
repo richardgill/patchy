@@ -35,6 +35,23 @@ const TEST_METADATA = {
     example: "10",
     defaultValue: "5",
   },
+  base_revision: {
+    configField: true,
+    requiredInConfig: false,
+    env: "TEST_BASE_REVISION",
+    type: "string",
+    name: "Base revision",
+    stricliFlag: {
+      "base-revision": {
+        kind: "parsed",
+        parse: String,
+        brief: "Base revision",
+        optional: true,
+      },
+    },
+    example: "abc123",
+    defaultValue: undefined,
+  },
   verbose: {
     configField: true,
     requiredInConfig: false,
@@ -69,6 +86,7 @@ const testSchema = z
   .object({
     name: z.string().optional(),
     count: z.string().optional(),
+    base_revision: z.string().optional(),
     verbose: z.boolean().optional(),
   })
   .strict();

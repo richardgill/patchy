@@ -128,19 +128,37 @@ export const FLAG_METADATA = {
       },
     },
   },
-  ref: {
+  base_revision: {
     configField: true,
     requiredInConfig: false,
-    env: "PATCHY_REF",
+    env: "PATCHY_BASE_REVISION",
     type: "string",
-    name: "Git reference",
-    example: "main",
+    name: "Base revision",
+    example: "abc123def",
     defaultValue: "main",
     stricliFlag: {
-      ref: {
+      "base-revision": {
         kind: "parsed",
         parse: String,
-        brief: "Git ref to use [env: PATCHY_REF]",
+        brief: "Git SHA or tag to reset to [env: PATCHY_BASE_REVISION]",
+        optional: true,
+      },
+    },
+  },
+  upstream_branch: {
+    configField: true,
+    requiredInConfig: false,
+    env: "PATCHY_UPSTREAM_BRANCH",
+    type: "string",
+    name: "Upstream branch",
+    example: "main",
+    defaultValue: undefined,
+    stricliFlag: {
+      "upstream-branch": {
+        kind: "parsed",
+        parse: String,
+        brief:
+          "Remote branch to track for updates [env: PATCHY_UPSTREAM_BRANCH]",
         optional: true,
       },
     },
