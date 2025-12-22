@@ -3,7 +3,11 @@
 import { Glob } from "bun";
 import chalk from "chalk";
 
-const VALID_TEST_SUFFIXES = [".unit.test.ts", ".e2e.test.ts"];
+const VALID_TEST_SUFFIXES = [
+  ".unit.test.ts",
+  ".integration.test.ts",
+  ".e2e.test.ts",
+];
 
 const findInvalidTestFiles = async (): Promise<string[]> => {
   const glob = new Glob("**/*.test.ts");

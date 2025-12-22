@@ -23,6 +23,13 @@ This is a CLI tool for managing Git patch workflows. It helps maintain curated p
 
 Always run `bun run local-ci` it runs formatter, linter & tests
 
+## Testing
+
+This codebase has three types of tests:
+- **Unit tests** (`*.unit.test.ts`) - Pure function testing, no I/O, fast
+- **Integration tests** (`*.integration.test.ts`) - Internal modules with I/O, no CLI
+- **E2E tests** (`*.e2e.test.ts`) - Full CLI execution via `runCli()`
+
 ## Releasing
 
 Use add changeset skill
