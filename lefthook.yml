@@ -22,10 +22,10 @@ post-merge:
       run: bun install
 
 post-checkout:
-  files: git diff-tree -r --name-only --no-commit-id {1} {2}
   commands:
     bun-install:
       glob: "bun.lock"
+      files: "git diff-tree -r --name-only --no-commit-id ORIG_HEAD HEAD 2>/dev/null || git show --name-only --pretty=format: HEAD"
       run: bun install
 
 pre-push:
