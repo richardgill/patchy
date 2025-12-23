@@ -14,7 +14,7 @@ export const fetchAndValidateRemoteRefs = async (
   prompts.log.step(`Fetching upstream refs from ${chalk.cyan(sourceRepo)}...`);
 
   try {
-    return await fetchRefs(sourceRepo);
+    return await fetchRefs(sourceRepo, context.cwd);
   } catch (error) {
     const message = error instanceof Error ? error.message : String(error);
     return exit(context, {

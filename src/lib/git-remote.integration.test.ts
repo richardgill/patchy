@@ -86,7 +86,7 @@ describe("fetchRefs integration", () => {
         ...setup,
       });
 
-      const refs = await fetchRefs(`file://${bareRepoDir}`);
+      const refs = await fetchRefs(`file://${bareRepoDir}`, process.cwd());
 
       const branches = refs.filter((r) => r.type === "branch");
       const tags = refs.filter((r) => r.type === "tag");
@@ -109,7 +109,7 @@ describe("fetchRefs integration", () => {
 
   errorCases.forEach(({ name, url }) => {
     it(`should throw on ${name}`, async () => {
-      await expect(fetchRefs(url)).rejects.toThrow();
+      await expect(fetchRefs(url, process.cwd())).rejects.toThrow();
     });
   });
 
@@ -134,7 +134,7 @@ describe("fetchRefs integration", () => {
           expectedTags: ["v1.0.0"],
         });
 
-        const refs = await fetchRefs(transform(bareRepoDir));
+        const refs = await fetchRefs(transform(bareRepoDir), process.cwd());
 
         const branches = refs.filter((r) => r.type === "branch");
         expect(branches.map((b) => b.name).sort()).toEqual(["develop", "main"]);
@@ -142,14 +142,16 @@ describe("fetchRefs integration", () => {
     });
 
     it("should throw on non-existent path", async () => {
-      await expect(fetchRefs("/nonexistent/path/to/repo")).rejects.toThrow();
+      await expect(
+        fetchRefs("/nonexistent/path/to/repo", process.cwd()),
+      ).rejects.toThrow();
     });
 
     it("should throw on path that is not a git repo", async () => {
       const tmpDir = generateTmpDir();
       mkdirSync(tmpDir, { recursive: true });
 
-      await expect(fetchRefs(tmpDir)).rejects.toThrow();
+      await expect(fetchRefs(tmpDir, process.cwd())).rejects.toThrow();
     });
 
     it("should return empty array for empty bare repo", async () => {
@@ -162,7 +164,7 @@ describe("fetchRefs integration", () => {
         expectedTags: [],
       });
 
-      const refs = await fetchRefs(bareRepoDir);
+      const refs = await fetchRefs(bareRepoDir, process.cwd());
 
       expect(refs).toEqual([]);
     });
@@ -176,7 +178,7 @@ describe("fetchRefs integration", () => {
         tags: ["v1.0.0"],
       });
 
-      const refs = await fetchRefs(tmpDir);
+      const refs = await fetchRefs(tmpDir, process.cwd());
 
       const branches = refs.filter((r) => r.type === "branch");
       const tags = refs.filter((r) => r.type === "tag");
@@ -186,6 +188,22 @@ describe("fetchRefs integration", () => {
         "main",
       ]);
       expect(tags.map((t) => t.name)).toEqual(["v1.0.0"]);
+    });
+
+    it("should resolve relative paths against workDir, not process.cwd()", async () => {
+      const tmpDir = generateTmpDir();
+      const repoDir = path.join(tmpDir, "upstream");
+      mkdirSync(repoDir, { recursive: true });
+      await createLocalRepo({
+        dir: repoDir,
+        branches: [],
+        tags: ["v1.0.0"],
+      });
+
+      const refs = await fetchRefs("./upstream", tmpDir);
+
+      const branches = refs.filter((r) => r.type === "branch");
+      expect(branches.map((b) => b.name)).toEqual(["main"]);
     });
   });
 });

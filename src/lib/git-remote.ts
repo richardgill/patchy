@@ -28,10 +28,13 @@ const fetchRemoteRefs = async (repoUrl: string): Promise<RemoteRef[]> => {
     });
 };
 
-const fetchLocalRefs = async (localPath: string): Promise<RemoteRef[]> => {
+const fetchLocalRefs = async (
+  localPath: string,
+  workDir: string,
+): Promise<RemoteRef[]> => {
   const repoPath = localPath.startsWith("file://")
     ? localPath.slice(7)
-    : path.resolve(localPath);
+    : path.resolve(workDir, localPath);
 
   const git = createGitClient({ baseDir: repoPath });
   const isBareRepo = await git.checkIsRepo(CheckRepoActions.BARE);
@@ -62,9 +65,12 @@ const fetchLocalRefs = async (localPath: string): Promise<RemoteRef[]> => {
     });
 };
 
-export const fetchRefs = async (repoUrl: string): Promise<RemoteRef[]> => {
+export const fetchRefs = async (
+  repoUrl: string,
+  workDir: string,
+): Promise<RemoteRef[]> => {
   if (isLocalPath(repoUrl)) {
-    return fetchLocalRefs(repoUrl);
+    return fetchLocalRefs(repoUrl, workDir);
   }
   return fetchRemoteRefs(repoUrl);
 };

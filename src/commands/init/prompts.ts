@@ -32,9 +32,8 @@ const fetchRemoteRefsIfNeeded = async (
   const prompts = createPrompts(context);
   try {
     prompts.log.step("Fetching repository information...");
-    return await fetchRefs(repoUrl);
-  } catch (_error) {
-    console.log("zzz _error", _error);
+    return await fetchRefs(repoUrl, context.cwd);
+  } catch {
     prompts.log.warn(
       "Could not fetch remote refs. You can enter values manually.",
     );
