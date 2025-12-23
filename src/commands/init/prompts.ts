@@ -88,9 +88,7 @@ const promptBaseRevision = async (
   if (remoteRefs.length > 0) {
     const tags = getLatestTags(remoteRefs);
     const branches = getBranches(remoteRefs);
-    const baseOptions = buildBaseRevisionOptions(tags, branches, {
-      manualLabel: "Enter SHA manually",
-    });
+    const baseOptions = buildBaseRevisionOptions(tags, branches);
 
     const selectedBase = await prompts.select({
       message: "Select base revision:",
