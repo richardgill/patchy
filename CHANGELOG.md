@@ -1,5 +1,18 @@
 # patchy-cli
 
+## 0.0.10
+
+### Patch Changes
+
+- [#178](https://github.com/richardgill/patchy/pull/178) [`4e87eb1`](https://github.com/richardgill/patchy/commit/4e87eb12a3043d5072636a549c5656d78e678116) Thanks [@richardgill](https://github.com/richardgill)! - Add commit-per-patch-set feature and improve configuration
+
+  - Replace `ref` config field with `base_revision` and `upstream_branch`
+  - Add `patchy base` command to view/update base revision interactively
+  - Auto-commit each patch set during `patchy apply` with `--all` and `--edit` flags
+  - Enhance `patchy init` with interactive remote ref selection via `git ls-remote`
+  - Update `repo clone` and `repo reset` to use `base_revision`
+  - Remove `repo checkout` command (use git directly)
+
 ## 0.0.9
 
 ### Patch Changes
