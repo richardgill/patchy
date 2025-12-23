@@ -366,12 +366,13 @@ describe("patchy generate", () => {
     expect(ctx.patchExists("001-from-config/initial.txt.diff")).toBe(true);
   });
 
-  it.skip("should use PATCHY_PATCH_SET env var", async () => {
+  it("should use PATCHY_PATCH_SET env var", async () => {
     const ctx = await scenario({
       git: true,
       targetFiles: {
         "initial.txt": "initial content\n",
       },
+      env: { PATCHY_PATCH_SET: "001-from-env" },
     });
 
     await writeFileIn(

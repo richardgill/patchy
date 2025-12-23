@@ -4,13 +4,7 @@ import { join } from "node:path";
 import { createTestGitClient } from "~/lib/git";
 import { runCli as baseRunCli } from "./e2e-utils";
 import { generateTmpDir, writeFileIn } from "./fs-test-utils";
-import {
-  createTagInBareRepo as gitCreateTag,
-  pushBranchToBareRepo as gitPushBranch,
-  initBareRepoWithCommit,
-  initGitRepo,
-  initGitRepoWithCommit,
-} from "./git-helpers";
+import { createLocalBareRepo, createLocalRepo } from "./git-helpers";
 import {
   acceptDefault,
   cancel,
@@ -40,6 +34,7 @@ type ScenarioOptions = {
   configPath?: string;
   configContent?: string;
   tty?: boolean;
+  env?: Record<string, string>;
 };
 
 type PromptMatcher = string | RegExp;
@@ -145,19 +140,12 @@ const setupBareRepo = async (
 ): Promise<void> => {
   await mkdir(bareRepoDir, { recursive: true });
   const bareOpts = typeof bareRepoOption === "object" ? bareRepoOption : {};
-  await initBareRepoWithCommit(bareRepoDir, bareOpts.files);
-
-  if (bareOpts.branches) {
-    for (const branch of bareOpts.branches) {
-      await gitPushBranch(bareRepoDir, branch);
-    }
-  }
-
-  if (bareOpts.tags) {
-    for (const tag of bareOpts.tags) {
-      await gitCreateTag(bareRepoDir, tag);
-    }
-  }
+  await createLocalBareRepo({
+    dir: bareRepoDir,
+    files: bareOpts.files,
+    branches: bareOpts.branches,
+    tags: bareOpts.tags,
+  });
 };
 
 const setupConfig = async (
@@ -205,14 +193,16 @@ const setupGit = async (
   hasTargetFiles: boolean,
 ): Promise<void> => {
   if (hasTargetFiles) {
-    await initGitRepo(targetRepoDir);
-    const git = createTestGitClient(targetRepoDir);
+    const git = createTestGitClient({ baseDir: targetRepoDir });
+    await git.init();
+    await git.addConfig("user.email", "test@test.com");
+    await git.addConfig("user.name", "Test User");
     await git.addConfig("init.defaultBranch", "main");
     await git.checkout(["-b", "main"]);
     await git.add(".");
     await git.commit("initial commit");
   } else {
-    await initGitRepoWithCommit(targetRepoDir);
+    await createLocalRepo({ dir: targetRepoDir });
   }
 };
 
@@ -242,13 +232,13 @@ const createContextHelpers = (
   };
 
   const commits = async (): Promise<string[]> => {
-    const git = createTestGitClient(targetRepoDir);
+    const git = createTestGitClient({ baseDir: targetRepoDir });
     const log = await git.log();
     return log.all.map((commit) => commit.message);
   };
 
   const gitStatus = async (): Promise<string[]> => {
-    const git = createTestGitClient(targetRepoDir);
+    const git = createTestGitClient({ baseDir: targetRepoDir });
     const status = await git.status();
     return status.files.map((f) => f.path);
   };
@@ -284,18 +274,20 @@ const createRunCli = (
   tmpDir: string,
   expectations: PromptExpectation[],
   ttyMode: boolean,
+  env?: Record<string, string>,
 ): ((command: string) => Promise<PromptedCliResult>) => {
   return async (command: string): Promise<PromptedCliResult> => {
     const recorded: RecordedPrompt[] = [];
 
     if (!ttyMode) {
-      const result = await baseRunCli(command, tmpDir);
+      const result = await baseRunCli(command, tmpDir, { env });
       return { result, prompts: recorded };
     }
 
     const result = await baseRunCli(command, tmpDir, {
       promptHandler: (prompt) => findResponse(prompt, expectations),
       onPromptRecord: (p) => recorded.push(p),
+      env,
     });
     return { result, prompts: recorded };
   };
@@ -336,14 +328,14 @@ export const scenario = async (
   ): ScenarioContext => {
     return {
       ...helpers,
-      runCli: createRunCli(paths.tmpDir, expectations, true),
+      runCli: createRunCli(paths.tmpDir, expectations, true, options.env),
       withPrompts,
     };
   };
 
   return {
     ...helpers,
-    runCli: createRunCli(paths.tmpDir, [], options.tty ?? false),
+    runCli: createRunCli(paths.tmpDir, [], options.tty ?? false, options.env),
     withPrompts,
   };
 };

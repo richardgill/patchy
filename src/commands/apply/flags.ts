@@ -42,3 +42,13 @@ export const applyFlags = {
 } as const;
 
 export type ApplyFlags = ParsedFlags<typeof applyFlags>;
+
+export const validateCommitFlags = (
+  all: boolean | undefined,
+  edit: boolean | undefined,
+): { error?: string } => {
+  if (all && edit) {
+    return { error: "Cannot use both --all and --edit flags together" };
+  }
+  return {};
+};

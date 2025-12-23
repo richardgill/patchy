@@ -1,8 +1,4 @@
-import { compact } from "es-toolkit";
-import {
-  createEnrichedMergedConfig,
-  hasAbsoluteTargetRepo,
-} from "~/cli-fields";
+import { createEnrichedMergedConfig, REQUIRE_TARGET_REPO } from "~/cli-fields";
 import type { LocalContext } from "~/context";
 import { exit } from "~/lib/exit";
 import type { GenerateFlags } from "./flags";
@@ -22,8 +18,7 @@ export const loadAndValidateConfig = (
 ): GenerateConfig => {
   const result = createEnrichedMergedConfig({
     flags,
-    requiredFields: (config) =>
-      compact([!hasAbsoluteTargetRepo(config) && "clones_dir", "target_repo"]),
+    requires: [REQUIRE_TARGET_REPO],
     cwd: context.cwd,
     env: context.process.env,
   });
@@ -32,13 +27,5 @@ export const loadAndValidateConfig = (
     return exit(context, { exitCode: 1, stderr: result.error });
   }
 
-  const config = result.mergedConfig;
-  return {
-    absolutePatchesDir: config.absolutePatchesDir ?? "",
-    absoluteTargetRepo: config.absoluteTargetRepo ?? "",
-    patches_dir: config.patches_dir ?? "",
-    target_repo: config.target_repo ?? "",
-    patch_set: config.patch_set,
-    dry_run: config.dry_run,
-  };
+  return result.mergedConfig;
 };

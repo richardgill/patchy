@@ -4,23 +4,22 @@ import { exit } from "~/lib/exit";
 import { formatPathForDisplay, isPathWithinDir } from "~/lib/fs";
 import {
   buildBaseRevisionOptions,
-  fetchRemoteRefs,
+  fetchRefs,
   getBranches,
   getLatestTags,
   MANUAL_SHA_OPTION,
+  type RemoteRef,
 } from "~/lib/git-remote";
 import { canPrompt, createPrompts, promptForManualSha } from "~/lib/prompts";
 import { validateGitUrl } from "~/lib/validation";
 import type { PromptAnswers } from "./config";
 import type { InitFlags } from "./flags";
 
-type RemoteRefs = Awaited<ReturnType<typeof fetchRemoteRefs>>;
-
 const fetchRemoteRefsIfNeeded = async (
   context: LocalContext,
   repoUrl: string,
   flags: InitFlags,
-): Promise<RemoteRefs> => {
+): Promise<RemoteRef[]> => {
   const shouldFetchRemote =
     repoUrl &&
     (flags["upstream-branch"] === undefined ||
@@ -33,8 +32,8 @@ const fetchRemoteRefsIfNeeded = async (
   const prompts = createPrompts(context);
   try {
     prompts.log.step("Fetching repository information...");
-    return await fetchRemoteRefs(repoUrl);
-  } catch (_error) {
+    return await fetchRefs(repoUrl, context.cwd);
+  } catch {
     prompts.log.warn(
       "Could not fetch remote refs. You can enter values manually.",
     );
@@ -44,7 +43,7 @@ const fetchRemoteRefsIfNeeded = async (
 
 const promptUpstreamBranch = async (
   context: LocalContext,
-  remoteRefs: RemoteRefs,
+  remoteRefs: RemoteRef[],
 ): Promise<string | undefined> => {
   if (remoteRefs.length === 0) {
     return undefined;
@@ -52,10 +51,20 @@ const promptUpstreamBranch = async (
 
   const prompts = createPrompts(context);
   const branches = getBranches(remoteRefs);
+  const branchNames = branches.map((b) => b.name);
+  const preferredBranch =
+    branchNames.find((n) => n === "main") ??
+    branchNames.find((n) => n === "master") ??
+    branchNames[0];
+  const otherBranches = branchNames.filter((n) => n !== preferredBranch);
+
   const NONE_VALUE = "_none";
   const branchOptions: Array<{ value: string; label: string }> = [
+    ...(preferredBranch
+      ? [{ value: preferredBranch, label: preferredBranch }]
+      : []),
     { value: NONE_VALUE, label: "None (manual updates only)" },
-    ...branches.map((b) => ({ value: b.name, label: b.name })),
+    ...otherBranches.map((name) => ({ value: name, label: name })),
   ];
 
   const selectedBranch = await prompts.select({
@@ -72,16 +81,14 @@ const promptUpstreamBranch = async (
 
 const promptBaseRevision = async (
   context: LocalContext,
-  remoteRefs: RemoteRefs,
+  remoteRefs: RemoteRef[],
 ): Promise<string> => {
   const prompts = createPrompts(context);
 
   if (remoteRefs.length > 0) {
     const tags = getLatestTags(remoteRefs);
     const branches = getBranches(remoteRefs);
-    const baseOptions = buildBaseRevisionOptions(tags, branches, {
-      manualLabel: "Enter SHA manually",
-    });
+    const baseOptions = buildBaseRevisionOptions(tags, branches);
 
     const selectedBase = await prompts.select({
       message: "Select base revision:",

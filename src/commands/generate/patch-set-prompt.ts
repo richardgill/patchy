@@ -50,7 +50,9 @@ export const resolvePatchSet = async (
   }
 
   const options: Array<{ value: string; label: string }> = [
-    ...existingPatchSets.map((name) => ({ value: name, label: name })),
+    ...existingPatchSets
+      .toReversed()
+      .map((name) => ({ value: name, label: name })),
     { value: CREATE_NEW_OPTION, label: "Create new patch set" },
   ];
 

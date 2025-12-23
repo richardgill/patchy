@@ -1,10 +1,10 @@
 import chalk from "chalk";
 import type { LocalContext } from "~/context";
 import { exit } from "~/lib/exit";
-import { fetchRemoteRefs } from "~/lib/git-remote";
+import { fetchRefs } from "~/lib/git-remote";
 import type { Prompts } from "~/lib/prompts";
 
-export type RemoteRefs = Awaited<ReturnType<typeof fetchRemoteRefs>>;
+export type RemoteRefs = Awaited<ReturnType<typeof fetchRefs>>;
 
 export const fetchAndValidateRemoteRefs = async (
   context: LocalContext,
@@ -14,7 +14,7 @@ export const fetchAndValidateRemoteRefs = async (
   prompts.log.step(`Fetching upstream refs from ${chalk.cyan(sourceRepo)}...`);
 
   try {
-    return await fetchRemoteRefs(sourceRepo);
+    return await fetchRefs(sourceRepo, context.cwd);
   } catch (error) {
     const message = error instanceof Error ? error.message : String(error);
     return exit(context, {

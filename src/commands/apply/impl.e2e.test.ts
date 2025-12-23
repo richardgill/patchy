@@ -1,5 +1,4 @@
 import { describe, expect, it } from "bun:test";
-import { mkdirSync } from "node:fs";
 import { mkdir } from "node:fs/promises";
 import path from "node:path";
 import { runCli } from "~/testing/e2e-utils";
@@ -8,7 +7,7 @@ import {
   setupTestWithConfig,
   writeFileIn,
 } from "~/testing/fs-test-utils";
-import { initGitRepoWithCommit } from "~/testing/git-helpers";
+import { createLocalRepo } from "~/testing/git-helpers";
 import { scenario } from "~/testing/scenario";
 
 describe("patchy apply", () => {
@@ -156,7 +155,8 @@ describe("patchy apply", () => {
 
       expect(result).toSucceed();
       expect(result.stdout).toMatchInlineSnapshot(`
-        "Applying patch sets...
+        "Applying patches from ./patches to ./main...
+
           [001-first] 1 file(s)
             Copied: file1.ts
           [002-second] 1 file(s)
@@ -186,7 +186,8 @@ describe("patchy apply", () => {
 
       expect(result).toSucceed();
       expect(result.stdout).toMatchInlineSnapshot(`
-        "Applying patch sets...
+        "Applying patches from ./patches to ./main...
+
           [002-second] 1 file(s)
             Copied: file2.ts
         Successfully applied 1 patch file(s) across 1 patch set(s)."
@@ -212,7 +213,8 @@ describe("patchy apply", () => {
 
       expect(result).toSucceed();
       expect(result.stdout).toMatchInlineSnapshot(`
-        "Applying patch sets...
+        "Applying patches from ./patches to ./main...
+
           [001-first] 1 file(s)
             Copied: file1.ts
           [002-second] 1 file(s)
@@ -449,8 +451,8 @@ export const component = () => {
 
       expect(result).toSucceed();
       expect(result.stdout).toMatchInlineSnapshot(`
-        "[DRY RUN] Would apply patches from ./patches to ./main
-        [DRY RUN] Applying patch sets...
+        "[DRY RUN] Applying patches from ./patches to ./main...
+
           [001-first] 1 file(s)
             Copy: file1.ts
           [002-second] 1 file(s)
@@ -525,12 +527,10 @@ const other = 2;
       const tmpDir = generateTmpDir();
 
       const absoluteRepoPath = path.join(tmpDir, "standalone-repo");
-      mkdirSync(absoluteRepoPath, { recursive: true });
-      await initGitRepoWithCommit(
-        absoluteRepoPath,
-        "file.txt",
-        "original content",
-      );
+      await createLocalRepo({
+        dir: absoluteRepoPath,
+        files: { "file.txt": "original content" },
+      });
 
       const ctx = await setupTestWithConfig({
         tmpDir,
@@ -613,7 +613,7 @@ const other = 2;
 
       expect(result).toSucceed();
       expect(result).toHaveOutput(
-        "[DRY RUN] Would apply patches from ./cli-patches to ./cli-repo",
+        "[DRY RUN] Applying patches from ./cli-patches to ./cli-repo...",
       );
     });
   });
@@ -700,9 +700,10 @@ const other = 2;
       const { result } = await runCli(`patchy apply --verbose`);
 
       expect(result).toSucceed();
-      expect(result.stdout).toContain("Committed patch set: 001-first");
-      expect(result.stdout).toContain("Committed patch set: 002-second");
-      expect(result.stdout).toContain("Committed patch set: 003-third");
+      expect(result.stdout).toContain("[001-first]");
+      expect(result.stdout).toContain("[002-second]");
+      expect(result.stdout).toContain("[003-third]");
+      expect(result.stdout).toMatch(/committed ✓.*committed ✓.*committed ✓/s);
 
       const commitMessages = await commits();
       expect(commitMessages.length).toBeGreaterThan(1);
@@ -728,8 +729,8 @@ const other = 2;
       const { result } = await runCli(`patchy apply --verbose`);
 
       expect(result).toSucceed();
-      expect(result.stdout).toContain("Committed patch set: 001-first");
-      expect(result.stdout).toContain("Left patch set uncommitted: 002-second");
+      expect(result.stdout).toContain("[001-first]");
+      expect(result.stdout).toContain("committed ✓");
 
       const commitMessages = await commits();
       expect(commitMessages[0]).toBe("Apply patch set: 001-first");
@@ -750,8 +751,9 @@ const other = 2;
       const { result } = await runCli(`patchy apply --all --verbose`);
 
       expect(result).toSucceed();
-      expect(result.stdout).toContain("Committed patch set: 001-first");
-      expect(result.stdout).toContain("Committed patch set: 002-second");
+      expect(result.stdout).toContain("[001-first]");
+      expect(result.stdout).toContain("[002-second]");
+      expect(result.stdout).toMatch(/committed ✓.*committed ✓/s);
 
       const commitMessages = await commits();
       expect(commitMessages[0]).toBe("Apply patch set: 002-second");
@@ -770,8 +772,9 @@ const other = 2;
       const { result } = await runCli(`patchy apply --edit --verbose`);
 
       expect(result).toSucceed();
-      expect(result.stdout).toContain("Committed patch set: 001-first");
-      expect(result.stdout).toContain("Left patch set uncommitted: 002-second");
+      expect(result.stdout).toContain("[001-first]");
+      expect(result.stdout).toContain("committed ✓");
+      expect(result.stdout).toContain("skipped");
 
       const commitMessages = await commits();
       expect(commitMessages[0]).toBe("Apply patch set: 001-first");
@@ -810,7 +813,8 @@ const other = 2;
       );
 
       expect(result).toSucceed();
-      expect(result.stdout).toContain("Committed patch set: 001-first");
+      expect(result.stdout).toContain("[001-first]");
+      expect(result.stdout).toContain("committed ✓");
 
       const commitMessages = await commits();
       expect(commitMessages[0]).toBe("Apply patch set: 001-first");
@@ -836,8 +840,8 @@ const other = 2;
       );
 
       expect(result).toSucceed();
-      expect(result.stdout).toContain("Committed patch set: 001-first");
-      expect(result.stdout).toContain("Left patch set uncommitted: 002-second");
+      expect(result.stdout).toContain("[001-first]");
+      expect(result.stdout).toContain("committed ✓");
 
       const commitMessages = await commits();
       expect(commitMessages[0]).toBe("Apply patch set: 001-first");
@@ -855,7 +859,7 @@ const other = 2;
 
       expect(result).toSucceed();
       expect(result.stdout).toContain("[DRY RUN]");
-      expect(result.stdout).not.toContain("Committed");
+      expect(result.stdout).not.toContain("committed");
 
       const commitMessages = await commits();
       expect(commitMessages.length).toBe(1);
@@ -877,7 +881,8 @@ const other = 2;
       const { result } = await runCli(`patchy apply --verbose`);
 
       expect(result).toSucceed();
-      expect(result.stdout).toContain("Committed patch set: 001-only");
+      expect(result.stdout).toContain("[001-only]");
+      expect(result.stdout).toContain("committed ✓");
 
       const commitMessages = await commits();
       expect(commitMessages[0]).toBe("Apply patch set: 001-only");

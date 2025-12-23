@@ -10,12 +10,28 @@ import {
   writeJsonConfig,
   writeTestFile,
 } from "~/testing/fs-test-utils";
+import type { NarrowedConfig } from "./narrowing";
+import {
+  REQUIRE_PATCHES_DIR,
+  REQUIRE_SOURCE_REPO,
+  REQUIRE_TARGET_REPO,
+  type RequirementPattern,
+} from "./requirement-patterns";
 import { createEnrichedMergedConfig } from "./resolver";
 import type { EnrichedMergedConfig, JsonConfigKey, SharedFlags } from "./types";
 
-const expectSuccessfulMerge: (
-  result: ReturnType<typeof createEnrichedMergedConfig>,
-) => asserts result is { success: true; mergedConfig: EnrichedMergedConfig } = (
+const makePattern = (
+  fields: JsonConfigKey[],
+): RequirementPattern<keyof EnrichedMergedConfig> => ({
+  validate: fields,
+  guarantees: fields as (keyof EnrichedMergedConfig)[],
+});
+
+const expectSuccessfulMerge: <
+  P extends readonly RequirementPattern<keyof EnrichedMergedConfig>[],
+>(
+  result: ReturnType<typeof createEnrichedMergedConfig<P>>,
+) => asserts result is { success: true; mergedConfig: NarrowedConfig<P> } = (
   result,
 ) => {
   expect(result.success).toBe(true);
@@ -24,8 +40,10 @@ const expectSuccessfulMerge: (
   }
 };
 
-const expectFailedMerge: (
-  result: ReturnType<typeof createEnrichedMergedConfig>,
+const expectFailedMerge: <
+  P extends readonly RequirementPattern<keyof EnrichedMergedConfig>[],
+>(
+  result: ReturnType<typeof createEnrichedMergedConfig<P>>,
 ) => asserts result is { success: false; error: string } = (result) => {
   expect(result.success).toBe(false);
   if (!result.success) {
@@ -57,15 +75,12 @@ describe("createEnrichedMergedConfig", () => {
       "dry-run": true,
     };
 
-    const requiredFields: JsonConfigKey[] = [
-      "source_repo",
-      "clones_dir",
-      "target_repo",
-    ];
-
     const result = createEnrichedMergedConfig({
       flags,
-      requiredFields,
+      requires: [
+        makePattern(["source_repo", "clones_dir"]),
+        REQUIRE_TARGET_REPO,
+      ],
       cwd: tmpDir,
     });
 
@@ -105,11 +120,9 @@ describe("createEnrichedMergedConfig", () => {
       "dry-run": true,
     };
 
-    const requiredFields: JsonConfigKey[] = ["source_repo", "target_repo"];
-
     const result = createEnrichedMergedConfig({
       flags,
-      requiredFields,
+      requires: [REQUIRE_SOURCE_REPO, REQUIRE_TARGET_REPO],
       cwd: tmpDir,
     });
 
@@ -143,15 +156,13 @@ describe("createEnrichedMergedConfig", () => {
     });
 
     const flags: SharedFlags = {};
-    const requiredFields: JsonConfigKey[] = [
-      "source_repo",
-      "clones_dir",
-      "target_repo",
-    ];
 
     const result = createEnrichedMergedConfig({
       flags,
-      requiredFields,
+      requires: [
+        makePattern(["source_repo", "clones_dir"]),
+        REQUIRE_TARGET_REPO,
+      ],
       cwd: tmpDir,
     });
 
@@ -181,11 +192,10 @@ describe("createEnrichedMergedConfig", () => {
     const flags: SharedFlags = {
       config: "./non-existent-config.json",
     };
-    const requiredFields: JsonConfigKey[] = ["source_repo"];
 
     const result = createEnrichedMergedConfig({
       flags,
-      requiredFields,
+      requires: [REQUIRE_SOURCE_REPO],
       cwd: tmpDir,
     });
 
@@ -203,11 +213,10 @@ describe("createEnrichedMergedConfig", () => {
     const flags: SharedFlags = {
       config: invalidJsonPath,
     };
-    const requiredFields: JsonConfigKey[] = ["source_repo"];
 
     const result = createEnrichedMergedConfig({
       flags,
-      requiredFields,
+      requires: [REQUIRE_SOURCE_REPO],
       cwd: tmpDir,
     });
 
@@ -236,16 +245,14 @@ describe("createEnrichedMergedConfig", () => {
     });
 
     const flags: SharedFlags = {};
-    const requiredFields: JsonConfigKey[] = [
-      "source_repo",
-      "clones_dir",
-      "target_repo",
-      "patches_dir",
-    ];
 
     const result = createEnrichedMergedConfig({
       flags,
-      requiredFields,
+      requires: [
+        makePattern(["source_repo", "clones_dir"]),
+        REQUIRE_TARGET_REPO,
+        REQUIRE_PATCHES_DIR,
+      ],
       cwd: tmpDir,
     });
 
@@ -287,16 +294,14 @@ describe("createEnrichedMergedConfig", () => {
       "base-revision": "flag-ref",
       verbose: true,
     };
-    const requiredFields: JsonConfigKey[] = [
-      "source_repo",
-      "clones_dir",
-      "target_repo",
-      "patches_dir",
-    ];
 
     const result = createEnrichedMergedConfig({
       flags,
-      requiredFields,
+      requires: [
+        makePattern(["source_repo", "clones_dir"]),
+        REQUIRE_TARGET_REPO,
+        REQUIRE_PATCHES_DIR,
+      ],
       cwd: tmpDir,
     });
 
@@ -338,16 +343,14 @@ describe("createEnrichedMergedConfig", () => {
     });
 
     const flags: SharedFlags = {};
-    const requiredFields: JsonConfigKey[] = [
-      "source_repo",
-      "clones_dir",
-      "target_repo",
-      "patches_dir",
-    ];
 
     const result = createEnrichedMergedConfig({
       flags,
-      requiredFields,
+      requires: [
+        makePattern(["source_repo", "clones_dir"]),
+        REQUIRE_TARGET_REPO,
+        REQUIRE_PATCHES_DIR,
+      ],
       cwd: tmpDir,
     });
 
@@ -380,11 +383,10 @@ describe("createEnrichedMergedConfig", () => {
       config: emptyJsonPath,
       "source-repo": "https://github.com/example/repo.git",
     };
-    const requiredFields: JsonConfigKey[] = ["source_repo"];
 
     const result = createEnrichedMergedConfig({
       flags,
-      requiredFields,
+      requires: [REQUIRE_SOURCE_REPO],
       cwd: tmpDir,
     });
 
@@ -415,11 +417,10 @@ describe("createEnrichedMergedConfig", () => {
       config: emptyJsonPath,
       "source-repo": "https://github.com/example/repo.git",
     };
-    const requiredFields: JsonConfigKey[] = ["source_repo"];
 
     const result = createEnrichedMergedConfig({
       flags,
-      requiredFields,
+      requires: [REQUIRE_SOURCE_REPO],
       cwd: tmpDir,
     });
 
@@ -445,11 +446,10 @@ describe("createEnrichedMergedConfig", () => {
     });
 
     const flags: SharedFlags = {};
-    const requiredFields: JsonConfigKey[] = ["clones_dir", "patches_dir"];
 
     const result = createEnrichedMergedConfig({
       flags,
-      requiredFields,
+      requires: [makePattern(["clones_dir"]), REQUIRE_PATCHES_DIR],
       cwd: tmpDir,
     });
 
@@ -485,15 +485,13 @@ describe("createEnrichedMergedConfig", () => {
       verbose: true,
       "dry-run": true,
     };
-    const requiredFields: JsonConfigKey[] = [
-      "source_repo",
-      "clones_dir",
-      "target_repo",
-    ];
 
     const result = createEnrichedMergedConfig({
       flags,
-      requiredFields,
+      requires: [
+        makePattern(["source_repo", "clones_dir"]),
+        REQUIRE_TARGET_REPO,
+      ],
       cwd: tmpDir,
     });
 
@@ -533,15 +531,13 @@ describe("createEnrichedMergedConfig", () => {
     });
 
     const flags: SharedFlags = {};
-    const requiredFields: JsonConfigKey[] = [
-      "source_repo",
-      "clones_dir",
-      "target_repo",
-    ];
 
     const result = createEnrichedMergedConfig({
       flags,
-      requiredFields,
+      requires: [
+        makePattern(["source_repo", "clones_dir"]),
+        REQUIRE_TARGET_REPO,
+      ],
       cwd: tmpDir,
     });
 
@@ -587,15 +583,13 @@ describe("createEnrichedMergedConfig", () => {
     const flags: SharedFlags = {
       config: customConfigPath,
     };
-    const requiredFields: JsonConfigKey[] = [
-      "source_repo",
-      "clones_dir",
-      "target_repo",
-    ];
 
     const result = createEnrichedMergedConfig({
       flags,
-      requiredFields,
+      requires: [
+        makePattern(["source_repo", "clones_dir"]),
+        REQUIRE_TARGET_REPO,
+      ],
       cwd: tmpDir,
     });
 
@@ -636,16 +630,14 @@ describe("createEnrichedMergedConfig", () => {
     });
 
     const flags: SharedFlags = {};
-    const requiredFields: JsonConfigKey[] = [
-      "source_repo",
-      "clones_dir",
-      "target_repo",
-    ];
 
     const originalCwd = process.cwd();
     const result = createEnrichedMergedConfig({
       flags,
-      requiredFields,
+      requires: [
+        makePattern(["source_repo", "clones_dir"]),
+        REQUIRE_TARGET_REPO,
+      ],
       cwd: subDir,
     });
 
@@ -686,16 +678,14 @@ describe("createEnrichedMergedConfig", () => {
     });
 
     const flags: SharedFlags = {};
-    const requiredFields: JsonConfigKey[] = [
-      "source_repo",
-      "clones_dir",
-      "target_repo",
-    ];
     const originalCwd = process.cwd();
 
     const result = createEnrichedMergedConfig({
       flags,
-      requiredFields,
+      requires: [
+        makePattern(["source_repo", "clones_dir"]),
+        REQUIRE_TARGET_REPO,
+      ],
       cwd: tmpDir,
     });
 
@@ -732,11 +722,10 @@ describe("createEnrichedMergedConfig", () => {
     const flags: SharedFlags = {
       config: invalidJsonPath,
     };
-    const requiredFields: JsonConfigKey[] = ["source_repo"];
 
     const result = createEnrichedMergedConfig({
       flags,
-      requiredFields,
+      requires: [REQUIRE_SOURCE_REPO],
       cwd: tmpDir,
     });
 
@@ -760,15 +749,14 @@ describe("createEnrichedMergedConfig", () => {
     });
 
     const flags: SharedFlags = {};
-    const requiredFields: JsonConfigKey[] = [
-      "source_repo",
-      "clones_dir",
-      "target_repo",
-    ];
 
     const result = createEnrichedMergedConfig({
       flags,
-      requiredFields,
+      requires: [
+        makePattern(["clones_dir"]),
+        REQUIRE_SOURCE_REPO,
+        REQUIRE_TARGET_REPO,
+      ],
       cwd: tmpDir,
     });
 
@@ -794,11 +782,10 @@ describe("createEnrichedMergedConfig", () => {
     const flags: SharedFlags = {
       config: jsonPath,
     };
-    const requiredFields: JsonConfigKey[] = [];
 
     const result = createEnrichedMergedConfig({
       flags,
-      requiredFields,
+      requires: [],
       cwd: tmpDir,
     });
 
@@ -822,11 +809,10 @@ describe("createEnrichedMergedConfig", () => {
     const flags: SharedFlags = {
       config: jsonPath,
     };
-    const requiredFields: JsonConfigKey[] = [];
 
     const result = createEnrichedMergedConfig({
       flags,
-      requiredFields,
+      requires: [],
       cwd: tmpDir,
     });
 
@@ -850,11 +836,10 @@ describe("createEnrichedMergedConfig", () => {
     const flags: SharedFlags = {
       config: jsonPath,
     };
-    const requiredFields: JsonConfigKey[] = [];
 
     const result = createEnrichedMergedConfig({
       flags,
-      requiredFields,
+      requires: [],
       cwd: tmpDir,
     });
 
@@ -875,11 +860,10 @@ describe("createEnrichedMergedConfig", () => {
     const flags: SharedFlags = {
       config: jsonPath,
     };
-    const requiredFields: JsonConfigKey[] = [];
 
     const result = createEnrichedMergedConfig({
       flags,
-      requiredFields,
+      requires: [],
       cwd: tmpDir,
     });
 
@@ -902,11 +886,10 @@ describe("createEnrichedMergedConfig", () => {
     const flags: SharedFlags = {
       config: jsonPath,
     };
-    const requiredFields: JsonConfigKey[] = [];
 
     const result = createEnrichedMergedConfig({
       flags,
-      requiredFields,
+      requires: [],
       cwd: tmpDir,
     });
 
@@ -929,11 +912,10 @@ describe("createEnrichedMergedConfig", () => {
     const flags: SharedFlags = {
       config: jsonPath,
     };
-    const requiredFields: JsonConfigKey[] = [];
 
     const result = createEnrichedMergedConfig({
       flags,
-      requiredFields,
+      requires: [],
       cwd: tmpDir,
     });
 
@@ -960,11 +942,10 @@ describe("createEnrichedMergedConfig", () => {
     const flags: SharedFlags = {
       config: jsonPath,
     };
-    const requiredFields: JsonConfigKey[] = [];
 
     const result = createEnrichedMergedConfig({
       flags,
-      requiredFields,
+      requires: [],
       cwd: tmpDir,
     });
 
@@ -993,12 +974,6 @@ describe("createEnrichedMergedConfig", () => {
     });
 
     const flags: SharedFlags = {};
-    const requiredFields: JsonConfigKey[] = [
-      "source_repo",
-      "clones_dir",
-      "target_repo",
-      "patches_dir",
-    ];
     const env = {
       PATCHY_SOURCE_REPO: "https://github.com/example/env-repo.git",
       PATCHY_CLONES_DIR: "env-base",
@@ -1011,7 +986,11 @@ describe("createEnrichedMergedConfig", () => {
 
     const result = createEnrichedMergedConfig({
       flags,
-      requiredFields,
+      requires: [
+        makePattern(["source_repo", "clones_dir"]),
+        REQUIRE_TARGET_REPO,
+        REQUIRE_PATCHES_DIR,
+      ],
       cwd: tmpDir,
       env,
     });
@@ -1057,12 +1036,6 @@ describe("createEnrichedMergedConfig", () => {
       verbose: true,
       "dry-run": true,
     };
-    const requiredFields: JsonConfigKey[] = [
-      "source_repo",
-      "clones_dir",
-      "target_repo",
-      "patches_dir",
-    ];
     const env = {
       PATCHY_SOURCE_REPO: "https://github.com/example/env-repo.git",
       PATCHY_CLONES_DIR: "env-base",
@@ -1075,7 +1048,11 @@ describe("createEnrichedMergedConfig", () => {
 
     const result = createEnrichedMergedConfig({
       flags,
-      requiredFields,
+      requires: [
+        makePattern(["source_repo", "clones_dir"]),
+        REQUIRE_TARGET_REPO,
+        REQUIRE_PATCHES_DIR,
+      ],
       cwd: tmpDir,
       env,
     });
@@ -1120,12 +1097,6 @@ describe("createEnrichedMergedConfig", () => {
     });
 
     const flags: SharedFlags = {};
-    const requiredFields: JsonConfigKey[] = [
-      "source_repo",
-      "clones_dir",
-      "target_repo",
-      "patches_dir",
-    ];
     const env = {
       PATCHY_SOURCE_REPO: "https://github.com/example/env-repo.git",
       PATCHY_CLONES_DIR: "env-base",
@@ -1137,7 +1108,11 @@ describe("createEnrichedMergedConfig", () => {
 
     const result = createEnrichedMergedConfig({
       flags,
-      requiredFields,
+      requires: [
+        makePattern(["source_repo", "clones_dir"]),
+        REQUIRE_TARGET_REPO,
+        REQUIRE_PATCHES_DIR,
+      ],
       cwd: tmpDir,
       env,
     });
@@ -1182,18 +1157,16 @@ describe("createEnrichedMergedConfig", () => {
     });
 
     const flags: SharedFlags = {};
-    const requiredFields: JsonConfigKey[] = [
-      "source_repo",
-      "clones_dir",
-      "target_repo",
-    ];
     const env = {
       PATCHY_CONFIG: customConfigPath,
     };
 
     const result = createEnrichedMergedConfig({
       flags,
-      requiredFields,
+      requires: [
+        makePattern(["source_repo", "clones_dir"]),
+        REQUIRE_TARGET_REPO,
+      ],
       cwd: tmpDir,
       env,
     });
@@ -1223,14 +1196,13 @@ describe("createEnrichedMergedConfig", () => {
     mkdirSync(tmpDir, { recursive: true });
 
     const flags: SharedFlags = {};
-    const requiredFields: JsonConfigKey[] = ["source_repo"];
     const env = {
       PATCHY_CONFIG: "./non-existent-env-config.json",
     };
 
     const result = createEnrichedMergedConfig({
       flags,
-      requiredFields,
+      requires: [REQUIRE_SOURCE_REPO],
       cwd: tmpDir,
       env,
     });
@@ -1291,7 +1263,10 @@ describe("createEnrichedMergedConfig", () => {
     } of testCases) {
       const result = createEnrichedMergedConfig({
         flags: {},
-        requiredFields: ["source_repo", "clones_dir", "target_repo"],
+        requires: [
+          makePattern(["source_repo", "clones_dir"]),
+          REQUIRE_TARGET_REPO,
+        ],
         cwd: tmpDir,
         env: { PATCHY_VERBOSE, PATCHY_DRY_RUN },
       });
@@ -1319,11 +1294,6 @@ describe("createEnrichedMergedConfig", () => {
     });
 
     const flags: SharedFlags = {};
-    const requiredFields: JsonConfigKey[] = [
-      "source_repo",
-      "clones_dir",
-      "target_repo",
-    ];
     const env = {
       PATCHY_SOURCE_REPO: "",
       PATCHY_BASE_REVISION: "",
@@ -1331,7 +1301,10 @@ describe("createEnrichedMergedConfig", () => {
 
     const result = createEnrichedMergedConfig({
       flags,
-      requiredFields,
+      requires: [
+        makePattern(["source_repo", "clones_dir"]),
+        REQUIRE_TARGET_REPO,
+      ],
       cwd: tmpDir,
       env,
     });
@@ -1358,11 +1331,10 @@ describe("createEnrichedMergedConfig", () => {
     });
 
     const flags: SharedFlags = {};
-    const requiredFields: JsonConfigKey[] = ["source_repo", "target_repo"];
 
     const result = createEnrichedMergedConfig({
       flags,
-      requiredFields,
+      requires: [REQUIRE_SOURCE_REPO, REQUIRE_TARGET_REPO],
       cwd: tmpDir,
     });
 
@@ -1384,11 +1356,10 @@ describe("createEnrichedMergedConfig", () => {
     });
 
     const flags: SharedFlags = {};
-    const requiredFields: JsonConfigKey[] = ["source_repo"];
 
     const result = createEnrichedMergedConfig({
       flags,
-      requiredFields,
+      requires: [REQUIRE_SOURCE_REPO],
       cwd: tmpDir,
     });
 
