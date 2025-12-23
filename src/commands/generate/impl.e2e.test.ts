@@ -541,6 +541,37 @@ describe("patchy generate", () => {
     expect(result.stderr).toContain("Operation cancelled");
   });
 
+  it("should show patch set options in correct order: create new first, then newest to oldest", async () => {
+    const ctx = await scenario({
+      git: true,
+      targetFiles: {
+        "initial.txt": "initial content\n",
+      },
+    });
+
+    mkdirSync(path.join(ctx.tmpDir, "patches/001-first"), { recursive: true });
+    mkdirSync(path.join(ctx.tmpDir, "patches/002-second"), { recursive: true });
+
+    await writeFileIn(
+      path.join(ctx.tmpDir, "repos/main"),
+      "initial.txt",
+      "modified content\n",
+    );
+
+    const { prompts } = await ctx
+      .withPrompts({ select: "Select patch set:", respond: "001-first" })
+      .runCli("patchy generate");
+
+    expect(prompts[0]).toMatchObject({
+      type: "select",
+      options: [
+        { value: CREATE_NEW_OPTION, label: "Create new patch set" },
+        { value: "002-second", label: "002-second" },
+        { value: "001-first", label: "001-first" },
+      ],
+    });
+  });
+
   it("should only clean stale patches within the target patch set", async () => {
     const ctx = await scenario({
       git: true,

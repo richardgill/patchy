@@ -50,10 +50,10 @@ export const resolvePatchSet = async (
   }
 
   const options: Array<{ value: string; label: string }> = [
+    { value: CREATE_NEW_OPTION, label: "Create new patch set" },
     ...existingPatchSets
       .toReversed()
       .map((name) => ({ value: name, label: name })),
-    { value: CREATE_NEW_OPTION, label: "Create new patch set" },
   ];
 
   const selected = await prompts.select({
