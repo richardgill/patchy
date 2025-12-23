@@ -104,7 +104,7 @@ export const canPrompt = (context: LocalContext): boolean => {
 };
 
 export const promptForManualSha = async (
-  prompts: ReturnType<typeof createPrompts>,
+  prompts: Prompts,
 ): Promise<string | symbol> => {
   const manualSha = await prompts.text({
     message: "Enter commit SHA or tag:",
@@ -119,6 +119,8 @@ export const promptForManualSha = async (
 
   return manualSha;
 };
+
+export type Prompts = ReturnType<typeof createPrompts>;
 
 export const createPrompts = (context: LocalContext) => {
   if (context.promptHandler) {
