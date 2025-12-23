@@ -53,7 +53,7 @@ type PromptExpectation = {
 
 type ScenarioContext = {
   runCli: (command: string) => Promise<PromptedCliResult>;
-  files: (relativePath: string) => string;
+  fileContent: (relativePath: string) => string;
   exists: (relativePath: string) => boolean;
   commits: () => Promise<string[]>;
   gitStatus: () => Promise<string[]>;
@@ -220,7 +220,7 @@ const createContextHelpers = (
   paths: ScenarioPaths,
 ): Pick<
   ScenarioContext,
-  | "files"
+  | "fileContent"
   | "exists"
   | "commits"
   | "gitStatus"
@@ -231,7 +231,7 @@ const createContextHelpers = (
 > => {
   const { tmpDir, patchesDir, targetRepoDir } = paths;
 
-  const files = (relativePath: string): string => {
+  const fileContent = (relativePath: string): string => {
     const fullPath = join(targetRepoDir, relativePath);
     return readFileSync(fullPath, "utf-8");
   };
@@ -269,7 +269,7 @@ const createContextHelpers = (
   };
 
   return {
-    files,
+    fileContent,
     exists,
     commits,
     gitStatus,

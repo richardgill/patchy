@@ -144,7 +144,7 @@ describe("patchy apply", () => {
 
   describe("applying patch sets", () => {
     it("should apply all patch sets in alphabetical order", async () => {
-      const { runCli, files } = await scenario({
+      const { runCli, fileContent } = await scenario({
         patches: {
           "001-first": { "file1.ts": "content from first" },
           "002-second": { "file2.ts": "content from second" },
@@ -166,13 +166,13 @@ describe("patchy apply", () => {
         Successfully applied 3 patch file(s) across 3 patch set(s)."
       `);
 
-      expect(files("file1.ts")).toBe("content from first");
-      expect(files("file2.ts")).toBe("content from second");
-      expect(files("file3.ts")).toBe("content from third");
+      expect(fileContent("file1.ts")).toBe("content from first");
+      expect(fileContent("file2.ts")).toBe("content from second");
+      expect(fileContent("file3.ts")).toBe("content from third");
     });
 
     it("should apply single patch set with --only flag", async () => {
-      const { runCli, files, exists } = await scenario({
+      const { runCli, fileContent, exists } = await scenario({
         patches: {
           "001-first": { "file1.ts": "content from first" },
           "002-second": { "file2.ts": "content from second" },
@@ -193,12 +193,12 @@ describe("patchy apply", () => {
       `);
 
       expect(exists("file1.ts")).toBe(false);
-      expect(files("file2.ts")).toBe("content from second");
+      expect(fileContent("file2.ts")).toBe("content from second");
       expect(exists("file3.ts")).toBe(false);
     });
 
     it("should apply patch sets up to and including --until", async () => {
-      const { runCli, files, exists } = await scenario({
+      const { runCli, fileContent, exists } = await scenario({
         patches: {
           "001-first": { "file1.ts": "content from first" },
           "002-second": { "file2.ts": "content from second" },
@@ -220,8 +220,8 @@ describe("patchy apply", () => {
         Successfully applied 2 patch file(s) across 2 patch set(s)."
       `);
 
-      expect(files("file1.ts")).toBe("content from first");
-      expect(files("file2.ts")).toBe("content from second");
+      expect(fileContent("file1.ts")).toBe("content from first");
+      expect(fileContent("file2.ts")).toBe("content from second");
       expect(exists("file3.ts")).toBe(false);
     });
 
@@ -276,7 +276,7 @@ describe("patchy apply", () => {
 
   describe("file operations", () => {
     it("should copy new files from patch set to repo", async () => {
-      const { runCli, files } = await scenario({
+      const { runCli, fileContent } = await scenario({
         patches: {
           "001-my-set": {
             "newFile.ts": 'export const hello = "world";',
@@ -290,11 +290,11 @@ describe("patchy apply", () => {
       expect(result).toHaveOutput("[001-my-set] 1 file(s)");
       expect(result).toHaveOutput("Copied: newFile.ts");
 
-      expect(files("newFile.ts")).toBe('export const hello = "world";');
+      expect(fileContent("newFile.ts")).toBe('export const hello = "world";');
     });
 
     it("should copy new files in nested directories", async () => {
-      const { runCli, files } = await scenario({
+      const { runCli, fileContent } = await scenario({
         patches: {
           "001-my-set": {
             "src/utils/helper.ts":
@@ -308,13 +308,13 @@ describe("patchy apply", () => {
       expect(result).toSucceed();
       expect(result).toHaveOutput("Copied: src/utils/helper.ts");
 
-      expect(files("src/utils/helper.ts")).toBe(
+      expect(fileContent("src/utils/helper.ts")).toBe(
         "export const add = (a: number, b: number) => a + b;",
       );
     });
 
     it("should apply diff files to existing files", async () => {
-      const { runCli, files } = await scenario({
+      const { runCli, fileContent } = await scenario({
         targetFiles: {
           "existing.ts": "const value = 1;\nconst other = 2;\n",
         },
@@ -336,13 +336,13 @@ describe("patchy apply", () => {
       expect(result).toSucceed();
       expect(result).toHaveOutput("Applied diff: existing.ts.diff");
 
-      expect(files("existing.ts")).toBe(
+      expect(fileContent("existing.ts")).toBe(
         "const value = 42;\nconst other = 2;\n",
       );
     });
 
     it("should handle mixed files (copies and diffs) in a patch set", async () => {
-      const { runCli, files } = await scenario({
+      const { runCli, fileContent } = await scenario({
         targetFiles: {
           "existing.ts": "const x = 1;\n",
         },
@@ -364,8 +364,8 @@ describe("patchy apply", () => {
       expect(result).toSucceed();
       expect(result).toHaveOutput("[001-my-set] 2 file(s)");
 
-      expect(files("existing.ts")).toBe("const x = 100;\n");
-      expect(files("new.ts")).toBe("export const y = 2;");
+      expect(fileContent("existing.ts")).toBe("const x = 100;\n");
+      expect(fileContent("new.ts")).toBe("export const y = 2;");
     });
 
     it("should report error when diff target file does not exist", async () => {
@@ -400,7 +400,7 @@ export const component = () => {
 // Special characters: "quotes", 'single', \`backticks\`
 // Unicode: 你好 🎉
 `;
-      const { runCli, files } = await scenario({
+      const { runCli, fileContent } = await scenario({
         patches: {
           "001-my-set": {
             "complex.tsx": complexContent,
@@ -411,7 +411,7 @@ export const component = () => {
       const { result } = await runCli(`patchy apply`);
 
       expect(result).toSucceed();
-      expect(files("complex.tsx")).toBe(complexContent);
+      expect(fileContent("complex.tsx")).toBe(complexContent);
     });
   });
 
@@ -462,7 +462,7 @@ export const component = () => {
 
   describe("fuzz factor", () => {
     it("should apply diff with fuzzy matching when context lines are missing", async () => {
-      const { runCli, files } = await scenario({
+      const { runCli, fileContent } = await scenario({
         targetFiles: {
           "fuzzy.ts": `const value = 1;
 const other = 2;
@@ -487,7 +487,7 @@ const other = 2;
       expect(result).toSucceed();
       expect(result).toHaveOutput("Applied diff: fuzzy.ts.diff");
 
-      expect(files("fuzzy.ts")).toBe(`const value = 42;
+      expect(fileContent("fuzzy.ts")).toBe(`const value = 42;
 const other = 2;
 `);
     });
