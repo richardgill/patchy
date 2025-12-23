@@ -1,21 +1,14 @@
 import { writeFileSync } from "node:fs";
 import { copyFile } from "node:fs/promises";
-import { dirname, join, relative } from "node:path";
-import { compact } from "es-toolkit";
-import {
-  createEnrichedMergedConfig,
-  hasAbsoluteTargetRepo,
-} from "~/cli-fields";
+import { dirname, join } from "node:path";
 import type { LocalContext } from "~/context";
-import { exit } from "~/lib/exit";
-import { ensureDirExists, formatPathForDisplay, removeFile } from "~/lib/fs";
+import { ensureDirExists, formatPathForDisplay } from "~/lib/fs";
+import { cleanupStalePatches } from "./cleanup";
+import { loadAndValidateConfig } from "./config";
 import type { GenerateFlags } from "./flags";
 import { generateDiff, getGitChanges } from "./git-changes";
-import {
-  getExpectedPatchPaths,
-  getStalePatches,
-  toPatchOperations,
-} from "./patch-operations";
+import { printDryRun, reportSuccess } from "./output";
+import { getExpectedPatchPaths, toPatchOperations } from "./patch-operations";
 import { CREATE_NEW_OPTION, resolvePatchSet } from "./patch-set-prompt";
 
 export { CREATE_NEW_OPTION };
@@ -24,21 +17,8 @@ export default async function (
   this: LocalContext,
   flags: GenerateFlags,
 ): Promise<void> {
-  const result = createEnrichedMergedConfig({
-    flags,
-    requiredFields: (config) =>
-      compact([!hasAbsoluteTargetRepo(config) && "clones_dir", "target_repo"]),
-    cwd: this.cwd,
-    env: this.process.env,
-  });
-
-  if (!result.success) {
-    return exit(this, { exitCode: 1, stderr: result.error });
-  }
-
-  const config = result.mergedConfig;
-  const absoluteTargetRepo = config.absoluteTargetRepo ?? "";
-  const absolutePatchesDir = config.absolutePatchesDir ?? "";
+  const config = loadAndValidateConfig(this, flags);
+  const { absoluteTargetRepo, absolutePatchesDir } = config;
 
   const patchSet = await resolvePatchSet(
     this,
@@ -63,12 +43,18 @@ export default async function (
   );
 
   if (config.dry_run) {
-    await printDryRun(this, config, patchSet, operations, absolutePatchSetDir);
+    await printDryRun({
+      context: this,
+      config,
+      patchSet,
+      operations,
+      absolutePatchSetDir,
+    });
     return;
   }
 
   this.process.stdout.write(
-    `Generating patches from ${formatPathForDisplay(config.target_repo ?? "")} to ${formatPathForDisplay(config.patches_dir ?? "")}/${patchSet}/...\n`,
+    `Generating patches from ${formatPathForDisplay(config.target_repo)} to ${formatPathForDisplay(config.patches_dir)}/${patchSet}/...\n`,
   );
 
   ensureDirExists(absolutePatchSetDir);
@@ -93,63 +79,9 @@ export default async function (
     expectedPaths,
   );
 
-  const removedMsg = staleCount > 0 ? `, removed ${staleCount} stale` : "";
-  this.process.stdout.write(
-    `Generated ${operations.length} patch(es)${removedMsg} successfully.\n`,
-  );
+  reportSuccess({
+    context: this,
+    operationCount: operations.length,
+    staleCount,
+  });
 }
-
-const cleanupStalePatches = async (
-  context: LocalContext,
-  patchSetDir: string,
-  expectedPaths: Set<string>,
-): Promise<number> => {
-  const stalePatches = await getStalePatches(patchSetDir, expectedPaths);
-
-  for (const stalePath of stalePatches) {
-    removeFile(stalePath);
-    const relativePath = relative(patchSetDir, stalePath);
-    context.process.stdout.write(`  Removed stale: ${relativePath}\n`);
-  }
-
-  if (stalePatches.length > 0) {
-    context.process.stdout.write(
-      `Removed ${stalePatches.length} stale patch(es).\n`,
-    );
-  }
-
-  return stalePatches.length;
-};
-
-const printDryRun = async (
-  context: LocalContext,
-  config: { target_repo?: string; patches_dir?: string },
-  patchSet: string,
-  operations: Array<{ type: string; relativePath: string; destPath: string }>,
-  absolutePatchSetDir: string,
-): Promise<void> => {
-  context.process.stdout.write(
-    `[DRY RUN] Would generate patches from ${formatPathForDisplay(config.target_repo ?? "")} to ${formatPathForDisplay(config.patches_dir ?? "")}/${patchSet}/\n`,
-  );
-  context.process.stdout.write(`Found ${operations.length} change(s):\n`);
-  for (const op of operations) {
-    context.process.stdout.write(
-      `  ${op.type}: ${op.relativePath} -> ${op.destPath}\n`,
-    );
-  }
-
-  const expectedPaths = getExpectedPatchPaths(operations);
-  const stalePatches = await getStalePatches(
-    absolutePatchSetDir,
-    expectedPaths,
-  );
-  if (stalePatches.length > 0) {
-    context.process.stdout.write(
-      `\nWould remove ${stalePatches.length} stale patch(es):\n`,
-    );
-    for (const stalePath of stalePatches) {
-      const relativePath = relative(absolutePatchSetDir, stalePath);
-      context.process.stdout.write(`  remove: ${relativePath}\n`);
-    }
-  }
-};
