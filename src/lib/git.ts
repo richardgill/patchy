@@ -13,12 +13,12 @@ const getCleanGitEnv = (): NodeJS.ProcessEnv =>
 export const createGitClient = (
   options?: Partial<SimpleGitOptions>,
 ): SimpleGit =>
-  (options ? simpleGit(options) : simpleGit()).env(getCleanGitEnv());
+  simpleGit({ maxConcurrentProcesses: 50, ...options }).env(getCleanGitEnv());
 
 export const createTestGitClient = (
   options?: Partial<SimpleGitOptions>,
 ): SimpleGit =>
-  (options ? simpleGit(options) : simpleGit()).env({
+  simpleGit({ maxConcurrentProcesses: 50, ...options }).env({
     ...getCleanGitEnv(),
     LEFTHOOK: "0",
   });
