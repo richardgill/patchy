@@ -4,11 +4,7 @@ import { join } from "node:path";
 import { createTestGitClient } from "~/lib/git";
 import { runCli as baseRunCli } from "./e2e-utils";
 import { generateTmpDir, writeFileIn } from "./fs-test-utils";
-import {
-  createLocalBareRepo,
-  initGitRepo,
-  initGitRepoWithCommit,
-} from "./git-helpers";
+import { createLocalBareRepo, createLocalRepo } from "./git-helpers";
 import {
   acceptDefault,
   cancel,
@@ -197,14 +193,16 @@ const setupGit = async (
   hasTargetFiles: boolean,
 ): Promise<void> => {
   if (hasTargetFiles) {
-    await initGitRepo(targetRepoDir);
     const git = createTestGitClient({ baseDir: targetRepoDir });
+    await git.init();
+    await git.addConfig("user.email", "test@test.com");
+    await git.addConfig("user.name", "Test User");
     await git.addConfig("init.defaultBranch", "main");
     await git.checkout(["-b", "main"]);
     await git.add(".");
     await git.commit("initial commit");
   } else {
-    await initGitRepoWithCommit(targetRepoDir);
+    await createLocalRepo({ dir: targetRepoDir });
   }
 };
 

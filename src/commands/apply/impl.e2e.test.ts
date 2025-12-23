@@ -1,5 +1,4 @@
 import { describe, expect, it } from "bun:test";
-import { mkdirSync } from "node:fs";
 import { mkdir } from "node:fs/promises";
 import path from "node:path";
 import { runCli } from "~/testing/e2e-utils";
@@ -8,7 +7,7 @@ import {
   setupTestWithConfig,
   writeFileIn,
 } from "~/testing/fs-test-utils";
-import { initGitRepoWithCommit } from "~/testing/git-helpers";
+import { createLocalRepo } from "~/testing/git-helpers";
 import { scenario } from "~/testing/scenario";
 
 describe("patchy apply", () => {
@@ -524,12 +523,10 @@ const other = 2;
       const tmpDir = generateTmpDir();
 
       const absoluteRepoPath = path.join(tmpDir, "standalone-repo");
-      mkdirSync(absoluteRepoPath, { recursive: true });
-      await initGitRepoWithCommit(
-        absoluteRepoPath,
-        "file.txt",
-        "original content",
-      );
+      await createLocalRepo({
+        dir: absoluteRepoPath,
+        files: { "file.txt": "original content" },
+      });
 
       const ctx = await setupTestWithConfig({
         tmpDir,

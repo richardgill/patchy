@@ -6,9 +6,9 @@ import { runCli } from "~/testing/e2e-utils";
 import { generateTmpDir, setupTestWithConfig } from "~/testing/fs-test-utils";
 import {
   createLocalBareRepo,
+  createLocalRepo,
   getCurrentBranch,
   getCurrentCommit,
-  initGitRepoWithCommit,
 } from "~/testing/git-helpers";
 import { scenario } from "~/testing/scenario";
 
@@ -33,12 +33,16 @@ describe("patchy repo clone", () => {
     const tmpDir = generateTmpDir();
 
     const sourceRepoDir = path.join(tmpDir, "upstream");
-    mkdirSync(sourceRepoDir, { recursive: true });
-    await initGitRepoWithCommit(sourceRepoDir, "SOURCE_MARKER.txt", "correct");
+    await createLocalRepo({
+      dir: sourceRepoDir,
+      files: { "SOURCE_MARKER.txt": "correct" },
+    });
 
     const wrongRepoDir = path.join(tmpDir, "clones", "upstream");
-    mkdirSync(wrongRepoDir, { recursive: true });
-    await initGitRepoWithCommit(wrongRepoDir, "WRONG_MARKER.txt", "wrong");
+    await createLocalRepo({
+      dir: wrongRepoDir,
+      files: { "WRONG_MARKER.txt": "wrong" },
+    });
 
     await setupTestWithConfig({
       tmpDir,
@@ -64,8 +68,10 @@ describe("patchy repo clone", () => {
     const tmpDir = generateTmpDir();
 
     const sourceRepoDir = path.join(tmpDir, "upstream");
-    mkdirSync(sourceRepoDir, { recursive: true });
-    await initGitRepoWithCommit(sourceRepoDir, "PARENT.txt", "parent");
+    await createLocalRepo({
+      dir: sourceRepoDir,
+      files: { "PARENT.txt": "parent" },
+    });
 
     const projectDir = path.join(tmpDir, "project");
     mkdirSync(projectDir, { recursive: true });

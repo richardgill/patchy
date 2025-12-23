@@ -6,25 +6,11 @@ import { createTestGitClient } from "~/lib/git";
 import { generateTmpDir } from "./fs-test-utils";
 import type { FileMap } from "./testing-types";
 
-export const initGitRepo = async (repoDir: string): Promise<void> => {
+const initGitRepo = async (repoDir: string): Promise<void> => {
   const git = createTestGitClient({ baseDir: repoDir });
   await git.init();
   await git.addConfig("user.email", "test@test.com");
   await git.addConfig("user.name", "Test User");
-};
-
-export const initGitRepoWithCommit = async (
-  repoDir: string,
-  filename = "initial.txt",
-  content = "initial content\n",
-): Promise<void> => {
-  await initGitRepo(repoDir);
-  const git = createTestGitClient({ baseDir: repoDir });
-  await git.addConfig("init.defaultBranch", "main");
-  await git.checkout(["-b", "main"]);
-  writeFileSync(join(repoDir, filename), content);
-  await git.add(".");
-  await git.commit("initial commit");
 };
 
 type TestRepoOptions = {
@@ -75,24 +61,18 @@ export const createLocalRepo = async (
   const repoDir = options.dir ?? generateTmpDir();
   mkdirSync(repoDir, { recursive: true });
 
-  const { files } = options;
+  const filesToWrite = options.files ?? { "initial.txt": "initial content\n" };
 
-  if (files) {
-    await initGitRepo(repoDir);
-    const git = createTestGitClient({ baseDir: repoDir });
-    await git.addConfig("init.defaultBranch", "main");
-    await git.checkout(["-b", "main"]);
-    for (const [filename, content] of Object.entries(files)) {
-      writeFileSync(join(repoDir, filename), content);
-    }
-    await git.add(".");
-    await git.commit("initial commit");
-    await addRefsToRepo({ git, workDir: repoDir }, options);
-  } else {
-    await initGitRepoWithCommit(repoDir);
-    const git = createTestGitClient({ baseDir: repoDir });
-    await addRefsToRepo({ git, workDir: repoDir }, options);
+  await initGitRepo(repoDir);
+  const git = createTestGitClient({ baseDir: repoDir });
+  await git.addConfig("init.defaultBranch", "main");
+  await git.checkout(["-b", "main"]);
+  for (const [filename, content] of Object.entries(filesToWrite)) {
+    writeFileSync(join(repoDir, filename), content);
   }
+  await git.add(".");
+  await git.commit("initial commit");
+  await addRefsToRepo({ git, workDir: repoDir }, options);
 
   return repoDir;
 };
