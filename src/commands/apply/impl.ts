@@ -58,16 +58,14 @@ export default async function (
     return;
   }
 
-  if (config.dry_run) {
-    this.process.stdout.write(
-      `[DRY RUN] Would apply patches from ${formatPathForDisplay(config.patches_dir)} to ${formatPathForDisplay(config.target_repo)}\n`,
-    );
-  } else {
+  if (!config.dry_run) {
     await ensureCleanWorkingTree(this, config.absoluteTargetRepo);
   }
 
   const dryRunPrefix = config.dry_run ? "[DRY RUN] " : "";
-  this.process.stdout.write(`${dryRunPrefix}Applying patch sets...\n`);
+  this.process.stdout.write(
+    `${dryRunPrefix}Applying patches from ${formatPathForDisplay(config.patches_dir)} to ${formatPathForDisplay(config.target_repo)}...\n`,
+  );
 
   const stats: PatchSetStats[] = [];
 

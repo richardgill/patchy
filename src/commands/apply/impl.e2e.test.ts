@@ -156,7 +156,7 @@ describe("patchy apply", () => {
 
       expect(result).toSucceed();
       expect(result.stdout).toMatchInlineSnapshot(`
-        "Applying patch sets...
+        "Applying patches from ./patches to ./main...
           [001-first] 1 file(s)
             Copied: file1.ts
           [002-second] 1 file(s)
@@ -186,7 +186,7 @@ describe("patchy apply", () => {
 
       expect(result).toSucceed();
       expect(result.stdout).toMatchInlineSnapshot(`
-        "Applying patch sets...
+        "Applying patches from ./patches to ./main...
           [002-second] 1 file(s)
             Copied: file2.ts
         Successfully applied 1 patch file(s) across 1 patch set(s)."
@@ -212,7 +212,7 @@ describe("patchy apply", () => {
 
       expect(result).toSucceed();
       expect(result.stdout).toMatchInlineSnapshot(`
-        "Applying patch sets...
+        "Applying patches from ./patches to ./main...
           [001-first] 1 file(s)
             Copied: file1.ts
           [002-second] 1 file(s)
@@ -449,8 +449,7 @@ export const component = () => {
 
       expect(result).toSucceed();
       expect(result.stdout).toMatchInlineSnapshot(`
-        "[DRY RUN] Would apply patches from ./patches to ./main
-        [DRY RUN] Applying patch sets...
+        "[DRY RUN] Applying patches from ./patches to ./main...
           [001-first] 1 file(s)
             Copy: file1.ts
           [002-second] 1 file(s)
@@ -613,7 +612,7 @@ const other = 2;
 
       expect(result).toSucceed();
       expect(result).toHaveOutput(
-        "[DRY RUN] Would apply patches from ./cli-patches to ./cli-repo",
+        "[DRY RUN] Applying patches from ./cli-patches to ./cli-repo...",
       );
     });
   });

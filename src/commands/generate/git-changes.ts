@@ -6,7 +6,7 @@ export type GitChange = {
 };
 
 export const getGitChanges = async (repoDir: string): Promise<GitChange[]> => {
-  const git = createGitClient(repoDir);
+  const git = createGitClient({ baseDir: repoDir });
 
   const diffSummary = await git.diffSummary(["HEAD"]);
   const modifiedFiles: GitChange[] = diffSummary.files.map((file) => ({
@@ -26,6 +26,6 @@ export const generateDiff = async (
   repoDir: string,
   filePath: string,
 ): Promise<string> => {
-  const git = createGitClient(repoDir);
+  const git = createGitClient({ baseDir: repoDir });
   return git.diff(["HEAD", "--", filePath]);
 };

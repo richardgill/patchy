@@ -5,9 +5,7 @@ import { createTestGitClient } from "~/lib/git";
 import { runCli as baseRunCli } from "./e2e-utils";
 import { generateTmpDir, writeFileIn } from "./fs-test-utils";
 import {
-  createTagInBareRepo as gitCreateTag,
-  pushBranchToBareRepo as gitPushBranch,
-  initBareRepoWithCommit,
+  createLocalBareRepo,
   initGitRepo,
   initGitRepoWithCommit,
 } from "./git-helpers";
@@ -145,19 +143,12 @@ const setupBareRepo = async (
 ): Promise<void> => {
   await mkdir(bareRepoDir, { recursive: true });
   const bareOpts = typeof bareRepoOption === "object" ? bareRepoOption : {};
-  await initBareRepoWithCommit(bareRepoDir, bareOpts.files);
-
-  if (bareOpts.branches) {
-    for (const branch of bareOpts.branches) {
-      await gitPushBranch(bareRepoDir, branch);
-    }
-  }
-
-  if (bareOpts.tags) {
-    for (const tag of bareOpts.tags) {
-      await gitCreateTag(bareRepoDir, tag);
-    }
-  }
+  await createLocalBareRepo({
+    dir: bareRepoDir,
+    files: bareOpts.files,
+    branches: bareOpts.branches,
+    tags: bareOpts.tags,
+  });
 };
 
 const setupConfig = async (
@@ -206,7 +197,7 @@ const setupGit = async (
 ): Promise<void> => {
   if (hasTargetFiles) {
     await initGitRepo(targetRepoDir);
-    const git = createTestGitClient(targetRepoDir);
+    const git = createTestGitClient({ baseDir: targetRepoDir });
     await git.addConfig("init.defaultBranch", "main");
     await git.checkout(["-b", "main"]);
     await git.add(".");
@@ -242,13 +233,13 @@ const createContextHelpers = (
   };
 
   const commits = async (): Promise<string[]> => {
-    const git = createTestGitClient(targetRepoDir);
+    const git = createTestGitClient({ baseDir: targetRepoDir });
     const log = await git.log();
     return log.all.map((commit) => commit.message);
   };
 
   const gitStatus = async (): Promise<string[]> => {
-    const git = createTestGitClient(targetRepoDir);
+    const git = createTestGitClient({ baseDir: targetRepoDir });
     const status = await git.status();
     return status.files.map((f) => f.path);
   };

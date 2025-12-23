@@ -3,10 +3,11 @@ import { mkdirSync, rmSync, writeFileSync } from "node:fs";
 import { writeFile } from "node:fs/promises";
 import { join } from "node:path";
 import { createTestGitClient } from "~/lib/git";
+import { generateTmpDir } from "./fs-test-utils";
 import type { FileMap } from "./testing-types";
 
 export const initGitRepo = async (repoDir: string): Promise<void> => {
-  const git = createTestGitClient(repoDir);
+  const git = createTestGitClient({ baseDir: repoDir });
   await git.init();
   await git.addConfig("user.email", "test@test.com");
   await git.addConfig("user.name", "Test User");
@@ -18,7 +19,7 @@ export const initGitRepoWithCommit = async (
   content = "initial content\n",
 ): Promise<void> => {
   await initGitRepo(repoDir);
-  const git = createTestGitClient(repoDir);
+  const git = createTestGitClient({ baseDir: repoDir });
   await git.addConfig("init.defaultBranch", "main");
   await git.checkout(["-b", "main"]);
   writeFileSync(join(repoDir, filename), content);
@@ -26,28 +27,112 @@ export const initGitRepoWithCommit = async (
   await git.commit("initial commit");
 };
 
-export const initBareRepoWithCommit = async (
-  bareRepoDir: string,
-  files: FileMap = { "initial.txt": "initial content\n" },
+type TestRepoOptions = {
+  dir?: string;
+  files?: FileMap;
+  commits?: number;
+  branches?: string[];
+  tags?: string[];
+};
+
+type AddRefsContext = {
+  git: ReturnType<typeof createTestGitClient>;
+  workDir: string;
+  pushTo?: string;
+};
+
+const addRefsToRepo = async (
+  ctx: AddRefsContext,
+  options: TestRepoOptions,
 ): Promise<void> => {
-  const git = createTestGitClient(bareRepoDir);
-  await git.init(true);
+  const { commits = 0, branches = [], tags = [] } = options;
+  const { git, workDir, pushTo } = ctx;
+
+  for (let i = 0; i < commits; i++) {
+    writeFileSync(join(workDir, `commit-${i + 1}.txt`), `content ${i + 1}`);
+    await git.add(".");
+    await git.commit(`commit ${i + 1}`);
+    if (pushTo) await git.push(pushTo, "main");
+  }
+
+  for (const branch of branches) {
+    await git.checkoutLocalBranch(branch);
+    writeFileSync(join(workDir, `${branch}.txt`), `content for ${branch}`);
+    await git.add(".");
+    await git.commit(`commit on ${branch}`);
+    if (pushTo) await git.push(pushTo, branch);
+  }
+
+  for (const tag of tags) {
+    await git.addTag(tag);
+    if (pushTo) await git.push(pushTo, tag);
+  }
+};
+
+export const createLocalRepo = async (
+  options: TestRepoOptions = {},
+): Promise<string> => {
+  const repoDir = options.dir ?? generateTmpDir();
+  mkdirSync(repoDir, { recursive: true });
+
+  const { files } = options;
+
+  if (files) {
+    await initGitRepo(repoDir);
+    const git = createTestGitClient({ baseDir: repoDir });
+    await git.addConfig("init.defaultBranch", "main");
+    await git.checkout(["-b", "main"]);
+    for (const [filename, content] of Object.entries(files)) {
+      writeFileSync(join(repoDir, filename), content);
+    }
+    await git.add(".");
+    await git.commit("initial commit");
+    await addRefsToRepo({ git, workDir: repoDir }, options);
+  } else {
+    await initGitRepoWithCommit(repoDir);
+    const git = createTestGitClient({ baseDir: repoDir });
+    await addRefsToRepo({ git, workDir: repoDir }, options);
+  }
+
+  return repoDir;
+};
+
+export const createLocalBareRepo = async (
+  options: TestRepoOptions = {},
+): Promise<string> => {
+  const bareRepoDir = options.dir ?? generateTmpDir();
+  mkdirSync(bareRepoDir, { recursive: true });
+
+  const { files } = options;
+
+  await createTestGitClient({ baseDir: bareRepoDir }).init(true);
+
   const tmpWorkDir = join(bareRepoDir, "..", `tmp-work-${randomUUID()}`);
   mkdirSync(tmpWorkDir, { recursive: true });
-  const workGit = createTestGitClient(tmpWorkDir);
-  await workGit.init();
-  await workGit.addConfig("user.email", "test@test.com");
-  await workGit.addConfig("user.name", "Test User");
+
+  await initGitRepo(tmpWorkDir);
+  const workGit = createTestGitClient({ baseDir: tmpWorkDir });
   await workGit.addConfig("init.defaultBranch", "main");
   await workGit.checkout(["-b", "main"]);
-  for (const [filename, content] of Object.entries(files)) {
-    writeFileSync(join(tmpWorkDir, filename), content as string);
+
+  const filesToWrite = files ?? { "initial.txt": "initial content\n" };
+  for (const [filename, content] of Object.entries(filesToWrite)) {
+    writeFileSync(join(tmpWorkDir, filename), content);
   }
   await workGit.add(".");
   await workGit.commit("initial commit");
+
   await workGit.addRemote("origin", bareRepoDir);
   await workGit.push(["-u", "origin", "main"]);
+
+  await addRefsToRepo(
+    { git: workGit, workDir: tmpWorkDir, pushTo: "origin" },
+    options,
+  );
+
   rmSync(tmpWorkDir, { recursive: true, force: true });
+
+  return bareRepoDir;
 };
 
 export const commitFile = async (
@@ -58,65 +143,28 @@ export const commitFile = async (
 ): Promise<void> => {
   const filePath = join(repoDir, filename);
   await writeFile(filePath, content);
-  const git = createTestGitClient(repoDir);
+  const git = createTestGitClient({ baseDir: repoDir });
   await git.add(filename);
   await git.commit(message);
 };
 
 export const getCurrentBranch = async (repoDir: string): Promise<string> => {
-  const git = createTestGitClient(repoDir);
+  const git = createTestGitClient({ baseDir: repoDir });
   const branch = await git.revparse(["--abbrev-ref", "HEAD"]);
   return branch.trim();
 };
 
 export const getCurrentCommit = async (repoDir: string): Promise<string> => {
-  const git = createTestGitClient(repoDir);
+  const git = createTestGitClient({ baseDir: repoDir });
   const commit = await git.revparse(["HEAD"]);
   return commit.trim();
 };
 
-export const pushBranchToBareRepo = async (
-  bareRepoDir: string,
-  branchName: string,
+export const getRefSha = async (
+  repoDir: string,
+  ref: string,
 ): Promise<string> => {
-  const tmpWorkDir = join(bareRepoDir, "..", `tmp-work-${randomUUID()}`);
-  mkdirSync(tmpWorkDir, { recursive: true });
-  const workGit = createTestGitClient(tmpWorkDir);
-  await workGit.clone(bareRepoDir, ".");
-  await workGit.addConfig("user.email", "test@test.com");
-  await workGit.addConfig("user.name", "Test User");
-  await workGit.checkoutLocalBranch(branchName);
-  writeFileSync(
-    join(tmpWorkDir, "branch-file.txt"),
-    `content from ${branchName}`,
-  );
-  await workGit.add(".");
-  await workGit.commit(`commit on ${branchName}`);
-  await workGit.push("origin", branchName);
-  const sha = await workGit.revparse(["HEAD"]);
-  rmSync(tmpWorkDir, { recursive: true, force: true });
-  return sha.trim();
-};
-
-export const createTagInBareRepo = async (
-  bareRepoDir: string,
-  tagName: string,
-): Promise<string> => {
-  const tmpWorkDir = join(bareRepoDir, "..", `tmp-work-tag-${randomUUID()}`);
-  mkdirSync(tmpWorkDir, { recursive: true });
-  const workGit = createTestGitClient(tmpWorkDir);
-  await workGit.clone(bareRepoDir, ".");
-  await workGit.addConfig("user.email", "test@test.com");
-  await workGit.addConfig("user.name", "Test User");
-  writeFileSync(
-    join(tmpWorkDir, `${tagName}-file.txt`),
-    `content for ${tagName}`,
-  );
-  await workGit.add(".");
-  await workGit.commit(`commit for ${tagName}`);
-  await workGit.addTag(tagName);
-  await workGit.push("origin", tagName);
-  const sha = await workGit.revparse(["HEAD"]);
-  rmSync(tmpWorkDir, { recursive: true, force: true });
+  const git = createTestGitClient({ baseDir: repoDir });
+  const sha = await git.revparse([ref]);
   return sha.trim();
 };

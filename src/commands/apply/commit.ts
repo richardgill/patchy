@@ -14,7 +14,7 @@ const checkWorkingTreeClean = async (
   }
 
   try {
-    const git = createGitClient(repoDir);
+    const git = createGitClient({ baseDir: repoDir });
     const status = await git.status();
 
     if (status.files.length > 0) {
@@ -54,7 +54,7 @@ const commitPatchSet = async (
   }
 
   try {
-    const git = createGitClient(repoDir);
+    const git = createGitClient({ baseDir: repoDir });
     await git.add(".");
     await git.commit(`Apply patch set: ${patchSetName}`);
     stdout.write(`  Committed patch set: ${patchSetName}\n`);

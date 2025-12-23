@@ -39,7 +39,7 @@ export default async function (
   }
 
   try {
-    const git = createGitClient(config.repoDir);
+    const git = createGitClient({ baseDir: config.repoDir });
     await git.reset(["--hard", config.baseRevision]);
     this.process.stdout.write(
       chalk.green(

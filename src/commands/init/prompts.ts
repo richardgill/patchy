@@ -4,23 +4,22 @@ import { exit } from "~/lib/exit";
 import { formatPathForDisplay, isPathWithinDir } from "~/lib/fs";
 import {
   buildBaseRevisionOptions,
-  fetchRemoteRefs,
+  fetchRefs,
   getBranches,
   getLatestTags,
   MANUAL_SHA_OPTION,
+  type RemoteRef,
 } from "~/lib/git-remote";
 import { canPrompt, createPrompts, promptForManualSha } from "~/lib/prompts";
 import { validateGitUrl } from "~/lib/validation";
 import type { PromptAnswers } from "./config";
 import type { InitFlags } from "./flags";
 
-type RemoteRefs = Awaited<ReturnType<typeof fetchRemoteRefs>>;
-
 const fetchRemoteRefsIfNeeded = async (
   context: LocalContext,
   repoUrl: string,
   flags: InitFlags,
-): Promise<RemoteRefs> => {
+): Promise<RemoteRef[]> => {
   const shouldFetchRemote =
     repoUrl &&
     (flags["upstream-branch"] === undefined ||
@@ -33,7 +32,7 @@ const fetchRemoteRefsIfNeeded = async (
   const prompts = createPrompts(context);
   try {
     prompts.log.step("Fetching repository information...");
-    return await fetchRemoteRefs(repoUrl);
+    return await fetchRefs(repoUrl);
   } catch (_error) {
     prompts.log.warn(
       "Could not fetch remote refs. You can enter values manually.",
@@ -44,7 +43,7 @@ const fetchRemoteRefsIfNeeded = async (
 
 const promptUpstreamBranch = async (
   context: LocalContext,
-  remoteRefs: RemoteRefs,
+  remoteRefs: RemoteRef[],
 ): Promise<string | undefined> => {
   if (remoteRefs.length === 0) {
     return undefined;
@@ -72,7 +71,7 @@ const promptUpstreamBranch = async (
 
 const promptBaseRevision = async (
   context: LocalContext,
-  remoteRefs: RemoteRefs,
+  remoteRefs: RemoteRef[],
 ): Promise<string> => {
   const prompts = createPrompts(context);
 

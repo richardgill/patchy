@@ -15,7 +15,7 @@ describe("patchy repo reset", () => {
     });
 
     const repoPath = join(ctx.tmpDir, "repos", "main");
-    const git = createGitClient(repoPath);
+    const git = createGitClient({ baseDir: repoPath });
     const baseCommit = (await git.revparse(["HEAD"])).trim();
 
     await writeFileIn(repoPath, "test.txt", "modified content");
@@ -39,7 +39,7 @@ describe("patchy repo reset", () => {
     });
 
     const repoPath = join(ctx.tmpDir, "repos", "main");
-    const git = createGitClient(repoPath);
+    const git = createGitClient({ baseDir: repoPath });
     const baseCommit = (await git.revparse(["HEAD"])).trim();
 
     const { result } = await ctx.runCli(
@@ -60,7 +60,7 @@ describe("patchy repo reset", () => {
     });
 
     const repoPath = join(ctx.tmpDir, "repos", "main");
-    const git = createGitClient(repoPath);
+    const git = createGitClient({ baseDir: repoPath });
     const baseCommit = (await git.revparse(["HEAD"])).trim();
 
     // Add patch commits
@@ -167,7 +167,7 @@ describe("patchy repo reset", () => {
       });
 
       const repoPath = join(ctx.tmpDir, "repos", "main");
-      const git = createGitClient(repoPath);
+      const git = createGitClient({ baseDir: repoPath });
       const baseCommit = (await git.revparse(["HEAD"])).trim();
 
       await writeFileIn(repoPath, "test.txt", "modified content");
@@ -209,7 +209,7 @@ describe("patchy repo reset", () => {
       });
 
       const repoPath = join(ctx.tmpDir, "repos", "main");
-      const git = createGitClient(repoPath);
+      const git = createGitClient({ baseDir: repoPath });
       const baseCommit = (await git.revparse(["HEAD"])).trim();
 
       // Make uncommitted changes
@@ -244,7 +244,7 @@ describe("patchy repo reset", () => {
       });
 
       const repoPath = join(ctx.tmpDir, "repos", "main");
-      const git = createGitClient(repoPath);
+      const git = createGitClient({ baseDir: repoPath });
       const baseCommit = (await git.revparse(["HEAD"])).trim();
 
       const { result, prompts } = await ctx
@@ -276,7 +276,7 @@ describe("patchy repo reset", () => {
       });
 
       const repoPath = join(ctx.tmpDir, "repos", "main");
-      const git = createGitClient(repoPath);
+      const git = createGitClient({ baseDir: repoPath });
       const baseCommit = (await git.revparse(["HEAD"])).trim();
 
       const { result, prompts } = await ctx

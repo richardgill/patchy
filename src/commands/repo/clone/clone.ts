@@ -9,7 +9,7 @@ const cloneRepository = async (
   context: LocalContext,
   config: CloneConfig,
 ): Promise<void> => {
-  const git = createGitClient(config.clonesDir);
+  const git = createGitClient({ baseDir: config.clonesDir });
   try {
     await git.clone(config.resolvedRepoUrl, config.targetDirName);
   } catch (error) {
@@ -28,7 +28,7 @@ const checkoutRevision = async (
   if (!config.baseRevision) return;
 
   context.process.stdout.write(`Checking out ${config.baseRevision}...\n`);
-  const repoGit = createGitClient(config.targetDir);
+  const repoGit = createGitClient({ baseDir: config.targetDir });
   try {
     await repoGit.checkout(config.baseRevision);
   } catch (error) {

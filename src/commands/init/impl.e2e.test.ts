@@ -1,10 +1,7 @@
 import { describe, expect, it } from "bun:test";
 import { existsSync, mkdirSync, readFileSync } from "node:fs";
 import path, { join } from "node:path";
-import {
-  createTagInBareRepo,
-  initBareRepoWithCommit,
-} from "~/testing/git-helpers";
+import { createLocalBareRepo, getRefSha } from "~/testing/git-helpers";
 import { acceptDefault, cancel, scenario } from "~/testing/scenario";
 import { getSchemaUrl } from "~/version";
 
@@ -400,7 +397,7 @@ describe("patchy init", () => {
       const ctx = await scenario({ noConfig: true });
       const bareRepoDir = path.join(ctx.tmpDir, "bare-repo.git");
       mkdirSync(bareRepoDir, { recursive: true });
-      await initBareRepoWithCommit(bareRepoDir);
+      await createLocalBareRepo({ dir: bareRepoDir });
       const bareRepoUrl = `file://${bareRepoDir}`;
 
       const { result, prompts } = await ctx
@@ -477,7 +474,7 @@ describe("patchy init", () => {
       const ctx = await scenario({ noConfig: true });
       const bareRepoDir = path.join(ctx.tmpDir, "bare-repo.git");
       mkdirSync(bareRepoDir, { recursive: true });
-      await initBareRepoWithCommit(bareRepoDir);
+      await createLocalBareRepo({ dir: bareRepoDir });
       const bareRepoUrl = `file://${bareRepoDir}`;
 
       const { result } = await ctx
@@ -505,7 +502,7 @@ describe("patchy init", () => {
       const ctx = await scenario({ noConfig: true });
       const bareRepoDir = path.join(ctx.tmpDir, "bare-repo.git");
       mkdirSync(bareRepoDir, { recursive: true });
-      await initBareRepoWithCommit(bareRepoDir);
+      await createLocalBareRepo({ dir: bareRepoDir });
       const bareRepoUrl = `file://${bareRepoDir}`;
 
       const { result, prompts } = await ctx
@@ -538,8 +535,8 @@ describe("patchy init", () => {
       const ctx = await scenario({ noConfig: true });
       const bareRepoDir = path.join(ctx.tmpDir, "bare-repo.git");
       mkdirSync(bareRepoDir, { recursive: true });
-      await initBareRepoWithCommit(bareRepoDir);
-      const tagSha = await createTagInBareRepo(bareRepoDir, "v1.0.0");
+      await createLocalBareRepo({ dir: bareRepoDir, tags: ["v1.0.0"] });
+      const tagSha = await getRefSha(bareRepoDir, "v1.0.0");
       const bareRepoUrl = `file://${bareRepoDir}`;
 
       const { result, prompts } = await ctx
@@ -594,6 +591,38 @@ describe("patchy init", () => {
       const configPath = path.join(ctx.tmpDir, "patchy.json");
       const config = JSON.parse(readFileSync(configPath, "utf-8"));
       expect(config.base_revision).toBe("main");
+    });
+
+    it("should fetch refs from local repo with absolute path", async () => {
+      const ctx = await scenario({ noConfig: true });
+      const bareRepoDir = path.join(ctx.tmpDir, "local-repo.git");
+      mkdirSync(bareRepoDir, { recursive: true });
+      await createLocalBareRepo({ dir: bareRepoDir, tags: ["v2.0.0"] });
+
+      const { result, prompts } = await ctx
+        .withPrompts(
+          { text: /patch files/, respond: acceptDefault },
+          { text: /cloned repos/, respond: acceptDefault },
+          { confirm: /gitignore/, respond: false },
+          { text: /repository URL/, respond: bareRepoDir },
+          { select: /upstream branch/, respond: "_none" },
+          { select: /base revision/, respond: "_manual" },
+          { text: /commit SHA or tag/, respond: "main" },
+          { confirm: /Clone local-repo/, respond: false },
+        )
+        .runCli("patchy init --force");
+
+      expect(result).toSucceed();
+
+      const upstreamBranchPrompt = prompts.find(
+        (p) => p.type === "select" && p.message.includes("upstream branch"),
+      );
+      expect(upstreamBranchPrompt).toBeDefined();
+
+      const baseRevisionPrompt = prompts.find(
+        (p) => p.type === "select" && p.message.includes("base revision"),
+      );
+      expect(baseRevisionPrompt).toBeDefined();
     });
   });
 

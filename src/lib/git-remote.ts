@@ -1,4 +1,7 @@
-import { simpleGit } from "simple-git";
+import path from "node:path";
+import { CheckRepoActions } from "simple-git";
+import { createGitClient } from "./git";
+import { isLocalPath } from "./validation";
 
 export type RemoteRef = {
   sha: string;
@@ -6,10 +9,8 @@ export type RemoteRef = {
   type: "branch" | "tag";
 };
 
-export const fetchRemoteRefs = async (
-  repoUrl: string,
-): Promise<RemoteRef[]> => {
-  const git = simpleGit();
+const fetchRemoteRefs = async (repoUrl: string): Promise<RemoteRef[]> => {
+  const git = createGitClient();
   const result = await git.listRemote(["--refs", repoUrl]);
 
   return result
@@ -25,6 +26,47 @@ export const fetchRemoteRefs = async (
       }
       return [];
     });
+};
+
+const fetchLocalRefs = async (localPath: string): Promise<RemoteRef[]> => {
+  const repoPath = localPath.startsWith("file://")
+    ? localPath.slice(7)
+    : path.resolve(localPath);
+
+  const git = createGitClient({ baseDir: repoPath });
+  const isBareRepo = await git.checkIsRepo(CheckRepoActions.BARE);
+  const isNormalRepo = await git.checkIsRepo(CheckRepoActions.IS_REPO_ROOT);
+  if (!isBareRepo && !isNormalRepo) {
+    throw new Error(`Not a git repository: ${repoPath}`);
+  }
+
+  let result: string;
+  try {
+    result = await git.raw(["show-ref"]);
+  } catch {
+    return [];
+  }
+
+  return result
+    .split("\n")
+    .filter(Boolean)
+    .flatMap((line): RemoteRef[] => {
+      const [sha, ref] = line.split(" ");
+      if (ref.startsWith("refs/heads/")) {
+        return [{ sha, name: ref.replace("refs/heads/", ""), type: "branch" }];
+      }
+      if (ref.startsWith("refs/tags/")) {
+        return [{ sha, name: ref.replace("refs/tags/", ""), type: "tag" }];
+      }
+      return [];
+    });
+};
+
+export const fetchRefs = async (repoUrl: string): Promise<RemoteRef[]> => {
+  if (isLocalPath(repoUrl)) {
+    return fetchLocalRefs(repoUrl);
+  }
+  return fetchRemoteRefs(repoUrl);
 };
 
 export const getLatestTags = (refs: RemoteRef[], limit = 10): RemoteRef[] => {

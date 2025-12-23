@@ -1,5 +1,5 @@
 import { describe, expect, it } from "bun:test";
-import { isValidGitUrl, validateGitUrl } from "./validation";
+import { isLocalPath, isValidGitUrl, validateGitUrl } from "./validation";
 
 describe("isValidGitUrl", () => {
   const validUrls = [
@@ -60,6 +60,42 @@ describe("isValidGitUrl", () => {
 
   it("trims whitespace from URLs", () => {
     expect(isValidGitUrl("  https://github.com/user/repo  ")).toBe(true);
+  });
+});
+
+describe("isLocalPath", () => {
+  const localPaths = [
+    "/absolute/path",
+    "/home/user/repo.git",
+    "./relative/path",
+    "../parent/repo",
+    "file:///path/to/repo",
+    "file://localhost/path",
+  ];
+
+  localPaths.forEach((path) => {
+    it(`returns true for local path: ${path}`, () => {
+      expect(isLocalPath(path)).toBe(true);
+    });
+  });
+
+  const remotePaths = [
+    "https://github.com/user/repo",
+    "git@github.com:user/repo.git",
+    "relative-no-prefix",
+    "",
+    "ftp://server/path",
+  ];
+
+  remotePaths.forEach((path) => {
+    it(`returns false for non-local path: "${path}"`, () => {
+      expect(isLocalPath(path)).toBe(false);
+    });
+  });
+
+  it("trims whitespace before checking", () => {
+    expect(isLocalPath("  /path/to/repo  ")).toBe(true);
+    expect(isLocalPath("  ./relative  ")).toBe(true);
   });
 });
 

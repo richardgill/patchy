@@ -1,16 +1,27 @@
-export const isValidGitUrl = (url: string): boolean => {
-  const httpsPattern = /^https?:\/\/[\w.-]+\/[\w.-]+(\/[\w.-]+)+(\.git)?$/;
-  const sshPattern = /^git@[\w.-]+:[\w.-]+(\/[\w.-]+)+(\.git)?$/;
-  const filePattern = /^file:\/\/\/.+$/;
-  const absolutePathPattern = /^\/[^\s]+$/;
-  const relativePathPattern = /^\.\.?\/[^\s]+$/;
+export const isLocalPath = (url: string): boolean => {
   const trimmed = url.trim();
   return (
-    httpsPattern.test(trimmed) ||
-    sshPattern.test(trimmed) ||
-    filePattern.test(trimmed) ||
-    absolutePathPattern.test(trimmed) ||
-    relativePathPattern.test(trimmed)
+    trimmed.startsWith("/") ||
+    trimmed.startsWith("./") ||
+    trimmed.startsWith("../") ||
+    trimmed.startsWith("file://")
+  );
+};
+
+const HTTPS_PATTERN = /^https?:\/\/[\w.-]+\/[\w.-]+(\/[\w.-]+)+(\.git)?$/;
+const SSH_PATTERN = /^git@[\w.-]+:[\w.-]+(\/[\w.-]+)+(\.git)?$/;
+const FILE_PATTERN = /^file:\/\/\/.+$/;
+const ABSOLUTE_PATH_PATTERN = /^\/[^\s]+$/;
+const RELATIVE_PATH_PATTERN = /^\.\.?\/[^\s]+$/;
+
+export const isValidGitUrl = (url: string): boolean => {
+  const trimmed = url.trim();
+  return (
+    HTTPS_PATTERN.test(trimmed) ||
+    SSH_PATTERN.test(trimmed) ||
+    FILE_PATTERN.test(trimmed) ||
+    ABSOLUTE_PATH_PATTERN.test(trimmed) ||
+    RELATIVE_PATH_PATTERN.test(trimmed)
   );
 };
 

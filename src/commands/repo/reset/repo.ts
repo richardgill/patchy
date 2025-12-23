@@ -16,7 +16,7 @@ export const ensureValidGitRepo = async (
     });
   }
 
-  const git = createGitClient(repoDir);
+  const git = createGitClient({ baseDir: repoDir });
   const isRepo = await git.checkIsRepo(CheckRepoActions.IS_REPO_ROOT);
   if (!isRepo) {
     return exit(context, {
