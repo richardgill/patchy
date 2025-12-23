@@ -1,4 +1,5 @@
 import { describe, expect, it } from "bun:test";
+import { existsSync, mkdirSync, writeFileSync } from "node:fs";
 import { join } from "node:path";
 import { createGitClient } from "~/lib/git";
 import { writeFileIn } from "~/testing/fs-test-utils";
@@ -87,6 +88,55 @@ describe("patchy repo reset", () => {
     expect(join(repoPath, "base.txt")).toExist();
     expect(join(repoPath, "patch1.txt")).not.toExist();
     expect(join(repoPath, "patch2.txt")).not.toExist();
+  });
+
+  it("should remove untracked files after reset", async () => {
+    const ctx = await scenario({
+      git: true,
+      targetFiles: {
+        "base.txt": "base content",
+      },
+    });
+
+    const repoPath = join(ctx.tmpDir, "repos", "main");
+    const git = createGitClient({ baseDir: repoPath });
+    const baseCommit = (await git.revparse(["HEAD"])).trim();
+
+    const untrackedFile = join(repoPath, "untracked.txt");
+    writeFileSync(untrackedFile, "untracked content");
+    expect(existsSync(untrackedFile)).toBe(true);
+
+    const { result } = await ctx.runCli(
+      `patchy repo reset --base-revision ${baseCommit} --yes`,
+    );
+    expect(result).toSucceed();
+
+    expect(existsSync(untrackedFile)).toBe(false);
+  });
+
+  it("should remove untracked directories after reset", async () => {
+    const ctx = await scenario({
+      git: true,
+      targetFiles: {
+        "base.txt": "base content",
+      },
+    });
+
+    const repoPath = join(ctx.tmpDir, "repos", "main");
+    const git = createGitClient({ baseDir: repoPath });
+    const baseCommit = (await git.revparse(["HEAD"])).trim();
+
+    const untrackedDir = join(repoPath, "untracked-dir");
+    mkdirSync(untrackedDir);
+    writeFileSync(join(untrackedDir, "file.txt"), "content");
+    expect(existsSync(untrackedDir)).toBe(true);
+
+    const { result } = await ctx.runCli(
+      `patchy repo reset --base-revision ${baseCommit} --yes`,
+    );
+    expect(result).toSucceed();
+
+    expect(existsSync(untrackedDir)).toBe(false);
   });
 
   describe("error cases", () => {
@@ -217,7 +267,8 @@ describe("patchy repo reset", () => {
 
       const { result, prompts } = await ctx
         .withPrompts({
-          confirm: /discarding all commits and uncommitted changes/,
+          confirm:
+            /discarding all commits, uncommitted changes, and untracked files/,
           respond: true,
         })
         .runCli(`patchy repo reset --base-revision ${baseCommit}`);
@@ -228,7 +279,7 @@ describe("patchy repo reset", () => {
         {
           type: "confirm",
           message: expect.stringMatching(
-            /discarding all commits and uncommitted changes/,
+            /discarding all commits, uncommitted changes, and untracked files/,
           ),
           response: true,
         },
@@ -249,7 +300,8 @@ describe("patchy repo reset", () => {
 
       const { result, prompts } = await ctx
         .withPrompts({
-          confirm: /discarding all commits and uncommitted changes/,
+          confirm:
+            /discarding all commits, uncommitted changes, and untracked files/,
           respond: false,
         })
         .runCli(`patchy repo reset --base-revision ${baseCommit}`);
@@ -260,7 +312,7 @@ describe("patchy repo reset", () => {
         {
           type: "confirm",
           message: expect.stringMatching(
-            /discarding all commits and uncommitted changes/,
+            /discarding all commits, uncommitted changes, and untracked files/,
           ),
           response: false,
         },
@@ -281,7 +333,8 @@ describe("patchy repo reset", () => {
 
       const { result, prompts } = await ctx
         .withPrompts({
-          confirm: /discarding all commits and uncommitted changes/,
+          confirm:
+            /discarding all commits, uncommitted changes, and untracked files/,
           respond: cancel,
         })
         .runCli(`patchy repo reset --base-revision ${baseCommit}`);
@@ -292,7 +345,7 @@ describe("patchy repo reset", () => {
         {
           type: "confirm",
           message: expect.stringMatching(
-            /discarding all commits and uncommitted changes/,
+            /discarding all commits, uncommitted changes, and untracked files/,
           ),
           response: "cancelled",
         },

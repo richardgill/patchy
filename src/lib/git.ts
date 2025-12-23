@@ -39,3 +39,15 @@ export const extractRepoName = (url: string): string | undefined => {
   }
   return undefined;
 };
+
+export const hardResetRepo = async (
+  repoDir: string,
+  revision: string,
+): Promise<void> => {
+  if (!isGitRepo(repoDir)) {
+    throw new Error(`Not a git repository: ${repoDir}`);
+  }
+  const git = createGitClient({ baseDir: repoDir });
+  await git.reset(["--hard", revision]);
+  await git.clean("f", ["-d"]);
+};
