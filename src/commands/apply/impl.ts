@@ -64,7 +64,7 @@ export default async function (
 
   const dryRunPrefix = config.dry_run ? "[DRY RUN] " : "";
   this.process.stdout.write(
-    `${dryRunPrefix}Applying patches from ${formatPathForDisplay(config.patches_dir)} to ${formatPathForDisplay(config.target_repo)}...\n`,
+    `${dryRunPrefix}Applying patches from ${formatPathForDisplay(config.patches_dir)} to ${formatPathForDisplay(config.target_repo)}...\n\n`,
   );
 
   const stats: PatchSetStats[] = [];

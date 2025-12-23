@@ -48,6 +48,7 @@ const commitPatchSet = async (
   repoDir: string,
   patchSetName: string,
   stdout: NodeJS.WriteStream,
+  verbose: boolean,
 ): Promise<{ success: boolean; error?: string }> => {
   if (!isGitRepo(repoDir)) {
     return { success: true };
@@ -57,7 +58,8 @@ const commitPatchSet = async (
     const git = createGitClient({ baseDir: repoDir });
     await git.add(".");
     await git.commit(`Apply patch set: ${patchSetName}`);
-    stdout.write(`  Committed patch set: ${patchSetName}\n`);
+    const prefix = verbose ? "  " : " — ";
+    stdout.write(`${prefix}committed ✓\n`);
     return { success: true };
   } catch (error) {
     return {
@@ -112,9 +114,8 @@ export const commitPatchSetIfNeeded = async (params: {
   const mode = determineCommitMode(context, flags, isLastPatchSet);
 
   if (mode === "skip") {
-    context.process.stdout.write(
-      `  Left patch set uncommitted: ${patchSetName}\n`,
-    );
+    const prefix = flags.verbose ? "  " : " — ";
+    context.process.stdout.write(`${prefix}skipped\n`);
     return { committed: false };
   }
 
@@ -123,6 +124,7 @@ export const commitPatchSetIfNeeded = async (params: {
       repoDir,
       patchSetName,
       context.process.stdout as NodeJS.WriteStream,
+      flags.verbose ?? false,
     );
     if (!result.success) {
       exit(context, {
@@ -132,6 +134,9 @@ export const commitPatchSetIfNeeded = async (params: {
     }
     return { committed: true };
   }
+
+  const lineBreak = flags.verbose ? "\n" : "\n\n";
+  context.process.stdout.write(lineBreak);
 
   const prompts = createPrompts(context);
   const shouldCommit = await prompts.confirm({
@@ -149,6 +154,7 @@ export const commitPatchSetIfNeeded = async (params: {
       repoDir,
       patchSetName,
       context.process.stdout as NodeJS.WriteStream,
+      flags.verbose ?? false,
     );
     if (!result.success) {
       exit(context, {
@@ -159,8 +165,5 @@ export const commitPatchSetIfNeeded = async (params: {
     return { committed: true };
   }
 
-  context.process.stdout.write(
-    `  Left patch set uncommitted: ${patchSetName}\n`,
-  );
   return { committed: false };
 };

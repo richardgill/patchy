@@ -80,8 +80,9 @@ export const applySinglePatchSet = async (params: {
   const patchFiles = await collectPatchToApplys(patchSetDir, repoDir);
   const errors: Array<{ file: string; error: string }> = [];
 
+  const lineEnding = verbose ? "\n" : "";
   context.process.stdout.write(
-    `  [${patchSetName}] ${patchFiles.length} file(s)\n`,
+    `  [${patchSetName}] ${patchFiles.length} file(s)${lineEnding}`,
   );
 
   for (const patchFile of patchFiles) {
