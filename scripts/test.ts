@@ -1,6 +1,8 @@
 import { $ } from "bun";
 
-const result = await $`bun test ${Bun.argv.slice(2)}`.nothrow().quiet();
+const result = await $`bun test --max-concurrency=5 ${Bun.argv.slice(2)}`
+  .nothrow()
+  .quiet();
 
 process.stdout.write(result.stdout);
 process.stderr.write(result.stderr);
