@@ -12,7 +12,14 @@ import {
   resolvePatchSetsToApply,
 } from "./patch-set";
 
-const reportResults = (context: LocalContext, stats: PatchSetStats[]): void => {
+type ReportResultsOptions = {
+  context: LocalContext;
+  stats: PatchSetStats[];
+  dryRun: boolean;
+};
+
+const reportResults = (options: ReportResultsOptions): void => {
+  const { context, stats, dryRun } = options;
   const totalFiles = sumBy(stats, (s) => s.fileCount);
   const allErrors = stats.flatMap((s) => s.errors);
 
@@ -24,8 +31,9 @@ const reportResults = (context: LocalContext, stats: PatchSetStats[]): void => {
     exit(context, { exitCode: 1 });
   }
 
+  const prefix = dryRun ? "[DRY RUN] Would apply" : "Successfully applied";
   context.process.stdout.write(
-    `Successfully applied ${totalFiles} patch file(s) across ${stats.length} patch set(s).\n`,
+    `${prefix} ${totalFiles} patch file(s) across ${stats.length} patch set(s).\n`,
   );
 };
 
@@ -53,7 +61,8 @@ export default async function (
     await ensureCleanWorkingTree(this, config.absoluteTargetRepo);
   }
 
-  this.process.stdout.write("Applying patch sets...\n");
+  const dryRunPrefix = config.dry_run ? "[DRY RUN] " : "";
+  this.process.stdout.write(`${dryRunPrefix}Applying patch sets...\n`);
 
   const stats: PatchSetStats[] = [];
 
@@ -88,5 +97,5 @@ export default async function (
     stats.push(result);
   }
 
-  reportResults(this, stats);
+  reportResults({ context: this, stats, dryRun: config.dry_run });
 }

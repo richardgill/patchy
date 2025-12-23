@@ -450,12 +450,12 @@ export const component = () => {
       expect(result).toSucceed();
       expect(result.stdout).toMatchInlineSnapshot(`
         "[DRY RUN] Would apply patches from ./patches to ./main
-        Applying patch sets...
+        [DRY RUN] Applying patch sets...
           [001-first] 1 file(s)
             Copy: file1.ts
           [002-second] 1 file(s)
             Copy: file2.ts
-        Successfully applied 2 patch file(s) across 2 patch set(s)."
+        [DRY RUN] Would apply 2 patch file(s) across 2 patch set(s)."
       `);
     });
   });
