@@ -38,6 +38,7 @@ type ScenarioOptions = {
   configPath?: string;
   configContent?: string;
   tty?: boolean;
+  env?: Record<string, string>;
 };
 
 type PromptMatcher = string | RegExp;
@@ -275,18 +276,20 @@ const createRunCli = (
   tmpDir: string,
   expectations: PromptExpectation[],
   ttyMode: boolean,
+  env?: Record<string, string>,
 ): ((command: string) => Promise<PromptedCliResult>) => {
   return async (command: string): Promise<PromptedCliResult> => {
     const recorded: RecordedPrompt[] = [];
 
     if (!ttyMode) {
-      const result = await baseRunCli(command, tmpDir);
+      const result = await baseRunCli(command, tmpDir, { env });
       return { result, prompts: recorded };
     }
 
     const result = await baseRunCli(command, tmpDir, {
       promptHandler: (prompt) => findResponse(prompt, expectations),
       onPromptRecord: (p) => recorded.push(p),
+      env,
     });
     return { result, prompts: recorded };
   };
@@ -327,14 +330,14 @@ export const scenario = async (
   ): ScenarioContext => {
     return {
       ...helpers,
-      runCli: createRunCli(paths.tmpDir, expectations, true),
+      runCli: createRunCli(paths.tmpDir, expectations, true, options.env),
       withPrompts,
     };
   };
 
   return {
     ...helpers,
-    runCli: createRunCli(paths.tmpDir, [], options.tty ?? false),
+    runCli: createRunCli(paths.tmpDir, [], options.tty ?? false, options.env),
     withPrompts,
   };
 };
