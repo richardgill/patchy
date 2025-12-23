@@ -114,10 +114,10 @@ describe("git-remote helpers", () => {
       expect(options).toHaveLength(4); // 3 branches (limited) + manual
       expect(options[0]).toEqual({
         value: "ccc1111222233334444555566667777888899990",
-        label: "main branch tip (ccc1111) - Warning: will change",
+        label: "ccc1111 ← main HEAD - pinned, main keeps moving",
       });
-      expect(options[1].label).toContain("develop branch tip");
-      expect(options[2].label).toContain("feature branch tip");
+      expect(options[1].label).toContain("← develop HEAD");
+      expect(options[2].label).toContain("← feature HEAD");
       expect(options[3].value).toBe(MANUAL_SHA_OPTION);
     });
 
@@ -127,7 +127,7 @@ describe("git-remote helpers", () => {
       expect(options).toHaveLength(6);
       expect(options[0].label).toBe("v1.0.0 (aaa1111)");
       expect(options[1].label).toBe("v2.0.0 (bbb1111)");
-      expect(options[2].label).toContain("main branch tip");
+      expect(options[2].label).toContain("← main HEAD");
       expect(options[5].value).toBe(MANUAL_SHA_OPTION);
     });
 
@@ -137,7 +137,7 @@ describe("git-remote helpers", () => {
       });
       // 2 tags + 1 branch + manual = 4
       expect(options).toHaveLength(4);
-      expect(options[2].label).toContain("main branch tip");
+      expect(options[2].label).toContain("← main HEAD");
       expect(options[3].value).toBe(MANUAL_SHA_OPTION);
     });
 
@@ -167,7 +167,7 @@ describe("git-remote helpers", () => {
     it("should include warning text for branch tips", () => {
       const options = buildBaseRevisionOptions([], mockBranches);
       for (const opt of options.filter((o) => o.value !== MANUAL_SHA_OPTION)) {
-        expect(opt.label).toContain("Warning: will change");
+        expect(opt.label).toContain("keeps moving");
       }
     });
 

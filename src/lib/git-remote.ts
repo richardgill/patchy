@@ -108,7 +108,7 @@ export const buildBaseRevisionOptions = (
     })),
     ...branches.slice(0, branchLimit).map((b) => ({
       value: b.sha,
-      label: `${b.name} branch tip (${b.sha.slice(0, 7)}) - Warning: will change`,
+      label: `${b.sha.slice(0, 7)} ← ${b.name} HEAD - pinned, ${b.name} keeps moving`,
     })),
     { value: MANUAL_SHA_OPTION, label: manualLabel },
   ];
