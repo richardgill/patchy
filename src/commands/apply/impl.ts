@@ -82,7 +82,7 @@ export default async function (
       hasErrors: result.errors.length > 0,
     });
     if (commitResult.cancelled) {
-      exit(this, { exitCode: 1 });
+      return exit(this, { exitCode: 1 });
     }
 
     stats.push(result);
