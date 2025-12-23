@@ -20,7 +20,6 @@ const commands = [
   "bun run misc-checks",
   "bun run test",
   "bun run knip",
-  "bun run lint-versions",
 ];
 
 console.log(`Running local-ci: ${commands.join(", ")}\n`);

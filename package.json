@@ -21,7 +21,6 @@
     "changeset-version": "changeset version",
     "dev": "bun run src/cli.ts",
     "knip": "knip-bun",
-    "lint-versions": "syncpack lint",
     "local-ci": "bun run scripts/local-ci.ts",
     "prepare": "[ -n \"$CI\" ] || lefthook install",
     "typecheck": "tsgo --noEmit",

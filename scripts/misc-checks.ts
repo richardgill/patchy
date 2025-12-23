@@ -1,6 +1,6 @@
 #!/usr/bin/env bun
 
-import { Glob } from "bun";
+import { $, Glob } from "bun";
 import chalk from "chalk";
 
 const VALID_TEST_SUFFIXES = [
@@ -58,10 +58,23 @@ const checkTestNaming = async (): Promise<boolean> => {
   return false;
 };
 
+const checkVersions = async (): Promise<boolean> => {
+  const result = await $`syncpack lint`.quiet().nothrow();
+
+  if (result.exitCode === 0) {
+    console.log(chalk.green("✓ Package versions are valid"));
+    return true;
+  }
+
+  console.log(chalk.red("✗ Package version issues found:\n"));
+  console.log(result.text());
+  return false;
+};
+
 const main = async () => {
   console.log(chalk.bold("Running miscellaneous checks...\n"));
 
-  const results = await Promise.all([checkTestNaming()]);
+  const results = await Promise.all([checkTestNaming(), checkVersions()]);
 
   const allPassed = results.every(Boolean);
 
