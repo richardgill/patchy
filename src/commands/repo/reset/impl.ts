@@ -1,71 +1,35 @@
-import { existsSync } from "node:fs";
 import chalk from "chalk";
-import { compact } from "es-toolkit";
-import { CheckRepoActions } from "simple-git";
-import {
-  createEnrichedMergedConfig,
-  hasAbsoluteTargetRepo,
-} from "~/cli-fields";
 import type { LocalContext } from "~/context";
-import { assertDefined } from "~/lib/assert";
 import { exit } from "~/lib/exit";
 import { createGitClient } from "~/lib/git";
 import { createPrompts } from "~/lib/prompts";
+import { loadAndValidateConfig } from "./config";
 import type { ResetFlags } from "./flags";
+import { ensureValidGitRepo } from "./repo";
 
 export default async function (
   this: LocalContext,
   flags: ResetFlags,
 ): Promise<void> {
-  const prompts = createPrompts(this);
-  const result = createEnrichedMergedConfig({
-    flags,
-    requiredFields: (config) =>
-      compact([!hasAbsoluteTargetRepo(config) && "clones_dir", "target_repo"]),
-    cwd: this.cwd,
-  });
+  const config = loadAndValidateConfig(this, flags);
+  await ensureValidGitRepo(this, config.repoDir);
 
-  if (!result.success) {
-    return exit(this, { exitCode: 1, stderr: result.error });
+  if (config.verbose) {
+    this.process.stdout.write(`Repository directory: ${config.repoDir}\n`);
+    this.process.stdout.write(`Base revision: ${config.baseRevision}\n`);
   }
 
-  const config = result.mergedConfig;
-  const repoDir = config.absoluteTargetRepo ?? "";
-  const baseRevision = assertDefined(config.base_revision, "base_revision");
-  const dryRun = config.dry_run;
-  const verbose = config.verbose;
-
-  if (!existsSync(repoDir)) {
-    return exit(this, {
-      exitCode: 1,
-      stderr: chalk.red(`Repository directory does not exist: ${repoDir}`),
-    });
-  }
-
-  const git = createGitClient(repoDir);
-  const isRepo = await git.checkIsRepo(CheckRepoActions.IS_REPO_ROOT);
-  if (!isRepo) {
-    return exit(this, {
-      exitCode: 1,
-      stderr: chalk.red(`Not a Git repository: ${repoDir}`),
-    });
-  }
-
-  if (verbose) {
-    this.process.stdout.write(`Repository directory: ${repoDir}\n`);
-    this.process.stdout.write(`Base revision: ${baseRevision}\n`);
-  }
-
-  if (dryRun) {
+  if (config.dryRun) {
     this.process.stdout.write(
-      `[DRY RUN] Would hard reset repository to ${baseRevision}: ${repoDir}\n`,
+      `[DRY RUN] Would hard reset repository to ${config.baseRevision}: ${config.repoDir}\n`,
     );
     return;
   }
 
-  if (!flags.yes) {
+  if (!config.skipConfirmation) {
+    const prompts = createPrompts(this);
     const confirmed = await prompts.confirm({
-      message: `This will reset ${repoDir} to ${baseRevision}, discarding all commits and uncommitted changes. Continue?`,
+      message: `This will reset ${config.repoDir} to ${config.baseRevision}, discarding all commits and uncommitted changes. Continue?`,
       initialValue: false,
     });
 
@@ -75,10 +39,11 @@ export default async function (
   }
 
   try {
-    await git.reset(["--hard", baseRevision]);
+    const git = createGitClient(config.repoDir);
+    await git.reset(["--hard", config.baseRevision]);
     this.process.stdout.write(
       chalk.green(
-        `Successfully reset repository to ${baseRevision}: ${repoDir}\n`,
+        `Successfully reset repository to ${config.baseRevision}: ${config.repoDir}\n`,
       ),
     );
   } catch (error) {
@@ -86,7 +51,7 @@ export default async function (
     return exit(this, {
       exitCode: 1,
       stderr: chalk.red(
-        `Failed to reset to base_revision "${baseRevision}": ${message}`,
+        `Failed to reset to base_revision "${config.baseRevision}": ${message}`,
       ),
     });
   }
