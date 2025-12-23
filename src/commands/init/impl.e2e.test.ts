@@ -531,6 +531,45 @@ describe("patchy init", () => {
       expect(upstreamPrompt).toBeDefined();
     });
 
+    it("should order upstream branch options with preferred branch first, then None, then others", async () => {
+      const ctx = await scenario({ noConfig: true });
+      const bareRepoDir = path.join(ctx.tmpDir, "bare-repo.git");
+      mkdirSync(bareRepoDir, { recursive: true });
+      await createLocalBareRepo({
+        dir: bareRepoDir,
+        branches: ["develop", "feature-x"],
+      });
+      const bareRepoUrl = `file://${bareRepoDir}`;
+
+      const { result, prompts } = await ctx
+        .withPrompts(
+          { text: /patch files/, respond: acceptDefault },
+          { text: /cloned repos/, respond: acceptDefault },
+          { confirm: /gitignore/, respond: true },
+          { text: /repository URL/, respond: bareRepoUrl },
+          { select: /upstream branch/, respond: "main" },
+          { select: /base revision/, respond: "_manual" },
+          { text: /commit SHA or tag/, respond: "abc123" },
+          { confirm: /Clone bare-repo/, respond: false },
+        )
+        .runCli("patchy init --force");
+
+      expect(result).toSucceed();
+
+      const upstreamPrompt = prompts.find(
+        (p) => p.type === "select" && p.message.includes("upstream"),
+      );
+      expect(upstreamPrompt?.type).toBe("select");
+      if (upstreamPrompt?.type !== "select") return;
+
+      const optionValues = upstreamPrompt.options.map((o) => o.value);
+      expect(optionValues[0]).toBe("main");
+      expect(optionValues[1]).toBe("_none");
+      expect(optionValues.slice(2)).toEqual(
+        expect.arrayContaining(["develop", "feature-x"]),
+      );
+    });
+
     it("should save selected tag as base_revision", async () => {
       const ctx = await scenario({ noConfig: true });
       const bareRepoDir = path.join(ctx.tmpDir, "bare-repo.git");

@@ -51,10 +51,20 @@ const promptUpstreamBranch = async (
 
   const prompts = createPrompts(context);
   const branches = getBranches(remoteRefs);
+  const branchNames = branches.map((b) => b.name);
+  const preferredBranch =
+    branchNames.find((n) => n === "main") ??
+    branchNames.find((n) => n === "master") ??
+    branchNames[0];
+  const otherBranches = branchNames.filter((n) => n !== preferredBranch);
+
   const NONE_VALUE = "_none";
   const branchOptions: Array<{ value: string; label: string }> = [
+    ...(preferredBranch
+      ? [{ value: preferredBranch, label: preferredBranch }]
+      : []),
     { value: NONE_VALUE, label: "None (manual updates only)" },
-    ...branches.map((b) => ({ value: b.name, label: b.name })),
+    ...otherBranches.map((name) => ({ value: name, label: name })),
   ];
 
   const selectedBranch = await prompts.select({
