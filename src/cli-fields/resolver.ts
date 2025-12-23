@@ -9,6 +9,8 @@ import { isAbsolutePath, resolvePath } from "~/lib/fs";
 import { formatZodErrorHuman } from "~/lib/zod";
 import { DEFAULT_CONFIG_PATH } from "./defaults";
 import { FLAG_METADATA } from "./metadata";
+import type { NarrowedConfig } from "./narrowing";
+import type { RequirementPattern } from "./requirement-patterns";
 import { type JsonConfig, jsonConfigSchema } from "./schema";
 import type {
   EnrichedMergedConfig,
@@ -19,14 +21,13 @@ import type {
 
 type PatchyConfigSources = ConfigSources<typeof FLAG_METADATA, JsonConfig>;
 
-export const hasAbsoluteTargetRepo = (config: MergedConfig): boolean =>
-  Boolean(config.target_repo && isAbsolutePath(config.target_repo));
-
-type CreateEnrichedMergedConfigParams = {
+type CreateEnrichedMergedConfigParams<
+  P extends readonly RequirementPattern<keyof EnrichedMergedConfig>[],
+> = {
   flags: SharedFlags;
   cwd: string;
   env?: NodeJS.ProcessEnv;
-  requiredFields: JsonConfigKey[] | ((config: MergedConfig) => JsonConfigKey[]);
+  requires: P;
 };
 
 type ResolveTargetRepoParams = {
@@ -58,19 +59,16 @@ const enrichConfig = (
     patch_set: patchSet,
   } = config;
 
-  const absolutePatchesDir = patchesDir
-    ? resolvePath(cwd, patchesDir)
-    : undefined;
+  const absolutePatchesDir = resolvePath(cwd, patchesDir);
 
   return {
     ...config,
-    absoluteClonesDir: clonesDir ? resolvePath(cwd, clonesDir) : undefined,
+    absoluteClonesDir: resolvePath(cwd, clonesDir),
     absoluteTargetRepo: resolveTargetRepo({ cwd, targetRepo, clonesDir }),
     absolutePatchesDir,
-    absolutePatchSetDir:
-      absolutePatchesDir && patchSet
-        ? join(absolutePatchesDir, patchSet)
-        : undefined,
+    absolutePatchSetDir: patchSet
+      ? join(absolutePatchesDir, patchSet)
+      : undefined,
   };
 };
 
@@ -88,13 +86,39 @@ const formatInitHint = (
   )}`;
 };
 
-export const createEnrichedMergedConfig = ({
+const patternsToRequiredFields = <
+  P extends readonly RequirementPattern<keyof EnrichedMergedConfig>[],
+>(
+  patterns: P,
+): JsonConfigKey[] | ((config: MergedConfig) => JsonConfigKey[]) => {
+  const hasDynamicPattern = patterns.some(
+    (p) => typeof p.validate === "function",
+  );
+
+  if (!hasDynamicPattern) {
+    const staticFields = patterns.flatMap((p) => p.validate as JsonConfigKey[]);
+    return [...new Set(staticFields)];
+  }
+
+  return (config: MergedConfig) => {
+    const allFields = patterns.flatMap((p) =>
+      typeof p.validate === "function"
+        ? p.validate(config)
+        : (p.validate as JsonConfigKey[]),
+    );
+    return [...new Set(allFields)];
+  };
+};
+
+export const createEnrichedMergedConfig = <
+  P extends readonly RequirementPattern<keyof EnrichedMergedConfig>[],
+>({
   flags,
-  requiredFields,
+  requires,
   cwd,
   env = process.env,
-}: CreateEnrichedMergedConfigParams):
-  | { mergedConfig: EnrichedMergedConfig; success: true }
+}: CreateEnrichedMergedConfigParams<P>):
+  | { mergedConfig: NarrowedConfig<P>; success: true }
   | { success: false; error: string } => {
   const result = loadConfigFromFile({
     metadata: FLAG_METADATA,
@@ -114,6 +138,7 @@ export const createEnrichedMergedConfig = ({
   // Enrich with absolute paths
   const enrichedConfig = enrichConfig(result.mergedConfig as MergedConfig, cwd);
 
+  const requiredFields = patternsToRequiredFields(requires);
   const validationResult = validateConfig({
     metadata: FLAG_METADATA,
     mergedConfig: enrichedConfig,
@@ -127,5 +152,8 @@ export const createEnrichedMergedConfig = ({
     return validationResult;
   }
 
-  return { mergedConfig: enrichedConfig, success: true };
+  return {
+    mergedConfig: enrichedConfig as unknown as NarrowedConfig<P>,
+    success: true,
+  };
 };

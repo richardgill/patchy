@@ -3,10 +3,9 @@ import chalk from "chalk";
 import {
   createEnrichedMergedConfig,
   DEFAULT_CONFIG_PATH,
-  FLAG_METADATA,
+  REQUIRE_SOURCE_REPO,
 } from "~/cli-fields";
 import type { LocalContext } from "~/context";
-import { assertDefined } from "~/lib/assert";
 import { exit } from "~/lib/exit";
 import {
   findAvailableDirName,
@@ -31,20 +30,6 @@ export type CloneConfig = {
   verbose: boolean;
   configPath: string;
   displayTargetPath: string;
-};
-
-const validateClonesDir = (
-  context: LocalContext,
-  clonesDir: string | undefined,
-): void => {
-  if (!clonesDir) {
-    exit(context, {
-      exitCode: 1,
-      stderr: chalk.red(
-        `Missing required parameter: clones_dir\nSet --clones-dir flag, ${FLAG_METADATA.clones_dir.env} env var, or clones_dir in config file.`,
-      ),
-    });
-  }
 };
 
 const validateGitUrl = (context: LocalContext, repoUrl: string): void => {
@@ -80,7 +65,7 @@ export const loadAndValidateConfig = (
 ): CloneConfig => {
   const result = createEnrichedMergedConfig({
     flags,
-    requiredFields: ["source_repo"],
+    requires: [REQUIRE_SOURCE_REPO],
     cwd: context.cwd,
   });
 
@@ -89,13 +74,12 @@ export const loadAndValidateConfig = (
   }
 
   const config = result.mergedConfig;
-  const repoUrl = assertDefined(config.source_repo, "source_repo");
+  const repoUrl = config.source_repo;
+  const clonesDir = config.absoluteClonesDir;
 
-  validateClonesDir(context, config.clones_dir);
   validateGitUrl(context, repoUrl);
   const repoName = validateRepoName(context, repoUrl);
 
-  const clonesDir = resolvePath(context.cwd, config.clones_dir ?? "");
   const targetDirName = findAvailableDirName(clonesDir, repoName);
 
   return {
@@ -110,7 +94,7 @@ export const loadAndValidateConfig = (
     verbose: config.verbose,
     configPath: config.config ?? DEFAULT_CONFIG_PATH,
     displayTargetPath: formatPathForDisplay(
-      join(config.clones_dir ?? "", targetDirName),
+      join(config.clones_dir, targetDirName),
     ),
   };
 };

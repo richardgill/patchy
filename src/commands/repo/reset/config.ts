@@ -1,10 +1,9 @@
-import { compact } from "es-toolkit";
 import {
   createEnrichedMergedConfig,
-  hasAbsoluteTargetRepo,
+  REQUIRE_BASE_REVISION,
+  REQUIRE_TARGET_REPO,
 } from "~/cli-fields";
 import type { LocalContext } from "~/context";
-import { assertDefined } from "~/lib/assert";
 import { exit } from "~/lib/exit";
 import type { ResetFlags } from "./flags";
 
@@ -22,8 +21,7 @@ export const loadAndValidateConfig = (
 ): ResetConfig => {
   const result = createEnrichedMergedConfig({
     flags,
-    requiredFields: (config) =>
-      compact([!hasAbsoluteTargetRepo(config) && "clones_dir", "target_repo"]),
+    requires: [REQUIRE_TARGET_REPO, REQUIRE_BASE_REVISION],
     cwd: context.cwd,
   });
 
@@ -33,8 +31,8 @@ export const loadAndValidateConfig = (
 
   const config = result.mergedConfig;
   return {
-    repoDir: config.absoluteTargetRepo ?? "",
-    baseRevision: assertDefined(config.base_revision, "base_revision"),
+    repoDir: config.absoluteTargetRepo,
+    baseRevision: config.base_revision,
     dryRun: config.dry_run,
     verbose: config.verbose,
     skipConfirmation: flags.yes ?? false,
