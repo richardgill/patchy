@@ -4,7 +4,7 @@ import { acceptDefault, cancel, scenario } from "./scenario";
 describe("scenario helper", () => {
   describe("basic usage", () => {
     it("applies patch sets in alphabetical order", async () => {
-      const { runCli, files } = await scenario({
+      const { runCli, fileContent } = await scenario({
         patches: {
           "001-first": { "file1.ts": "content from first" },
           "002-second": { "file2.ts": "content from second" },
@@ -14,8 +14,8 @@ describe("scenario helper", () => {
       const { result } = await runCli("patchy apply --verbose");
 
       expect(result).toSucceed();
-      expect(files("file1.ts")).toBe("content from first");
-      expect(files("file2.ts")).toBe("content from second");
+      expect(fileContent("file1.ts")).toBe("content from first");
+      expect(fileContent("file2.ts")).toBe("content from second");
     });
 
     it("fails when --only patch set doesn't exist", async () => {
@@ -33,7 +33,7 @@ describe("scenario helper", () => {
 
   describe("targetFiles option", () => {
     it("applies diff to existing file", async () => {
-      const { runCli, files } = await scenario({
+      const { runCli, fileContent } = await scenario({
         targetFiles: {
           "existing.ts": "const value = 1;\nconst other = 2;\n",
         },
@@ -53,7 +53,7 @@ describe("scenario helper", () => {
       const { result } = await runCli("patchy apply");
 
       expect(result).toSucceed();
-      expect(files("existing.ts")).toBe(
+      expect(fileContent("existing.ts")).toBe(
         "const value = 42;\nconst other = 2;\n",
       );
     });
@@ -77,7 +77,7 @@ describe("scenario helper", () => {
     });
 
     it("initializes git with targetFiles committed", async () => {
-      const { runCli, commits, files } = await scenario({
+      const { runCli, commits, fileContent } = await scenario({
         git: true,
         targetFiles: {
           "existing.ts": "const value = 1;\n",
@@ -97,7 +97,7 @@ describe("scenario helper", () => {
       const { result } = await runCli("patchy apply --all");
 
       expect(result).toSucceed();
-      expect(files("existing.ts")).toBe("const value = 42;\n");
+      expect(fileContent("existing.ts")).toBe("const value = 42;\n");
       const commitMessages = await commits();
       expect(commitMessages[0]).toBe("Apply patch set: 001-fix");
       expect(commitMessages[1]).toBe("initial commit");
