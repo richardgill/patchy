@@ -1,5 +1,11 @@
 # patchy-cli
 
+## 0.0.14
+
+### Patch Changes
+
+- [#206](https://github.com/richardgill/patchy/pull/206) [`bea0b62`](https://github.com/richardgill/patchy/commit/bea0b628803883f16953d8fe13b623dec7287f94) Thanks [@richardgill](https://github.com/richardgill)! - Use kebab-case for boolean flag negations (--no-verbose instead of --noVerbose)
+
 ## 0.0.13
 
 ### Patch Changes
