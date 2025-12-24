@@ -1,7 +1,4 @@
 import { $ } from "bun";
-import { createTemplateRepos } from "../src/testing/git-helpers";
-
-await createTemplateRepos();
 
 const result = await $`bun test --max-concurrency=6 ${Bun.argv.slice(2)}`
   .nothrow()
