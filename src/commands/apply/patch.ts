@@ -11,30 +11,42 @@ type PatchToApply = {
   targetPath: string;
 };
 
+type CollectPatchParams = {
+  patchSetDir: string;
+  repoDir: string;
+  exclude?: string[];
+};
+
 export const collectPatchToApplys = async (
-  patchSetDir: string,
-  repoDir: string,
+  params: CollectPatchParams,
 ): Promise<PatchToApply[]> => {
+  const { patchSetDir, repoDir, exclude = [] } = params;
   if (!existsSync(patchSetDir)) {
     return [];
   }
   const relativePaths = await getAllFiles(patchSetDir);
+  const excludeSet = new Set(exclude);
 
-  return relativePaths.map((relativePath) => {
-    const absolutePath = path.join(patchSetDir, relativePath);
-    const isDiff = relativePath.endsWith(".diff");
-    const targetRelativePath = isDiff
-      ? relativePath.slice(0, -5)
-      : relativePath;
-    const targetPath = path.join(repoDir, targetRelativePath);
+  return relativePaths
+    .filter((relativePath) => {
+      const filename = path.basename(relativePath);
+      return !excludeSet.has(filename);
+    })
+    .map((relativePath) => {
+      const absolutePath = path.join(patchSetDir, relativePath);
+      const isDiff = relativePath.endsWith(".diff");
+      const targetRelativePath = isDiff
+        ? relativePath.slice(0, -5)
+        : relativePath;
+      const targetPath = path.join(repoDir, targetRelativePath);
 
-    return {
-      relativePath,
-      absolutePath,
-      type: isDiff ? "diff" : "copy",
-      targetPath,
-    };
-  });
+      return {
+        relativePath,
+        absolutePath,
+        type: isDiff ? "diff" : "copy",
+        targetPath,
+      };
+    });
 };
 
 export const applyPatch = async (

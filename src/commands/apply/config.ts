@@ -16,6 +16,8 @@ type ApplyConfig = {
   dry_run: boolean;
   verbose: boolean;
   fuzzFactor: number;
+  hook_prefix: string;
+  base_revision?: string;
 };
 
 export const loadAndValidateConfig = (

@@ -10,6 +10,7 @@ type GenerateConfig = {
   target_repo: string;
   patch_set: string | undefined;
   dry_run: boolean;
+  hook_prefix: string | undefined;
 };
 
 export const loadAndValidateConfig = (

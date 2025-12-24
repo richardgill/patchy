@@ -1,6 +1,14 @@
 import type { LocalContext } from "~/context";
 import { exit } from "~/lib/exit";
 import { getSortedFolders } from "~/lib/fs";
+import {
+  executeHook,
+  findHook,
+  getHookFilenames,
+  type HookEnv,
+  type HookInfo,
+  validateHookPermissions,
+} from "~/lib/hooks";
 import type { ApplyFlags } from "./flags";
 import { applyPatch, collectPatchToApplys } from "./patch";
 
@@ -59,7 +67,32 @@ export const resolvePatchSetsToApply = (
   return result.filtered;
 };
 
-export const applySinglePatchSet = async (params: {
+type RunHookParams = {
+  hook: HookInfo;
+  dryRun: boolean;
+  verbose: boolean;
+  repoDir: string;
+  hookEnv: HookEnv;
+  context: LocalContext;
+};
+
+const runHook = async (
+  params: RunHookParams,
+): Promise<{ success: true } | { success: false; error: string }> => {
+  const { hook, dryRun, verbose, repoDir, hookEnv, context } = params;
+
+  if (dryRun) {
+    if (verbose) {
+      context.process.stdout.write(`    Would run hook: ${hook.name}\n`);
+    }
+    return { success: true };
+  }
+
+  context.process.stdout.write(`    Running hook: ${hook.name}\n`);
+  return executeHook({ hook, cwd: repoDir, env: hookEnv, context });
+};
+
+type ApplySinglePatchSetParams = {
   context: LocalContext;
   patchSetDir: string;
   repoDir: string;
@@ -67,7 +100,14 @@ export const applySinglePatchSet = async (params: {
   dryRun: boolean;
   verbose: boolean;
   fuzzFactor: number;
-}): Promise<PatchSetStats> => {
+  hookPrefix: string;
+  patchesDir: string;
+  baseRevision?: string;
+};
+
+export const applySinglePatchSet = async (
+  params: ApplySinglePatchSetParams,
+): Promise<PatchSetStats> => {
   const {
     context,
     patchSetDir,
@@ -76,14 +116,77 @@ export const applySinglePatchSet = async (params: {
     dryRun,
     verbose,
     fuzzFactor,
+    hookPrefix,
+    patchesDir,
+    baseRevision,
   } = params;
-  const patchFiles = await collectPatchToApplys(patchSetDir, repoDir);
+
+  const hookEnv: HookEnv = {
+    PATCHY_TARGET_REPO: repoDir,
+    PATCHY_PATCH_SET: patchSetName,
+    PATCHY_PATCHES_DIR: patchesDir,
+    PATCHY_PATCH_SET_DIR: patchSetDir,
+    ...(baseRevision ? { PATCHY_BASE_REVISION: baseRevision } : {}),
+  };
+
+  const preHook = findHook({
+    dir: patchSetDir,
+    prefix: hookPrefix,
+    type: "pre-apply",
+  });
+  const postHook = findHook({
+    dir: patchSetDir,
+    prefix: hookPrefix,
+    type: "post-apply",
+  });
+
+  if (preHook) {
+    const validation = validateHookPermissions({
+      hook: preHook,
+      patchSetName,
+      patchSetDir,
+    });
+    if (!validation.success) {
+      return exit(context, { exitCode: 1, stderr: validation.error });
+    }
+  }
+  if (postHook) {
+    const validation = validateHookPermissions({
+      hook: postHook,
+      patchSetName,
+      patchSetDir,
+    });
+    if (!validation.success) {
+      return exit(context, { exitCode: 1, stderr: validation.error });
+    }
+  }
+
+  const hookFilenames = getHookFilenames(hookPrefix);
+  const patchFiles = await collectPatchToApplys({
+    patchSetDir,
+    repoDir,
+    exclude: hookFilenames,
+  });
   const errors: Array<{ file: string; error: string }> = [];
 
   const lineEnding = verbose ? "\n" : "";
   context.process.stdout.write(
     `  [${patchSetName}] ${patchFiles.length} file(s)${lineEnding}`,
   );
+
+  if (preHook) {
+    const result = await runHook({
+      hook: preHook,
+      dryRun,
+      verbose,
+      repoDir,
+      hookEnv,
+      context,
+    });
+    if (!result.success) {
+      return exit(context, { exitCode: 1, stderr: result.error });
+    }
+  }
 
   for (const patchFile of patchFiles) {
     if (dryRun) {
@@ -103,6 +206,20 @@ export const applySinglePatchSet = async (params: {
       if (!result.success && result.error) {
         errors.push({ file: patchFile.relativePath, error: result.error });
       }
+    }
+  }
+
+  if (postHook) {
+    const result = await runHook({
+      hook: postHook,
+      dryRun,
+      verbose,
+      repoDir,
+      hookEnv,
+      context,
+    });
+    if (!result.success) {
+      return exit(context, { exitCode: 1, stderr: result.error });
     }
   }
 

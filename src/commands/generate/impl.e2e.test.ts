@@ -631,4 +631,36 @@ describe("patchy generate", () => {
     expect(ctx.patchExists("001-target/stale.txt.diff")).toBe(false);
     expect(ctx.patchExists("002-other/should-remain.txt.diff")).toBe(true);
   });
+
+  it("should not delete hook files during cleanup", async () => {
+    const ctx = await scenario({
+      git: true,
+      targetFiles: {
+        "file.txt": "original\n",
+      },
+      patches: {
+        "001-my-set": {
+          "file.txt.diff": "old diff\n",
+        },
+      },
+      hooks: {
+        "001-my-set": {
+          pre: "#!/bin/bash\necho test",
+        },
+      },
+    });
+
+    await writeFileIn(
+      path.join(ctx.tmpDir, "repos/main"),
+      "file.txt",
+      "modified\n",
+    );
+
+    const { result } = await ctx.runCli(
+      "patchy generate --patch-set 001-my-set",
+    );
+
+    expect(result).toSucceed();
+    expect(ctx.patchExists("001-my-set/patchy-pre-apply")).toBe(true);
+  });
 });

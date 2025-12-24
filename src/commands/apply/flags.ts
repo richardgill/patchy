@@ -7,6 +7,7 @@ export const applyFlags = {
   ...FLAG_METADATA.patches_dir.stricliFlag,
   ...FLAG_METADATA.source_repo.stricliFlag,
   ...FLAG_METADATA.base_revision.stricliFlag,
+  ...FLAG_METADATA.hook_prefix.stricliFlag,
   ...FLAG_METADATA.config.stricliFlag,
   ...FLAG_METADATA.verbose.stricliFlag,
   ...FLAG_METADATA.dry_run.stricliFlag,

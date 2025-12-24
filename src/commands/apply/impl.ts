@@ -82,6 +82,9 @@ export default async function (
       dryRun: config.dry_run,
       verbose: config.verbose,
       fuzzFactor: config.fuzzFactor,
+      hookPrefix: config.hook_prefix,
+      patchesDir: config.absolutePatchesDir,
+      baseRevision: config.base_revision,
     });
 
     const commitResult = await commitPatchSetIfNeeded({

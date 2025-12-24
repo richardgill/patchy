@@ -3,6 +3,7 @@ import { copyFile } from "node:fs/promises";
 import { dirname, join } from "node:path";
 import type { LocalContext } from "~/context";
 import { ensureDirExists, formatPathForDisplay } from "~/lib/fs";
+import { getHookFilenames } from "~/lib/hooks";
 import { cleanupStalePatches } from "./cleanup";
 import { loadAndValidateConfig } from "./config";
 import type { GenerateFlags } from "./flags";
@@ -30,9 +31,17 @@ export default async function (
   const absolutePatchSetDir = join(absolutePatchesDir, patchSet);
   const changes = await getGitChanges(absoluteTargetRepo);
 
+  const hookPrefix = config.hook_prefix ?? "patchy-";
+  const hookFilenames = getHookFilenames(hookPrefix);
+
   if (changes.length === 0) {
     this.process.stdout.write("No changes detected in repository.\n");
-    await cleanupStalePatches(this, absolutePatchSetDir, new Set());
+    await cleanupStalePatches({
+      context: this,
+      patchSetDir: absolutePatchSetDir,
+      expectedPaths: new Set(),
+      exclude: hookFilenames,
+    });
     return;
   }
 
@@ -73,11 +82,12 @@ export default async function (
   }
 
   const expectedPaths = getExpectedPatchPaths(operations);
-  const staleCount = await cleanupStalePatches(
-    this,
-    absolutePatchSetDir,
+  const staleCount = await cleanupStalePatches({
+    context: this,
+    patchSetDir: absolutePatchSetDir,
     expectedPaths,
-  );
+    exclude: hookFilenames,
+  });
 
   reportSuccess({
     context: this,
