@@ -2,7 +2,3 @@
 // This must be set before chalk is imported
 process.env["NO_COLOR"] = "1";
 process.env["FORCE_COLOR"] = "0";
-
-import { createTemplateRepos } from "./git-helpers";
-
-await createTemplateRepos();
