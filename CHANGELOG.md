@@ -1,5 +1,11 @@
 # patchy-cli
 
+## 0.0.13
+
+### Patch Changes
+
+- [#205](https://github.com/richardgill/patchy/pull/205) [`85f5f1f`](https://github.com/richardgill/patchy/commit/85f5f1f41d7345ed2024b33f61556465a08dad87) Thanks [@richardgill](https://github.com/richardgill)! - Fix release workflow to use custom version script that syncs optionalDependencies
+
 ## 0.0.12
 
 ### Patch Changes
