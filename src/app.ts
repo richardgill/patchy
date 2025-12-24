@@ -24,4 +24,8 @@ export const app = buildApplication(routes, {
   versionInfo: {
     currentVersion: VERSION,
   },
+  // Use kebab-case for flags (--no-verbose instead of --noVerbose)
+  scanner: {
+    caseStyle: "allow-kebab-for-camel",
+  },
 });
