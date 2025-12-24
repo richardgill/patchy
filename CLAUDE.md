@@ -30,6 +30,8 @@ This codebase has three types of tests:
 - **Integration tests** (`*.integration.test.ts`) - Internal modules with I/O, no CLI
 - **E2E tests** (`*.e2e.test.ts`) - Full CLI execution via `runCli()`
 
+E2E tests are organized 1:1 with commands - each command has its own e2e test file in the command's directory (e.g., `src/commands/init/impl.e2e.test.ts`).
+
 ## Releasing
 
 Use add changeset skill

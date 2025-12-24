@@ -572,6 +572,33 @@ describe("patchy generate", () => {
     });
   });
 
+  describe("CI mode (CI=true)", () => {
+    it("should fail with helpful message when patch-set not provided", async () => {
+      const ctx = await scenario({
+        bareRepo: true,
+        git: true,
+        env: { CI: "true" },
+      });
+
+      const { result } = await ctx.runCli("patchy generate");
+
+      expect(result).toFail();
+      expect(result.stderr).toContain("--patch-set");
+    });
+
+    it("should succeed when patch-set is provided", async () => {
+      const ctx = await scenario({
+        bareRepo: true,
+        git: true,
+        env: { CI: "true" },
+      });
+
+      const { result } = await ctx.runCli("patchy generate --patch-set test");
+
+      expect(result).toSucceed();
+    });
+  });
+
   it("should only clean stale patches within the target patch set", async () => {
     const ctx = await scenario({
       git: true,

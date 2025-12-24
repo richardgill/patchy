@@ -2,7 +2,7 @@ import chalk from "chalk";
 import type { LocalContext } from "~/context";
 import { exit } from "~/lib/exit";
 import { hardResetRepo } from "~/lib/git";
-import { createPrompts } from "~/lib/prompts";
+import { canPrompt, createPrompts } from "~/lib/prompts";
 import { loadAndValidateConfig } from "./config";
 import type { ResetFlags } from "./flags";
 import { ensureValidGitRepo } from "./repo";
@@ -27,6 +27,13 @@ export default async function (
   }
 
   if (!config.skipConfirmation) {
+    if (!canPrompt(this)) {
+      return exit(this, {
+        exitCode: 1,
+        stderr: "Non-interactive mode requires --yes flag to confirm reset",
+      });
+    }
+
     const prompts = createPrompts(this);
     const confirmed = await prompts.confirm({
       message: `This will reset ${config.repoDir} to ${config.baseRevision}, discarding all commits, uncommitted changes, and untracked files. Continue?`,

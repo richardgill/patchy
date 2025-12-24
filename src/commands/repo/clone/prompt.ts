@@ -5,14 +5,8 @@ import chalk from "chalk";
 import type { JsonConfig } from "~/cli-fields";
 import type { LocalContext } from "~/context";
 import { parseJsonc, updateJsoncField } from "~/lib/jsonc";
-import { createPrompts } from "~/lib/prompts";
+import { canPrompt, createPrompts } from "~/lib/prompts";
 import type { CloneConfig } from "./config";
-
-const canPrompt = (context: LocalContext): boolean => {
-  const inputStream = context.promptInput;
-  const isTTY = inputStream && "isTTY" in inputStream && inputStream.isTTY;
-  return Boolean(isTTY) || context.promptHandler !== undefined;
-};
 
 type ConfigFileResult =
   | { exists: false }

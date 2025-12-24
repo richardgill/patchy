@@ -731,4 +731,72 @@ describe("patchy init", () => {
     expect(result).toHaveOutput("patchy repo clone");
     expect(result).not.toHaveOutput("patchy generate");
   });
+
+  describe("CI mode (CI=true)", () => {
+    it("should fail with helpful message when patches-dir not provided", async () => {
+      const ctx = await scenario({ noConfig: true, env: { CI: "true" } });
+
+      const { result } = await ctx.runCli(
+        "patchy init --source-repo https://github.com/example/repo.git --clones-dir clones --base-revision main --force",
+      );
+
+      expect(result).toFail();
+      expect(result.stderr).toContain("--patches-dir");
+    });
+
+    it("should fail with helpful message when clones-dir not provided", async () => {
+      const ctx = await scenario({ noConfig: true, env: { CI: "true" } });
+
+      const { result } = await ctx.runCli(
+        "patchy init --source-repo https://github.com/example/repo.git --patches-dir patches --base-revision main --force",
+      );
+
+      expect(result).toFail();
+      expect(result.stderr).toContain("--clones-dir");
+    });
+
+    it("should fail with helpful message when source-repo not provided", async () => {
+      const ctx = await scenario({ noConfig: true, env: { CI: "true" } });
+
+      const { result } = await ctx.runCli(
+        "patchy init --patches-dir patches --clones-dir clones --base-revision main --force",
+      );
+
+      expect(result).toFail();
+      expect(result.stderr).toContain("--source-repo");
+    });
+
+    it("should fail with helpful message when base-revision not provided", async () => {
+      const ctx = await scenario({ noConfig: true, env: { CI: "true" } });
+
+      const { result } = await ctx.runCli(
+        "patchy init --source-repo https://github.com/example/repo.git --patches-dir patches --clones-dir clones --force",
+      );
+
+      expect(result).toFail();
+      expect(result.stderr).toContain("--base-revision");
+    });
+
+    it("should succeed when all required flags are provided", async () => {
+      const ctx = await scenario({ noConfig: true, env: { CI: "true" } });
+      mkdirSync(join(ctx.tmpDir, "clones"), { recursive: true });
+
+      const { result } = await ctx.runCli(
+        "patchy init --source-repo https://github.com/example/repo.git --patches-dir patches --clones-dir clones --base-revision main --force",
+      );
+
+      expect(result).toSucceed();
+    });
+
+    it("should detect CI=1 as non-interactive", async () => {
+      const ctx = await scenario({ noConfig: true, env: { CI: "1" } });
+
+      const { result } = await ctx.runCli(
+        "patchy init --source-repo https://github.com/example/repo.git --clones-dir clones --base-revision main --force",
+      );
+
+      expect(result).toFail();
+      expect(result.stderr).toContain("--patches-dir");
+    });
+  });
 });
