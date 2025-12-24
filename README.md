@@ -139,7 +139,7 @@ Or via npm:
 
 ```sh
 npm install -g patchy-cli
-patchy-cli
+patchy
 ```
 
 Or use directly without installing:
@@ -189,7 +189,7 @@ Precedence: CLI flags > Environment variables > `patchy.json`
 
 ## Patch file layout
 
-The `patches/` directory (customizable via [`patches_dir`](#patchyjson-reference)) uses the same folder structure as `target_repo`:
+Patches are stored in the `patches/` directory (customizable via [`patches_dir`](#patchyjson-reference)):
 
 ```
 ./
@@ -203,7 +203,10 @@ The `patches/` directory (customizable via [`patches_dir`](#patchyjson-reference
 │       └── path/to/newFile.txt (added)
 └── patchy.json
 ```
+
 Patches are grouped into **patch sets** for organizing related changes. Patch sets have numeric prefixes (e.g., `001-auth`, `002-ui`) and are applied in order.
+
+Within each patch set files follow the same folder structure as in the `source_repo`.
 
 **Two types of patch files:**
 - **`.diff` files** — For modified existing files (generated via `git diff HEAD`)
