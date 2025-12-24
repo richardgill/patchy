@@ -3,12 +3,22 @@ import type { LocalContext } from "~/context";
 import { removeFile } from "~/lib/fs";
 import { getStalePatches } from "./patch-operations";
 
+type CleanupStalePatchesParams = {
+  context: LocalContext;
+  patchSetDir: string;
+  expectedPaths: Set<string>;
+  exclude?: string[];
+};
+
 export const cleanupStalePatches = async (
-  context: LocalContext,
-  patchSetDir: string,
-  expectedPaths: Set<string>,
+  params: CleanupStalePatchesParams,
 ): Promise<number> => {
-  const stalePatches = await getStalePatches(patchSetDir, expectedPaths);
+  const { context, patchSetDir, expectedPaths, exclude = [] } = params;
+  const stalePatches = await getStalePatches({
+    patchSetDir,
+    expectedPaths,
+    exclude,
+  });
 
   for (const stalePath of stalePatches) {
     removeFile(stalePath);

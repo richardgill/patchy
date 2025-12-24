@@ -163,6 +163,23 @@ export const FLAG_METADATA = {
       },
     },
   },
+  hook_prefix: {
+    configField: true,
+    requiredInConfig: false,
+    env: "PATCHY_HOOK_PREFIX",
+    type: "string",
+    name: "Hook prefix",
+    example: "patchy-",
+    defaultValue: "patchy-",
+    stricliFlag: {
+      "hook-prefix": {
+        kind: "parsed",
+        parse: String,
+        brief: "Prefix for hook script filenames [env: PATCHY_HOOK_PREFIX]",
+        optional: true,
+      },
+    },
+  },
   verbose: {
     configField: true,
     requiredInConfig: false,

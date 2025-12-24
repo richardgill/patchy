@@ -1,5 +1,19 @@
 # patchy-cli
 
+## 0.0.16
+
+### Patch Changes
+
+- [#211](https://github.com/richardgill/patchy/pull/211) [`2dbe928`](https://github.com/richardgill/patchy/commit/2dbe928e0256a306e7757d6dba3b73bed596f2c5) Thanks [@richardgill](https://github.com/richardgill)! - Add hooks for patch set lifecycle events (pre-apply and post-apply scripts)
+
+## 0.0.15
+
+### Patch Changes
+
+- [#209](https://github.com/richardgill/patchy/pull/209) [`5ff7529`](https://github.com/richardgill/patchy/commit/5ff75291819d8b13b4498131e0375efe9c162261) Thanks [@richardgill](https://github.com/richardgill)! - Add CI mode detection to prevent interactive prompts from hanging in non-interactive environments. Commands now check for `CI=true` or `CI=1` environment variable and fail with helpful error messages listing required flags instead of waiting for input.
+
+- [#209](https://github.com/richardgill/patchy/pull/209) [`5ff7529`](https://github.com/richardgill/patchy/commit/5ff75291819d8b13b4498131e0375efe9c162261) Thanks [@richardgill](https://github.com/richardgill)! - Refactor getMissingRequiredFlags to use FLAG_METADATA as single source of truth
+
 ## 0.0.14
 
 ### Patch Changes

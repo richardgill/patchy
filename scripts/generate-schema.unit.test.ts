@@ -18,6 +18,9 @@ describe("generateJsonSchema", () => {
           "clones_dir": {
             "type": "string",
           },
+          "hook_prefix": {
+            "type": "string",
+          },
           "patch_set": {
             "type": "string",
           },

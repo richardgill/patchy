@@ -1,5 +1,6 @@
 import * as clackPrompts from "@clack/prompts";
 import type { LocalContext } from "~/context";
+import { isCI } from "~/lib/env";
 import {
   acceptDefault,
   cancel,
@@ -100,7 +101,7 @@ export const canPrompt = (context: LocalContext): boolean => {
     inputStream && "isTTY" in inputStream && inputStream.isTTY,
   );
   const hasPromptHandler = context.promptHandler !== undefined;
-  return isTTY || hasPromptHandler;
+  return !isCI(context) && (isTTY || hasPromptHandler);
 };
 
 export const promptForManualSha = async (

@@ -1,5 +1,5 @@
 import { existsSync } from "node:fs";
-import { join } from "node:path";
+import { basename, join } from "node:path";
 import { getAllFiles } from "~/lib/fs";
 import type { GitChange } from "./git-changes";
 
@@ -36,15 +36,26 @@ export const getExpectedPatchPaths = (
   operations: Array<{ destPath: string }>,
 ): Set<string> => new Set(operations.map((op) => op.destPath));
 
+type GetStalePatchesParams = {
+  patchSetDir: string;
+  expectedPaths: Set<string>;
+  exclude?: string[];
+};
+
 export const getStalePatches = async (
-  patchSetDir: string,
-  expectedPaths: Set<string>,
+  params: GetStalePatchesParams,
 ): Promise<string[]> => {
+  const { patchSetDir, expectedPaths, exclude = [] } = params;
   if (!existsSync(patchSetDir)) {
     return [];
   }
+  const excludeSet = new Set(exclude);
   const existingPatches = await getAllFiles(patchSetDir);
   return existingPatches
+    .filter((relativePath) => {
+      const filename = basename(relativePath);
+      return !excludeSet.has(filename);
+    })
     .map((relativePath) => join(patchSetDir, relativePath))
     .filter((absolutePath) => !expectedPaths.has(absolutePath));
 };

@@ -25,6 +25,7 @@ type BareRepoOptions = {
 
 type ScenarioOptions = {
   patches?: Record<string, FileMap>;
+  hooks?: Record<string, { pre?: string; post?: string }>;
   targetFiles?: FileMap;
   git?: boolean;
   bareRepo?: boolean | BareRepoOptions;
@@ -179,6 +180,33 @@ const setupPatches = async (
   }
 };
 
+const setupHooks = async (
+  patchesDir: string,
+  hooks: Record<string, { pre?: string; post?: string }>,
+): Promise<void> => {
+  const { chmodSync } = await import("node:fs");
+  for (const [patchSetName, hookScripts] of Object.entries(hooks)) {
+    if (hookScripts.pre) {
+      const hookPath = join(patchesDir, patchSetName, "patchy-pre-apply");
+      await writeFileIn(
+        patchesDir,
+        join(patchSetName, "patchy-pre-apply"),
+        hookScripts.pre,
+      );
+      chmodSync(hookPath, 0o755);
+    }
+    if (hookScripts.post) {
+      const hookPath = join(patchesDir, patchSetName, "patchy-post-apply");
+      await writeFileIn(
+        patchesDir,
+        join(patchSetName, "patchy-post-apply"),
+        hookScripts.post,
+      );
+      chmodSync(hookPath, 0o755);
+    }
+  }
+};
+
 const setupTargetFiles = async (
   targetRepoDir: string,
   targetFiles: FileMap,
@@ -268,18 +296,20 @@ const createRunCli = (
   ttyMode: boolean,
   env?: Record<string, string>,
 ): ((command: string) => Promise<PromptedCliResult>) => {
+  const mergedEnv = { CI: "false", ...env };
+
   return async (command: string): Promise<PromptedCliResult> => {
     const recorded: RecordedPrompt[] = [];
 
     if (!ttyMode) {
-      const result = await baseRunCli(command, tmpDir, { env });
+      const result = await baseRunCli(command, tmpDir, { env: mergedEnv });
       return { result, prompts: recorded };
     }
 
     const result = await baseRunCli(command, tmpDir, {
       promptHandler: (prompt) => findResponse(prompt, expectations),
       onPromptRecord: (p) => recorded.push(p),
-      env,
+      env: mergedEnv,
     });
     return { result, prompts: recorded };
   };
@@ -300,6 +330,10 @@ export const scenario = async (
 
   if (options.patches) {
     await setupPatches(paths.patchesDir, options.patches);
+  }
+
+  if (options.hooks) {
+    await setupHooks(paths.patchesDir, options.hooks);
   }
 
   if (options.git) {

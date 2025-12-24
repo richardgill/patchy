@@ -26,6 +26,16 @@ const PLATFORM_PACKAGES = [
   "windows-x64",
 ];
 
+const isVersionPublished = async (
+  packageName: string,
+  version: string,
+): Promise<boolean> => {
+  const result = await $`npm view ${packageName}@${version} version`
+    .quiet()
+    .nothrow();
+  return result.exitCode === 0;
+};
+
 const parseArgs = async (): Promise<Config> => {
   const args = process.argv.slice(2);
   const mode = args.find((a) => a.startsWith("--mode="))?.split("=")[1] as Mode;
@@ -100,6 +110,13 @@ const publishPlatformPackages = async (config: Config) => {
     const npmName = `patchy-cli-${platform}`;
     const pkgPath = `${distDir}/package.json`;
 
+    if (await isVersionPublished(npmName, config.version)) {
+      console.log(
+        `  ⏭ ${npmName}@${config.version} already published, skipping`,
+      );
+      continue;
+    }
+
     const pkg = await Bun.file(pkgPath).json();
     pkg.name = npmName;
     pkg.version = config.version;
@@ -118,6 +135,14 @@ const publishMainPackage = async (config: Config) => {
   console.log(`Publishing main package with tag ${config.npmTag}...`);
 
   const pkg = await Bun.file("package.json").json();
+
+  if (await isVersionPublished(pkg.name, config.version)) {
+    console.log(
+      `  ⏭ ${pkg.name}@${config.version} already published, skipping`,
+    );
+    return;
+  }
+
   pkg.version = config.version;
   pkg.optionalDependencies = Object.fromEntries(
     PLATFORM_PACKAGES.map((p) => [`patchy-cli-${p}`, config.version]),

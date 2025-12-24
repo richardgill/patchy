@@ -888,4 +888,236 @@ const other = 2;
       expect(commitMessages[0]).toBe("Apply patch set: 001-only");
     });
   });
+
+  describe("hooks", () => {
+    it("should run pre-apply hook before patches", async () => {
+      const { runCli, fileContent } = await scenario({
+        patches: {
+          "001-with-hook": { "file.ts": "content" },
+        },
+        hooks: {
+          "001-with-hook": {
+            pre: '#!/bin/bash\necho "PRE_HOOK_RAN"',
+          },
+        },
+      });
+
+      const { result } = await runCli(`patchy apply --verbose`);
+
+      expect(result).toSucceed();
+      expect(result.stdout).toContain("Running hook: patchy-pre-apply");
+      expect(result.stdout).toContain("PRE_HOOK_RAN");
+      expect(fileContent("file.ts")).toBe("content");
+    });
+
+    it("should run post-apply hook after patches", async () => {
+      const { runCli, fileContent } = await scenario({
+        patches: {
+          "001-with-hook": { "file.ts": "content" },
+        },
+        hooks: {
+          "001-with-hook": {
+            post: '#!/bin/bash\necho "POST_HOOK_RAN"',
+          },
+        },
+      });
+
+      const { result } = await runCli(`patchy apply --verbose`);
+
+      expect(result).toSucceed();
+      expect(result.stdout).toContain("Running hook: patchy-post-apply");
+      expect(result.stdout).toContain("POST_HOOK_RAN");
+      expect(fileContent("file.ts")).toBe("content");
+    });
+
+    it("should run both hooks in correct order", async () => {
+      const { runCli } = await scenario({
+        patches: {
+          "001-with-hooks": { "file.ts": "content" },
+        },
+        hooks: {
+          "001-with-hooks": {
+            pre: '#!/bin/bash\necho "STEP_1_PRE"',
+            post: '#!/bin/bash\necho "STEP_2_POST"',
+          },
+        },
+      });
+
+      const { result } = await runCli(`patchy apply --verbose`);
+
+      expect(result).toSucceed();
+      const preIndex = result.stdout.indexOf("STEP_1_PRE");
+      const postIndex = result.stdout.indexOf("STEP_2_POST");
+      expect(preIndex).toBeLessThan(postIndex);
+    });
+
+    it("should abort on pre-apply hook failure", async () => {
+      const { runCli, exists } = await scenario({
+        patches: {
+          "001-failing": { "file.ts": "content" },
+        },
+        hooks: {
+          "001-failing": {
+            pre: '#!/bin/bash\necho "FAILING" && exit 1',
+          },
+        },
+      });
+
+      const { result } = await runCli(`patchy apply --verbose`);
+
+      expect(result).toFail();
+      expect(result.stderr).toContain(
+        "Hook 'patchy-pre-apply' failed with exit code 1",
+      );
+      expect(exists("file.ts")).toBe(false);
+    });
+
+    it("should abort on post-apply hook failure", async () => {
+      const { runCli } = await scenario({
+        patches: {
+          "001-failing": { "file.ts": "content" },
+        },
+        hooks: {
+          "001-failing": {
+            post: "#!/bin/bash\nexit 1",
+          },
+        },
+      });
+
+      const { result } = await runCli(`patchy apply --verbose`);
+
+      expect(result).toFail();
+      expect(result.stderr).toContain(
+        "Hook 'patchy-post-apply' failed with exit code 1",
+      );
+    });
+
+    it("should report hooks in dry-run without executing", async () => {
+      const { runCli } = await scenario({
+        patches: {
+          "001-with-hooks": { "file.ts": "content" },
+        },
+        hooks: {
+          "001-with-hooks": {
+            pre: '#!/bin/bash\necho "SHOULD_NOT_RUN"',
+            post: '#!/bin/bash\necho "SHOULD_NOT_RUN"',
+          },
+        },
+      });
+
+      const { result } = await runCli(`patchy apply --dry-run --verbose`);
+
+      expect(result).toSucceed();
+      expect(result.stdout).toContain("Would run hook: patchy-pre-apply");
+      expect(result.stdout).toContain("Would run hook: patchy-post-apply");
+      expect(result.stdout).not.toContain("SHOULD_NOT_RUN");
+    });
+
+    it("should pass environment variables to hooks", async () => {
+      const { runCli } = await scenario({
+        patches: {
+          "001-env-test": { "file.ts": "content" },
+        },
+        hooks: {
+          "001-env-test": {
+            pre: '#!/bin/bash\necho "SET=$PATCHY_PATCH_SET"',
+          },
+        },
+      });
+
+      const { result } = await runCli(`patchy apply --verbose`);
+
+      expect(result).toSucceed();
+      expect(result.stdout).toContain("SET=001-env-test");
+    });
+
+    it("should work with multiple patch sets having different hooks", async () => {
+      const { runCli } = await scenario({
+        patches: {
+          "001-first": { "file1.ts": "content1" },
+          "002-second": { "file2.ts": "content2" },
+          "003-third": { "file3.ts": "content3" },
+        },
+        hooks: {
+          "001-first": { post: '#!/bin/bash\necho "FIRST_POST"' },
+          "003-third": { pre: '#!/bin/bash\necho "THIRD_PRE"' },
+        },
+      });
+
+      const { result } = await runCli(`patchy apply --verbose`);
+
+      expect(result).toSucceed();
+      expect(result.stdout).toContain("FIRST_POST");
+      expect(result.stdout).not.toContain("SECOND");
+      expect(result.stdout).toContain("THIRD_PRE");
+    });
+
+    it("should error with chmod instructions for non-executable hook", async () => {
+      const { runCli, tmpDir } = await scenario({
+        patches: {
+          "001-with-hook": { "file.ts": "content" },
+        },
+      });
+
+      const { writeFileSync } = await import("node:fs");
+      const { join } = await import("node:path");
+      const hookPath = join(
+        tmpDir,
+        "patches",
+        "001-with-hook",
+        "patchy-pre-apply",
+      );
+      writeFileSync(hookPath, "#!/bin/bash\necho test");
+
+      const { result } = await runCli(`patchy apply --verbose`);
+
+      expect(result).toFail();
+      expect(result.stderr).toContain("is not executable");
+      expect(result.stderr).toContain("chmod +x");
+      expect(result.stderr).toContain("patchy-pre-apply");
+    });
+
+    it("should use custom hook prefix from --hook-prefix flag", async () => {
+      const { runCli, tmpDir } = await scenario({
+        patches: {
+          "001-custom": { "file.ts": "content" },
+        },
+      });
+
+      const { writeFileSync, chmodSync } = await import("node:fs");
+      const { join } = await import("node:path");
+      const hookPath = join(tmpDir, "patches", "001-custom", "_pre-apply");
+      writeFileSync(hookPath, '#!/bin/bash\necho "CUSTOM_PREFIX_HOOK"');
+      chmodSync(hookPath, 0o755);
+
+      const { result } = await runCli(`patchy apply --hook-prefix _ --verbose`);
+
+      expect(result).toSucceed();
+      expect(result.stdout).toContain("Running hook: _pre-apply");
+      expect(result.stdout).toContain("CUSTOM_PREFIX_HOOK");
+    });
+
+    it("should use hook prefix from PATCHY_HOOK_PREFIX env var", async () => {
+      const { runCli, tmpDir } = await scenario({
+        patches: {
+          "001-env": { "file.ts": "content" },
+        },
+        env: {
+          PATCHY_HOOK_PREFIX: "hook.",
+        },
+      });
+
+      const { writeFileSync, chmodSync } = await import("node:fs");
+      const { join } = await import("node:path");
+      const hookPath = join(tmpDir, "patches", "001-env", "hook.pre-apply");
+      writeFileSync(hookPath, '#!/bin/bash\necho "ENV_PREFIX_HOOK"');
+      chmodSync(hookPath, 0o755);
+
+      const { result } = await runCli(`patchy apply --verbose`);
+
+      expect(result).toSucceed();
+      expect(result.stdout).toContain("Running hook: hook.pre-apply");
+      expect(result.stdout).toContain("ENV_PREFIX_HOOK");
+    });
+  });
 });

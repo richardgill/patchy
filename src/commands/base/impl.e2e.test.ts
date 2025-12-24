@@ -274,6 +274,22 @@ describe("patchy base", () => {
     });
   });
 
+  describe("CI mode (CI=true)", () => {
+    it("should show current base and message about TTY requirement", async () => {
+      const ctx = await scenario({
+        bareRepo: true,
+        config: { upstream_branch: "main" },
+        env: { CI: "true" },
+      });
+
+      const { result } = await ctx.runCli("patchy base");
+
+      expect(result).toSucceed();
+      expect(result.stdout).toContain("Current base_revision");
+      expect(result.stdout).toContain("TTY");
+    });
+  });
+
   describe("error cases", () => {
     it("should fail when config file does not exist", async () => {
       const ctx = await scenario({ noConfig: true });

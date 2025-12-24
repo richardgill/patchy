@@ -1,4 +1,4 @@
-import { getDefaultValue } from "~/cli-fields";
+import { FLAG_METADATA, getDefaultValue } from "~/cli-fields";
 import type { LocalContext } from "~/context";
 import { exit } from "~/lib/exit";
 import { formatPathForDisplay, isPathWithinDir } from "~/lib/fs";
@@ -124,11 +124,37 @@ const promptBaseRevision = async (
   return baseRevision;
 };
 
+const INIT_REQUIRED_FIELDS = [
+  "patches_dir",
+  "clones_dir",
+  "source_repo",
+  "base_revision",
+] as const;
+
+const getFlagName = (configKey: keyof typeof FLAG_METADATA): string =>
+  Object.keys(FLAG_METADATA[configKey].stricliFlag)[0];
+
+const getMissingRequiredFlags = (flags: InitFlags): string[] =>
+  INIT_REQUIRED_FIELDS.filter(
+    (key) => flags[getFlagName(key) as keyof InitFlags] === undefined,
+  ).map((key) => `--${getFlagName(key)}`);
+
 export const gatherAnswers = async (
   context: LocalContext,
   flags: InitFlags,
 ): Promise<PromptAnswers> => {
   const answers: PromptAnswers = {};
+
+  if (!canPrompt(context)) {
+    const missing = getMissingRequiredFlags(flags);
+    if (missing.length > 0) {
+      return exit(context, {
+        exitCode: 1,
+        stderr: `Non-interactive mode requires all flags: ${missing.join(", ")}`,
+      });
+    }
+  }
+
   const prompts = createPrompts(context);
 
   if (flags["patches-dir"] === undefined) {
