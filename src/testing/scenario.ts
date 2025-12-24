@@ -188,22 +188,14 @@ const setupTargetFiles = async (
   }
 };
 
-const setupGit = async (
-  targetRepoDir: string,
-  hasTargetFiles: boolean,
-): Promise<void> => {
-  if (hasTargetFiles) {
-    const git = createTestGitClient({ baseDir: targetRepoDir });
-    await git.init();
-    await git.addConfig("user.email", "test@test.com");
-    await git.addConfig("user.name", "Test User");
-    await git.addConfig("init.defaultBranch", "main");
-    await git.checkout(["-b", "main"]);
-    await git.add(".");
-    await git.commit("initial commit");
-  } else {
-    await createLocalRepo({ dir: targetRepoDir });
-  }
+const setupGit = async (targetRepoDir: string): Promise<void> => {
+  await createLocalRepo({ dir: targetRepoDir });
+};
+
+const commitTargetFiles = async (targetRepoDir: string): Promise<void> => {
+  const git = createTestGitClient({ baseDir: targetRepoDir });
+  await git.add(".");
+  await git.commit("initial commit", ["--amend"]);
 };
 
 const createContextHelpers = (
@@ -310,15 +302,15 @@ export const scenario = async (
     await setupPatches(paths.patchesDir, options.patches);
   }
 
-  if (options.targetFiles) {
-    await setupTargetFiles(paths.targetRepoDir, options.targetFiles);
+  if (options.git) {
+    await setupGit(paths.targetRepoDir);
   }
 
-  if (options.git) {
-    const hasTargetFiles = Boolean(
-      options.targetFiles && Object.keys(options.targetFiles).length > 0,
-    );
-    await setupGit(paths.targetRepoDir, hasTargetFiles);
+  if (options.targetFiles) {
+    await setupTargetFiles(paths.targetRepoDir, options.targetFiles);
+    if (options.git) {
+      await commitTargetFiles(paths.targetRepoDir);
+    }
   }
 
   const helpers = createContextHelpers(paths);
