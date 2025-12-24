@@ -1,5 +1,11 @@
 # patchy-cli
 
+## 0.0.11
+
+### Patch Changes
+
+- [#201](https://github.com/richardgill/patchy/pull/201) [`907f00c`](https://github.com/richardgill/patchy/commit/907f00c36c2b6369a6fed534c05518ba7071f82a) Thanks [@richardgill](https://github.com/richardgill)! - Improve README documentation with clearer installation command and patch structure explanation
+
 ## 0.0.10
 
 ### Patch Changes
