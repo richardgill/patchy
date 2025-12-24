@@ -37,8 +37,10 @@ const fetchLocalRefs = async (
     : path.resolve(workDir, localPath);
 
   const git = createGitClient({ baseDir: repoPath });
-  const isBareRepo = await git.checkIsRepo(CheckRepoActions.BARE);
-  const isNormalRepo = await git.checkIsRepo(CheckRepoActions.IS_REPO_ROOT);
+  const [isBareRepo, isNormalRepo] = await Promise.all([
+    git.checkIsRepo(CheckRepoActions.BARE),
+    git.checkIsRepo(CheckRepoActions.IS_REPO_ROOT),
+  ]);
   if (!isBareRepo && !isNormalRepo) {
     throw new Error(`Not a git repository: ${repoPath}`);
   }
