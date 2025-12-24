@@ -214,6 +214,36 @@ Within each patch set files follow the same folder structure as in the `source_r
 
 `patchy generate` automatically removes stale files in `patches/<patch-set>` that no longer correspond to changes in `target_repo`.
 
+## Hooks
+
+Patch sets can include executable scripts that run before and after patches are applied:
+
+```
+patches/
+└── 001-add-feature/
+    ├── patchy-pre-apply   # runs before patches
+    ├── patchy-post-apply  # runs after patches
+    ├── src/file.ts.diff
+    └── src/new-file.ts
+```
+
+### Hook execution
+
+- Hooks run with `cwd` set to `target_repo`
+- Environment variables: `PATCHY_TARGET_REPO`, `PATCHY_PATCH_SET`, `PATCHY_PATCHES_DIR`, `PATCHY_PATCH_SET_DIR`, `PATCHY_BASE_REVISION`
+- Non-zero exit aborts `patchy apply`
+- Hooks must be executable (`chmod +x`)
+
+### Custom hook prefix
+
+```jsonc
+{
+  "hook_prefix": "_"  // Override: --hook-prefix | env: PATCHY_HOOK_PREFIX
+}
+```
+
+With prefix `_`, hooks are named `_pre-apply` and `_post-apply`.
+
 ## Commands
 
 ### `patchy generate`

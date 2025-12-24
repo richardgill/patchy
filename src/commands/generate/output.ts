@@ -1,11 +1,12 @@
 import { relative } from "node:path";
 import type { LocalContext } from "~/context";
 import { formatPathForDisplay } from "~/lib/fs";
+import { getHookFilenames } from "~/lib/hooks";
 import { getExpectedPatchPaths, getStalePatches } from "./patch-operations";
 
 type PrintDryRunOptions = {
   context: LocalContext;
-  config: { target_repo: string; patches_dir: string };
+  config: { target_repo: string; patches_dir: string; hook_prefix?: string };
   patchSet: string;
   operations: Array<{ type: string; relativePath: string; destPath: string }>;
   absolutePatchSetDir: string;
@@ -27,11 +28,14 @@ export const printDryRun = async (
     );
   }
 
+  const hookPrefix = config.hook_prefix ?? "patchy-";
+  const hookFilenames = getHookFilenames(hookPrefix);
   const expectedPaths = getExpectedPatchPaths(operations);
-  const stalePatches = await getStalePatches(
-    absolutePatchSetDir,
+  const stalePatches = await getStalePatches({
+    patchSetDir: absolutePatchSetDir,
     expectedPaths,
-  );
+    exclude: hookFilenames,
+  });
   if (stalePatches.length > 0) {
     context.process.stdout.write(
       `\nWould remove ${stalePatches.length} stale patch(es):\n`,
