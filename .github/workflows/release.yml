@@ -43,6 +43,7 @@ jobs:
         with:
           title: "chore: release"
           commit: "chore: release"
+          version: bun run changeset-version
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
