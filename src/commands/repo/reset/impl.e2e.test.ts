@@ -352,4 +352,31 @@ describe("patchy repo reset", () => {
       ]);
     });
   });
+
+  describe("CI mode (CI=true)", () => {
+    it("should fail with helpful message when --yes not provided", async () => {
+      const ctx = await scenario({
+        bareRepo: true,
+        git: true,
+        env: { CI: "true" },
+      });
+
+      const { result } = await ctx.runCli("patchy repo reset");
+
+      expect(result).toFail();
+      expect(result.stderr).toContain("--yes");
+    });
+
+    it("should succeed when --yes is provided", async () => {
+      const ctx = await scenario({
+        bareRepo: true,
+        git: true,
+        env: { CI: "true" },
+      });
+
+      const { result } = await ctx.runCli("patchy repo reset --yes");
+
+      expect(result).toSucceed();
+    });
+  });
 });

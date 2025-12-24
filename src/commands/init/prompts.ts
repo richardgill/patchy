@@ -124,11 +124,31 @@ const promptBaseRevision = async (
   return baseRevision;
 };
 
+const getMissingRequiredFlags = (flags: InitFlags): string[] => {
+  const missing: string[] = [];
+  if (flags["patches-dir"] === undefined) missing.push("--patches-dir");
+  if (flags["clones-dir"] === undefined) missing.push("--clones-dir");
+  if (flags["source-repo"] === undefined) missing.push("--source-repo");
+  if (flags["base-revision"] === undefined) missing.push("--base-revision");
+  return missing;
+};
+
 export const gatherAnswers = async (
   context: LocalContext,
   flags: InitFlags,
 ): Promise<PromptAnswers> => {
   const answers: PromptAnswers = {};
+
+  if (!canPrompt(context)) {
+    const missing = getMissingRequiredFlags(flags);
+    if (missing.length > 0) {
+      return exit(context, {
+        exitCode: 1,
+        stderr: `Non-interactive mode requires all flags: ${missing.join(", ")}`,
+      });
+    }
+  }
+
   const prompts = createPrompts(context);
 
   if (flags["patches-dir"] === undefined) {
