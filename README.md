@@ -206,7 +206,7 @@ Patches are stored in the `patches/` directory (customizable via [`patches_dir`]
 
 Patches are grouped into **patch sets** for organizing related changes. Patch sets have numeric prefixes (e.g., `001-auth`, `002-ui`) and are applied in order.
 
-Within each patch set files follow the same folder structure as in the source repo.
+Within each patch set files follow the same folder structure as in the `source_repo`.
 
 **Two types of patch files:**
 - **`.diff` files** — For modified existing files (generated via `git diff HEAD`)
