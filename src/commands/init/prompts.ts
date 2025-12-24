@@ -1,4 +1,4 @@
-import { getDefaultValue } from "~/cli-fields";
+import { FLAG_METADATA, getDefaultValue } from "~/cli-fields";
 import type { LocalContext } from "~/context";
 import { exit } from "~/lib/exit";
 import { formatPathForDisplay, isPathWithinDir } from "~/lib/fs";
@@ -124,14 +124,20 @@ const promptBaseRevision = async (
   return baseRevision;
 };
 
-const getMissingRequiredFlags = (flags: InitFlags): string[] => {
-  const missing: string[] = [];
-  if (flags["patches-dir"] === undefined) missing.push("--patches-dir");
-  if (flags["clones-dir"] === undefined) missing.push("--clones-dir");
-  if (flags["source-repo"] === undefined) missing.push("--source-repo");
-  if (flags["base-revision"] === undefined) missing.push("--base-revision");
-  return missing;
-};
+const INIT_REQUIRED_FIELDS = [
+  "patches_dir",
+  "clones_dir",
+  "source_repo",
+  "base_revision",
+] as const;
+
+const getFlagName = (configKey: keyof typeof FLAG_METADATA): string =>
+  Object.keys(FLAG_METADATA[configKey].stricliFlag)[0];
+
+const getMissingRequiredFlags = (flags: InitFlags): string[] =>
+  INIT_REQUIRED_FIELDS.filter(
+    (key) => flags[getFlagName(key) as keyof InitFlags] === undefined,
+  ).map((key) => `--${getFlagName(key)}`);
 
 export const gatherAnswers = async (
   context: LocalContext,
