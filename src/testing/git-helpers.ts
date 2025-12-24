@@ -12,17 +12,18 @@ const TEMPLATE_LOCAL_REPO = join(TEMPLATE_DIR, "local-template");
 
 const createTemplateBareRepo = async (): Promise<void> => {
   mkdirSync(TEMPLATE_BARE_REPO, { recursive: true });
-  await createTestGitClient({ baseDir: TEMPLATE_BARE_REPO }).init(true);
+  await createTestGitClient({ baseDir: TEMPLATE_BARE_REPO }).init([
+    "--bare",
+    "--initial-branch=main",
+  ]);
 };
 
 const createTemplateLocalRepo = async (): Promise<void> => {
   mkdirSync(TEMPLATE_LOCAL_REPO, { recursive: true });
   const git = createTestGitClient({ baseDir: TEMPLATE_LOCAL_REPO });
-  await git.init();
+  await git.init(["--initial-branch=main"]);
   await git.addConfig("user.email", "test@test.com");
   await git.addConfig("user.name", "Test User");
-  await git.addConfig("init.defaultBranch", "main");
-  await git.checkout(["-b", "main"]);
   writeFileSync(join(TEMPLATE_LOCAL_REPO, "initial.txt"), "initial content\n");
   await git.add(".");
   await git.commit("initial commit");
