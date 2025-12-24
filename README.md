@@ -221,10 +221,10 @@ Patch sets can include executable scripts that run before and after patches are 
 ```
 patches/
 └── 001-add-feature/
-    ├── patchy-post-apply  # runs after patches
+    ├── patchy-pre-apply   # runs before patches
     ├── src/file.ts.diff
     ├── src/new-file.ts
-    └── patchy-pre-apply   # runs before patches
+    └── patchy-post-apply  # runs after patches
 ```
 
 ### Hook execution
