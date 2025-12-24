@@ -134,6 +134,8 @@ export const createLocalRepo = async (
   }
 
   const git = createTestGitClient({ baseDir: repoDir });
+  await git.addConfig("user.email", "test@test.com");
+  await git.addConfig("user.name", "Test User");
 
   if (files) {
     for (const [filename, content] of Object.entries(files)) {
