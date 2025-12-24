@@ -1,5 +1,11 @@
 # patchy-cli
 
+## 0.0.16
+
+### Patch Changes
+
+- [#211](https://github.com/richardgill/patchy/pull/211) [`2dbe928`](https://github.com/richardgill/patchy/commit/2dbe928e0256a306e7757d6dba3b73bed596f2c5) Thanks [@richardgill](https://github.com/richardgill)! - Add hooks for patch set lifecycle events (pre-apply and post-apply scripts)
+
 ## 0.0.15
 
 ### Patch Changes
