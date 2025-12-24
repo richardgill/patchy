@@ -221,10 +221,10 @@ Patch sets can include executable scripts that run before and after patches are 
 ```
 patches/
 └── 001-add-feature/
-    ├── patchy-pre-apply   # runs before patches
     ├── patchy-post-apply  # runs after patches
     ├── src/file.ts.diff
-    └── src/new-file.ts
+    ├── src/new-file.ts
+    └── patchy-pre-apply   # runs before patches
 ```
 
 ### Hook execution
@@ -238,11 +238,11 @@ patches/
 
 ```jsonc
 {
-  "hook_prefix": "_"  // Override: --hook-prefix | env: PATCHY_HOOK_PREFIX
+  "hook_prefix": "my-prefix-"  // Override: --hook-prefix | env: PATCHY_HOOK_PREFIX
 }
 ```
 
-With prefix `_`, hooks are named `_pre-apply` and `_post-apply`.
+With prefix `my-prefix-`, hooks are named `my-prefix-pre-apply` and `my-prefix-post-apply`.
 
 ## Commands
 
