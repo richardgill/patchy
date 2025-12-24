@@ -1,5 +1,11 @@
 # patchy-cli
 
+## 0.0.17
+
+### Patch Changes
+
+- [#214](https://github.com/richardgill/patchy/pull/214) [`143f340`](https://github.com/richardgill/patchy/commit/143f340c92803357d899a02a80dd56c7840a6613) Thanks [@richardgill](https://github.com/richardgill)! - Fix hooks documentation to show pre-apply before post-apply
+
 ## 0.0.16
 
 ### Patch Changes
