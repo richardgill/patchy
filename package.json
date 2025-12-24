@@ -18,7 +18,7 @@
     "check-fix": "biome check --write --error-on-warnings --diagnostic-level=warn",
     "misc-checks": "bun run scripts/misc-checks.ts",
     "changeset": "changeset",
-    "changeset-version": "changeset version",
+    "changeset-version": "changeset version && bun run scripts/post-version-bump.ts",
     "dev": "bun run src/cli.ts",
     "knip": "knip-bun",
     "local-ci": "bun run scripts/local-ci.ts",
@@ -64,11 +64,11 @@
     "url": "https://github.com/richardgill/patchy"
   },
   "optionalDependencies": {
-    "patchy-cli-linux-x64": "=0.0.2",
-    "patchy-cli-linux-arm64": "=0.0.2",
-    "patchy-cli-darwin-x64": "=0.0.2",
-    "patchy-cli-darwin-arm64": "=0.0.2",
-    "patchy-cli-windows-x64": "=0.0.2"
+    "patchy-cli-linux-x64": "=0.0.11",
+    "patchy-cli-linux-arm64": "=0.0.11",
+    "patchy-cli-darwin-x64": "=0.0.11",
+    "patchy-cli-darwin-arm64": "=0.0.11",
+    "patchy-cli-windows-x64": "=0.0.11"
   },
   "publishConfig": {
     "access": "public"
