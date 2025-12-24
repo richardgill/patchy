@@ -1,5 +1,11 @@
 # patchy-cli
 
+## 0.0.12
+
+### Patch Changes
+
+- [#203](https://github.com/richardgill/patchy/pull/203) [`bcbb5e4`](https://github.com/richardgill/patchy/commit/bcbb5e4b2d03d24579d1e2fac964cc410fd8e20e) Thanks [@richardgill](https://github.com/richardgill)! - Sync optionalDependencies versions automatically during release to prevent stale Dependabot PRs
+
 ## 0.0.11
 
 ### Patch Changes
