@@ -1,5 +1,5 @@
 ---
-"patchy-cli": major
+"patchy-cli": patch
 ---
 
 Replace `--all` and `--edit` flags with `--auto-commit` enum flag
