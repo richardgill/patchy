@@ -1,16 +1,23 @@
-import { basename, join } from "node:path";
+import { basename, join, resolve } from "node:path";
 import { DEFAULT_CONFIG_PATH } from "~/cli-fields";
 import type { LocalContext } from "~/context";
 import { loadJsonConfig } from "~/lib/cli-config";
 import { exit } from "~/lib/exit";
-import { formatPathForDisplay, stripTrailingSlashes } from "~/lib/fs";
+import {
+  formatPathForDisplay,
+  getSortedFolders,
+  stripTrailingSlashes,
+} from "~/lib/fs";
 import type { PrimeFlags } from "./flags";
 
 type PrimeConfig = {
   configPath: string;
   patchesDir: string;
+  absolutePatchesDir: string;
   clonesDir: string;
   repoName: string;
+  sourceRepo: string | undefined;
+  baseRevision: string;
 };
 
 const loadConfig = (context: LocalContext, flags: PrimeFlags): PrimeConfig => {
@@ -24,12 +31,16 @@ const loadConfig = (context: LocalContext, flags: PrimeFlags): PrimeConfig => {
   const repoName =
     config.target_repo ?? extractRepoName(config.source_repo ?? "");
   const relativePath = flags.config ?? DEFAULT_CONFIG_PATH;
+  const patchesDir = config.patches_dir ?? "patches";
 
   return {
     configPath: relativePath,
-    patchesDir: config.patches_dir ?? "patches",
+    patchesDir,
+    absolutePatchesDir: resolve(context.cwd, patchesDir),
     clonesDir: config.clones_dir ?? "clones",
     repoName,
+    sourceRepo: config.source_repo,
+    baseRevision: config.base_revision ?? "main",
   };
 };
 
@@ -39,27 +50,48 @@ const extractRepoName = (sourceRepo: string): string => {
   return name || "<repo-name>";
 };
 
+const formatPatchSets = (patchSets: string[]): string => {
+  if (patchSets.length === 0) {
+    return "  (none yet)\n";
+  }
+  return patchSets.map((name) => `  - \`${name}/\`\n`).join("");
+};
+
 const generateOutput = (config: PrimeConfig): string => {
-  const { configPath, patchesDir, clonesDir, repoName } = config;
+  const {
+    configPath,
+    patchesDir,
+    absolutePatchesDir,
+    clonesDir,
+    repoName,
+    sourceRepo,
+    baseRevision,
+  } = config;
   const targetPath = formatPathForDisplay(join(clonesDir, repoName));
   const normalizedPatchesDir = formatPathForDisplay(
     stripTrailingSlashes(patchesDir),
   );
+  const patchSets = getSortedFolders(absolutePatchesDir);
+
+  const sourceRepoLine = sourceRepo ? `- Source: \`${sourceRepo}\`\n` : "";
 
   return `## Patchy
 
 This project uses \`patchy\` to maintain patches against an upstream repo.
 
-- Config: \`${formatPathForDisplay(configPath)}\` (jsonc)
+${sourceRepoLine}- Base revision: \`${baseRevision}\`
+- Config: \`${formatPathForDisplay(configPath)}\`
 - Patches: \`${normalizedPatchesDir}/\`
 - Cloned repo: \`${targetPath}/\`
 
+Patch sets:
+${formatPatchSets(patchSets)}
 Key commands:
-- \`patchy generate\` - Generate patches from changes in the cloned repo
-- \`patchy apply\` - Apply all patches to the cloned repo
-- \`patchy repo reset\` - Reset cloned repo to base revision (discard all changes)
+- \`patchy generate --patch-set <name>\` - Generate patches from cloned repo changes
+- \`patchy apply --auto-commit all\` - Apply all patches to the cloned repo
+- \`patchy repo reset --yes\` - Reset cloned repo to base revision (discard all changes)
 
-Make changes in \`${targetPath}/\`, then run \`patchy generate\` to update patches.
+Make changes in \`${targetPath}/\`, then run \`patchy generate --patch-set <name>\` to update patches.
 `;
 };
 
