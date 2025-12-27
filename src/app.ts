@@ -1,6 +1,7 @@
 import { buildApplication, buildRouteMap } from "@stricli/core";
 import { applyCommand } from "./commands/apply/command";
 import { baseCommand } from "./commands/base/command";
+import { configRoutes } from "./commands/config/routes";
 import { generateCommand } from "./commands/generate/command";
 import { initCommand } from "./commands/init/command";
 import { primeCommand } from "./commands/prime/command";
@@ -14,6 +15,7 @@ const routes = buildRouteMap({
     generate: generateCommand,
     prime: primeCommand,
     base: baseCommand,
+    config: configRoutes,
     repo: repoRoutes,
   },
   docs: {
