@@ -56,6 +56,10 @@ export const removeFile = (filePath: string): void => {
   rmSync(filePath, { force: true });
 };
 
+export const stripTrailingSlashes = (targetPath: string): string => {
+  return targetPath.replace(/\/+$/, "");
+};
+
 export const formatPathForDisplay = (targetPath: string): string => {
   if (
     targetPath.startsWith("~") ||
