@@ -319,6 +319,7 @@ describe("patchy init", () => {
             respond: "https://github.com/example/repo.git",
           },
           { text: /[Bb]ase revision/, respond: acceptDefault },
+          { confirm: /Clone repo/, respond: false },
         )
         .runCli("patchy init --force");
 
@@ -344,6 +345,11 @@ describe("patchy init", () => {
           message: expect.stringMatching(/[Bb]ase revision/),
           response: "default",
         },
+        {
+          type: "confirm",
+          message: expect.stringMatching(/Clone repo/),
+          response: false,
+        },
       ]);
 
       const gitignorePath = join(ctx.tmpDir, ".gitignore");
@@ -362,6 +368,7 @@ describe("patchy init", () => {
             respond: "https://github.com/example/repo.git",
           },
           { text: /[Bb]ase revision/, respond: acceptDefault },
+          { confirm: /Clone repo/, respond: false },
         )
         .runCli("patchy init --force");
 
@@ -386,6 +393,11 @@ describe("patchy init", () => {
           type: "text",
           message: expect.stringMatching(/[Bb]ase revision/),
           response: "default",
+        },
+        {
+          type: "confirm",
+          message: expect.stringMatching(/Clone repo/),
+          response: false,
         },
       ]);
 

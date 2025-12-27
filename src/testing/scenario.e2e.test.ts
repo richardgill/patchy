@@ -68,7 +68,9 @@ describe("scenario helper", () => {
         },
       });
 
-      const { result } = await runCli("patchy apply --all --verbose");
+      const { result } = await runCli(
+        "patchy apply --auto-commit=all --verbose",
+      );
 
       expect(result).toSucceed();
       expect(result).toHaveOutput("committed ✓");
@@ -94,7 +96,7 @@ describe("scenario helper", () => {
         },
       });
 
-      const { result } = await runCli("patchy apply --all");
+      const { result } = await runCli("patchy apply --auto-commit=all");
 
       expect(result).toSucceed();
       expect(fileContent("existing.ts")).toBe("const value = 42;\n");

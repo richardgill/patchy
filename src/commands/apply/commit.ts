@@ -2,9 +2,9 @@ import type { LocalContext } from "~/context";
 import { exit } from "~/lib/exit";
 import { createGitClient, isGitRepo } from "~/lib/git";
 import { canPrompt, createPrompts } from "~/lib/prompts";
-import type { ApplyFlags } from "./flags";
+import type { AutoCommitMode } from "./flags";
 
-type CommitMode = "auto" | "prompt" | "skip";
+type CommitAction = "commit" | "prompt" | "skip";
 
 const checkWorkingTreeClean = async (
   repoDir: string,
@@ -69,31 +69,27 @@ const commitPatchSet = async (
   }
 };
 
-const determineCommitMode = (
+const determineCommitAction = (
   context: LocalContext,
-  flags: ApplyFlags,
+  autoCommit: AutoCommitMode | undefined,
   isLastPatchSet: boolean,
-): CommitMode => {
-  if (flags.all) {
-    return "auto";
-  }
+): CommitAction => {
+  const mode = autoCommit ?? "interactive";
 
-  if (flags.edit) {
-    return isLastPatchSet ? "skip" : "auto";
-  }
-
-  if (isLastPatchSet) {
-    return canPrompt(context) ? "prompt" : "auto";
-  }
-
-  return "auto";
+  if (mode === "all") return "commit";
+  if (mode === "off") return "skip";
+  if (mode === "skip-last") return isLastPatchSet ? "skip" : "commit";
+  // mode === "interactive"
+  if (isLastPatchSet) return canPrompt(context) ? "prompt" : "commit";
+  return "commit";
 };
 
 export const commitPatchSetIfNeeded = async (params: {
   context: LocalContext;
   repoDir: string;
   patchSetName: string;
-  flags: ApplyFlags;
+  autoCommit: AutoCommitMode | undefined;
+  verbose: boolean;
   isLastPatchSet: boolean;
   dryRun: boolean;
   hasErrors: boolean;
@@ -102,7 +98,8 @@ export const commitPatchSetIfNeeded = async (params: {
     context,
     repoDir,
     patchSetName,
-    flags,
+    autoCommit,
+    verbose,
     isLastPatchSet,
     dryRun,
     hasErrors,
@@ -111,20 +108,20 @@ export const commitPatchSetIfNeeded = async (params: {
     return { committed: false };
   }
 
-  const mode = determineCommitMode(context, flags, isLastPatchSet);
+  const action = determineCommitAction(context, autoCommit, isLastPatchSet);
 
-  if (mode === "skip") {
-    const prefix = flags.verbose ? "  " : " — ";
+  if (action === "skip") {
+    const prefix = verbose ? "  " : " — ";
     context.process.stdout.write(`${prefix}skipped\n`);
     return { committed: false };
   }
 
-  if (mode === "auto") {
+  if (action === "commit") {
     const result = await commitPatchSet(
       repoDir,
       patchSetName,
       context.process.stdout as NodeJS.WriteStream,
-      flags.verbose ?? false,
+      verbose,
     );
     if (!result.success) {
       exit(context, {
@@ -135,7 +132,7 @@ export const commitPatchSetIfNeeded = async (params: {
     return { committed: true };
   }
 
-  const lineBreak = flags.verbose ? "\n" : "\n\n";
+  const lineBreak = verbose ? "\n" : "\n\n";
   context.process.stdout.write(lineBreak);
 
   const prompts = createPrompts(context);
@@ -154,7 +151,7 @@ export const commitPatchSetIfNeeded = async (params: {
       repoDir,
       patchSetName,
       context.process.stdout as NodeJS.WriteStream,
-      flags.verbose ?? false,
+      verbose,
     );
     if (!result.success) {
       exit(context, {

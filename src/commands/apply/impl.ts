@@ -5,7 +5,7 @@ import { exit } from "~/lib/exit";
 import { formatPathForDisplay } from "~/lib/fs";
 import { commitPatchSetIfNeeded, ensureCleanWorkingTree } from "./commit";
 import { loadAndValidateConfig } from "./config";
-import { type ApplyFlags, validateCommitFlags } from "./flags";
+import type { ApplyFlags } from "./flags";
 import {
   applySinglePatchSet,
   type PatchSetStats,
@@ -41,11 +41,6 @@ export default async function (
   this: LocalContext,
   flags: ApplyFlags,
 ): Promise<void> {
-  const flagValidation = validateCommitFlags(flags.all, flags.edit);
-  if (flagValidation.error !== undefined) {
-    return exit(this, { exitCode: 1, stderr: flagValidation.error });
-  }
-
   const config = loadAndValidateConfig(this, flags);
 
   const patchSets = resolvePatchSetsToApply(
@@ -91,7 +86,8 @@ export default async function (
       context: this,
       repoDir: config.absoluteTargetRepo,
       patchSetName,
-      flags,
+      autoCommit: flags["auto-commit"],
+      verbose: config.verbose,
       isLastPatchSet: isLast,
       dryRun: config.dry_run,
       hasErrors: result.errors.length > 0,

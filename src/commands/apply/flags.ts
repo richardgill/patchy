@@ -1,6 +1,9 @@
 import { FLAG_METADATA } from "~/cli-fields";
 import type { ParsedFlags } from "~/types/utils";
 
+const autoCommitValues = ["all", "interactive", "skip-last", "off"] as const;
+export type AutoCommitMode = (typeof autoCommitValues)[number];
+
 export const applyFlags = {
   ...FLAG_METADATA.clones_dir.stricliFlag,
   ...FLAG_METADATA.target_repo.stricliFlag,
@@ -30,26 +33,14 @@ export const applyFlags = {
     brief: "Apply patch sets up to and including the specified one",
     optional: true,
   },
-  all: {
-    kind: "boolean",
-    brief: "Automatically commit all patch sets without prompting",
-    optional: true,
-  },
-  edit: {
-    kind: "boolean",
-    brief: "Leave the last patch set uncommitted for manual review",
+  "auto-commit": {
+    kind: "enum",
+    values: autoCommitValues,
+    default: "interactive",
+    brief:
+      "Control automatic committing of patch sets (all = commit everything, interactive = prompt on last, skip-last = leave last uncommitted, off = commit nothing)",
     optional: true,
   },
 } as const;
 
 export type ApplyFlags = ParsedFlags<typeof applyFlags>;
-
-export const validateCommitFlags = (
-  all: boolean | undefined,
-  edit: boolean | undefined,
-): { error?: string } => {
-  if (all && edit) {
-    return { error: "Cannot use both --all and --edit flags together" };
-  }
-  return {};
-};

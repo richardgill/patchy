@@ -31,7 +31,6 @@ export const runCli = async (
 
   let stdout = "";
   let stderr = "";
-  let exitCode = 0;
 
   class MockProcessExit extends Error {
     constructor(public code: number) {
@@ -52,8 +51,9 @@ export const runCli = async (
       },
     },
     env: { ...process.env, NO_COLOR: "1", FORCE_COLOR: "0", ...options.env },
+    exitCode: 0 as number | undefined,
     exit: (code: number): never => {
-      exitCode = code;
+      mockProcess.exitCode = code;
       throw new MockProcessExit(code);
     },
     cwd: () => cwd,
@@ -73,8 +73,8 @@ export const runCli = async (
   } catch (error) {
     if (error instanceof MockProcessExit) {
       // Expected exit - exitCode already set
-    } else if (exitCode === 0) {
-      exitCode = 1;
+    } else if (mockProcess.exitCode === 0) {
+      mockProcess.exitCode = 1;
     }
   }
 
@@ -83,6 +83,8 @@ export const runCli = async (
     .replace(/\n?Error: MockProcessExit:[\s\S]*$/, "")
     .replace(/\nCommand failed, MockProcessExit:[\s\S]*$/, "")
     .replace(/^Command failed, MockProcessExit:[\s\S]*$/, "");
+
+  const exitCode = mockProcess.exitCode ?? 0;
 
   // Stabilize output by replacing temp dir paths with <TEST_DIR> for snapshot consistency
   return {
