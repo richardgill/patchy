@@ -313,6 +313,57 @@ patchy prime >> CLAUDE.md
 
 Outputs a brief description of Patchy, key paths, and essential commands to help AI coding agents understand your project's patch workflow.
 
+### `patchy config get <key>`
+
+Output a single config value (raw, no label). Useful for shell scripts.
+
+```sh
+patchy config get target_repo_path    # /home/user/project/clones/my-repo
+patchy config get patch_set           # 001-feature
+patchy config get verbose             # false
+```
+
+**Available keys:**
+
+| Key | Description |
+|-----|-------------|
+| `source_repo` | Git URL or local file path |
+| `target_repo` | Repository name or path |
+| `clones_dir` | Directory for clones |
+| `patches_dir` | Directory for patches |
+| `patch_set` | Current patch set name |
+| `base_revision` | Base SHA or tag |
+| `upstream_branch` | Remote branch to track |
+| `hook_prefix` | Hook script prefix |
+| `verbose` | Verbose mode ("true"/"false") |
+| `clones_dir_path` | Absolute path to clones directory |
+| `target_repo_path` | Absolute path to target repository |
+| `patches_dir_path` | Absolute path to patches directory |
+| `patch_set_path` | Absolute path to current patch set |
+
+- Unknown keys exit with code 1
+- Unset raw keys exit with code 1
+- Unset computed keys (e.g., `patch_set_path` when `patch_set` is not set) output an empty line
+
+### `patchy config list`
+
+Output all config values as aligned key-value pairs.
+
+```sh
+patchy config list
+# source_repo       https://github.com/example/repo.git
+# target_repo       my-repo
+# clones_dir        ./clones
+# patches_dir       ./patches
+# patch_set         001-feature
+# verbose           false
+# clones_dir_path   /home/user/project/clones
+# target_repo_path  /home/user/project/clones/my-repo
+# ...
+```
+
+Only defined values are shown. Computed path values are resolved to absolute paths.
+
 ## License
 
 MIT
