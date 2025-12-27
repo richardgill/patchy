@@ -135,4 +135,41 @@ describe("patchy prime", () => {
     expect(result).toSucceed();
     expect(result.stdout).toContain("./repos/my-target/");
   });
+
+  it("should not produce double slashes when paths have trailing slashes", async () => {
+    const ctx = await scenario({
+      rawConfig: {
+        source_repo: "https://github.com/qmk/qmk_firmware.git",
+        clones_dir: "./clones/",
+        patches_dir: "./patches/",
+        base_revision: "0.29.11",
+        target_repo: "qmk_firmware",
+      },
+    });
+
+    const { result } = await ctx.runCli("patchy prime");
+
+    expect(result).toSucceed();
+    expect(result.stdout).not.toContain("//");
+    expect(result.stdout).toContain("./clones/qmk_firmware/");
+    expect(result.stdout).toContain("./patches/");
+  });
+
+  it("should handle multiple trailing slashes", async () => {
+    const ctx = await scenario({
+      rawConfig: {
+        source_repo: "https://github.com/owner/repo.git",
+        clones_dir: "./clones///",
+        patches_dir: "./patches///",
+        base_revision: "main",
+      },
+    });
+
+    const { result } = await ctx.runCli("patchy prime");
+
+    expect(result).toSucceed();
+    expect(result.stdout).not.toContain("//");
+    expect(result.stdout).toContain("./clones/repo/");
+    expect(result.stdout).toContain("./patches/");
+  });
 });

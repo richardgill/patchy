@@ -1,9 +1,9 @@
-import { basename } from "node:path";
+import { basename, join } from "node:path";
 import { DEFAULT_CONFIG_PATH } from "~/cli-fields";
 import type { LocalContext } from "~/context";
 import { loadJsonConfig } from "~/lib/cli-config";
 import { exit } from "~/lib/exit";
-import { formatPathForDisplay } from "~/lib/fs";
+import { formatPathForDisplay, stripTrailingSlashes } from "~/lib/fs";
 import type { PrimeFlags } from "./flags";
 
 type PrimeConfig = {
@@ -41,14 +41,17 @@ const extractRepoName = (sourceRepo: string): string => {
 
 const generateOutput = (config: PrimeConfig): string => {
   const { configPath, patchesDir, clonesDir, repoName } = config;
-  const targetPath = formatPathForDisplay(`${clonesDir}/${repoName}`);
+  const targetPath = formatPathForDisplay(join(clonesDir, repoName));
+  const normalizedPatchesDir = formatPathForDisplay(
+    stripTrailingSlashes(patchesDir),
+  );
 
   return `## Patchy
 
 This project uses \`patchy\` to maintain patches against an upstream repo.
 
 - Config: \`${formatPathForDisplay(configPath)}\` (jsonc)
-- Patches: \`${formatPathForDisplay(patchesDir)}/\`
+- Patches: \`${normalizedPatchesDir}/\`
 - Cloned repo: \`${targetPath}/\`
 
 Key commands:
