@@ -1,5 +1,29 @@
 # patchy-cli
 
+## 0.0.18
+
+### Patch Changes
+
+- [#219](https://github.com/richardgill/patchy/pull/219) [`97ca0c2`](https://github.com/richardgill/patchy/commit/97ca0c28d09b47039bf63dd687edacad1388c772) Thanks [@richardgill](https://github.com/richardgill)! - Add `patchy config get` and `patchy config list` commands for shell-script-friendly config access
+
+- [#216](https://github.com/richardgill/patchy/pull/216) [`5ff9e7b`](https://github.com/richardgill/patchy/commit/5ff9e7ba83518a79476283d1fba120848d83b383) Thanks [@richardgill](https://github.com/richardgill)! - Add `patchy prime` command to output AI context for inclusion in CLAUDE.md
+
+- [#218](https://github.com/richardgill/patchy/pull/218) [`82b513a`](https://github.com/richardgill/patchy/commit/82b513a40d31a4c06048e7cf7899133b1a516f93) Thanks [@richardgill](https://github.com/richardgill)! - Replace `--all` and `--edit` flags with `--auto-commit` enum flag
+
+  **Breaking Changes:**
+
+  - `--all` flag removed, use `--auto-commit=all` instead
+  - `--edit` flag removed, use `--auto-commit=skip-last` instead
+
+  (pre release so doing a patch release)
+
+  **New `--auto-commit` modes:**
+
+  - `all` - Commit all patch sets automatically
+  - `interactive` (default) - Auto-commit intermediate, prompt on last (falls back to `all` if no TTY)
+  - `skip-last` - Auto-commit all except last, leave final uncommitted
+  - `off` - Don't commit anything
+
 ## 0.0.17
 
 ### Patch Changes
