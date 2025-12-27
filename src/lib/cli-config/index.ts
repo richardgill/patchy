@@ -1,3 +1,4 @@
+export { loadJsonConfig } from "./config-file";
 export { loadConfigFromFile } from "./loader";
 export type { ConfigSources } from "./resolver";
 export * from "./type-derivations";

@@ -298,6 +298,22 @@ patchy base              # Interactive
 patchy base abc123def    # Set base_revision to the specified SHA or tag
 ```
 
+### `patchy prime`
+
+Prints a prompt you can include in your `AGENTS.md` / `CLAUDE.md`.
+
+Tell your agent to run:
+```sh
+patchy prime
+```
+
+Or include it directly:
+```sh
+patchy prime >> CLAUDE.md
+```
+
+Outputs a brief description of Patchy, key paths, and essential commands to help AI coding agents understand your project's patch workflow.
+
 ## License
 
 MIT

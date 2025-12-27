@@ -1,15 +1,9 @@
-import { existsSync, readFileSync } from "node:fs";
 import { writeFile } from "node:fs/promises";
-import { resolve } from "node:path";
 import chalk from "chalk";
-import {
-  DEFAULT_CONFIG_PATH,
-  type JsonConfig,
-  jsonConfigSchema,
-} from "~/cli-fields";
 import type { LocalContext } from "~/context";
+import { loadJsonConfig } from "~/lib/cli-config";
 import { exit } from "~/lib/exit";
-import { parseJsonc, updateJsoncField } from "~/lib/jsonc";
+import { updateJsoncField } from "~/lib/jsonc";
 import type { Prompts } from "~/lib/prompts";
 import type { BaseFlags } from "./flags";
 
@@ -25,28 +19,13 @@ export const loadConfig = (
   context: LocalContext,
   flags: BaseFlags,
 ): BaseConfig => {
-  const configPath = resolve(context.cwd, flags.config ?? DEFAULT_CONFIG_PATH);
+  const result = loadJsonConfig(context.cwd, flags.config);
 
-  if (!existsSync(configPath)) {
-    return exit(context, {
-      exitCode: 1,
-      stderr: `Configuration file not found: ${configPath}`,
-    });
+  if (!result.success) {
+    return exit(context, { exitCode: 1, stderr: result.error });
   }
 
-  const content = readFileSync(configPath, "utf8");
-  const parseResult = parseJsonc<JsonConfig>(content);
-
-  if (!parseResult.success) {
-    return exit(context, { exitCode: 1, stderr: parseResult.error });
-  }
-
-  const zodResult = jsonConfigSchema.safeParse(parseResult.json);
-  if (!zodResult.success) {
-    return exit(context, { exitCode: 1, stderr: "Invalid configuration file" });
-  }
-
-  const config = zodResult.data;
+  const { config, configPath, content } = result;
 
   return {
     configPath,

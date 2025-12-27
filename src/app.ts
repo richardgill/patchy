@@ -3,6 +3,7 @@ import { applyCommand } from "./commands/apply/command";
 import { baseCommand } from "./commands/base/command";
 import { generateCommand } from "./commands/generate/command";
 import { initCommand } from "./commands/init/command";
+import { primeCommand } from "./commands/prime/command";
 import { repoRoutes } from "./commands/repo/routes";
 import { VERSION } from "./version";
 
@@ -11,6 +12,7 @@ const routes = buildRouteMap({
     init: initCommand,
     apply: applyCommand,
     generate: generateCommand,
+    prime: primeCommand,
     base: baseCommand,
     repo: repoRoutes,
   },
