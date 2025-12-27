@@ -820,7 +820,7 @@ const other = 2;
 
       const { result } = await runCli(`patchy apply --auto-commit=invalid`);
 
-      expect(result.stderr).toContain(
+      expect(result).toFailWith(
         'Expected "invalid" to be one of (all|interactive|skip-last|off)',
       );
     });
