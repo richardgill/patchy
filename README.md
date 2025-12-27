@@ -260,18 +260,17 @@ Note: `patchy generate` is destructive and will remove any unneeded files in the
 
 ### `patchy apply`
 
-Apply patch files from `patches/` into `target_repo`. Patch sets are applied in alphabetical order, with each patch set committed automatically.
+Apply patch files from `patches/` into `target_repo`. Patch sets are applied in alphabetical order.
 
 ```sh
-patchy apply [--only <patch-set>] [--until <patch-set>] [--all] [--edit] [--target-repo] [--patches-dir] [--dry-run]
+patchy apply [--only <patch-set>] [--until <patch-set>] [--auto-commit=<mode>] [--target-repo] [--patches-dir] [--dry-run]
 ```
 
 | Flag | Description |
 |------|-------------|
 | `--only <name>` | Apply only the specified patch set |
 | `--until <name>` | Apply patch sets up to and including the specified one |
-| `--all` | Commit all patch sets without prompting |
-| `--edit` | Leave the last patch set uncommitted for manual review |
+| `--auto-commit=<mode>` | Control auto-commit behavior: `all` (commit everything), `interactive` (prompt on last, default), `skip-last` (leave last uncommitted), `off` (commit nothing) |
 
 ### `patchy repo reset`
 

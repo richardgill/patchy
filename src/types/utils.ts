@@ -1,13 +1,15 @@
 /** Infer the parsed value type from a stricli flag definition */
 type InferFlagValue<F> = F extends { kind: "boolean" }
   ? boolean
-  : F extends { kind: "parsed"; parse: StringConstructor }
-    ? string
-    : F extends { kind: "parsed"; parse: NumberConstructor }
-      ? number
-      : F extends { kind: "parsed"; parse: (...args: unknown[]) => infer R }
-        ? R
-        : never;
+  : F extends { kind: "enum"; values: readonly (infer T)[] }
+    ? T
+    : F extends { kind: "parsed"; parse: StringConstructor }
+      ? string
+      : F extends { kind: "parsed"; parse: NumberConstructor }
+        ? number
+        : F extends { kind: "parsed"; parse: (...args: unknown[]) => infer R }
+          ? R
+          : never;
 
 /**
  * Derive parsed flag values type from stricli flag definitions.

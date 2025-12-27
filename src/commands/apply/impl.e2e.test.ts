@@ -676,7 +676,7 @@ const other = 2;
         "locked",
       );
 
-      const { result } = await runCli(`patchy apply --all`);
+      const { result } = await runCli(`patchy apply --auto-commit=all`);
 
       expect(result).toFail();
       expect(result.stderr).toContain("Could not commit patch set");
@@ -739,7 +739,7 @@ const other = 2;
       expect(status.some((f) => f === "file2.ts")).toBe(true);
     });
 
-    it("should commit all patch sets with --all flag", async () => {
+    it("should commit all patch sets with --auto-commit=all", async () => {
       const { runCli, commits } = await scenario({
         git: true,
         patches: {
@@ -748,7 +748,9 @@ const other = 2;
         },
       });
 
-      const { result } = await runCli(`patchy apply --all --verbose`);
+      const { result } = await runCli(
+        `patchy apply --auto-commit=all --verbose`,
+      );
 
       expect(result).toSucceed();
       expect(result.stdout).toContain("[001-first]");
@@ -760,7 +762,7 @@ const other = 2;
       expect(commitMessages[1]).toBe("Apply patch set: 001-first");
     });
 
-    it("should leave last patch set uncommitted with --edit flag", async () => {
+    it("should leave last patch set uncommitted with --auto-commit=skip-last", async () => {
       const { runCli, commits, gitStatus } = await scenario({
         git: true,
         patches: {
@@ -769,7 +771,9 @@ const other = 2;
         },
       });
 
-      const { result } = await runCli(`patchy apply --edit --verbose`);
+      const { result } = await runCli(
+        `patchy apply --auto-commit=skip-last --verbose`,
+      );
 
       expect(result).toSucceed();
       expect(result.stdout).toContain("[001-first]");
@@ -783,14 +787,41 @@ const other = 2;
       expect(status.some((f) => f === "file2.ts")).toBe(true);
     });
 
-    it("should fail when both --all and --edit are provided", async () => {
+    it("should leave all patch sets uncommitted with --auto-commit=off", async () => {
+      const { runCli, commits, gitStatus } = await scenario({
+        git: true,
+        patches: {
+          "001-first": { "file1.ts": "content1" },
+          "002-second": { "file2.ts": "content2" },
+        },
+      });
+
+      const { result } = await runCli(
+        `patchy apply --auto-commit=off --verbose`,
+      );
+
+      expect(result).toSucceed();
+      expect(result.stdout).toContain("[001-first]");
+      expect(result.stdout).toContain("[002-second]");
+      expect(result.stdout).toMatch(/skipped.*skipped/s);
+
+      const commitMessages = await commits();
+      expect(commitMessages.some((m) => m.startsWith("Apply patch set:"))).toBe(
+        false,
+      );
+
+      const status = await gitStatus();
+      expect(status.some((f) => f === "file1.ts")).toBe(true);
+      expect(status.some((f) => f === "file2.ts")).toBe(true);
+    });
+
+    it("should reject invalid --auto-commit value", async () => {
       const { runCli } = await scenario();
 
-      const { result } = await runCli(`patchy apply --all --edit`);
+      const { result } = await runCli(`patchy apply --auto-commit=invalid`);
 
-      expect(result).toFail();
-      expect(result.stderr).toContain(
-        "Cannot use both --all and --edit flags together",
+      expect(result).toFailWith(
+        'Expected "invalid" to be one of (all|interactive|skip-last|off)',
       );
     });
 
