@@ -1,5 +1,11 @@
 # patchy-cli
 
+## 0.0.19
+
+### Patch Changes
+
+- [#220](https://github.com/richardgill/patchy/pull/220) [`b47bf7c`](https://github.com/richardgill/patchy/commit/b47bf7c2bcd02fc2eca57cf4c091c0b074b83d03) Thanks [@richardgill](https://github.com/richardgill)! - Fix double slashes in `patchy prime` output when config paths have trailing slashes
+
 ## 0.0.18
 
 ### Patch Changes
