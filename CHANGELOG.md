@@ -1,5 +1,11 @@
 # patchy-cli
 
+## 0.0.21
+
+### Patch Changes
+
+- [#224](https://github.com/richardgill/patchy/pull/224) [`c0e9eab`](https://github.com/richardgill/patchy/commit/c0e9eab8f8ef2e849e9530958695bacfd7a4bb63) Thanks [@richardgill](https://github.com/richardgill)! - Add demo recording setup and improve path display in repo reset command
+
 ## 0.0.20
 
 ### Patch Changes
