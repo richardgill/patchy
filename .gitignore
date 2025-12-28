@@ -6,3 +6,8 @@ coverage
 /e2e/
 plans/
 clones/
+
+# Demo generated files
+demo/.workdir/
+demo/frames/
+demo/demo.gif
