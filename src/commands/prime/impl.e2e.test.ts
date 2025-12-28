@@ -20,9 +20,100 @@ describe("patchy prime", () => {
     expect(result.stdout).toContain("./patchy.json");
     expect(result.stdout).toContain("./my-patches/");
     expect(result.stdout).toContain("./my-clones/my-lib/");
-    expect(result.stdout).toContain("patchy generate");
-    expect(result.stdout).toContain("patchy apply");
-    expect(result.stdout).toContain("patchy repo reset");
+    expect(result.stdout).toContain("patchy generate --patch-set <name>");
+    expect(result.stdout).toContain("patchy apply --auto-commit all");
+    expect(result.stdout).toContain("patchy repo reset --yes");
+  });
+
+  it("should show source_repo when configured", async () => {
+    const ctx = await scenario({
+      config: {
+        source_repo: "https://github.com/owner/my-lib.git",
+        base_revision: "v2.0.0",
+      },
+    });
+
+    const { result } = await ctx.runCli("patchy prime");
+
+    expect(result).toSucceed();
+    expect(result.stdout).toContain(
+      "Source: `https://github.com/owner/my-lib.git`",
+    );
+  });
+
+  it("should show base_revision", async () => {
+    const ctx = await scenario({
+      config: {
+        source_repo: "https://github.com/owner/repo.git",
+        base_revision: "v2.0.0",
+      },
+    });
+
+    const { result } = await ctx.runCli("patchy prime");
+
+    expect(result).toSucceed();
+    expect(result.stdout).toContain("Base revision: `v2.0.0`");
+  });
+
+  it("should default base_revision to main when not specified", async () => {
+    const ctx = await scenario({
+      rawConfig: {
+        source_repo: "https://github.com/owner/repo.git",
+      },
+    });
+
+    const { result } = await ctx.runCli("patchy prime");
+
+    expect(result).toSucceed();
+    expect(result.stdout).toContain("Base revision: `main`");
+  });
+
+  it("should list existing patch sets", async () => {
+    const ctx = await scenario({
+      config: {
+        source_repo: "https://github.com/owner/repo.git",
+        base_revision: "main",
+      },
+      patches: {
+        "001-feature-one": { "file.diff": "diff content" },
+        "002-feature-two": { "other.diff": "other diff" },
+      },
+    });
+
+    const { result } = await ctx.runCli("patchy prime");
+
+    expect(result).toSucceed();
+    expect(result.stdout).toContain("Patch sets:");
+    expect(result.stdout).toContain("- `001-feature-one/`");
+    expect(result.stdout).toContain("- `002-feature-two/`");
+  });
+
+  it("should show (none yet) when no patch sets exist", async () => {
+    const ctx = await scenario({
+      config: {
+        source_repo: "https://github.com/owner/repo.git",
+        base_revision: "main",
+      },
+    });
+
+    const { result } = await ctx.runCli("patchy prime");
+
+    expect(result).toSucceed();
+    expect(result.stdout).toContain("Patch sets:");
+    expect(result.stdout).toContain("(none yet)");
+  });
+
+  it("should not show Source line when source_repo is not configured", async () => {
+    const ctx = await scenario({
+      rawConfig: {
+        base_revision: "main",
+      },
+    });
+
+    const { result } = await ctx.runCli("patchy prime");
+
+    expect(result).toSucceed();
+    expect(result.stdout).not.toContain("Source:");
   });
 
   it("should use default paths when not specified in config", async () => {
@@ -150,7 +241,7 @@ describe("patchy prime", () => {
     const { result } = await ctx.runCli("patchy prime");
 
     expect(result).toSucceed();
-    expect(result.stdout).not.toContain("//");
+    expect(result.stdout).not.toContain(".//");
     expect(result.stdout).toContain("./clones/qmk_firmware/");
     expect(result.stdout).toContain("./patches/");
   });
@@ -168,7 +259,7 @@ describe("patchy prime", () => {
     const { result } = await ctx.runCli("patchy prime");
 
     expect(result).toSucceed();
-    expect(result.stdout).not.toContain("//");
+    expect(result.stdout).not.toContain(".//");
     expect(result.stdout).toContain("./clones/repo/");
     expect(result.stdout).toContain("./patches/");
   });
