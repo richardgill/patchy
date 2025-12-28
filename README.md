@@ -32,7 +32,7 @@ It's opinionated and has [conventions](#patch-file-layout) about how the `.diff`
 1. `patchy init` - sets up config and clones the upstream repo
 2. Make your changes directly in the cloned repo
 3. `patchy generate` - saves your changes as `.diff` files in `./patches/`
-4. `patchy apply` - applies patches back to the repo
+4. `patchy apply` - applies patches back to the cloned repo
 
 Patchy also has commands to: reset your cloned repo, create more clones, switch which SHA or Tag to clone from etc.
 
