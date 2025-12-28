@@ -28,11 +28,11 @@
         "typescript": "=5.9.3",
       },
       "optionalDependencies": {
-        "patchy-cli-darwin-arm64": "=0.0.20",
-        "patchy-cli-darwin-x64": "=0.0.20",
-        "patchy-cli-linux-arm64": "=0.0.20",
-        "patchy-cli-linux-x64": "=0.0.20",
-        "patchy-cli-windows-x64": "=0.0.20",
+        "patchy-cli-darwin-arm64": "=0.0.21",
+        "patchy-cli-darwin-x64": "=0.0.21",
+        "patchy-cli-linux-arm64": "=0.0.21",
+        "patchy-cli-linux-x64": "=0.0.21",
+        "patchy-cli-windows-x64": "=0.0.21",
       },
       "peerDependencies": {
         "typescript": ">=5.0.4",
