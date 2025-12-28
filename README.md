@@ -27,7 +27,16 @@ Patchy helps you **generate** and **apply** `.diff` patches for a git repo you'v
 
 It's opinionated and has [conventions](#patch-file-layout) about how the `.diff` files are stored.
 
-## Example
+## How it works
+
+1. `patchy init` - sets up config and clones the upstream repo
+2. Make your changes directly in the cloned repo
+3. `patchy generate` - saves your changes as `.diff` files in `./patches/`
+4. `patchy apply` - applies patches back to the repo
+
+Patchy also has commands to: reset your cloned repo, create more clones, switch which SHA or Tag to clone from etc.
+
+## Detailed walkthrough
 
 Starting a patch-based fork of https://github.com/octocat/spoon-knife.
 

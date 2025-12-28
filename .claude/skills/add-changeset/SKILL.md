@@ -9,10 +9,12 @@ First Todo list item: Find the code in this PR to get context.
 
 ## Instructions
 
-1. If the user does not specify `patch`, `minor`, or `major`, use AskUserQuestion to prompt them:
+1. If the user does not specify one of `patch`, `minor`, or `major`, use AskUserQuestion to prompt them:
    - **patch**: Bug fixes, small changes (backwards compatible)
    - **minor**: New features (backwards compatible)
    - **major**: Breaking changes
+
+Only prompt if they do not provide it
 
 2. Create a changeset file in `.changeset/` directory with a descriptive name based on the feature or change (e.g., `add-dark-mode.md`, `fix-login-bug.md`, `rename-config-fields.md`)
 

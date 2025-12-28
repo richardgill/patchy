@@ -1,6 +1,13 @@
 {
   "permissions": {
-    "allow": ["Bash(bd:*)", "Skill(add-changeset)"],
+    "allow": [
+      "Bash(bd:*)",
+      "Skill(add-changeset)",
+      "WebFetch(domain:mise-versions.jdx.dev)",
+      "Bash(./run-demo.sh)",
+      "Bash(numfmt:*)",
+      "Bash(vhs:*)"
+    ],
     "additionalDirectories": ["/home/rich/code/reference-repos/opencode"]
   }
 }
