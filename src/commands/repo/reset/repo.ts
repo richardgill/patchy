@@ -3,16 +3,18 @@ import chalk from "chalk";
 import { CheckRepoActions } from "simple-git";
 import type { LocalContext } from "~/context";
 import { exit } from "~/lib/exit";
+import { toRelativeDisplayPath } from "~/lib/fs";
 import { createGitClient } from "~/lib/git";
 
 export const ensureValidGitRepo = async (
   context: LocalContext,
   repoDir: string,
 ): Promise<void> => {
+  const displayPath = toRelativeDisplayPath(repoDir);
   if (!existsSync(repoDir)) {
     return exit(context, {
       exitCode: 1,
-      stderr: chalk.red(`Repository directory does not exist: ${repoDir}`),
+      stderr: chalk.red(`Repository directory does not exist: ${displayPath}`),
     });
   }
 
@@ -21,7 +23,7 @@ export const ensureValidGitRepo = async (
   if (!isRepo) {
     return exit(context, {
       exitCode: 1,
-      stderr: chalk.red(`Not a Git repository: ${repoDir}`),
+      stderr: chalk.red(`Not a Git repository: ${displayPath}`),
     });
   }
 };

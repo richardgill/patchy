@@ -55,5 +55,10 @@ describe("fs-test-utils", () => {
 
       expect(stabilizeTempDir(input)).toBe(expected);
     });
+
+    it("should handle relative temp paths", () => {
+      const input = "e2e/tmp/test-abc123-def456/repos/main";
+      expect(stabilizeTempDir(input)).toBe("<TEST_DIR>/repos/main");
+    });
   });
 });

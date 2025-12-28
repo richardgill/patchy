@@ -10,4 +10,8 @@ clones/
 # Demo generated files
 demo/.workdir/
 demo/frames/
-demo/demo.gif
+demo/*.gif
+demo/*.webm
+demo/*.webp
+demo/*.mp4
+demo/*.txt

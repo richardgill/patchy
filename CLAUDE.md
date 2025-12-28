@@ -32,6 +32,8 @@ This codebase has three types of tests:
 
 E2E tests are organized 1:1 with commands - each command has its own e2e test file in the command's directory (e.g., `src/commands/init/impl.e2e.test.ts`).
 
+**Always write tests for new functions.** Find the appropriate type of test and test file (or create one) and add coverage. If in doubt - E2E is the preferred type of test.
+
 ## Releasing
 
 Use add changeset skill

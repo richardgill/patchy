@@ -10,6 +10,7 @@ import {
   isAbsolutePath,
   isPathWithinDir,
   resolvePath,
+  toRelativeDisplayPath,
 } from "./fs";
 
 describe("findAvailableDirName", () => {
@@ -200,5 +201,29 @@ describe("getSortedFolders", () => {
     mkdirSync(tmpDir, { recursive: true });
 
     expect(getSortedFolders(tmpDir)).toEqual([]);
+  });
+});
+
+describe("toRelativeDisplayPath", () => {
+  const cwd = process.cwd();
+
+  it("returns relative path for subdirectory", () => {
+    expect(toRelativeDisplayPath(path.join(cwd, "clones/repo"))).toBe(
+      "clones/repo",
+    );
+  });
+
+  it("returns '.' for current directory", () => {
+    expect(toRelativeDisplayPath(cwd)).toBe(".");
+  });
+
+  it("returns relative path with .. for parent directories", () => {
+    const parentPath = path.dirname(cwd);
+    expect(toRelativeDisplayPath(parentPath)).toBe("..");
+  });
+
+  it("returns relative path for sibling directories", () => {
+    const siblingPath = path.join(path.dirname(cwd), "sibling");
+    expect(toRelativeDisplayPath(siblingPath)).toBe("../sibling");
   });
 });

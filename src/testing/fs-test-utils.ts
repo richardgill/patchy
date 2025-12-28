@@ -56,11 +56,15 @@ export const writeFileIn = async (
 
 // Replace paths up to and including tmp/test-UUID directory with <TEST_DIR>
 // e.g. "/home/user/project/e2e/tmp/test-abc123/repos" → "<TEST_DIR>/repos"
+// e.g. "e2e/tmp/test-abc123/repos" → "<TEST_DIR>/repos" (relative paths)
 export const stabilizeTempDir = (
   str: string | undefined,
 ): string | undefined => {
   if (!str) return str;
-  return str.replace(/\/[^\s]*\/(?:e2e\/)?tmp\/test-[a-f0-9-]+/g, "<TEST_DIR>");
+  return str.replace(
+    /(?:\/[^\s]*\/)?(?:e2e\/)?tmp\/test-[a-f0-9-]+/g,
+    "<TEST_DIR>",
+  );
 };
 
 // biome-ignore lint/suspicious/noExplicitAny: Generic utility function needs to accept any JSON-serializable value

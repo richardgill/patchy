@@ -1,6 +1,7 @@
 import chalk from "chalk";
 import type { LocalContext } from "~/context";
 import { exit } from "~/lib/exit";
+import { toRelativeDisplayPath } from "~/lib/fs";
 import { hardResetRepo } from "~/lib/git";
 import { canPrompt, createPrompts } from "~/lib/prompts";
 import { loadAndValidateConfig } from "./config";
@@ -13,15 +14,16 @@ export default async function (
 ): Promise<void> {
   const config = loadAndValidateConfig(this, flags);
   await ensureValidGitRepo(this, config.repoDir);
+  const displayPath = toRelativeDisplayPath(config.repoDir);
 
   if (config.verbose) {
-    this.process.stdout.write(`Repository directory: ${config.repoDir}\n`);
+    this.process.stdout.write(`Repository directory: ${displayPath}\n`);
     this.process.stdout.write(`Base revision: ${config.baseRevision}\n`);
   }
 
   if (config.dryRun) {
     this.process.stdout.write(
-      `[DRY RUN] Would hard reset repository to ${config.baseRevision}: ${config.repoDir}\n`,
+      `[DRY RUN] Would hard reset repository to ${config.baseRevision}: ${displayPath}\n`,
     );
     return;
   }
@@ -36,7 +38,7 @@ export default async function (
 
     const prompts = createPrompts(this);
     const confirmed = await prompts.confirm({
-      message: `This will reset ${config.repoDir} to ${config.baseRevision}, discarding all commits, uncommitted changes, and untracked files. Continue?`,
+      message: `This will reset ${displayPath} to ${config.baseRevision}, discarding all commits, uncommitted changes, and untracked files. Continue?`,
       initialValue: false,
     });
 
@@ -49,7 +51,7 @@ export default async function (
     await hardResetRepo(config.repoDir, config.baseRevision);
     this.process.stdout.write(
       chalk.green(
-        `Successfully reset repository to ${config.baseRevision}: ${config.repoDir}\n`,
+        `Successfully reset repository to ${config.baseRevision}: ${displayPath}\n`,
       ),
     );
   } catch (error) {
