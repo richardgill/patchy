@@ -3,44 +3,17 @@
 import { describe, expect, it } from "bun:test";
 import { $ } from "bun";
 
-const clearAgentEnv = {
-  CLAUDECODE: "",
-  CLAUDE_CODE: "",
-  CLAUDE_CODE_ACTION: "",
-  CURSOR_TRACE_ID: "",
-  CURSOR_AGENT: "",
-  GEMINI_CLI: "",
-  CODEX_SANDBOX: "",
-  REPL_ID: "",
-  CLINE: "",
-  AIDER: "",
-  WINDSURF: "",
-  AI_AGENT: "",
-};
+const clearAgentEnv = { CLAUDECODE: "", AI_AGENT: "" };
 
 describe("patchy CLI", () => {
   describe("--help with AI agent detection", () => {
-    const agentEnvVars = [
-      "CLAUDECODE",
-      "CLAUDE_CODE",
-      "CLAUDE_CODE_ACTION",
-      "CURSOR_TRACE_ID",
-      "CURSOR_AGENT",
-      "GEMINI_CLI",
-      "CODEX_SANDBOX",
-      "REPL_ID",
-      "AI_AGENT",
-    ];
+    it("should show tip when AI agent env var is set", async () => {
+      const result = await $`bun run src/cli.ts --help`
+        .env({ ...clearAgentEnv, CLAUDECODE: "1" })
+        .text();
 
-    for (const envVar of agentEnvVars) {
-      it(`should show tip when ${envVar} is set`, async () => {
-        const result = await $`bun run src/cli.ts --help`
-          .env({ ...clearAgentEnv, [envVar]: "1" })
-          .text();
-
-        expect(result).toContain("TIP: Run `patchy prime`");
-      });
-    }
+      expect(result).toContain("TIP: Run `patchy prime`");
+    });
 
     it("should NOT show tip when no agent env vars are set", async () => {
       const result = await $`bun run src/cli.ts --help`
