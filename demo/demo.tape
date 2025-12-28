@@ -1,4 +1,5 @@
-# Patchy Demo - Full Lifecycle
+# Patchy Demo - 15 Second Version
+# Shows: patches exist → upgrade upstream → reapply → verify
 # Run with: ./run-demo.sh
 
 Output demo.webm
@@ -7,10 +8,10 @@ Output demo.webm
 Set Shell bash
 Set FontSize 18
 Set Width 900
-Set Height 550
+Set Height 500
 Set Padding 20
 Set Theme "Catppuccin Mocha"
-Set TypingSpeed 40ms
+Set TypingSpeed 35ms
 Set CursorBlink false
 
 # Setup: cd to workdir and configure aliases
@@ -20,121 +21,69 @@ Enter
 Sleep 500ms
 Show
 
-# === SECTION 1: Show project state ===
-Sleep 1s
-Type "# Patchy: maintain patches against upstream repos"
+# Beat 0: Show patches structure
 Sleep 300ms
+Type "# Store changes as patches"
+Sleep 200ms
 Enter
-Sleep 1.5s
-
-Type "cat patchy.json"
-Sleep 300ms
-Enter
-Sleep 2.5s
-
-Type "patchy repo clone"
-Sleep 300ms
-Enter
-Sleep 2s
 Enter
 Sleep 500ms
-
-Type "tree clones/patchy-demo-repo/"
-Sleep 300ms
-Enter
-Sleep 2.5s
-Enter
-Sleep 500ms
-
-# === SECTION 2: Make a change ===
-Type "clear"
-Enter
-Sleep 500ms
-
-Type "# Make changes directly in cloned repo"
-Sleep 300ms
-Enter
-Sleep 1s
-
-Type "cat clones/patchy-demo-repo/scripts/build.sh"
-Sleep 300ms
-Enter
-Sleep 1.5s
-
-Type `echo 'echo "Custom build step"' >> clones/patchy-demo-repo/scripts/build.sh`
-Sleep 300ms
-Enter
-Sleep 1s
-
-# === SECTION 3: Generate patch ===
-Type "patchy generate"
-Sleep 300ms
-Enter
-Sleep 800ms
-
-# Prompt: new patch set name
-Type "custom-build"
-Sleep 300ms
-Enter
-Sleep 2s
-
-# === SECTION 4: Show the patch (hero shot) ===
-Type "clear"
-Enter
-Sleep 500ms
-
-Type "# Patches are stored in numbered changesets, mirroring the folder structure"
-Sleep 300ms
-Enter
-Sleep 1s
 
 Type "tree patches/"
-Sleep 300ms
-Enter
-Sleep 1.5s
-
-Type "bat patches/001-custom-build/scripts/build.sh.diff"
-Sleep 300ms
-Enter
-Sleep 3.5s
-
-# === SECTION 5: Upgrade upstream ===
-Type "clear"
-Enter
-Sleep 500ms
-
-Type "# Lets reapply our changes to a newer tag of the upstream repo"
-Sleep 300ms
-Enter
-Sleep 1s
-
-Type "patchy base v1.1.0"
-Sleep 300ms
-Enter
-Sleep 1.5s
-
-Type "patchy repo reset --yes"
-Sleep 300ms
-Enter
-Sleep 1.5s
-
-# === SECTION 6: Re-apply patches (the magic) ===
-Type "patchy apply --all"
-Sleep 300ms
+Sleep 200ms
 Enter
 Sleep 2s
 
-# === SECTION 7: Payoff - prove it worked ===
-Type "clear"
+# Beat 1: Change upstream base
+Ctrl+l
+Sleep 300ms
+
+Type "# Change the upstream base to a new tag"
+Sleep 200ms
+Enter
 Enter
 Sleep 500ms
 
-Type "# Our custom changes have been applied to the freshly cloned repo"
-Sleep 300ms
+Type "patchy base v1.1.0"
+Sleep 200ms
 Enter
-Sleep 1s
+Sleep 1.2s
+
+# Beat 2: Reset repo
+Ctrl+l
+Sleep 300ms
+
+Type "# Reset repo"
+Sleep 200ms
+Enter
+Enter
+Sleep 500ms
+
+Type "patchy repo reset --yes"
+Sleep 200ms
+Enter
+Sleep 1.2s
+
+# Beat 3: Reapply patches
+Ctrl+l
+Sleep 300ms
+
+Type "# Reapply patches against new base"
+Sleep 200ms
+Enter
+Enter
+Sleep 500ms
+
+Type "patchy apply --all"
+Sleep 200ms
+Enter
+Sleep 1.5s
+
+# Beat 4: Payoff
+Ctrl+l
+Sleep 300ms
 
 Type "cat clones/patchy-demo-repo/scripts/build.sh"
-Sleep 300ms
+Sleep 200ms
 Enter
-Sleep 4s
+Sleep 3.5s
