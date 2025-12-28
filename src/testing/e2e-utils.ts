@@ -1,6 +1,5 @@
 import type { Readable, Writable } from "node:stream";
-import { run } from "@stricli/core";
-import { app } from "~/app";
+import { runCli as runCliEntrypoint } from "~/cli";
 import type { LocalContext } from "~/context";
 import { stabilizeTempDir } from "./fs-test-utils";
 import {
@@ -69,7 +68,7 @@ export const runCli = async (
   };
 
   try {
-    await run(app, args, context);
+    await runCliEntrypoint(args, context);
   } catch (error) {
     if (error instanceof MockProcessExit) {
       // Expected exit - exitCode already set
