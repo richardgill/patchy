@@ -1,5 +1,11 @@
 # patchy-cli
 
+## 0.0.20
+
+### Patch Changes
+
+- [#222](https://github.com/richardgill/patchy/pull/222) [`aa23144`](https://github.com/richardgill/patchy/commit/aa23144c18558e03c316795f3aebe97096bdaa64) Thanks [@richardgill](https://github.com/richardgill)! - Show `patchy prime` tip for AI agents when running `--help`
+
 ## 0.0.19
 
 ### Patch Changes
