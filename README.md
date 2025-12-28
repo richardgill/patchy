@@ -19,7 +19,7 @@ A CLI for generating and applying patches to git repositories.
 
 A traditional fork means maintaining a separate repository or long-lived branch. Over time, your history diverges from upstream, which can make updates painful.
 
-With patches, you store changes as `.diff` files alongside the upstream repo. You can inspect them, edit them, and apply them to a fresh clone of the repo.
+With patches, you store your changes as `.diff` files. You can inspect them, edit them, and apply them to a fresh clone of the repo.
 
 ## What is Patchy?
 
