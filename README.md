@@ -1,6 +1,6 @@
 <p align="center">
   <a href="https://github.com/richardgill/patchy">
-    <img width="180" src="./assets/logo.png" alt="Patchy logo">
+    <img width="120" src="./assets/logo.png" alt="Patchy logo">
   </a>
 </p>
 <br/>
@@ -15,123 +15,43 @@
 
 A CLI for generating and applying patches to git repositories.
 
-## Patches vs forks
+## Why Patchy?
 
-A traditional fork means maintaining a separate repository or long-lived branch. Over time, your history diverges from upstream, which can make updates painful.
+For long-lived git forks with no plans to merge upstream:
 
-With patches, you store your changes as `.diff` files. You can inspect them, edit them, and apply them to a fresh clone of the repo.
+- A **git fork** stores your changes as commits.
+- **Patches** store them as `.diff`
 
-## What is Patchy?
+Patch files are a clean way to store long-lived changes - human-readable, easy to review and version. But managing them can be cumbersome.
 
-Patchy helps you **generate** and **apply** `.diff` patches for a git repo you've cloned on your machine.
-
-It's opinionated and has [conventions](#patch-file-layout) about how the `.diff` files are stored.
+Patchy makes managing patches easy: make changes to a clone → save them as patches → reapply anytime.
 
 ## How it works
 
-1. `patchy init` - sets up config and clones the upstream repo
-2. Make your changes directly in the cloned repo
-3. `patchy generate` - saves your changes as `.diff` files in `./patches/`
-4. `patchy apply` - applies patches back to the cloned repo
-
-Patchy also has commands to: reset your cloned repo, create more clones, switch which SHA or Tag to clone from etc.
-
-## Detailed walkthrough
-
-Starting a patch-based fork of https://github.com/octocat/spoon-knife.
-
-### Setup Patchy
-
-Create a folder for the fork: `mkdir spoon-knife-fork && cd spoon-knife-fork`
-
-- [Install Patchy](#installation)
-- Run `patchy init`
-  - press enter to select all the default options
-
-`patchy init` creates your config: `./patchy.json` ([full reference](#patchyjson-reference))
-```json5
-{
-  "source_repo": "https://github.com/octocat/spoon-knife",
-  "patches_dir": "./patches/",
-  "clones_dir": "./clones/",
-  "target_repo": "spoon-knife",
-  "base_revision": "d0dd1f61b33d64e29d8bc1372a94ef6a2fee76a9",
-  "upstream_branch": "main"
-}
-```
-
-`patchy init` also creates an empty `./patches` folder and clones the spoon-knife repo into `./clones`:
+`patchy init` sets up your project:
 
 ```
-./
-├── patches/
+├── patchy.json              ← config (source: github.com/org/repo, base: v2.1.0)
 ├── clones/
-│   └── spoon-knife/
-│       └── path/to/existingFile.txt
-└── patchy.json
+│   └── upstream-repo/       ← a clone of the source repo - your working copy
+└── patches/                 ← empty for now - your patches live here
 ```
 
-### Make changes to the cloned repo
+The workflow:
 
-We can now make changes directly in the cloned spoon-knife repo:
-
-```bash
-echo "edit existing file" >> clones/spoon-knife/path/to/existingFile.txt 
-echo "new file" > clones/spoon-knife/path/to/newFile.txt 
-```
-
-### Generate patches:
-
-To generate the patches for the changes run `patchy generate`:
-
-Patchy will prompt you to create your first **patch set**, let's name it: 'first-patch-set'
+1. Make changes directly in `clones/upstream-repo/`
+2. Run `patchy generate` to generate patches:
 
 ```
-./
-├── clones/
-│   └── spoon-knife/
-│       ├── path/to/existingFile.txt
-│       └── path/to/newFile.txt
-├── patches/
-│   └── 001-first-patch-set/ (created)
-│       ├── path/to/existingFile.txt.diff (generated)
-│       └── path/to/newFile.txt (generated)
-└── patchy.json
+patches/
+└── 001-feature-name/
+    ├── src/file.ts.diff     ← edits to existing files
+    └── src/newFile.ts       ← new files (no .diff suffix)
 ```
 
-- **Edits** are stored as `.diff` files e.g. `existingFile.txt.diff`.
-- **New files** are copied as regular files e.g. `newFile.txt` (easier to inspect and edit directly). 
+3. Run `patchy apply` to reapply your patches to `clones/upstream-repo/` anytime
 
-### Reapplying patches:
-
-Reset the current upstream repo with `patchy repo reset`, which will reset everything to `base_revision`:
-
-```
-./
-├── clones/
-│   └── spoon-knife/  <<< reset
-│       ├── path/to/existingFile.txt
-├── patches/
-│   └── 001-first-patch-set/
-│       ├── path/to/existingFile.txt.diff
-│       └── path/to/newFile.txt
-└── patchy.json
-```
-
-Apply the patches back to the cloned repo with: `patchy apply`
-
-```
-./
-├── clones/
-│   └── spoon-knife/
-│       ├── path/to/existingFile.txt (modified)
-│       └── path/to/newFile.txt (added)
-├── patches/
-│   └── 001-first-patch-set/
-│       ├── path/to/existingFile.txt.diff
-│       └── path/to/newFile.txt
-└── patchy.json
-```
+See the [example walkthrough](./docs/example.md) for a step-by-step guide.
 
 ## Getting started 
 
@@ -236,6 +156,8 @@ patches/
     └── patchy-post-apply  # runs after patches
 ```
 
+Patch sets support scripts without diffs, enabling pure automation steps.
+
 ### Hook execution
 
 - Hooks run with `cwd` set to `target_repo`
@@ -267,6 +189,8 @@ If `--patch-set` is not provided (and not set via env/config), prompts to select
 
 Note: `patchy generate` is destructive and will remove any unneeded files in the patch set directory.
 
+---
+
 ### `patchy apply`
 
 Apply patch files from `patches/` into `target_repo`. Patch sets are applied in alphabetical order.
@@ -279,7 +203,25 @@ patchy apply [--only <patch-set>] [--until <patch-set>] [--auto-commit=<mode>] [
 |------|-------------|
 | `--only <name>` | Apply only the specified patch set |
 | `--until <name>` | Apply patch sets up to and including the specified one |
-| `--auto-commit=<mode>` | Control auto-commit behavior: `all` (commit everything), `interactive` (prompt on last, default), `skip-last` (leave last uncommitted), `off` (commit nothing) |
+| `--auto-commit=<mode>` | Control auto-commit behavior (see below) |
+
+#### Auto-commit behavior
+
+Each patch set creates a single commit with message `Apply patch set: <name>`. The `--auto-commit` flag controls when commits happen:
+
+| Mode | Behavior |
+|------|----------|
+| `interactive` (default) | Commits all patch sets automatically, prompts for the last one |
+| `all` | Commits every patch set immediately after applying |
+| `skip-last` | Commits all except the last patch set |
+| `off` | No commits are made |
+
+**Notes:**
+- In non-interactive environments (e.g., CI), `interactive` mode auto-commits everything
+- Commits are skipped if any patch in the set fails to apply
+- `--dry-run` skips all commits
+
+---
 
 ### `patchy repo reset`
 
@@ -289,6 +231,8 @@ Hard reset the Git working tree of `target_repo` to `base_revision`. Discards al
 patchy repo reset [--base-revision] [--target-repo]
 ```
 
+---
+
 ### `patchy repo clone`
 
 Clone a repository into a subdirectory of `clones_dir` and checkout `base_revision`. The target directory is derived from the repo name.
@@ -296,6 +240,8 @@ Clone a repository into a subdirectory of `clones_dir` and checkout `base_revisi
 ```sh
 patchy repo clone [--source-repo] [--clones-dir] [--base-revision]
 ```
+
+---
 
 ### `patchy base [revision]`
 
@@ -305,6 +251,8 @@ View or update the `base_revision` in config.
 patchy base              # Interactive
 patchy base abc123def    # Set base_revision to the specified SHA or tag
 ```
+
+---
 
 ### `patchy prime`
 
@@ -321,6 +269,8 @@ patchy prime >> CLAUDE.md
 ```
 
 Outputs a brief description of Patchy, key paths, and essential commands to help AI coding agents understand your project's patch workflow.
+
+---
 
 ### `patchy config get <key>`
 
@@ -353,6 +303,8 @@ patchy config get verbose             # false
 - Unknown keys exit with code 1
 - Unset raw keys exit with code 1
 - Unset computed keys (e.g., `patch_set_path` when `patch_set` is not set) output an empty line
+
+---
 
 ### `patchy config list`
 
