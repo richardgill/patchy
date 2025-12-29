@@ -1,5 +1,11 @@
 # patchy-cli
 
+## 0.0.22
+
+### Patch Changes
+
+- [#227](https://github.com/richardgill/patchy/pull/227) [`04e1c22`](https://github.com/richardgill/patchy/commit/04e1c224adf2c3fb55730f69ad739f8802bc745f) Thanks [@richardgill](https://github.com/richardgill)! - Clarify in README that patch sets can contain only scripts without diffs
+
 ## 0.0.21
 
 ### Patch Changes
