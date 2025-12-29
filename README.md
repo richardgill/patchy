@@ -189,6 +189,8 @@ If `--patch-set` is not provided (and not set via env/config), prompts to select
 
 Note: `patchy generate` is destructive and will remove any unneeded files in the patch set directory.
 
+---
+
 ### `patchy apply`
 
 Apply patch files from `patches/` into `target_repo`. Patch sets are applied in alphabetical order.
@@ -203,6 +205,8 @@ patchy apply [--only <patch-set>] [--until <patch-set>] [--auto-commit=<mode>] [
 | `--until <name>` | Apply patch sets up to and including the specified one |
 | `--auto-commit=<mode>` | Control auto-commit behavior: `all` (commit everything), `interactive` (prompt on last, default), `skip-last` (leave last uncommitted), `off` (commit nothing) |
 
+---
+
 ### `patchy repo reset`
 
 Hard reset the Git working tree of `target_repo` to `base_revision`. Discards all local changes and patch commits.
@@ -210,6 +214,8 @@ Hard reset the Git working tree of `target_repo` to `base_revision`. Discards al
 ```sh
 patchy repo reset [--base-revision] [--target-repo]
 ```
+
+---
 
 ### `patchy repo clone`
 
@@ -219,6 +225,8 @@ Clone a repository into a subdirectory of `clones_dir` and checkout `base_revisi
 patchy repo clone [--source-repo] [--clones-dir] [--base-revision]
 ```
 
+---
+
 ### `patchy base [revision]`
 
 View or update the `base_revision` in config.
@@ -227,6 +235,8 @@ View or update the `base_revision` in config.
 patchy base              # Interactive
 patchy base abc123def    # Set base_revision to the specified SHA or tag
 ```
+
+---
 
 ### `patchy prime`
 
@@ -243,6 +253,8 @@ patchy prime >> CLAUDE.md
 ```
 
 Outputs a brief description of Patchy, key paths, and essential commands to help AI coding agents understand your project's patch workflow.
+
+---
 
 ### `patchy config get <key>`
 
@@ -275,6 +287,8 @@ patchy config get verbose             # false
 - Unknown keys exit with code 1
 - Unset raw keys exit with code 1
 - Unset computed keys (e.g., `patch_set_path` when `patch_set` is not set) output an empty line
+
+---
 
 ### `patchy config list`
 
