@@ -82,6 +82,12 @@ export default async function (
       baseRevision: config.base_revision,
     });
 
+    if (result.errors.length > 0) {
+      stats.push(result);
+      reportResults({ context: this, stats, dryRun: config.dry_run });
+      return;
+    }
+
     const commitResult = await commitPatchSetIfNeeded({
       context: this,
       repoDir: config.absoluteTargetRepo,
@@ -90,7 +96,6 @@ export default async function (
       verbose: config.verbose,
       isLastPatchSet: isLast,
       dryRun: config.dry_run,
-      hasErrors: result.errors.length > 0,
     });
     if (commitResult.cancelled) {
       return exit(this, { exitCode: 1 });

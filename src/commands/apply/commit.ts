@@ -92,7 +92,6 @@ export const commitPatchSetIfNeeded = async (params: {
   verbose: boolean;
   isLastPatchSet: boolean;
   dryRun: boolean;
-  hasErrors: boolean;
 }): Promise<{ committed: boolean; cancelled?: boolean }> => {
   const {
     context,
@@ -102,9 +101,8 @@ export const commitPatchSetIfNeeded = async (params: {
     verbose,
     isLastPatchSet,
     dryRun,
-    hasErrors,
   } = params;
-  if (dryRun || hasErrors) {
+  if (dryRun) {
     return { committed: false };
   }
 

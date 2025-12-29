@@ -1151,4 +1151,81 @@ const other = 2;
       expect(result.stdout).toContain("ENV_PREFIX_HOOK");
     });
   });
+
+  describe("error handling", () => {
+    it("should stop applying subsequent patches when a diff fails", async () => {
+      const { runCli, fileContent, exists, commits } = await scenario({
+        git: true,
+        targetFiles: {
+          "existing.ts": "const original = 1;\n",
+        },
+        patches: {
+          "001-bad-diff": {
+            "existing.ts.diff": `--- a/existing.ts
++++ b/existing.ts
+@@ -1 +1 @@
+-const WRONG_CONTEXT = 1;
++const patched = 1;
+`,
+          },
+          "002-should-not-apply": {
+            "new-file.ts": "this should not be created",
+          },
+        },
+      });
+
+      const { result } = await runCli(`patchy apply --auto-commit=all`);
+
+      expect(result).toFail();
+      expect(result.stderr).toContain("Patch failed to apply");
+      expect(result.stderr).toContain("existing.ts.diff");
+      expect(fileContent("existing.ts")).toBe("const original = 1;\n");
+      expect(exists("new-file.ts")).toBe(false);
+
+      const commitMessages = await commits();
+      expect(commitMessages.some((m) => m.startsWith("Apply patch set:"))).toBe(
+        false,
+      );
+    });
+
+    it("should not commit failed patchset changes mixed with subsequent patchset", async () => {
+      const { runCli, exists, commits, gitStatus } = await scenario({
+        git: true,
+        targetFiles: {
+          "existing.ts": "const original = 1;\n",
+        },
+        patches: {
+          "001-partial-fail": {
+            "good-file.ts": "content from 001",
+            "existing.ts.diff": `--- a/existing.ts
++++ b/existing.ts
+@@ -1 +1 @@
+-const WRONG_CONTEXT = 1;
++const patched = 1;
+`,
+          },
+          "002-second": {
+            "second-file.ts": "content from 002",
+          },
+        },
+      });
+
+      const { result } = await runCli(`patchy apply --auto-commit=all`);
+
+      expect(result).toFail();
+      expect(result.stderr).toContain("Patch failed to apply");
+
+      expect(exists("good-file.ts")).toBe(true);
+      expect(exists("second-file.ts")).toBe(false);
+
+      const status = await gitStatus();
+      expect(status).toContain("good-file.ts");
+
+      const commitMessages = await commits();
+      expect(commitMessages.some((m) => m.includes("001-partial-fail"))).toBe(
+        false,
+      );
+      expect(commitMessages.some((m) => m.includes("002-second"))).toBe(false);
+    });
+  });
 });
