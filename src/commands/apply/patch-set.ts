@@ -9,6 +9,13 @@ import {
   type HookInfo,
   validateHookPermissions,
 } from "~/lib/hooks";
+import {
+  BULLET,
+  CHECK_MARK,
+  CROSS_MARK,
+  TREE_BRANCH,
+  TREE_CORNER,
+} from "~/lib/symbols";
 import type { ApplyFlags } from "./flags";
 import { applyPatch, collectPatchToApplys } from "./patch";
 
@@ -80,7 +87,7 @@ const runHook = async (
   params: RunHookParams,
 ): Promise<{ success: true } | { success: false; error: string }> => {
   const { hook, dryRun, repoDir, hookEnv, context, isLast } = params;
-  const prefix = isLast ? "  \u2514 " : "  \u251C ";
+  const prefix = isLast ? `  ${TREE_CORNER} ` : `  ${TREE_BRANCH} `;
 
   if (dryRun) {
     context.process.stdout.write(`${prefix}${hook.name} (skip)\n`);
@@ -168,7 +175,7 @@ export const applySinglePatchSet = async (
   const errors: Array<{ file: string; error: string }> = [];
 
   // Print patch set header
-  context.process.stdout.write(`\u25CF ${patchSetName}\n`);
+  context.process.stdout.write(`${BULLET} ${patchSetName}\n`);
 
   // Run pre-apply hook
   if (preHook) {
@@ -190,19 +197,14 @@ export const applySinglePatchSet = async (
     for (const patchFile of patchFiles) {
       const suffix = patchFile.type === "copy" ? " (new)" : "";
       context.process.stdout.write(
-        `  \u251C ${patchFile.relativePath}${suffix}\n`,
+        `  ${TREE_BRANCH} ${patchFile.relativePath}${suffix}\n`,
       );
     }
   }
 
   for (const patchFile of patchFiles) {
     if (!dryRun) {
-      const result = await applyPatch(
-        patchFile,
-        false, // Don't print individual file output in applyPatch
-        fuzzFactor,
-        context.process.stdout as NodeJS.WriteStream,
-      );
+      const result = await applyPatch({ patchFile, fuzzFactor });
       if (!result.success && result.error) {
         errors.push({ file: patchFile.relativePath, error: result.error });
       }
@@ -213,11 +215,11 @@ export const applySinglePatchSet = async (
   const fileWord = patchFiles.length === 1 ? "file" : "files";
   if (errors.length > 0) {
     context.process.stdout.write(
-      `  \u251C applied ${patchFiles.length} ${fileWord} \u2716\n`,
+      `  ${TREE_BRANCH} applied ${patchFiles.length} ${fileWord} ${CROSS_MARK}\n`,
     );
   } else {
     context.process.stdout.write(
-      `  \u251C applied ${patchFiles.length} ${fileWord} \u2714\n`,
+      `  ${TREE_BRANCH} applied ${patchFiles.length} ${fileWord} ${CHECK_MARK}\n`,
     );
   }
 

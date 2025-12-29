@@ -2,6 +2,7 @@ import type { LocalContext } from "~/context";
 import { exit } from "~/lib/exit";
 import { createGitClient, isGitRepo } from "~/lib/git";
 import { canPrompt, createPrompts } from "~/lib/prompts";
+import { CHECK_MARK, TREE_CORNER } from "~/lib/symbols";
 import type { AutoCommitMode } from "./flags";
 
 type CommitAction = "commit" | "prompt" | "skip";
@@ -51,7 +52,7 @@ const commitPatchSet = async (
 ): Promise<{ success: boolean; error?: string }> => {
   if (!isGitRepo(repoDir)) {
     // Not a git repo, still show success
-    stdout.write("  \u2514 committed \u2714\n");
+    stdout.write(`  ${TREE_CORNER} committed ${CHECK_MARK}\n`);
     return { success: true };
   }
 
@@ -59,7 +60,7 @@ const commitPatchSet = async (
     const git = createGitClient({ baseDir: repoDir });
     await git.add(".");
     await git.commit(`Apply patch set: ${patchSetName}`);
-    stdout.write("  \u2514 committed \u2714\n");
+    stdout.write(`  ${TREE_CORNER} committed ${CHECK_MARK}\n`);
     return { success: true };
   } catch (error) {
     return {
@@ -104,7 +105,7 @@ export const commitPatchSetIfNeeded = async (params: {
   } = params;
 
   if (dryRun) {
-    context.process.stdout.write("  \u2514 commit (skip)\n");
+    context.process.stdout.write(`  ${TREE_CORNER} commit (skip)\n`);
     return { committed: false };
   }
 
@@ -115,7 +116,7 @@ export const commitPatchSetIfNeeded = async (params: {
   const action = determineCommitAction(context, autoCommit, isLastPatchSet);
 
   if (action === "skip") {
-    context.process.stdout.write("  \u2514 skipped commit\n");
+    context.process.stdout.write(`  ${TREE_CORNER} skipped commit\n`);
     return { committed: false };
   }
 
@@ -161,6 +162,6 @@ export const commitPatchSetIfNeeded = async (params: {
     return { committed: true };
   }
 
-  context.process.stdout.write("  \u2514 skipped commit\n");
+  context.process.stdout.write(`  ${TREE_CORNER} skipped commit\n`);
   return { committed: false };
 };

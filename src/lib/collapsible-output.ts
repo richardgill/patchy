@@ -1,4 +1,10 @@
 import yoctoSpinner, { type Spinner } from "yocto-spinner";
+import {
+  ANSI_CLEAR_LINE,
+  ANSI_MOVE_UP,
+  CHECK_MARK,
+  CROSS_MARK,
+} from "./symbols";
 
 type CollapsibleWriter = {
   /** Write output (shown live in TTY, collapsed on success) */
@@ -15,10 +21,6 @@ type CollapsibleOptions = {
   prefix?: string;
   indentOutput?: string;
 };
-
-// ANSI escape codes
-const CLEAR_LINE = "\x1b[2K";
-const MOVE_UP = "\x1b[1A";
 
 export function createCollapsibleWriter(
   opts: CollapsibleOptions,
@@ -38,7 +40,7 @@ export function createCollapsibleWriter(
   const clearOutputLines = () => {
     if (isTTY && linesWritten > 0) {
       for (let i = 0; i < linesWritten; i++) {
-        stream.write(`${MOVE_UP}${CLEAR_LINE}`);
+        stream.write(`${ANSI_MOVE_UP}${ANSI_CLEAR_LINE}`);
       }
       linesWritten = 0;
     }
@@ -67,7 +69,7 @@ export function createCollapsibleWriter(
       if (spinner) {
         spinner.success(message ?? label);
       } else {
-        stream.write(`${prefix}${message ?? label} \u2714\n`);
+        stream.write(`${prefix}${message ?? label} ${CHECK_MARK}\n`);
       }
     },
 
@@ -76,7 +78,7 @@ export function createCollapsibleWriter(
       if (spinner) {
         spinner.error(message ?? label);
       } else {
-        stream.write(`${prefix}${message ?? label} \u2716\n`);
+        stream.write(`${prefix}${message ?? label} ${CROSS_MARK}\n`);
       }
     },
   };

@@ -3,6 +3,7 @@ import { sumBy } from "es-toolkit";
 import type { LocalContext } from "~/context";
 import { exit } from "~/lib/exit";
 import { formatPathForDisplay } from "~/lib/fs";
+import { CHECK_MARK, CROSS_MARK } from "~/lib/symbols";
 import { commitPatchSetIfNeeded, ensureCleanWorkingTree } from "./commit";
 import { loadAndValidateConfig } from "./config";
 import type { ApplyFlags } from "./flags";
@@ -33,7 +34,7 @@ const reportResults = (options: ReportResultsOptions): void => {
       context.process.stderr.write(`  ${file}: ${error}\n`);
     }
     context.process.stdout.write(
-      `\n\u2716 Failed to apply patches to ${targetPath}\n`,
+      `\n${CROSS_MARK} Failed to apply patches to ${targetPath}\n`,
     );
     exit(context, { exitCode: 1 });
   }
@@ -44,7 +45,7 @@ const reportResults = (options: ReportResultsOptions): void => {
     );
   } else {
     context.process.stdout.write(
-      `\n\u2714 Applied ${totalFiles} ${fileWord} across ${stats.length} ${setWord} to ${targetPath}\n`,
+      `\n${CHECK_MARK} Applied ${totalFiles} ${fileWord} across ${stats.length} ${setWord} to ${targetPath}\n`,
     );
   }
 };
