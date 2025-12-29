@@ -14,6 +14,12 @@ const runCommand = async (command: string): Promise<CommandResult> => {
   return { command, exitCode: result.exitCode, output };
 };
 
+const checkStaleLockfile = async (): Promise<CommandResult> => {
+  const result = await $`bun install --frozen-lockfile`.nothrow().quiet();
+  const output = result.stdout.toString() + result.stderr.toString();
+  return { command: "bun lockfile check", exitCode: result.exitCode, output };
+};
+
 const commands = [
   "bun run typecheck",
   "bun run check",
@@ -22,9 +28,12 @@ const commands = [
   "bun run knip",
 ];
 
-console.log(`Running local-ci: ${commands.join(", ")}\n`);
+console.log(`Running local-ci: ${commands.join(", ")}, bun lockfile check\n`);
 
-const results = await Promise.all(commands.map(runCommand));
+const results = await Promise.all([
+  ...commands.map(runCommand),
+  checkStaleLockfile(),
+]);
 
 const successes = results.filter((r) => r.exitCode === 0);
 const failures = results.filter((r) => r.exitCode !== 0);
