@@ -92,24 +92,12 @@ export const commitPatchSetIfNeeded = async (params: {
   autoCommit: AutoCommitMode | undefined;
   isLastPatchSet: boolean;
   dryRun: boolean;
-  hasErrors: boolean;
 }): Promise<{ committed: boolean; cancelled?: boolean }> => {
-  const {
-    context,
-    repoDir,
-    patchSetName,
-    autoCommit,
-    isLastPatchSet,
-    dryRun,
-    hasErrors,
-  } = params;
+  const { context, repoDir, patchSetName, autoCommit, isLastPatchSet, dryRun } =
+    params;
 
   if (dryRun) {
     context.process.stdout.write(`  ${TREE_CORNER} commit (skip)\n`);
-    return { committed: false };
-  }
-
-  if (hasErrors) {
     return { committed: false };
   }
 
