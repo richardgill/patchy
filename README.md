@@ -203,7 +203,23 @@ patchy apply [--only <patch-set>] [--until <patch-set>] [--auto-commit=<mode>] [
 |------|-------------|
 | `--only <name>` | Apply only the specified patch set |
 | `--until <name>` | Apply patch sets up to and including the specified one |
-| `--auto-commit=<mode>` | Control auto-commit behavior: `all` (commit everything), `interactive` (prompt on last, default), `skip-last` (leave last uncommitted), `off` (commit nothing) |
+| `--auto-commit=<mode>` | Control auto-commit behavior (see below) |
+
+#### Auto-commit behavior
+
+Each patch set creates a single commit with message `Apply patch set: <name>`. The `--auto-commit` flag controls when commits happen:
+
+| Mode | Behavior |
+|------|----------|
+| `interactive` (default) | Commits all patch sets automatically, prompts for the last one |
+| `all` | Commits every patch set immediately after applying |
+| `skip-last` | Commits all except the last patch set |
+| `off` | No commits are made |
+
+**Notes:**
+- In non-interactive environments (e.g., CI), `interactive` mode auto-commits everything
+- Commits are skipped if any patch in the set fails to apply
+- `--dry-run` skips all commits
 
 ---
 
