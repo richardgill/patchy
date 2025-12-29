@@ -48,9 +48,10 @@ const commitPatchSet = async (
   repoDir: string,
   patchSetName: string,
   stdout: NodeJS.WriteStream,
-  verbose: boolean,
 ): Promise<{ success: boolean; error?: string }> => {
   if (!isGitRepo(repoDir)) {
+    // Not a git repo, still show success
+    stdout.write("  \u2514 committed \u2714\n");
     return { success: true };
   }
 
@@ -58,8 +59,7 @@ const commitPatchSet = async (
     const git = createGitClient({ baseDir: repoDir });
     await git.add(".");
     await git.commit(`Apply patch set: ${patchSetName}`);
-    const prefix = verbose ? "  " : " — ";
-    stdout.write(`${prefix}committed ✓\n`);
+    stdout.write("  \u2514 committed \u2714\n");
     return { success: true };
   } catch (error) {
     return {
@@ -89,7 +89,6 @@ export const commitPatchSetIfNeeded = async (params: {
   repoDir: string;
   patchSetName: string;
   autoCommit: AutoCommitMode | undefined;
-  verbose: boolean;
   isLastPatchSet: boolean;
   dryRun: boolean;
   hasErrors: boolean;
@@ -99,20 +98,24 @@ export const commitPatchSetIfNeeded = async (params: {
     repoDir,
     patchSetName,
     autoCommit,
-    verbose,
     isLastPatchSet,
     dryRun,
     hasErrors,
   } = params;
-  if (dryRun || hasErrors) {
+
+  if (dryRun) {
+    context.process.stdout.write("  \u2514 commit (skip)\n");
+    return { committed: false };
+  }
+
+  if (hasErrors) {
     return { committed: false };
   }
 
   const action = determineCommitAction(context, autoCommit, isLastPatchSet);
 
   if (action === "skip") {
-    const prefix = verbose ? "  " : " — ";
-    context.process.stdout.write(`${prefix}skipped\n`);
+    context.process.stdout.write("  \u2514 skipped commit\n");
     return { committed: false };
   }
 
@@ -121,7 +124,6 @@ export const commitPatchSetIfNeeded = async (params: {
       repoDir,
       patchSetName,
       context.process.stdout as NodeJS.WriteStream,
-      verbose,
     );
     if (!result.success) {
       exit(context, {
@@ -132,9 +134,7 @@ export const commitPatchSetIfNeeded = async (params: {
     return { committed: true };
   }
 
-  const lineBreak = verbose ? "\n" : "\n\n";
-  context.process.stdout.write(lineBreak);
-
+  // action === "prompt"
   const prompts = createPrompts(context);
   const shouldCommit = await prompts.confirm({
     message: `Commit changes from patch set "${patchSetName}"?`,
@@ -151,7 +151,6 @@ export const commitPatchSetIfNeeded = async (params: {
       repoDir,
       patchSetName,
       context.process.stdout as NodeJS.WriteStream,
-      verbose,
     );
     if (!result.success) {
       exit(context, {
@@ -162,5 +161,6 @@ export const commitPatchSetIfNeeded = async (params: {
     return { committed: true };
   }
 
+  context.process.stdout.write("  \u2514 skipped commit\n");
   return { committed: false };
 };

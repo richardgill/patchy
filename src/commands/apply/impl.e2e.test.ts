@@ -157,13 +157,20 @@ describe("patchy apply", () => {
       expect(result.stdout).toMatchInlineSnapshot(`
         "Applying patches from ./patches to ./main...
 
-          [001-first] 1 file(s)
-            Copied: file1.ts
-          [002-second] 1 file(s)
-            Copied: file2.ts
-          [003-third] 1 file(s)
-            Copied: file3.ts
-        Successfully applied 3 patch file(s) across 3 patch set(s)."
+        ● 001-first
+          ├ file1.ts (new)
+          ├ applied 1 file ✔
+          └ committed ✔
+        ● 002-second
+          ├ file2.ts (new)
+          ├ applied 1 file ✔
+          └ committed ✔
+        ● 003-third
+          ├ file3.ts (new)
+          ├ applied 1 file ✔
+          └ committed ✔
+
+        ✔ Applied 3 files across 3 patch sets to ./main"
       `);
 
       expect(fileContent("file1.ts")).toBe("content from first");
@@ -188,9 +195,12 @@ describe("patchy apply", () => {
       expect(result.stdout).toMatchInlineSnapshot(`
         "Applying patches from ./patches to ./main...
 
-          [002-second] 1 file(s)
-            Copied: file2.ts
-        Successfully applied 1 patch file(s) across 1 patch set(s)."
+        ● 002-second
+          ├ file2.ts (new)
+          ├ applied 1 file ✔
+          └ committed ✔
+
+        ✔ Applied 1 file across 1 patch set to ./main"
       `);
 
       expect(exists("file1.ts")).toBe(false);
@@ -215,11 +225,16 @@ describe("patchy apply", () => {
       expect(result.stdout).toMatchInlineSnapshot(`
         "Applying patches from ./patches to ./main...
 
-          [001-first] 1 file(s)
-            Copied: file1.ts
-          [002-second] 1 file(s)
-            Copied: file2.ts
-        Successfully applied 2 patch file(s) across 2 patch set(s)."
+        ● 001-first
+          ├ file1.ts (new)
+          ├ applied 1 file ✔
+          └ committed ✔
+        ● 002-second
+          ├ file2.ts (new)
+          ├ applied 1 file ✔
+          └ committed ✔
+
+        ✔ Applied 2 files across 2 patch sets to ./main"
       `);
 
       expect(fileContent("file1.ts")).toBe("content from first");
@@ -289,8 +304,8 @@ describe("patchy apply", () => {
       const { result } = await runCli(`patchy apply --verbose`);
 
       expect(result).toSucceed();
-      expect(result).toHaveOutput("[001-my-set] 1 file(s)");
-      expect(result).toHaveOutput("Copied: newFile.ts");
+      expect(result).toHaveOutput("● 001-my-set");
+      expect(result).toHaveOutput("newFile.ts (new)");
 
       expect(fileContent("newFile.ts")).toBe('export const hello = "world";');
     });
@@ -308,7 +323,7 @@ describe("patchy apply", () => {
       const { result } = await runCli(`patchy apply --verbose`);
 
       expect(result).toSucceed();
-      expect(result).toHaveOutput("Copied: src/utils/helper.ts");
+      expect(result).toHaveOutput("src/utils/helper.ts (new)");
 
       expect(fileContent("src/utils/helper.ts")).toBe(
         "export const add = (a: number, b: number) => a + b;",
@@ -336,7 +351,7 @@ describe("patchy apply", () => {
       const { result } = await runCli(`patchy apply --verbose`);
 
       expect(result).toSucceed();
-      expect(result).toHaveOutput("Applied diff: existing.ts.diff");
+      expect(result).toHaveOutput("existing.ts.diff");
 
       expect(fileContent("existing.ts")).toBe(
         "const value = 42;\nconst other = 2;\n",
@@ -364,7 +379,8 @@ describe("patchy apply", () => {
       const { result } = await runCli(`patchy apply --verbose`);
 
       expect(result).toSucceed();
-      expect(result).toHaveOutput("[001-my-set] 2 file(s)");
+      expect(result).toHaveOutput("● 001-my-set");
+      expect(result).toHaveOutput("applied 2 files");
 
       expect(fileContent("existing.ts")).toBe("const x = 100;\n");
       expect(fileContent("new.ts")).toBe("export const y = 2;");
@@ -432,9 +448,9 @@ export const component = () => {
 
       expect(result).toSucceed();
       expect(result).toHaveOutput("[DRY RUN]");
-      expect(result).toHaveOutput("[001-my-set] 2 file(s)");
-      expect(result).toHaveOutput("Apply diff: existing.ts.diff");
-      expect(result).toHaveOutput("Copy: newFile.ts");
+      expect(result).toHaveOutput("● 001-my-set");
+      expect(result).toHaveOutput("existing.ts.diff");
+      expect(result).toHaveOutput("newFile.ts (new)");
 
       expect(exists("newFile.ts")).toBe(false);
     });
@@ -453,11 +469,16 @@ export const component = () => {
       expect(result.stdout).toMatchInlineSnapshot(`
         "[DRY RUN] Applying patches from ./patches to ./main...
 
-          [001-first] 1 file(s)
-            Copy: file1.ts
-          [002-second] 1 file(s)
-            Copy: file2.ts
-        [DRY RUN] Would apply 2 patch file(s) across 2 patch set(s)."
+        ● 001-first
+          ├ file1.ts (new)
+          ├ applied 1 file ✔
+          └ commit (skip)
+        ● 002-second
+          ├ file2.ts (new)
+          ├ applied 1 file ✔
+          └ commit (skip)
+
+        [DRY RUN] Would apply 2 files across 2 patch sets to ./main"
       `);
     });
   });
@@ -487,7 +508,7 @@ const other = 2;
       const { result } = await runCli(`patchy apply --verbose`);
 
       expect(result).toSucceed();
-      expect(result).toHaveOutput("Applied diff: fuzzy.ts.diff");
+      expect(result).toHaveOutput("fuzzy.ts.diff");
 
       expect(fileContent("fuzzy.ts")).toBe(`const value = 42;
 const other = 2;
@@ -700,10 +721,10 @@ const other = 2;
       const { result } = await runCli(`patchy apply --verbose`);
 
       expect(result).toSucceed();
-      expect(result.stdout).toContain("[001-first]");
-      expect(result.stdout).toContain("[002-second]");
-      expect(result.stdout).toContain("[003-third]");
-      expect(result.stdout).toMatch(/committed ✓.*committed ✓.*committed ✓/s);
+      expect(result.stdout).toContain("● 001-first");
+      expect(result.stdout).toContain("● 002-second");
+      expect(result.stdout).toContain("● 003-third");
+      expect(result.stdout).toMatch(/committed ✔.*committed ✔.*committed ✔/s);
 
       const commitMessages = await commits();
       expect(commitMessages.length).toBeGreaterThan(1);
@@ -729,8 +750,8 @@ const other = 2;
       const { result } = await runCli(`patchy apply --verbose`);
 
       expect(result).toSucceed();
-      expect(result.stdout).toContain("[001-first]");
-      expect(result.stdout).toContain("committed ✓");
+      expect(result.stdout).toContain("● 001-first");
+      expect(result.stdout).toContain("committed ✔");
 
       const commitMessages = await commits();
       expect(commitMessages[0]).toBe("Apply patch set: 001-first");
@@ -753,9 +774,9 @@ const other = 2;
       );
 
       expect(result).toSucceed();
-      expect(result.stdout).toContain("[001-first]");
-      expect(result.stdout).toContain("[002-second]");
-      expect(result.stdout).toMatch(/committed ✓.*committed ✓/s);
+      expect(result.stdout).toContain("● 001-first");
+      expect(result.stdout).toContain("● 002-second");
+      expect(result.stdout).toMatch(/committed ✔.*committed ✔/s);
 
       const commitMessages = await commits();
       expect(commitMessages[0]).toBe("Apply patch set: 002-second");
@@ -776,9 +797,9 @@ const other = 2;
       );
 
       expect(result).toSucceed();
-      expect(result.stdout).toContain("[001-first]");
-      expect(result.stdout).toContain("committed ✓");
-      expect(result.stdout).toContain("skipped");
+      expect(result.stdout).toContain("● 001-first");
+      expect(result.stdout).toContain("committed ✔");
+      expect(result.stdout).toContain("skipped commit");
 
       const commitMessages = await commits();
       expect(commitMessages[0]).toBe("Apply patch set: 001-first");
@@ -801,9 +822,9 @@ const other = 2;
       );
 
       expect(result).toSucceed();
-      expect(result.stdout).toContain("[001-first]");
-      expect(result.stdout).toContain("[002-second]");
-      expect(result.stdout).toMatch(/skipped.*skipped/s);
+      expect(result.stdout).toContain("● 001-first");
+      expect(result.stdout).toContain("● 002-second");
+      expect(result.stdout).toMatch(/skipped commit.*skipped commit/s);
 
       const commitMessages = await commits();
       expect(commitMessages.some((m) => m.startsWith("Apply patch set:"))).toBe(
@@ -844,8 +865,8 @@ const other = 2;
       );
 
       expect(result).toSucceed();
-      expect(result.stdout).toContain("[001-first]");
-      expect(result.stdout).toContain("committed ✓");
+      expect(result.stdout).toContain("● 001-first");
+      expect(result.stdout).toContain("committed ✔");
 
       const commitMessages = await commits();
       expect(commitMessages[0]).toBe("Apply patch set: 001-first");
@@ -871,8 +892,8 @@ const other = 2;
       );
 
       expect(result).toSucceed();
-      expect(result.stdout).toContain("[001-first]");
-      expect(result.stdout).toContain("committed ✓");
+      expect(result.stdout).toContain("● 001-first");
+      expect(result.stdout).toContain("committed ✔");
 
       const commitMessages = await commits();
       expect(commitMessages[0]).toBe("Apply patch set: 001-first");
@@ -890,7 +911,7 @@ const other = 2;
 
       expect(result).toSucceed();
       expect(result.stdout).toContain("[DRY RUN]");
-      expect(result.stdout).not.toContain("committed");
+      expect(result.stdout).toContain("commit (skip)");
 
       const commitMessages = await commits();
       expect(commitMessages.length).toBe(1);
@@ -912,8 +933,8 @@ const other = 2;
       const { result } = await runCli(`patchy apply --verbose`);
 
       expect(result).toSucceed();
-      expect(result.stdout).toContain("[001-only]");
-      expect(result.stdout).toContain("committed ✓");
+      expect(result.stdout).toContain("● 001-only");
+      expect(result.stdout).toContain("committed ✔");
 
       const commitMessages = await commits();
       expect(commitMessages[0]).toBe("Apply patch set: 001-only");
@@ -936,7 +957,7 @@ const other = 2;
       const { result } = await runCli(`patchy apply --verbose`);
 
       expect(result).toSucceed();
-      expect(result.stdout).toContain("Running hook: patchy-pre-apply");
+      expect(result.stdout).toContain("patchy-pre-apply");
       expect(result.stdout).toContain("PRE_HOOK_RAN");
       expect(fileContent("file.ts")).toBe("content");
     });
@@ -956,7 +977,7 @@ const other = 2;
       const { result } = await runCli(`patchy apply --verbose`);
 
       expect(result).toSucceed();
-      expect(result.stdout).toContain("Running hook: patchy-post-apply");
+      expect(result.stdout).toContain("patchy-post-apply");
       expect(result.stdout).toContain("POST_HOOK_RAN");
       expect(fileContent("file.ts")).toBe("content");
     });
@@ -1039,8 +1060,8 @@ const other = 2;
       const { result } = await runCli(`patchy apply --dry-run --verbose`);
 
       expect(result).toSucceed();
-      expect(result.stdout).toContain("Would run hook: patchy-pre-apply");
-      expect(result.stdout).toContain("Would run hook: patchy-post-apply");
+      expect(result.stdout).toContain("patchy-pre-apply (skip)");
+      expect(result.stdout).toContain("patchy-post-apply (skip)");
       expect(result.stdout).not.toContain("SHOULD_NOT_RUN");
     });
 
@@ -1124,7 +1145,7 @@ const other = 2;
       const { result } = await runCli(`patchy apply --hook-prefix _ --verbose`);
 
       expect(result).toSucceed();
-      expect(result.stdout).toContain("Running hook: _pre-apply");
+      expect(result.stdout).toContain("_pre-apply");
       expect(result.stdout).toContain("CUSTOM_PREFIX_HOOK");
     });
 
@@ -1147,7 +1168,7 @@ const other = 2;
       const { result } = await runCli(`patchy apply --verbose`);
 
       expect(result).toSucceed();
-      expect(result.stdout).toContain("Running hook: hook.pre-apply");
+      expect(result.stdout).toContain("hook.pre-apply");
       expect(result.stdout).toContain("ENV_PREFIX_HOOK");
     });
   });

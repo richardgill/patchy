@@ -49,6 +49,7 @@
     "jsonc-parser": "=3.3.1",
     "simple-git": "=3.30.0",
     "untildify": "=6.0.0",
+    "yocto-spinner": "=0.2.2",
     "zod": "=4.1.13"
   },
   "peerDependencies": {
@@ -64,10 +65,10 @@
     "url": "https://github.com/richardgill/patchy"
   },
   "optionalDependencies": {
-    "patchy-cli-linux-x64": "=0.0.22",
-    "patchy-cli-linux-arm64": "=0.0.22",
-    "patchy-cli-darwin-x64": "=0.0.22",
     "patchy-cli-darwin-arm64": "=0.0.22",
+    "patchy-cli-darwin-x64": "=0.0.22",
+    "patchy-cli-linux-arm64": "=0.0.22",
+    "patchy-cli-linux-x64": "=0.0.22",
     "patchy-cli-windows-x64": "=0.0.22"
   },
   "publishConfig": {

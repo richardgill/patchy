@@ -2,6 +2,7 @@ import { spawn } from "node:child_process";
 import { accessSync, constants, existsSync } from "node:fs";
 import { join } from "node:path";
 import type { LocalContext } from "~/context";
+import { createCollapsibleWriter } from "./collapsible-output";
 
 type HookType = "pre-apply" | "post-apply";
 
@@ -82,12 +83,21 @@ type ExecuteHookParams = {
   cwd: string;
   env: HookEnv;
   context: LocalContext;
+  prefix?: string;
 };
 
 export const executeHook = async (
   params: ExecuteHookParams,
 ): Promise<HookResult> => {
-  const { hook, cwd, env, context } = params;
+  const { hook, cwd, env, context, prefix = "  \u251C " } = params;
+  const stream = context.process.stdout as NodeJS.WriteStream;
+
+  const writer = createCollapsibleWriter({
+    stream,
+    label: hook.name,
+    prefix,
+  });
+
   return new Promise((resolve) => {
     const child = spawn(hook.path, [], {
       cwd,
@@ -96,32 +106,25 @@ export const executeHook = async (
     });
 
     child.stdout?.on("data", (data: Buffer) => {
-      const lines = data.toString().split("\n");
-      for (const line of lines) {
-        if (line) {
-          context.process.stdout.write(`    ${line}\n`);
-        }
-      }
+      writer.write(data.toString());
     });
 
     child.stderr?.on("data", (data: Buffer) => {
-      const lines = data.toString().split("\n");
-      for (const line of lines) {
-        if (line) {
-          context.process.stderr.write(`    ${line}\n`);
-        }
-      }
+      writer.write(data.toString());
     });
 
     child.on("close", (code, signal) => {
       if (code === 0) {
+        writer.succeed(hook.name);
         resolve({ success: true });
       } else if (signal) {
+        writer.fail(`${hook.name} killed by ${signal}`);
         resolve({
           success: false,
           error: `Hook '${hook.name}' was killed by signal ${signal}.`,
         });
       } else {
+        writer.fail(`${hook.name} failed (exit ${code})`);
         resolve({
           success: false,
           error: `Hook '${hook.name}' failed with exit code ${code}.`,
@@ -130,6 +133,7 @@ export const executeHook = async (
     });
 
     child.on("error", (err) => {
+      writer.fail(`${hook.name} error`);
       resolve({
         success: false,
         error: `Hook '${hook.name}' failed to execute: ${err.message}`,

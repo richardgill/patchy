@@ -70,26 +70,24 @@ export const resolvePatchSetsToApply = (
 type RunHookParams = {
   hook: HookInfo;
   dryRun: boolean;
-  verbose: boolean;
   repoDir: string;
   hookEnv: HookEnv;
   context: LocalContext;
+  isLast: boolean;
 };
 
 const runHook = async (
   params: RunHookParams,
 ): Promise<{ success: true } | { success: false; error: string }> => {
-  const { hook, dryRun, verbose, repoDir, hookEnv, context } = params;
+  const { hook, dryRun, repoDir, hookEnv, context, isLast } = params;
+  const prefix = isLast ? "  \u2514 " : "  \u251C ";
 
   if (dryRun) {
-    if (verbose) {
-      context.process.stdout.write(`    Would run hook: ${hook.name}\n`);
-    }
+    context.process.stdout.write(`${prefix}${hook.name} (skip)\n`);
     return { success: true };
   }
 
-  context.process.stdout.write(`    Running hook: ${hook.name}\n`);
-  return executeHook({ hook, cwd: repoDir, env: hookEnv, context });
+  return executeHook({ hook, cwd: repoDir, env: hookEnv, context, prefix });
 };
 
 type ApplySinglePatchSetParams = {
@@ -169,37 +167,39 @@ export const applySinglePatchSet = async (
   });
   const errors: Array<{ file: string; error: string }> = [];
 
-  const lineEnding = verbose ? "\n" : "";
-  context.process.stdout.write(
-    `  [${patchSetName}] ${patchFiles.length} file(s)${lineEnding}`,
-  );
+  // Print patch set header
+  context.process.stdout.write(`\u25CF ${patchSetName}\n`);
 
+  // Run pre-apply hook
   if (preHook) {
     const result = await runHook({
       hook: preHook,
       dryRun,
-      verbose,
       repoDir,
       hookEnv,
       context,
+      isLast: false,
     });
     if (!result.success) {
       return exit(context, { exitCode: 1, stderr: result.error });
     }
   }
 
+  // Apply patches
+  if (verbose) {
+    for (const patchFile of patchFiles) {
+      const suffix = patchFile.type === "copy" ? " (new)" : "";
+      context.process.stdout.write(
+        `  \u251C ${patchFile.relativePath}${suffix}\n`,
+      );
+    }
+  }
+
   for (const patchFile of patchFiles) {
-    if (dryRun) {
-      if (verbose) {
-        const action = patchFile.type === "copy" ? "Copy" : "Apply diff";
-        context.process.stdout.write(
-          `    ${action}: ${patchFile.relativePath}\n`,
-        );
-      }
-    } else {
+    if (!dryRun) {
       const result = await applyPatch(
         patchFile,
-        verbose,
+        false, // Don't print individual file output in applyPatch
         fuzzFactor,
         context.process.stdout as NodeJS.WriteStream,
       );
@@ -209,14 +209,27 @@ export const applySinglePatchSet = async (
     }
   }
 
+  // Print apply result (always ├ since commit line follows)
+  const fileWord = patchFiles.length === 1 ? "file" : "files";
+  if (errors.length > 0) {
+    context.process.stdout.write(
+      `  \u251C applied ${patchFiles.length} ${fileWord} \u2716\n`,
+    );
+  } else {
+    context.process.stdout.write(
+      `  \u251C applied ${patchFiles.length} ${fileWord} \u2714\n`,
+    );
+  }
+
+  // Run post-apply hook (always ├ since commit line follows)
   if (postHook) {
     const result = await runHook({
       hook: postHook,
       dryRun,
-      verbose,
       repoDir,
       hookEnv,
       context,
+      isLast: false,
     });
     if (!result.success) {
       return exit(context, { exitCode: 1, stderr: result.error });

@@ -16,25 +16,37 @@ type ReportResultsOptions = {
   context: LocalContext;
   stats: PatchSetStats[];
   dryRun: boolean;
+  targetRepo: string;
 };
 
 const reportResults = (options: ReportResultsOptions): void => {
-  const { context, stats, dryRun } = options;
+  const { context, stats, dryRun, targetRepo } = options;
   const totalFiles = sumBy(stats, (s) => s.fileCount);
   const allErrors = stats.flatMap((s) => s.errors);
+  const targetPath = formatPathForDisplay(targetRepo);
+  const fileWord = totalFiles === 1 ? "file" : "files";
+  const setWord = stats.length === 1 ? "patch set" : "patch sets";
 
   if (allErrors.length > 0) {
     context.process.stderr.write(`\nErrors occurred while applying patches:\n`);
     for (const { file, error } of allErrors) {
       context.process.stderr.write(`  ${file}: ${error}\n`);
     }
+    context.process.stdout.write(
+      `\n\u2716 Failed to apply patches to ${targetPath}\n`,
+    );
     exit(context, { exitCode: 1 });
   }
 
-  const prefix = dryRun ? "[DRY RUN] Would apply" : "Successfully applied";
-  context.process.stdout.write(
-    `${prefix} ${totalFiles} patch file(s) across ${stats.length} patch set(s).\n`,
-  );
+  if (dryRun) {
+    context.process.stdout.write(
+      `\n[DRY RUN] Would apply ${totalFiles} ${fileWord} across ${stats.length} ${setWord} to ${targetPath}\n`,
+    );
+  } else {
+    context.process.stdout.write(
+      `\n\u2714 Applied ${totalFiles} ${fileWord} across ${stats.length} ${setWord} to ${targetPath}\n`,
+    );
+  }
 };
 
 export default async function (
@@ -87,7 +99,6 @@ export default async function (
       repoDir: config.absoluteTargetRepo,
       patchSetName,
       autoCommit: flags["auto-commit"],
-      verbose: config.verbose,
       isLastPatchSet: isLast,
       dryRun: config.dry_run,
       hasErrors: result.errors.length > 0,
@@ -99,5 +110,10 @@ export default async function (
     stats.push(result);
   }
 
-  reportResults({ context: this, stats, dryRun: config.dry_run });
+  reportResults({
+    context: this,
+    stats,
+    dryRun: config.dry_run,
+    targetRepo: config.target_repo,
+  });
 }
