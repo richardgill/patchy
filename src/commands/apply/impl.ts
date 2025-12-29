@@ -97,7 +97,12 @@ export default async function (
 
     if (result.errors.length > 0) {
       stats.push(result);
-      reportResults({ context: this, stats, dryRun: config.dry_run });
+      reportResults({
+        context: this,
+        stats,
+        dryRun: config.dry_run,
+        targetRepo: config.target_repo,
+      });
       return;
     }
 
