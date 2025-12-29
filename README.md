@@ -20,9 +20,11 @@ A CLI for generating and applying patches to git repositories.
 For long-lived git forks with no plans to merge upstream:
 
 - A **git fork** stores your changes as commits.
-- **Patches** store them as `.diff` files you can inspect, edit, and reapply.
+- **Patches** store them as `.diff`
 
-Patchy makes patch workflows easy: generate patches from your changes, apply them to any clone.
+Patches are a clean way to store long-lived changes - human-readable, easy to review, simple to version. But managing them can be cumbersome.
+
+Patchy makes managing a patchset easy: make changes to a clone, save them as patches, reapply anytime.
 
 ## How it works
 
