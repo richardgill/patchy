@@ -3,6 +3,9 @@ import { accessSync, constants, existsSync } from "node:fs";
 import { join } from "node:path";
 import type { LocalContext } from "~/context";
 import { createCollapsibleWriter } from "./collapsible-output";
+import { TREE_BRANCH } from "./symbols";
+
+const DEFAULT_HOOK_PREFIX = `  ${TREE_BRANCH} `;
 
 type HookType = "pre-apply" | "post-apply";
 
@@ -89,7 +92,7 @@ type ExecuteHookParams = {
 export const executeHook = async (
   params: ExecuteHookParams,
 ): Promise<HookResult> => {
-  const { hook, cwd, env, context, prefix = "  \u251C " } = params;
+  const { hook, cwd, env, context, prefix = DEFAULT_HOOK_PREFIX } = params;
   const stream = context.process.stdout as NodeJS.WriteStream;
 
   const writer = createCollapsibleWriter({

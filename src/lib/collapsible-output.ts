@@ -7,11 +7,11 @@ import {
 } from "./symbols";
 
 type CollapsibleWriter = {
-  /** Write output (shown live in TTY, collapsed on success) */
+  // Write output (shown live in TTY, collapsed on success)
   write: (text: string) => void;
-  /** Complete successfully - clears output in TTY, shows success symbol */
+  // Complete successfully - clears output in TTY, shows success symbol
   succeed: (message?: string) => void;
-  /** Complete with failure - preserves output for debugging */
+  // Complete with failure - preserves output for debugging
   fail: (message?: string) => void;
 };
 
