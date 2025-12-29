@@ -156,6 +156,8 @@ patches/
     └── patchy-post-apply  # runs after patches
 ```
 
+A patch set can only include a script.
+
 ### Hook execution
 
 - Hooks run with `cwd` set to `target_repo`
