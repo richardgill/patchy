@@ -67,19 +67,17 @@ export function createCollapsibleWriter(
     succeed(message?: string) {
       clearOutputLines();
       if (spinner) {
-        spinner.success(message ?? label);
-      } else {
-        stream.write(`${prefix}${message ?? label} ${CHECK_MARK}\n`);
+        spinner.stop();
       }
+      stream.write(`${prefix}${message ?? label} ${CHECK_MARK}\n`);
     },
 
     fail(message?: string) {
       // Don't clear output - preserve for debugging
       if (spinner) {
-        spinner.error(message ?? label);
-      } else {
-        stream.write(`${prefix}${message ?? label} ${CROSS_MARK}\n`);
+        spinner.stop();
       }
+      stream.write(`${prefix}${message ?? label} ${CROSS_MARK}\n`);
     },
   };
 }
