@@ -39,10 +39,8 @@ Patchy makes managing a patchset easy: make changes to a clone, save them as pat
 
 The workflow:
 1. Make changes in `clones/upstream-repo/`
-2. `patchy generate` → saves your changes into `patches/`
-3. `patchy apply` → reapplies patches to a fresh clone
 
-After running `patchy generate`, your patches are stored like this:
+After running `patchy generate`, your patches are stored in `./patches/` like this:
 
 ```
 patches/
@@ -50,6 +48,8 @@ patches/
     ├── src/file.ts.diff     ← edits to existing files
     └── src/newFile.ts       ← new files (no .diff suffix)
 ```
+
+Later, you can run `patchy apply` to reapply your patches to a fresh clone
 
 See the [example walkthrough](./docs/example.md) for a step-by-step guide.
 
