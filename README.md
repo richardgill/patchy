@@ -17,7 +17,7 @@ A CLI for generating and applying patches to git repositories.
 
 ## Why Patchy?
 
-For long-lived forks with no plans to merge upstream:
+For long-lived git forks with no plans to merge upstream:
 
 - A **git fork** stores your changes as commits.
 - **Patches** store them as `.diff` files you can inspect, edit, and reapply.
