@@ -174,10 +174,8 @@ export const applySinglePatchSet = async (
   });
   const errors: Array<{ file: string; error: string }> = [];
 
-  // Print patch set header
   context.process.stdout.write(`${BULLET} ${patchSetName}\n`);
 
-  // Run pre-apply hook
   if (preHook) {
     const result = await runHook({
       hook: preHook,
@@ -192,7 +190,6 @@ export const applySinglePatchSet = async (
     }
   }
 
-  // Apply patches
   if (verbose) {
     for (const patchFile of patchFiles) {
       const suffix = patchFile.type === "copy" ? " (new)" : "";
@@ -211,7 +208,6 @@ export const applySinglePatchSet = async (
     }
   }
 
-  // Print apply result (always ├ since commit line follows)
   const fileWord = patchFiles.length === 1 ? "file" : "files";
   if (errors.length > 0) {
     context.process.stdout.write(
@@ -223,7 +219,6 @@ export const applySinglePatchSet = async (
     );
   }
 
-  // Run post-apply hook (always ├ since commit line follows)
   if (postHook) {
     const result = await runHook({
       hook: postHook,
