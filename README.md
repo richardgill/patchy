@@ -22,9 +22,9 @@ For long-lived git forks with no plans to merge upstream:
 - A **git fork** stores your changes as commits.
 - **Patches** store them as `.diff`
 
-Patches are a clean way to store long-lived changes - human-readable, easy to review, simple to version. But managing them can be cumbersome.
+Patch files are a clean way to store long-lived changes - human-readable, easy to review and version. But managing them can be cumbersome.
 
-Patchy makes managing a patchset easy: make changes to a clone, save them as patches, reapply anytime.
+Patchy makes managing patches easy: make changes to a clone → save them as patches → reapply anytime.
 
 ## How it works
 
@@ -38,9 +38,9 @@ Patchy makes managing a patchset easy: make changes to a clone, save them as pat
 ```
 
 The workflow:
-1. Make changes in `clones/upstream-repo/`
 
-After running `patchy generate`, your patches are stored in `./patches/` like this:
+1. Make changes directly in `clones/upstream-repo/`
+2. Run `patchy generate` to generate patches:
 
 ```
 patches/
