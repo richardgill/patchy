@@ -49,7 +49,7 @@ patches/
     └── src/newFile.ts       ← new files (no .diff suffix)
 ```
 
-Later, you can run `patchy apply` to reapply your patches to a fresh clone
+3. Run `patchy apply` to reapply your patches to `clones/upstream-repo/` anytime
 
 See the [example walkthrough](./docs/example.md) for a step-by-step guide.
 
