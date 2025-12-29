@@ -1,17 +1,9 @@
 import yoctoSpinner, { type Spinner } from "yocto-spinner";
-import {
-  ANSI_CLEAR_LINE,
-  ANSI_MOVE_UP,
-  CHECK_MARK,
-  CROSS_MARK,
-} from "./symbols";
+import { CHECK_MARK, CROSS_MARK } from "./symbols";
 
 type CollapsibleWriter = {
-  // Write output (shown live in TTY, collapsed on success)
   write: (text: string) => void;
-  // Complete successfully - clears output in TTY, shows success symbol
   succeed: (message?: string) => void;
-  // Complete with failure - preserves output for debugging
   fail: (message?: string) => void;
 };
 
@@ -20,15 +12,22 @@ type CollapsibleOptions = {
   label: string;
   prefix?: string;
   indentOutput?: string;
+  verbose?: boolean;
 };
 
 export function createCollapsibleWriter(
   opts: CollapsibleOptions,
 ): CollapsibleWriter {
-  const { stream, label, prefix = "", indentOutput = "    " } = opts;
+  const {
+    stream,
+    label,
+    prefix = "",
+    indentOutput = "    ",
+    verbose = false,
+  } = opts;
   const isTTY = stream.isTTY ?? false;
 
-  let linesWritten = 0;
+  const outputBuffer: string[] = [];
   let spinner: Spinner | null = null;
 
   if (isTTY) {
@@ -37,27 +36,14 @@ export function createCollapsibleWriter(
     stream.write(`${prefix}${label}\n`);
   }
 
-  const clearOutputLines = () => {
-    if (isTTY && linesWritten > 0) {
-      for (let i = 0; i < linesWritten; i++) {
-        stream.write(`${ANSI_MOVE_UP}${ANSI_CLEAR_LINE}`);
-      }
-      linesWritten = 0;
-    }
-  };
-
   return {
     write(text: string) {
       const lines = text.split("\n").filter(Boolean);
+      for (const line of lines) {
+        outputBuffer.push(`${indentOutput}${line}`);
+      }
 
-      if (isTTY && spinner) {
-        spinner.stop();
-        for (const line of lines) {
-          stream.write(`${indentOutput}${line}\n`);
-          linesWritten++;
-        }
-        spinner.start();
-      } else {
+      if (verbose && !isTTY) {
         for (const line of lines) {
           stream.write(`${indentOutput}${line}\n`);
         }
@@ -65,7 +51,6 @@ export function createCollapsibleWriter(
     },
 
     succeed(message?: string) {
-      clearOutputLines();
       if (spinner) {
         spinner.stop();
       }
@@ -73,9 +58,12 @@ export function createCollapsibleWriter(
     },
 
     fail(message?: string) {
-      // Don't clear output - preserve for debugging
       if (spinner) {
         spinner.stop();
+      }
+      // Print buffered output on failure for debugging
+      for (const line of outputBuffer) {
+        stream.write(`${line}\n`);
       }
       stream.write(`${prefix}${message ?? label} ${CROSS_MARK}\n`);
     },

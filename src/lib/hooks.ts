@@ -87,18 +87,27 @@ type ExecuteHookParams = {
   env: HookEnv;
   context: LocalContext;
   prefix?: string;
+  verbose?: boolean;
 };
 
 export const executeHook = async (
   params: ExecuteHookParams,
 ): Promise<HookResult> => {
-  const { hook, cwd, env, context, prefix = DEFAULT_HOOK_PREFIX } = params;
+  const {
+    hook,
+    cwd,
+    env,
+    context,
+    prefix = DEFAULT_HOOK_PREFIX,
+    verbose = false,
+  } = params;
   const stream = context.process.stdout as NodeJS.WriteStream;
 
   const writer = createCollapsibleWriter({
     stream,
     label: hook.name,
     prefix,
+    verbose,
   });
 
   return new Promise((resolve) => {

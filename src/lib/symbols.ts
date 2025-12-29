@@ -4,6 +4,3 @@ export const TREE_CORNER = "\u2514";
 
 export const CHECK_MARK = "\u2714";
 export const CROSS_MARK = "\u2716";
-
-export const ANSI_CLEAR_LINE = "\x1b[2K";
-export const ANSI_MOVE_UP = "\x1b[1A";

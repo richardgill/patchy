@@ -81,12 +81,13 @@ type RunHookParams = {
   hookEnv: HookEnv;
   context: LocalContext;
   isLast: boolean;
+  verbose: boolean;
 };
 
 const runHook = async (
   params: RunHookParams,
 ): Promise<{ success: true } | { success: false; error: string }> => {
-  const { hook, dryRun, repoDir, hookEnv, context, isLast } = params;
+  const { hook, dryRun, repoDir, hookEnv, context, isLast, verbose } = params;
   const prefix = isLast ? `  ${TREE_CORNER} ` : `  ${TREE_BRANCH} `;
 
   if (dryRun) {
@@ -94,7 +95,14 @@ const runHook = async (
     return { success: true };
   }
 
-  return executeHook({ hook, cwd: repoDir, env: hookEnv, context, prefix });
+  return executeHook({
+    hook,
+    cwd: repoDir,
+    env: hookEnv,
+    context,
+    prefix,
+    verbose,
+  });
 };
 
 type ApplySinglePatchSetParams = {
@@ -184,6 +192,7 @@ export const applySinglePatchSet = async (
       hookEnv,
       context,
       isLast: false,
+      verbose,
     });
     if (!result.success) {
       return exit(context, { exitCode: 1, stderr: result.error });
@@ -227,6 +236,7 @@ export const applySinglePatchSet = async (
       hookEnv,
       context,
       isLast: false,
+      verbose,
     });
     if (!result.success) {
       return exit(context, { exitCode: 1, stderr: result.error });
