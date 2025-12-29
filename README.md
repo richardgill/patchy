@@ -156,7 +156,7 @@ patches/
     └── patchy-post-apply  # runs after patches
 ```
 
-A patch set can only include a script.
+Patch sets support scripts without diffs, enabling pure automation steps.
 
 ### Hook execution
 
