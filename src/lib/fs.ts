@@ -71,8 +71,11 @@ export const formatPathForDisplay = (targetPath: string): string => {
   return `./${targetPath}`;
 };
 
-export const toRelativeDisplayPath = (absolutePath: string): string => {
-  const relativePath = path.relative(process.cwd(), absolutePath);
+export const toRelativeDisplayPath = (
+  absolutePath: string,
+  cwd?: string,
+): string => {
+  const relativePath = path.relative(cwd ?? process.cwd(), absolutePath);
   return relativePath || ".";
 };
 

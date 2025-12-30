@@ -14,7 +14,7 @@ export default async function (
 ): Promise<void> {
   const config = loadAndValidateConfig(this, flags);
   await ensureValidGitRepo(this, config.repoDir);
-  const displayPath = toRelativeDisplayPath(config.repoDir);
+  const displayPath = toRelativeDisplayPath(config.repoDir, this.cwd);
 
   if (config.verbose) {
     this.process.stdout.write(`Repository directory: ${displayPath}\n`);

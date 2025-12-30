@@ -24,7 +24,7 @@ describe("patchy generate", () => {
 
     expect(result).toSucceed();
     expect(result).toHaveOutput(
-      "Generating patches from ./main to ./patches/001-test/",
+      "Generating patches from repos/main to ./patches/001-test/",
     );
     expect(result).toHaveOutput("Created diff: initial.txt.diff");
     expect(result).toHaveOutput("Generated 1 patch(es) successfully");
@@ -118,7 +118,7 @@ describe("patchy generate", () => {
 
     expect(result).toSucceed();
     expect(result).toHaveOutput(
-      "[DRY RUN] Would generate patches from ./main to ./patches/001-test/",
+      "[DRY RUN] Would generate patches from repos/main to ./patches/001-test/",
     );
     expect(result).toHaveOutput("Found 2 change(s):");
     expect(result).toHaveOutput("diff: initial.txt");
@@ -226,7 +226,7 @@ describe("patchy generate", () => {
 
     expect(result).toSucceed();
     expect(result).toHaveOutput(
-      "Generating patches from ./main to ./patches/001-test/",
+      "Generating patches from repos/main to ./patches/001-test/",
     );
     expect(result).toHaveOutput("Created diff: initial.txt.diff");
   });
@@ -361,7 +361,7 @@ describe("patchy generate", () => {
 
     expect(result).toSucceed();
     expect(result).toHaveOutput(
-      "Generating patches from ./main to ./patches/001-from-config/",
+      "Generating patches from repos/main to ./patches/001-from-config/",
     );
     expect(ctx.patchExists("001-from-config/initial.txt.diff")).toBe(true);
   });
@@ -385,7 +385,7 @@ describe("patchy generate", () => {
 
     expect(result).toSucceed();
     expect(result).toHaveOutput(
-      "Generating patches from ./main to ./patches/001-from-env/",
+      "Generating patches from repos/main to ./patches/001-from-env/",
     );
     expect(ctx.patchExists("001-from-env/initial.txt.diff")).toBe(true);
   });
@@ -432,7 +432,7 @@ describe("patchy generate", () => {
       response: "security-fixes",
     });
     expect(result).toHaveOutput(
-      "Generating patches from ./main to ./patches/001-security-fixes/",
+      "Generating patches from repos/main to ./patches/001-security-fixes/",
     );
     expect(ctx.patchExists("001-security-fixes/initial.txt.diff")).toBe(true);
   });
@@ -467,7 +467,7 @@ describe("patchy generate", () => {
       response: "001-existing",
     });
     expect(result).toHaveOutput(
-      "Generating patches from ./main to ./patches/001-existing/",
+      "Generating patches from repos/main to ./patches/001-existing/",
     );
     expect(ctx.patchExists("001-existing/initial.txt.diff")).toBe(true);
   });
@@ -500,7 +500,7 @@ describe("patchy generate", () => {
     expect(result).toSucceed();
     expect(prompts).toHaveLength(2);
     expect(result).toHaveOutput(
-      "Generating patches from ./main to ./patches/002-new-feature/",
+      "Generating patches from repos/main to ./patches/002-new-feature/",
     );
     expect(ctx.patchExists("002-new-feature/initial.txt.diff")).toBe(true);
   });

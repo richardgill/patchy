@@ -1,12 +1,16 @@
 import { relative } from "node:path";
 import type { LocalContext } from "~/context";
-import { formatPathForDisplay } from "~/lib/fs";
+import { formatPathForDisplay, toRelativeDisplayPath } from "~/lib/fs";
 import { getHookFilenames } from "~/lib/hooks";
 import { getExpectedPatchPaths, getStalePatches } from "./patch-operations";
 
 type PrintDryRunOptions = {
   context: LocalContext;
-  config: { target_repo: string; patches_dir: string; hook_prefix?: string };
+  config: {
+    absoluteTargetRepo: string;
+    patches_dir: string;
+    hook_prefix?: string;
+  };
   patchSet: string;
   operations: Array<{ type: string; relativePath: string; destPath: string }>;
   absolutePatchSetDir: string;
@@ -19,7 +23,7 @@ export const printDryRun = async (
     options;
 
   context.process.stdout.write(
-    `[DRY RUN] Would generate patches from ${formatPathForDisplay(config.target_repo)} to ${formatPathForDisplay(config.patches_dir)}/${patchSet}/\n`,
+    `[DRY RUN] Would generate patches from ${toRelativeDisplayPath(config.absoluteTargetRepo, context.cwd)} to ${formatPathForDisplay(config.patches_dir)}/${patchSet}/\n`,
   );
   context.process.stdout.write(`Found ${operations.length} change(s):\n`);
   for (const op of operations) {
