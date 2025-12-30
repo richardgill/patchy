@@ -1,3 +1,4 @@
+import pluralize from "pluralize";
 import type { LocalContext } from "~/context";
 import { exit } from "~/lib/exit";
 import { getSortedFolders } from "~/lib/fs";
@@ -9,12 +10,7 @@ import {
   type HookInfo,
   validateHookPermissions,
 } from "~/lib/hooks";
-import {
-  CHECK_MARK,
-  CROSS_MARK,
-  TREE_BRANCH,
-  TREE_CORNER,
-} from "~/lib/symbols";
+import { CHECK_MARK, CROSS_MARK, TREE_BRANCH } from "~/lib/symbols";
 import type { ApplyFlags } from "./flags";
 import { applyPatch, collectPatchToApplys } from "./patch";
 
@@ -79,15 +75,14 @@ type RunHookParams = {
   repoDir: string;
   hookEnv: HookEnv;
   context: LocalContext;
-  isLast: boolean;
   verbose: boolean;
 };
 
 const runHook = async (
   params: RunHookParams,
 ): Promise<{ success: true } | { success: false; error: string }> => {
-  const { hook, dryRun, repoDir, hookEnv, context, isLast, verbose } = params;
-  const prefix = isLast ? `  ${TREE_CORNER} ` : `  ${TREE_BRANCH} `;
+  const { hook, dryRun, repoDir, hookEnv, context, verbose } = params;
+  const prefix = `  ${TREE_BRANCH} `;
 
   if (dryRun) {
     context.process.stdout.write(`${prefix}${hook.name} (skip)\n`);
@@ -201,7 +196,6 @@ export const applySinglePatchSet = async (
       repoDir,
       hookEnv,
       context,
-      isLast: false,
       verbose,
     });
     if (!result.success) {
@@ -228,7 +222,7 @@ export const applySinglePatchSet = async (
   }
 
   if (hasFiles) {
-    const fileWord = patchFiles.length === 1 ? "file" : "files";
+    const fileWord = pluralize("file", patchFiles.length);
     if (errors.length > 0) {
       context.process.stdout.write(
         `  ${TREE_BRANCH} applied ${patchFiles.length} ${fileWord} ${CROSS_MARK}\n`,
@@ -247,7 +241,6 @@ export const applySinglePatchSet = async (
       repoDir,
       hookEnv,
       context,
-      isLast: false,
       verbose,
     });
     if (!result.success) {

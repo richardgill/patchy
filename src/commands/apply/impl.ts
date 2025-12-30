@@ -1,5 +1,6 @@
 import path from "node:path";
 import { sumBy } from "es-toolkit";
+import pluralize from "pluralize";
 import type { LocalContext } from "~/context";
 import { exit } from "~/lib/exit";
 import { formatPathForDisplay } from "~/lib/fs";
@@ -25,15 +26,15 @@ const reportResults = (options: ReportResultsOptions): void => {
   const totalFiles = sumBy(stats, (s) => s.fileCount);
   const allErrors = stats.flatMap((s) => s.errors);
   const targetPath = formatPathForDisplay(targetRepo);
-  const fileWord = totalFiles === 1 ? "file" : "files";
-  const setWord = stats.length === 1 ? "patch set" : "patch sets";
+  const fileWord = pluralize("file", totalFiles);
+  const setWord = pluralize("patch set", stats.length);
 
   if (allErrors.length > 0) {
     context.process.stderr.write(`\nErrors occurred while applying patches:\n`);
     for (const { file, error } of allErrors) {
       context.process.stderr.write(`  ${file}: ${error}\n`);
     }
-    context.process.stdout.write(
+    context.process.stderr.write(
       `\n${CROSS_MARK} Failed to apply patches to ${targetPath}\n`,
     );
     exit(context, { exitCode: 1 });

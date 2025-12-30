@@ -196,15 +196,12 @@ describe("patchy apply", () => {
         001-first
           ├ file1.ts (new)
           ├ applied 1 file ✓
-          └ committed ✓
         002-second
           ├ file2.ts (new)
           ├ applied 1 file ✓
-          └ committed ✓
         003-third
           ├ file3.ts (new)
           ├ applied 1 file ✓
-          └ committed ✓
 
         ✓ Applied 3 files across 3 patch sets to ./main"
       `);
@@ -234,7 +231,6 @@ describe("patchy apply", () => {
         002-second
           ├ file2.ts (new)
           ├ applied 1 file ✓
-          └ committed ✓
 
         ✓ Applied 1 file across 1 patch set to ./main"
       `);
@@ -264,11 +260,9 @@ describe("patchy apply", () => {
         001-first
           ├ file1.ts (new)
           ├ applied 1 file ✓
-          └ committed ✓
         002-second
           ├ file2.ts (new)
           ├ applied 1 file ✓
-          └ committed ✓
 
         ✓ Applied 2 files across 2 patch sets to ./main"
       `);

@@ -51,8 +51,6 @@ const commitPatchSet = async (
   stdout: NodeJS.WriteStream,
 ): Promise<{ success: boolean; error?: string }> => {
   if (!isGitRepo(repoDir)) {
-    // Not a git repo, still show success
-    stdout.write(`  ${TREE_CORNER} committed ${CHECK_MARK}\n`);
     return { success: true };
   }
 
