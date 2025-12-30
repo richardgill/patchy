@@ -141,6 +141,42 @@ describe("patchy apply", () => {
     });
   });
 
+  describe("empty patch sets", () => {
+    it("should error when a patch set has no files and no hooks", async () => {
+      const { runCli, tmpDir } = await scenario();
+
+      await mkdir(path.join(tmpDir, "patches", "001-empty"), {
+        recursive: true,
+      });
+
+      const { result } = await runCli(`patchy apply`);
+
+      expect(result).toFail();
+      expect(result.stderr).toMatchInlineSnapshot(
+        `"Patch set '001-empty' is empty (no files or hooks found)"`,
+      );
+    });
+
+    it("should succeed when a patch set has only hooks (no files)", async () => {
+      const { runCli } = await scenario({
+        git: true,
+        hooks: {
+          "001-hook-only": {
+            pre: '#!/bin/bash\necho "HOOK_OUTPUT"',
+          },
+        },
+      });
+
+      const { result } = await runCli(`patchy apply --verbose`);
+
+      expect(result).toSucceed();
+      expect(result.stdout).toContain("001-hook-only");
+      expect(result.stdout).toContain("patchy-pre-apply");
+      expect(result.stdout).toContain("HOOK_OUTPUT");
+      expect(result.stdout).not.toContain("applied 0 files");
+    });
+  });
+
   describe("applying patch sets", () => {
     it("should apply all patch sets in alphabetical order", async () => {
       const { runCli, fileContent } = await scenario({

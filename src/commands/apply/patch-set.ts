@@ -179,6 +179,17 @@ export const applySinglePatchSet = async (
     repoDir,
     exclude: hookFilenames,
   });
+
+  const hasHooks = Boolean(preHook || postHook);
+  const hasFiles = patchFiles.length > 0;
+
+  if (!hasHooks && !hasFiles) {
+    return exit(context, {
+      exitCode: 1,
+      stderr: `Patch set '${patchSetName}' is empty (no files or hooks found)`,
+    });
+  }
+
   const errors: Array<{ file: string; error: string }> = [];
 
   context.process.stdout.write(`${patchSetName}\n`);
@@ -216,15 +227,17 @@ export const applySinglePatchSet = async (
     }
   }
 
-  const fileWord = patchFiles.length === 1 ? "file" : "files";
-  if (errors.length > 0) {
-    context.process.stdout.write(
-      `  ${TREE_BRANCH} applied ${patchFiles.length} ${fileWord} ${CROSS_MARK}\n`,
-    );
-  } else {
-    context.process.stdout.write(
-      `  ${TREE_BRANCH} applied ${patchFiles.length} ${fileWord} ${CHECK_MARK}\n`,
-    );
+  if (hasFiles) {
+    const fileWord = patchFiles.length === 1 ? "file" : "files";
+    if (errors.length > 0) {
+      context.process.stdout.write(
+        `  ${TREE_BRANCH} applied ${patchFiles.length} ${fileWord} ${CROSS_MARK}\n`,
+      );
+    } else {
+      context.process.stdout.write(
+        `  ${TREE_BRANCH} applied ${patchFiles.length} ${fileWord} ${CHECK_MARK}\n`,
+      );
+    }
   }
 
   if (postHook) {
