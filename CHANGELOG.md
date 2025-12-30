@@ -1,5 +1,11 @@
 # patchy-cli
 
+## 0.0.24
+
+### Patch Changes
+
+- [#259](https://github.com/richardgill/patchy/pull/259) [`625f853`](https://github.com/richardgill/patchy/commit/625f853e461e7bcf0ecdae2e79539a0b0db12cd0) Thanks [@richardgill](https://github.com/richardgill)! - Fix target_repo display path in apply and generate commands to show the correctly resolved path (e.g., `clones/repo` instead of just `repo`)
+
 ## 0.0.23
 
 ### Patch Changes
