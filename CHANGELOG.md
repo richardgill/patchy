@@ -1,5 +1,13 @@
 # patchy-cli
 
+## 0.0.23
+
+### Patch Changes
+
+- [#229](https://github.com/richardgill/patchy/pull/229) [`756c68c`](https://github.com/richardgill/patchy/commit/756c68c34c2ed50d3cd1ccab992f7aace8ddd4f5) Thanks [@richardgill](https://github.com/richardgill)! - Fix apply command to stop immediately when a diff fails instead of continuing to apply subsequent patchsets
+
+- [#231](https://github.com/richardgill/patchy/pull/231) [`c689624`](https://github.com/richardgill/patchy/commit/c689624e61832e0ef5d6d67a950ad8c7a7a2eef9) Thanks [@richardgill](https://github.com/richardgill)! - Redesign apply command output with improved formatting: tree-style hierarchy (├ └), consistent symbols (✓ ✗), collapsible hook output in TTY mode using yocto-spinner, and target path in summary
+
 ## 0.0.22
 
 ### Patch Changes

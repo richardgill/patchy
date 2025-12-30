@@ -1,6 +1,6 @@
 {
   "name": "patchy-cli",
-  "version": "0.0.22",
+  "version": "0.0.23",
   "description": "A CLI tool for managing Git patch workflows.",
   "type": "module",
   "bin": {
@@ -37,7 +37,7 @@
     "@typescript/native-preview": "=7.0.0-dev.20251230.1",
     "bun-types": "=1.3.4",
     "knip": "=5.78.0",
-    "lefthook": "=2.0.11",
+    "lefthook": "=2.0.13",
     "syncpack": "=13.0.4",
     "typescript": "=5.9.3"
   },
@@ -67,11 +67,11 @@
     "url": "https://github.com/richardgill/patchy"
   },
   "optionalDependencies": {
-    "patchy-cli-darwin-arm64": "=0.0.22",
-    "patchy-cli-darwin-x64": "=0.0.22",
-    "patchy-cli-linux-arm64": "=0.0.22",
-    "patchy-cli-linux-x64": "=0.0.22",
-    "patchy-cli-windows-x64": "=0.0.22"
+    "patchy-cli-darwin-arm64": "=0.0.23",
+    "patchy-cli-darwin-x64": "=0.0.23",
+    "patchy-cli-linux-arm64": "=0.0.23",
+    "patchy-cli-linux-x64": "=0.0.23",
+    "patchy-cli-windows-x64": "=0.0.23"
   },
   "publishConfig": {
     "access": "public"
