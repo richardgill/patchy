@@ -33,3 +33,5 @@ jobs:
           git config --global user.email 'dependabot[bot]@users.noreply.github.com'
           git commit --amend --no-edit
           git push --force
+        env:
+          LEFTHOOK: 0
