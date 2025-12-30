@@ -1,4 +1,4 @@
-import { spinner as clackSpinner } from "@clack/prompts";
+import ora, { type Ora } from "ora";
 import { CHECK_MARK, CROSS_MARK } from "./symbols";
 
 type CollapsibleWriter = {
@@ -28,15 +28,12 @@ export const createCollapsibleWriter = (
   const isTTY = stream.isTTY ?? false;
 
   const outputBuffer: string[] = [];
-  let spinnerInstance: ReturnType<typeof clackSpinner> | null = null;
+  let spinner: Ora | null = null;
 
   if (isTTY) {
-    // Use styleFrame to indent the spinner character itself
-    const indent = prefix.replace(/[├└│]/g, " ");
-    spinnerInstance = clackSpinner({
-      styleFrame: (frame) => `${indent}${frame}`,
-    });
-    spinnerInstance.start(label);
+    // Count leading spaces in prefix for indent
+    const indentSpaces = prefix.match(/^(\s*)/)?.[1]?.length ?? 0;
+    spinner = ora({ text: label, stream, indent: indentSpaces }).start();
   } else {
     stream.write(`${prefix}${label}\n`);
   }
@@ -56,15 +53,15 @@ export const createCollapsibleWriter = (
     },
 
     succeed(message?: string) {
-      if (spinnerInstance) {
-        spinnerInstance.stop();
+      if (spinner) {
+        spinner.stop();
       }
       stream.write(`${prefix}${message ?? label} ${CHECK_MARK}\n`);
     },
 
     fail(message?: string) {
-      if (spinnerInstance) {
-        spinnerInstance.stop();
+      if (spinner) {
+        spinner.stop();
       }
       // Print buffered output on failure for debugging
       for (const line of outputBuffer) {
