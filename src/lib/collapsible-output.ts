@@ -55,6 +55,8 @@ export const createCollapsibleWriter = (
     succeed(message?: string) {
       if (spinner) {
         spinner.stop();
+        // ora's indent option leaves cursor at indent position after stop
+        stream.cursorTo?.(0);
       }
       stream.write(`${prefix}${message ?? label} ${CHECK_MARK}\n`);
     },
@@ -62,6 +64,8 @@ export const createCollapsibleWriter = (
     fail(message?: string) {
       if (spinner) {
         spinner.stop();
+        // ora's indent option leaves cursor at indent position after stop
+        stream.cursorTo?.(0);
       }
       // Print buffered output on failure for debugging
       for (const line of outputBuffer) {
