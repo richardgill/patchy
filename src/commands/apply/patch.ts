@@ -49,19 +49,20 @@ export const collectPatchToApplys = async (
     });
 };
 
+type ApplyPatchParams = {
+  patchFile: PatchToApply;
+  fuzzFactor: number;
+};
+
 export const applyPatch = async (
-  patchFile: PatchToApply,
-  verbose: boolean,
-  fuzzFactor: number,
-  stdout: NodeJS.WriteStream,
+  params: ApplyPatchParams,
 ): Promise<{ success: boolean; error?: string }> => {
+  const { patchFile, fuzzFactor } = params;
+
   try {
     if (patchFile.type === "copy") {
       await mkdir(path.dirname(patchFile.targetPath), { recursive: true });
       await copyFile(patchFile.absolutePath, patchFile.targetPath);
-      if (verbose) {
-        stdout.write(`    Copied: ${patchFile.relativePath}\n`);
-      }
     } else {
       if (!existsSync(patchFile.targetPath)) {
         return {
@@ -80,10 +81,6 @@ export const applyPatch = async (
 
       await mkdir(path.dirname(patchFile.targetPath), { recursive: true });
       await writeFile(patchFile.targetPath, patchedContent);
-
-      if (verbose) {
-        stdout.write(`    Applied diff: ${patchFile.relativePath}\n`);
-      }
     }
     return { success: true };
   } catch (error) {

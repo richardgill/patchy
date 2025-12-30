@@ -1,3 +1,4 @@
+import pluralize from "pluralize";
 import type { LocalContext } from "~/context";
 import { exit } from "~/lib/exit";
 import { getSortedFolders } from "~/lib/fs";
@@ -9,6 +10,7 @@ import {
   type HookInfo,
   validateHookPermissions,
 } from "~/lib/hooks";
+import { CHECK_MARK, CROSS_MARK, TREE_BRANCH } from "~/lib/symbols";
 import type { ApplyFlags } from "./flags";
 import { applyPatch, collectPatchToApplys } from "./patch";
 
@@ -70,26 +72,31 @@ export const resolvePatchSetsToApply = (
 type RunHookParams = {
   hook: HookInfo;
   dryRun: boolean;
-  verbose: boolean;
   repoDir: string;
   hookEnv: HookEnv;
   context: LocalContext;
+  verbose: boolean;
 };
 
 const runHook = async (
   params: RunHookParams,
 ): Promise<{ success: true } | { success: false; error: string }> => {
-  const { hook, dryRun, verbose, repoDir, hookEnv, context } = params;
+  const { hook, dryRun, repoDir, hookEnv, context, verbose } = params;
+  const prefix = `  ${TREE_BRANCH} `;
 
   if (dryRun) {
-    if (verbose) {
-      context.process.stdout.write(`    Would run hook: ${hook.name}\n`);
-    }
+    context.process.stdout.write(`${prefix}${hook.name} (skip)\n`);
     return { success: true };
   }
 
-  context.process.stdout.write(`    Running hook: ${hook.name}\n`);
-  return executeHook({ hook, cwd: repoDir, env: hookEnv, context });
+  return executeHook({
+    hook,
+    cwd: repoDir,
+    env: hookEnv,
+    context,
+    prefix,
+    verbose,
+  });
 };
 
 type ApplySinglePatchSetParams = {
@@ -167,45 +174,63 @@ export const applySinglePatchSet = async (
     repoDir,
     exclude: hookFilenames,
   });
+
+  const hasHooks = Boolean(preHook || postHook);
+  const hasFiles = patchFiles.length > 0;
+
+  if (!hasHooks && !hasFiles) {
+    return exit(context, {
+      exitCode: 1,
+      stderr: `Patch set '${patchSetName}' is empty (no files or hooks found)`,
+    });
+  }
+
   const errors: Array<{ file: string; error: string }> = [];
 
-  const lineEnding = verbose ? "\n" : "";
-  context.process.stdout.write(
-    `  [${patchSetName}] ${patchFiles.length} file(s)${lineEnding}`,
-  );
+  context.process.stdout.write(`${patchSetName}\n`);
 
   if (preHook) {
     const result = await runHook({
       hook: preHook,
       dryRun,
-      verbose,
       repoDir,
       hookEnv,
       context,
+      verbose,
     });
     if (!result.success) {
       return exit(context, { exitCode: 1, stderr: result.error });
     }
   }
 
-  for (const patchFile of patchFiles) {
-    if (dryRun) {
-      if (verbose) {
-        const action = patchFile.type === "copy" ? "Copy" : "Apply diff";
-        context.process.stdout.write(
-          `    ${action}: ${patchFile.relativePath}\n`,
-        );
-      }
-    } else {
-      const result = await applyPatch(
-        patchFile,
-        verbose,
-        fuzzFactor,
-        context.process.stdout as NodeJS.WriteStream,
+  if (verbose) {
+    for (const patchFile of patchFiles) {
+      const suffix = patchFile.type === "copy" ? " (new)" : "";
+      context.process.stdout.write(
+        `  ${TREE_BRANCH} ${patchFile.relativePath}${suffix}\n`,
       );
+    }
+  }
+
+  for (const patchFile of patchFiles) {
+    if (!dryRun) {
+      const result = await applyPatch({ patchFile, fuzzFactor });
       if (!result.success && result.error) {
         errors.push({ file: patchFile.relativePath, error: result.error });
       }
+    }
+  }
+
+  if (hasFiles) {
+    const fileWord = pluralize("file", patchFiles.length);
+    if (errors.length > 0) {
+      context.process.stdout.write(
+        `  ${TREE_BRANCH} applied ${patchFiles.length} ${fileWord} ${CROSS_MARK}\n`,
+      );
+    } else {
+      context.process.stdout.write(
+        `  ${TREE_BRANCH} applied ${patchFiles.length} ${fileWord} ${CHECK_MARK}\n`,
+      );
     }
   }
 
@@ -213,10 +238,10 @@ export const applySinglePatchSet = async (
     const result = await runHook({
       hook: postHook,
       dryRun,
-      verbose,
       repoDir,
       hookEnv,
       context,
+      verbose,
     });
     if (!result.success) {
       return exit(context, { exitCode: 1, stderr: result.error });
