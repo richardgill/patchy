@@ -191,7 +191,7 @@ describe("patchy apply", () => {
 
       expect(result).toSucceed();
       expect(result.stdout).toMatchInlineSnapshot(`
-        "Applying patches from ./patches to ./main...
+        "Applying patches from ./patches to repos/main...
 
         001-first
           ├ file1.ts (new)
@@ -203,7 +203,7 @@ describe("patchy apply", () => {
           ├ file3.ts (new)
           ├ applied 1 file ✓
 
-        ✓ Applied 3 files across 3 patch sets to ./main"
+        ✓ Applied 3 files across 3 patch sets to repos/main"
       `);
 
       expect(fileContent("file1.ts")).toBe("content from first");
@@ -226,13 +226,13 @@ describe("patchy apply", () => {
 
       expect(result).toSucceed();
       expect(result.stdout).toMatchInlineSnapshot(`
-        "Applying patches from ./patches to ./main...
+        "Applying patches from ./patches to repos/main...
 
         002-second
           ├ file2.ts (new)
           ├ applied 1 file ✓
 
-        ✓ Applied 1 file across 1 patch set to ./main"
+        ✓ Applied 1 file across 1 patch set to repos/main"
       `);
 
       expect(exists("file1.ts")).toBe(false);
@@ -255,7 +255,7 @@ describe("patchy apply", () => {
 
       expect(result).toSucceed();
       expect(result.stdout).toMatchInlineSnapshot(`
-        "Applying patches from ./patches to ./main...
+        "Applying patches from ./patches to repos/main...
 
         001-first
           ├ file1.ts (new)
@@ -264,7 +264,7 @@ describe("patchy apply", () => {
           ├ file2.ts (new)
           ├ applied 1 file ✓
 
-        ✓ Applied 2 files across 2 patch sets to ./main"
+        ✓ Applied 2 files across 2 patch sets to repos/main"
       `);
 
       expect(fileContent("file1.ts")).toBe("content from first");
@@ -497,7 +497,7 @@ export const component = () => {
 
       expect(result).toSucceed();
       expect(result.stdout).toMatchInlineSnapshot(`
-        "[DRY RUN] Applying patches from ./patches to ./main...
+        "[DRY RUN] Applying patches from ./patches to repos/main...
 
         001-first
           ├ file1.ts (new)
@@ -508,7 +508,7 @@ export const component = () => {
           ├ applied 1 file ✓
           └ commit (skip)
 
-        [DRY RUN] Would apply 2 files across 2 patch sets to ./main"
+        [DRY RUN] Would apply 2 files across 2 patch sets to repos/main"
       `);
     });
   });
@@ -664,7 +664,7 @@ const other = 2;
 
       expect(result).toSucceed();
       expect(result).toHaveOutput(
-        "[DRY RUN] Applying patches from ./cli-patches to ./cli-repo...",
+        "[DRY RUN] Applying patches from ./cli-patches to repos/cli-repo...",
       );
     });
   });

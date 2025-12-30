@@ -10,7 +10,7 @@ export const ensureValidGitRepo = async (
   context: LocalContext,
   repoDir: string,
 ): Promise<void> => {
-  const displayPath = toRelativeDisplayPath(repoDir);
+  const displayPath = toRelativeDisplayPath(repoDir, context.cwd);
   if (!existsSync(repoDir)) {
     return exit(context, {
       exitCode: 1,

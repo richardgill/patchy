@@ -2,7 +2,11 @@ import { writeFileSync } from "node:fs";
 import { copyFile } from "node:fs/promises";
 import { dirname, join } from "node:path";
 import type { LocalContext } from "~/context";
-import { ensureDirExists, formatPathForDisplay } from "~/lib/fs";
+import {
+  ensureDirExists,
+  formatPathForDisplay,
+  toRelativeDisplayPath,
+} from "~/lib/fs";
 import { getHookFilenames } from "~/lib/hooks";
 import { cleanupStalePatches } from "./cleanup";
 import { loadAndValidateConfig } from "./config";
@@ -63,7 +67,7 @@ export default async function (
   }
 
   this.process.stdout.write(
-    `Generating patches from ${formatPathForDisplay(config.target_repo)} to ${formatPathForDisplay(config.patches_dir)}/${patchSet}/...\n`,
+    `Generating patches from ${toRelativeDisplayPath(config.absoluteTargetRepo, this.cwd)} to ${formatPathForDisplay(config.patches_dir)}/${patchSet}/...\n`,
   );
 
   ensureDirExists(absolutePatchSetDir);

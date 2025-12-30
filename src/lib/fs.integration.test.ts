@@ -226,4 +226,21 @@ describe("toRelativeDisplayPath", () => {
     const siblingPath = path.join(path.dirname(cwd), "sibling");
     expect(toRelativeDisplayPath(siblingPath)).toBe("../sibling");
   });
+
+  it("uses provided cwd for relative path calculation", () => {
+    const customCwd = "/some/custom/path";
+    const targetPath = "/some/custom/path/repos/main";
+    expect(toRelativeDisplayPath(targetPath, customCwd)).toBe("repos/main");
+  });
+
+  it("returns '.' when target equals provided cwd", () => {
+    const customCwd = "/some/custom/path";
+    expect(toRelativeDisplayPath(customCwd, customCwd)).toBe(".");
+  });
+
+  it("returns parent path relative to provided cwd", () => {
+    const customCwd = "/some/custom/path/nested";
+    const targetPath = "/some/custom/path";
+    expect(toRelativeDisplayPath(targetPath, customCwd)).toBe("..");
+  });
 });

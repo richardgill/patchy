@@ -3,7 +3,7 @@ import { sumBy } from "es-toolkit";
 import pluralize from "pluralize";
 import type { LocalContext } from "~/context";
 import { exit } from "~/lib/exit";
-import { formatPathForDisplay } from "~/lib/fs";
+import { formatPathForDisplay, toRelativeDisplayPath } from "~/lib/fs";
 import { CHECK_MARK, CROSS_MARK } from "~/lib/symbols";
 import { commitPatchSetIfNeeded, ensureCleanWorkingTree } from "./commit";
 import { loadAndValidateConfig } from "./config";
@@ -25,7 +25,7 @@ const reportResults = (options: ReportResultsOptions): void => {
   const { context, stats, dryRun, targetRepo } = options;
   const totalFiles = sumBy(stats, (s) => s.fileCount);
   const allErrors = stats.flatMap((s) => s.errors);
-  const targetPath = formatPathForDisplay(targetRepo);
+  const targetPath = toRelativeDisplayPath(targetRepo, context.cwd);
   const fileWord = pluralize("file", totalFiles);
   const setWord = pluralize("patch set", stats.length);
 
@@ -73,7 +73,7 @@ export default async function (
 
   const dryRunPrefix = config.dry_run ? "[DRY RUN] " : "";
   this.process.stdout.write(
-    `${dryRunPrefix}Applying patches from ${formatPathForDisplay(config.patches_dir)} to ${formatPathForDisplay(config.target_repo)}...\n\n`,
+    `${dryRunPrefix}Applying patches from ${formatPathForDisplay(config.patches_dir)} to ${toRelativeDisplayPath(config.absoluteTargetRepo, this.cwd)}...\n\n`,
   );
 
   const stats: PatchSetStats[] = [];
@@ -102,7 +102,7 @@ export default async function (
         context: this,
         stats,
         dryRun: config.dry_run,
-        targetRepo: config.target_repo,
+        targetRepo: config.absoluteTargetRepo,
       });
       return;
     }
@@ -126,6 +126,6 @@ export default async function (
     context: this,
     stats,
     dryRun: config.dry_run,
-    targetRepo: config.target_repo,
+    targetRepo: config.absoluteTargetRepo,
   });
 }

@@ -163,7 +163,7 @@ describe("patchy repo reset", () => {
 
       expect(result).toFail();
       expect(result.stderr).toMatchInlineSnapshot(
-        `"Not a Git repository: <TEST_DIR>/repos/main"`,
+        `"Not a Git repository: repos/main"`,
       );
     });
 
