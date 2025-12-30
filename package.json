@@ -52,7 +52,7 @@
     "pluralize": "=8.0.0",
     "simple-git": "=3.30.0",
     "untildify": "=6.0.0",
-    "zod": "=4.1.13"
+    "zod": "=4.2.1"
   },
   "peerDependencies": {
     "typescript": ">=5.0.4"
