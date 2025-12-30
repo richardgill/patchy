@@ -22,4 +22,4 @@ updates:
           - "minor"
     ignore:
       - dependency-name: "@types/node"
-      - dependency-name: "bun-type"
+      - dependency-name: "bun-types"
