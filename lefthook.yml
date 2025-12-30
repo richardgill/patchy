@@ -1,8 +1,9 @@
 pre-commit:
   parallel: true
+  # Dependabot manages to install lefthook hooks despite prepare script checks, so skip here too
+  skip:
+    - run: '[ "$DEPENDABOT" = "true" ]'
   commands:
-    debug-env:
-      run: env
     biome:
       glob: "*.{js,ts,cjs,mjs,d.cts,d.mts,jsx,tsx,json,jsonc}"
       run: bun run biome check --write --error-on-warnings --diagnostic-level=warn --no-errors-on-unmatched --files-ignore-unknown=true {staged_files}
@@ -31,6 +32,8 @@ post-checkout:
       run: bun install
 
 pre-push:
+  skip:
+    - run: '[ "$DEPENDABOT" = "true" ]'
   commands:
     block-main:
       use_stdin: true
