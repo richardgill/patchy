@@ -32,6 +32,7 @@ post-checkout:
       run: bun install
 
 pre-push:
+  # Dependabot manages to install lefthook hooks despite prepare script checks, so skip here too
   skip:
     - run: '[ "$DEPENDABOT" = "true" ]'
   commands:
