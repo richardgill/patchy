@@ -12,6 +12,7 @@ jobs:
   publish-preview:
     name: Publish preview
     runs-on: ubuntu-latest
+    if: github.actor != 'dependabot[bot]'
     permissions:
       contents: write
       pull-requests: write
