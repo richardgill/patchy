@@ -4,7 +4,17 @@ updates:
     directory: "/"
     schedule:
       interval: "weekly"
-  - package-ecosystem: "npm"
+    groups:
+      actions:
+        patterns:
+          - "*"
+
+  - package-ecosystem: "bun"
     directory: "/"
     schedule:
       interval: "weekly"
+    groups:
+      all-non-major:
+        update-types:
+          - "patch"
+          - "minor"
