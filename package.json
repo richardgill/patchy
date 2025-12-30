@@ -22,7 +22,7 @@
     "dev": "bun run src/cli.ts",
     "knip": "knip-bun",
     "local-ci": "bun run scripts/local-ci.ts",
-    "prepare": "echo '=== PREPARE SCRIPT ENV ===' && env && echo '=== END PREPARE ===' && exit 1",
+    "prepare": "[ \"$DEPENDABOT\" = true ] || [ -n \"$CI\" ] || lefthook install",
     "typecheck": "tsgo --noEmit",
     "test": "bun run scripts/test.ts",
     "test-watch": "bun test --watch",
