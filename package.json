@@ -35,9 +35,9 @@
     "@types/node": "=25.0.3",
     "@types/pluralize": "=0.0.33",
     "@typescript/native-preview": "=7.0.0-dev.20251230.1",
-    "bun-types": "=1.3.4",
+    "bun-types": "=1.3.5",
     "knip": "=5.78.0",
-    "lefthook": "=2.0.11",
+    "lefthook": "=2.0.13",
     "syncpack": "=13.0.4",
     "typescript": "=5.9.3"
   },
