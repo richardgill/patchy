@@ -1,4 +1,4 @@
-import yoctoSpinner, { type Spinner } from "yocto-spinner";
+import { spinner as clackSpinner } from "@clack/prompts";
 import { CHECK_MARK, CROSS_MARK } from "./symbols";
 
 type CollapsibleWriter = {
@@ -15,9 +15,9 @@ type CollapsibleOptions = {
   verbose?: boolean;
 };
 
-export function createCollapsibleWriter(
+export const createCollapsibleWriter = (
   opts: CollapsibleOptions,
-): CollapsibleWriter {
+): CollapsibleWriter => {
   const {
     stream,
     label,
@@ -28,10 +28,15 @@ export function createCollapsibleWriter(
   const isTTY = stream.isTTY ?? false;
 
   const outputBuffer: string[] = [];
-  let spinner: Spinner | null = null;
+  let spinnerInstance: ReturnType<typeof clackSpinner> | null = null;
 
   if (isTTY) {
-    spinner = yoctoSpinner({ text: label, stream }).start();
+    // Use styleFrame to indent the spinner character itself
+    const indent = prefix.replace(/[├└│]/g, " ");
+    spinnerInstance = clackSpinner({
+      styleFrame: (frame) => `${indent}${frame}`,
+    });
+    spinnerInstance.start(label);
   } else {
     stream.write(`${prefix}${label}\n`);
   }
@@ -51,15 +56,15 @@ export function createCollapsibleWriter(
     },
 
     succeed(message?: string) {
-      if (spinner) {
-        spinner.stop();
+      if (spinnerInstance) {
+        spinnerInstance.stop();
       }
       stream.write(`${prefix}${message ?? label} ${CHECK_MARK}\n`);
     },
 
     fail(message?: string) {
-      if (spinner) {
-        spinner.stop();
+      if (spinnerInstance) {
+        spinnerInstance.stop();
       }
       // Print buffered output on failure for debugging
       for (const line of outputBuffer) {
@@ -68,4 +73,4 @@ export function createCollapsibleWriter(
       stream.write(`${prefix}${message ?? label} ${CROSS_MARK}\n`);
     },
   };
-}
+};

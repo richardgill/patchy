@@ -10,7 +10,6 @@ import {
   validateHookPermissions,
 } from "~/lib/hooks";
 import {
-  BULLET,
   CHECK_MARK,
   CROSS_MARK,
   TREE_BRANCH,
@@ -182,7 +181,7 @@ export const applySinglePatchSet = async (
   });
   const errors: Array<{ file: string; error: string }> = [];
 
-  context.process.stdout.write(`${BULLET} ${patchSetName}\n`);
+  context.process.stdout.write(`${patchSetName}\n`);
 
   if (preHook) {
     const result = await runHook({

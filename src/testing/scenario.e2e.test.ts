@@ -73,7 +73,7 @@ describe("scenario helper", () => {
       );
 
       expect(result).toSucceed();
-      expect(result).toHaveOutput("committed ✔");
+      expect(result).toHaveOutput("committed ✓");
       const commitMessages = await commits();
       expect(commitMessages[0]).toBe("Apply patch set: 001-first");
     });
@@ -124,7 +124,7 @@ describe("scenario helper", () => {
       const { result } = await runCli("patchy apply --verbose");
 
       expect(result).toSucceed();
-      expect(result.stdout).toMatch(/committed ✔.*committed ✔/s);
+      expect(result.stdout).toMatch(/committed ✓.*committed ✓/s);
 
       const commitMessages = await commits();
       expect(commitMessages[0]).toBe("Apply patch set: 002-second");
@@ -148,7 +148,7 @@ describe("scenario helper", () => {
       const { result } = await runCli("patchy apply --verbose");
 
       expect(result).toSucceed();
-      expect(result).toHaveOutput("committed ✔");
+      expect(result).toHaveOutput("committed ✓");
 
       const commitMessages = await commits();
       expect(commitMessages[0]).toBe("Apply patch set: 001-first");
