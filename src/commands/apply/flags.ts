@@ -4,6 +4,9 @@ import type { ParsedFlags } from "~/types/utils";
 const autoCommitValues = ["all", "interactive", "skip-last", "off"] as const;
 export type AutoCommitMode = (typeof autoCommitValues)[number];
 
+const onConflictValues = ["markers", "error"] as const;
+export type OnConflictMode = (typeof onConflictValues)[number];
+
 export const applyFlags = {
   ...FLAG_METADATA.clones_dir.stricliFlag,
   ...FLAG_METADATA.target_repo.stricliFlag,
@@ -39,6 +42,14 @@ export const applyFlags = {
     default: "interactive",
     brief:
       "Control automatic committing of patch sets (all = commit everything, interactive = prompt on last, skip-last = leave last uncommitted, off = commit nothing)",
+    optional: true,
+  },
+  "on-conflict": {
+    kind: "enum",
+    values: onConflictValues,
+    default: "markers",
+    brief:
+      "How to handle patches that fail to apply (markers = insert conflict markers, error = fail immediately)",
     optional: true,
   },
 } as const;

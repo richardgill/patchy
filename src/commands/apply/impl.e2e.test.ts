@@ -566,7 +566,9 @@ const other = 2;
         },
       });
 
-      const { result } = await runCli(`patchy apply --fuzz-factor 0`);
+      const { result } = await runCli(
+        `patchy apply --fuzz-factor 0 --on-conflict=error`,
+      );
 
       expect(result).toFailWith("Errors occurred while applying patches:");
       expect(result.stderr).toContain("Patch failed to apply");
@@ -1203,6 +1205,129 @@ const other = 2;
     });
   });
 
+  describe("conflict markers", () => {
+    it("should insert conflict markers when patch context does not match", async () => {
+      const { runCli, fileContent } = await scenario({
+        targetFiles: {
+          "file.ts": "const value = 999;\nconst other = 2;\n",
+        },
+        patches: {
+          "001-fix": {
+            "file.ts.diff": `--- a/file.ts
++++ b/file.ts
+@@ -1,2 +1,2 @@
+-const value = 1;
++const value = 42;
+ const other = 2;
+`,
+          },
+        },
+      });
+
+      const { result } = await runCli("patchy apply");
+
+      expect(result).toFailWith("Conflicts in 1 file");
+
+      const content = fileContent("file.ts");
+      expect(content).toContain("<<<<<<< current");
+      expect(content).toContain("const value = 999;");
+      expect(content).toContain("=======");
+      expect(content).toContain("const value = 42;");
+      expect(content).toContain(">>>>>>> file.ts.diff");
+    });
+
+    it("should fail immediately with --on-conflict=error", async () => {
+      const { runCli, fileContent } = await scenario({
+        targetFiles: {
+          "file.ts": "const value = 999;\nconst other = 2;\n",
+        },
+        patches: {
+          "001-fix": {
+            "file.ts.diff": `--- a/file.ts
++++ b/file.ts
+@@ -1,2 +1,2 @@
+-const value = 1;
++const value = 42;
+ const other = 2;
+`,
+          },
+        },
+      });
+
+      const { result } = await runCli("patchy apply --on-conflict=error");
+
+      expect(result).toFailWith("Patch failed to apply");
+
+      const content = fileContent("file.ts");
+      expect(content).not.toContain("<<<<<<<");
+    });
+
+    it("should not commit when conflicts exist", async () => {
+      const { runCli, commits } = await scenario({
+        git: true,
+        targetFiles: {
+          "file.ts": "const value = 999;\nconst other = 2;\n",
+        },
+        patches: {
+          "001-fix": {
+            "file.ts.diff": `--- a/file.ts
++++ b/file.ts
+@@ -1,2 +1,2 @@
+-const value = 1;
++const value = 42;
+ const other = 2;
+`,
+          },
+        },
+      });
+
+      await runCli("patchy apply --auto-commit=all");
+
+      const commitList = await commits();
+      expect(commitList.some((m) => m.includes("001-fix"))).toBe(false);
+    });
+
+    it("should apply clean hunks and mark conflicting hunks", async () => {
+      const { runCli, fileContent } = await scenario({
+        targetFiles: {
+          "file.ts": `const a = 1;
+const b = 2;
+const c = 3;
+const x = 10;
+const y = CHANGED;
+const z = 12;
+`,
+        },
+        patches: {
+          "001-fix": {
+            "file.ts.diff": `--- a/file.ts
++++ b/file.ts
+@@ -1,3 +1,3 @@
+ const a = 1;
+-const b = 2;
++const b = 22;
+ const c = 3;
+@@ -4,3 +4,3 @@
+ const x = 10;
+-const y = 11;
++const y = 111;
+ const z = 12;
+`,
+          },
+        },
+      });
+
+      const { result } = await runCli("patchy apply");
+
+      expect(result).toFailWith("Conflicts in 1 file");
+
+      const content = fileContent("file.ts");
+      expect(content).toContain("const b = 22;");
+      expect(content).toContain("<<<<<<< current");
+      expect(content).toContain("const y = CHANGED;");
+    });
+  });
+
   describe("error handling", () => {
     it("should stop applying subsequent patches when a diff fails", async () => {
       const { runCli, fileContent, exists, commits } = await scenario({
@@ -1225,7 +1350,9 @@ const other = 2;
         },
       });
 
-      const { result } = await runCli(`patchy apply --auto-commit=all`);
+      const { result } = await runCli(
+        `patchy apply --auto-commit=all --on-conflict=error`,
+      );
 
       expect(result).toFail();
       expect(result.stderr).toContain("Patch failed to apply");
@@ -1261,7 +1388,9 @@ const other = 2;
         },
       });
 
-      const { result } = await runCli(`patchy apply --auto-commit=all`);
+      const { result } = await runCli(
+        `patchy apply --auto-commit=all --on-conflict=error`,
+      );
 
       expect(result).toFail();
       expect(result.stderr).toContain("Patch failed to apply");
