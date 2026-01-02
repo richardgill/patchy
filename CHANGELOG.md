@@ -1,5 +1,11 @@
 # patchy-cli
 
+## 0.0.25
+
+### Patch Changes
+
+- [#261](https://github.com/richardgill/patchy/pull/261) [`fa03a51`](https://github.com/richardgill/patchy/commit/fa03a51e8a63563b02322841b1a7def6bf4fcca8) Thanks [@richardgill](https://github.com/richardgill)! - Add conflict marker support when patches fail to apply cleanly. The new `--on-conflict` flag controls behavior: `markers` (default) inserts git-style conflict markers allowing manual resolution, `error` fails immediately (previous behavior).
+
 ## 0.0.24
 
 ### Patch Changes
