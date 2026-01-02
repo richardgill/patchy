@@ -1,5 +1,7 @@
 import { applyPatch, parsePatch } from "diff";
 
+type Hunk = ReturnType<typeof parsePatch>[0]["hunks"][0];
+
 const MAX_FUZZY_SEARCH_OFFSET = 50;
 const MIN_FUZZY_MATCH_RATIO = 0.5;
 
@@ -41,23 +43,11 @@ const matchScore = (
     .length;
 };
 
-const findBestMatch = (
+const searchNearbyWindow = (
   fileLines: string[],
   expectedLines: string[],
   hintIndex: number,
-): MatchResult => {
-  // Handle pure insertion hunks (no context lines to match)
-  if (expectedLines.length === 0) {
-    const insertIndex = Math.max(0, Math.min(hintIndex, fileLines.length));
-    return { index: insertIndex, exactMatch: true };
-  }
-
-  // Fast path: check at hint index first
-  if (linesMatch(fileLines, expectedLines, hintIndex)) {
-    return { index: hintIndex, exactMatch: true };
-  }
-
-  // Search nearby with offset window (prefer closer matches)
+): MatchResult | null => {
   for (let offset = 1; offset <= MAX_FUZZY_SEARCH_OFFSET; offset++) {
     if (linesMatch(fileLines, expectedLines, hintIndex - offset)) {
       return { index: hintIndex - offset, exactMatch: true };
@@ -66,9 +56,14 @@ const findBestMatch = (
       return { index: hintIndex + offset, exactMatch: true };
     }
   }
+  return null;
+};
 
-  // Scan entire file for exact matches beyond the offset window
-  // Use closest-to-hint as tiebreaker
+const scanForExactMatch = (
+  fileLines: string[],
+  expectedLines: string[],
+  hintIndex: number,
+): MatchResult | null => {
   let closestExactIndex = -1;
   let closestExactDistance = Infinity;
 
@@ -85,8 +80,14 @@ const findBestMatch = (
   if (closestExactIndex !== -1) {
     return { index: closestExactIndex, exactMatch: true };
   }
+  return null;
+};
 
-  // Fuzzy matching: find best score, prefer closest to hint on ties
+const findFuzzyMatch = (
+  fileLines: string[],
+  expectedLines: string[],
+  hintIndex: number,
+): MatchResult => {
   let bestScore = 0;
   let bestIndex = -1;
   let bestDistance = Infinity;
@@ -108,6 +109,60 @@ const findBestMatch = (
   return { index: -1, exactMatch: false };
 };
 
+const findBestMatch = (
+  fileLines: string[],
+  expectedLines: string[],
+  hintIndex: number,
+): MatchResult => {
+  if (expectedLines.length === 0) {
+    const insertIndex = Math.max(0, Math.min(hintIndex, fileLines.length));
+    return { index: insertIndex, exactMatch: true };
+  }
+
+  if (linesMatch(fileLines, expectedLines, hintIndex)) {
+    return { index: hintIndex, exactMatch: true };
+  }
+
+  const nearbyMatch = searchNearbyWindow(fileLines, expectedLines, hintIndex);
+  if (nearbyMatch) return nearbyMatch;
+
+  const fullScanMatch = scanForExactMatch(fileLines, expectedLines, hintIndex);
+  if (fullScanMatch) return fullScanMatch;
+
+  return findFuzzyMatch(fileLines, expectedLines, hintIndex);
+}; // 23 lines: orchestrates search strategy for hunk location
+
+const extractHunkLines = (
+  hunk: Hunk,
+): { expectedLines: string[]; desiredLines: string[] } => {
+  const expectedLines = hunk.lines
+    .filter((l) => l[0] === " " || l[0] === "-")
+    .map((l) => l.slice(1));
+
+  const desiredLines = hunk.lines
+    .filter((l) => l[0] === " " || l[0] === "+")
+    .map((l) => l.slice(1));
+
+  return { expectedLines, desiredLines };
+};
+
+const buildConflictBlock = (
+  currentLines: string[],
+  desiredLines: string[],
+  patchName: string,
+): string[] => [
+  "<<<<<<< current",
+  ...currentLines,
+  "=======",
+  ...desiredLines,
+  `>>>>>>> ${patchName}`,
+];
+
+const splitIntoLines = (content: string): string[] => {
+  if (content === "") return [];
+  return content.split("\n");
+};
+
 const applyHunksWithConflicts = (
   originalContent: string,
   diffContent: string,
@@ -124,21 +179,13 @@ const applyHunksWithConflicts = (
     };
   }
 
-  const lines = originalContent.split("\n");
+  const lines = splitIntoLines(originalContent);
   const conflicts: ConflictInfo[] = [];
   let offset = 0;
 
   for (let hunkIndex = 0; hunkIndex < parsed.hunks.length; hunkIndex++) {
     const hunk = parsed.hunks[hunkIndex];
-
-    const expectedLines = hunk.lines
-      .filter((l) => l[0] === " " || l[0] === "-")
-      .map((l) => l.slice(1));
-
-    const desiredLines = hunk.lines
-      .filter((l) => l[0] === " " || l[0] === "+")
-      .map((l) => l.slice(1));
-
+    const { expectedLines, desiredLines } = extractHunkLines(hunk);
     const hintIndex = hunk.oldStart - 1 + offset;
     const matchResult = findBestMatch(lines, expectedLines, hintIndex);
 
@@ -151,15 +198,11 @@ const applyHunksWithConflicts = (
         matchResult.index,
         matchResult.index + expectedLines.length,
       );
-
-      const conflictBlock = [
-        "<<<<<<< current",
-        ...currentLines,
-        "=======",
-        ...desiredLines,
-        `>>>>>>> ${patchName}`,
-      ];
-
+      const conflictBlock = buildConflictBlock(
+        currentLines,
+        desiredLines,
+        patchName,
+      );
       const sizeDiff = conflictBlock.length - currentLines.length;
       lines.splice(matchResult.index, currentLines.length, ...conflictBlock);
       offset += sizeDiff;

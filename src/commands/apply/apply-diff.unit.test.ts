@@ -256,4 +256,71 @@ const d = 4;
       expect(lines[5]).toBe("const d = 4;");
     }
   });
+
+  it("should report conflict when hunk cannot be located at all", () => {
+    // Content is completely different - no fuzzy match possible
+    const original = "aaaa\nbbbb\ncccc\ndddd";
+    const diff = `--- a/file.ts
++++ b/file.ts
+@@ -1,3 +1,3 @@
+ xxxx
+-yyyy
++zzzz
+ wwww
+`;
+    const result = applyDiffWithConflicts(original, diff, {
+      fuzzFactor: 0,
+      patchName: "test.diff",
+    });
+
+    expect(result.success).toBe(false);
+    if (!result.success) {
+      expect(result.conflicts).toHaveLength(1);
+      expect(result.conflicts[0].reason).toBe("Could not locate hunk in file");
+      // Content should remain unchanged when hunk cannot be located
+      expect(result.content).toBe("aaaa\nbbbb\ncccc\ndddd");
+    }
+  });
+
+  it("should handle applying patch to empty file with pure insertion", () => {
+    const original = "";
+    const diff = `--- a/file.ts
++++ b/file.ts
+@@ -0,0 +1,2 @@
++const a = 1;
++const b = 2;
+`;
+    const result = applyDiffWithConflicts(original, diff, {
+      fuzzFactor: 0,
+      patchName: "test.diff",
+    });
+
+    expect(result.success).toBe(true);
+    if (result.success) {
+      expect(result.content).toContain("const a = 1;");
+      expect(result.content).toContain("const b = 2;");
+    }
+  });
+
+  it("should fail when applying non-insertion patch to empty file", () => {
+    const original = "";
+    // Patch expects to find "const value = 1;" but file is empty
+    const diff = `--- a/file.ts
++++ b/file.ts
+@@ -1,2 +1,2 @@
+-const value = 1;
++const value = 42;
+ const other = 2;
+`;
+    const result = applyDiffWithConflicts(original, diff, {
+      fuzzFactor: 0,
+      patchName: "test.diff",
+    });
+
+    expect(result.success).toBe(false);
+    if (!result.success) {
+      expect(result.conflicts).toHaveLength(1);
+      expect(result.conflicts[0].reason).toBe("Could not locate hunk in file");
+    }
+  });
 });
