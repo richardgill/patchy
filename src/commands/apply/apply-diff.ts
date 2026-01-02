@@ -130,7 +130,7 @@ const findBestMatch = (
   if (fullScanMatch) return fullScanMatch;
 
   return findFuzzyMatch(fileLines, expectedLines, hintIndex);
-}; // 23 lines: orchestrates search strategy for hunk location
+};
 
 const extractHunkLines = (
   hunk: Hunk,
