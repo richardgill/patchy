@@ -196,7 +196,7 @@ Note: `patchy generate` is destructive and will remove any unneeded files in the
 Apply patch files from `patches/` into `target_repo`. Patch sets are applied in alphabetical order.
 
 ```sh
-patchy apply [--only <patch-set>] [--until <patch-set>] [--auto-commit=<mode>] [--target-repo] [--patches-dir] [--dry-run]
+patchy apply [--only <patch-set>] [--until <patch-set>] [--auto-commit=<mode>] [--on-conflict=<mode>] [--target-repo] [--patches-dir] [--dry-run]
 ```
 
 | Flag | Description |
@@ -204,6 +204,39 @@ patchy apply [--only <patch-set>] [--until <patch-set>] [--auto-commit=<mode>] [
 | `--only <name>` | Apply only the specified patch set |
 | `--until <name>` | Apply patch sets up to and including the specified one |
 | `--auto-commit=<mode>` | Control auto-commit behavior (see below) |
+| `--on-conflict=<mode>` | How to handle patches that fail to apply (see below) |
+
+#### Conflict handling
+
+When a patch doesn't apply cleanly (e.g., the upstream file changed), patchy can insert git-style conflict markers for manual resolution.
+
+| Mode | Behavior |
+|------|----------|
+| `markers` (default) | Insert conflict markers and continue |
+| `error` | Fail immediately (previous behavior) |
+
+**Resolving conflicts:**
+
+When conflicts occur, patchy outputs instructions:
+```
+✗ Applied patches with conflicts to clones/my-repo
+
+To resolve:
+  1. Edit files in clones/my-repo to resolve conflicts (remove conflict markers)
+  2. Run: patchy generate --patch-set 001-fix
+  3. Commit the updated patches
+```
+
+Conflict markers look like standard git merge conflicts:
+```
+<<<<<<< current
+const value = 999;
+=======
+const value = 42;
+>>>>>>> file.ts.diff
+```
+
+Edit the file to keep the correct code, remove the marker lines, then regenerate the patch.
 
 #### Auto-commit behavior
 

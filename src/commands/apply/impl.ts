@@ -53,10 +53,19 @@ const reportResults = (options: ReportResultsOptions): void => {
         `  ${file}: ${count} ${pluralize("conflict", count)}\n`,
       );
     }
+    const patchSetWithConflicts = stats.find((s) => s.conflicts.length > 0);
+    const patchSetHint = patchSetWithConflicts
+      ? ` --patch-set ${patchSetWithConflicts.name}`
+      : "";
     context.process.stderr.write(
       `\n${CROSS_MARK} Applied patches with conflicts to ${targetPath}\n`,
     );
-    context.process.stderr.write(`Resolve conflicts and commit manually.\n`);
+    context.process.stderr.write(`\nTo resolve:\n`);
+    context.process.stderr.write(
+      `  1. Edit files in ${targetPath} to resolve conflicts (remove conflict markers)\n`,
+    );
+    context.process.stderr.write(`  2. Run: patchy generate${patchSetHint}\n`);
+    context.process.stderr.write(`  3. Commit the updated patches\n`);
     exit(context, { exitCode: 1 });
   }
 
