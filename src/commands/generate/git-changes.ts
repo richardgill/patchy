@@ -1,5 +1,11 @@
 import { createGitClient } from "~/lib/git";
 
+const stripIndexLine = (diff: string): string =>
+  diff
+    .split("\n")
+    .filter((line) => !line.startsWith("index "))
+    .join("\n");
+
 export type GitChange = {
   type: "modified" | "new";
   path: string;
@@ -27,5 +33,6 @@ export const generateDiff = async (
   filePath: string,
 ): Promise<string> => {
   const git = createGitClient({ baseDir: repoDir });
-  return git.diff(["HEAD", "--", filePath]);
+  const rawDiff = await git.diff(["HEAD", "--", filePath]);
+  return stripIndexLine(rawDiff);
 };

@@ -2,7 +2,8 @@ import { existsSync } from "node:fs";
 import { copyFile, mkdir, readFile, writeFile } from "node:fs/promises";
 import path from "node:path";
 import { getAllFiles } from "~/lib/fs";
-import { applyDiff } from "./apply-diff";
+import { applyDiff, applyDiffWithConflicts } from "./apply-diff";
+import type { OnConflictMode } from "./flags";
 
 type PatchToApply = {
   relativePath: string;
@@ -52,36 +53,66 @@ export const collectPatchToApplys = async (
 type ApplyPatchParams = {
   patchFile: PatchToApply;
   fuzzFactor: number;
+  onConflict: OnConflictMode;
 };
+
+type FileConflict = {
+  file: string;
+  count: number;
+};
+
+type ApplyPatchResult =
+  | { success: true; conflicts?: FileConflict[] }
+  | { success: false; error: string };
 
 export const applyPatch = async (
   params: ApplyPatchParams,
-): Promise<{ success: boolean; error?: string }> => {
-  const { patchFile, fuzzFactor } = params;
+): Promise<ApplyPatchResult> => {
+  const { patchFile, fuzzFactor, onConflict } = params;
 
   try {
     if (patchFile.type === "copy") {
       await mkdir(path.dirname(patchFile.targetPath), { recursive: true });
       await copyFile(patchFile.absolutePath, patchFile.targetPath);
-    } else {
-      if (!existsSync(patchFile.targetPath)) {
-        return {
-          success: false,
-          error: `Target file does not exist: ${patchFile.targetPath}`,
-        };
-      }
+      return { success: true };
+    }
 
-      const diffContent = await readFile(patchFile.absolutePath, "utf-8");
-      const originalContent = await readFile(patchFile.targetPath, "utf-8");
+    if (!existsSync(patchFile.targetPath)) {
+      return {
+        success: false,
+        error: `Target file does not exist: ${patchFile.targetPath}`,
+      };
+    }
+
+    const diffContent = await readFile(patchFile.absolutePath, "utf-8");
+    const originalContent = await readFile(patchFile.targetPath, "utf-8");
+
+    if (onConflict === "error") {
       const patchedContent = applyDiff(
         originalContent,
         diffContent,
         fuzzFactor,
       );
-
-      await mkdir(path.dirname(patchFile.targetPath), { recursive: true });
       await writeFile(patchFile.targetPath, patchedContent);
+      return { success: true };
     }
+
+    const result = applyDiffWithConflicts(originalContent, diffContent, {
+      fuzzFactor,
+      patchName: patchFile.relativePath,
+    });
+
+    await writeFile(patchFile.targetPath, result.content);
+
+    if (!result.success) {
+      return {
+        success: true,
+        conflicts: [
+          { file: patchFile.relativePath, count: result.conflicts.length },
+        ],
+      };
+    }
+
     return { success: true };
   } catch (error) {
     return {

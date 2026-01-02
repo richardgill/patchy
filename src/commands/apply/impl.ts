@@ -25,6 +25,7 @@ const reportResults = (options: ReportResultsOptions): void => {
   const { context, stats, dryRun, targetRepo } = options;
   const totalFiles = sumBy(stats, (s) => s.fileCount);
   const allErrors = stats.flatMap((s) => s.errors);
+  const allConflicts = stats.flatMap((s) => s.conflicts);
   const targetPath = toRelativeDisplayPath(targetRepo, context.cwd);
   const fileWord = pluralize("file", totalFiles);
   const setWord = pluralize("patch set", stats.length);
@@ -37,6 +38,34 @@ const reportResults = (options: ReportResultsOptions): void => {
     context.process.stderr.write(
       `\n${CROSS_MARK} Failed to apply patches to ${targetPath}\n`,
     );
+    exit(context, { exitCode: 1 });
+  }
+
+  if (allConflicts.length > 0) {
+    const conflictWord = pluralize("file", allConflicts.length);
+    const hunkCount = sumBy(allConflicts, (c) => c.count);
+    const hunkWord = pluralize("conflict", hunkCount);
+    context.process.stderr.write(
+      `\nConflicts in ${allConflicts.length} ${conflictWord} (${hunkCount} ${hunkWord}):\n`,
+    );
+    for (const { file, count } of allConflicts) {
+      context.process.stderr.write(
+        `  ${file}: ${count} ${pluralize("conflict", count)}\n`,
+      );
+    }
+    const patchSetWithConflicts = stats.find((s) => s.conflicts.length > 0);
+    const patchSetHint = patchSetWithConflicts
+      ? ` --patch-set ${patchSetWithConflicts.name}`
+      : "";
+    context.process.stderr.write(
+      `\n${CROSS_MARK} Applied patches with conflicts to ${targetPath}\n`,
+    );
+    context.process.stderr.write(`\nTo resolve:\n`);
+    context.process.stderr.write(
+      `  1. Edit files in ${targetPath} to resolve conflicts (remove conflict markers)\n`,
+    );
+    context.process.stderr.write(`  2. Run: patchy generate${patchSetHint}\n`);
+    context.process.stderr.write(`  3. Commit the updated patches\n`);
     exit(context, { exitCode: 1 });
   }
 
@@ -94,9 +123,10 @@ export default async function (
       hookPrefix: config.hook_prefix,
       patchesDir: config.absolutePatchesDir,
       baseRevision: config.base_revision,
+      onConflict: flags["on-conflict"] ?? "markers",
     });
 
-    if (result.errors.length > 0) {
+    if (result.errors.length > 0 || result.conflicts.length > 0) {
       stats.push(result);
       reportResults({
         context: this,

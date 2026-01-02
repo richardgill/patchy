@@ -11,13 +11,14 @@ import {
   validateHookPermissions,
 } from "~/lib/hooks";
 import { CHECK_MARK, CROSS_MARK, TREE_BRANCH } from "~/lib/symbols";
-import type { ApplyFlags } from "./flags";
+import type { ApplyFlags, OnConflictMode } from "./flags";
 import { applyPatch, collectPatchToApplys } from "./patch";
 
 export type PatchSetStats = {
   name: string;
   fileCount: number;
   errors: Array<{ file: string; error: string }>;
+  conflicts: Array<{ file: string; count: number }>;
 };
 
 type FilterResult = { filtered: string[] } | { error: string };
@@ -110,6 +111,7 @@ type ApplySinglePatchSetParams = {
   hookPrefix: string;
   patchesDir: string;
   baseRevision?: string;
+  onConflict: OnConflictMode;
 };
 
 export const applySinglePatchSet = async (
@@ -126,6 +128,7 @@ export const applySinglePatchSet = async (
     hookPrefix,
     patchesDir,
     baseRevision,
+    onConflict,
   } = params;
 
   const hookEnv: HookEnv = {
@@ -186,6 +189,7 @@ export const applySinglePatchSet = async (
   }
 
   const errors: Array<{ file: string; error: string }> = [];
+  const conflicts: Array<{ file: string; count: number }> = [];
 
   context.process.stdout.write(`${patchSetName}\n`);
 
@@ -214,9 +218,11 @@ export const applySinglePatchSet = async (
 
   for (const patchFile of patchFiles) {
     if (!dryRun) {
-      const result = await applyPatch({ patchFile, fuzzFactor });
-      if (!result.success && result.error) {
+      const result = await applyPatch({ patchFile, fuzzFactor, onConflict });
+      if (!result.success) {
         errors.push({ file: patchFile.relativePath, error: result.error });
+      } else if (result.conflicts) {
+        conflicts.push(...result.conflicts);
       }
     }
   }
@@ -248,5 +254,10 @@ export const applySinglePatchSet = async (
     }
   }
 
-  return { name: patchSetName, fileCount: patchFiles.length, errors };
+  return {
+    name: patchSetName,
+    fileCount: patchFiles.length,
+    errors,
+    conflicts,
+  };
 };

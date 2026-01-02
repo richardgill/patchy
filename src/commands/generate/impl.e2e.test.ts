@@ -34,6 +34,7 @@ describe("patchy generate", () => {
     const diffContent = ctx.patchFile("001-test/initial.txt.diff");
     expect(diffContent).toContain("-initial content");
     expect(diffContent).toContain("+modified content");
+    expect(diffContent).not.toContain("\nindex ");
   });
 
   it("should detect and copy new files", async () => {
