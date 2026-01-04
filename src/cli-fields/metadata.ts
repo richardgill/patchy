@@ -229,3 +229,11 @@ export const FLAG_METADATA = {
     },
   },
 } as const satisfies PatchyFlagMetadataMap;
+
+export const YES_FLAG = {
+  yes: {
+    kind: "boolean",
+    brief: "Skip confirmation prompts",
+    optional: true,
+  },
+} as const;
