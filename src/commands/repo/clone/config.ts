@@ -30,6 +30,7 @@ export type CloneConfig = {
   verbose: boolean;
   configPath: string;
   displayTargetPath: string;
+  skipConfirmation: boolean;
 };
 
 const validateGitUrl = (context: LocalContext, repoUrl: string): void => {
@@ -96,6 +97,7 @@ export const loadAndValidateConfig = (
     displayTargetPath: formatPathForDisplay(
       join(config.clones_dir, targetDirName),
     ),
+    skipConfirmation: flags.yes ?? false,
   };
 };
 

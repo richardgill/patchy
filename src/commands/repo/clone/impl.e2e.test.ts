@@ -464,5 +464,43 @@ describe("patchy repo clone", () => {
       const config = ctx.config();
       expect(config["target_repo"]).toBeUndefined();
     });
+
+    it("should auto-save target_repo with --yes flag", async () => {
+      const ctx = await scenario({
+        bareRepo: true,
+        rawConfig: { clones_dir: "repos" },
+      });
+
+      const bareRepoUrl = `file://${path.join(ctx.tmpDir, "bare-repo.git")}`;
+      const { result } = await ctx.runCli(
+        `patchy repo clone --source-repo ${bareRepoUrl} --yes`,
+      );
+
+      expect(result).toSucceed();
+      expect(result).toHaveOutput("Updated patchy.json");
+      const config = ctx.config();
+      expect(config["target_repo"]).toBe("bare-repo");
+    });
+
+    it("should auto-save incremented name with --yes when directory exists", async () => {
+      const ctx = await scenario({
+        bareRepo: true,
+        rawConfig: { clones_dir: "repos" },
+      });
+
+      mkdirSync(path.join(ctx.tmpDir, "repos", "bare-repo"), {
+        recursive: true,
+      });
+
+      const bareRepoUrl = `file://${path.join(ctx.tmpDir, "bare-repo.git")}`;
+      const { result } = await ctx.runCli(
+        `patchy repo clone --source-repo ${bareRepoUrl} --yes`,
+      );
+
+      expect(result).toSucceed();
+      expect(result).toHaveOutput("Updated patchy.json");
+      const config = ctx.config();
+      expect(config["target_repo"]).toBe("bare-repo-1");
+    });
   });
 });
