@@ -1,5 +1,11 @@
 # patchy-cli
 
+## 0.0.26
+
+### Patch Changes
+
+- [#263](https://github.com/richardgill/patchy/pull/263) [`9762dbb`](https://github.com/richardgill/patchy/commit/9762dbbe27caa302dff46ba3c1889c44cf82468b) Thanks [@richardgill](https://github.com/richardgill)! - Add --yes flag to `patchy repo clone` to skip confirmation prompts
+
 ## 0.0.25
 
 ### Patch Changes
