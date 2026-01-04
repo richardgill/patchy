@@ -1,4 +1,4 @@
-import { FLAG_METADATA } from "~/cli-fields";
+import { FLAG_METADATA, YES_FLAG } from "~/cli-fields";
 import type { ParsedFlags } from "~/types/utils";
 
 export const cloneFlags = {
@@ -8,6 +8,7 @@ export const cloneFlags = {
   ...FLAG_METADATA.config.stricliFlag,
   ...FLAG_METADATA.verbose.stricliFlag,
   ...FLAG_METADATA.dry_run.stricliFlag,
+  ...YES_FLAG,
 } as const;
 
 export type CloneFlags = ParsedFlags<typeof cloneFlags>;

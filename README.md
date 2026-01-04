@@ -271,8 +271,10 @@ patchy repo reset [--base-revision] [--target-repo]
 Clone a repository into a subdirectory of `clones_dir` and checkout `base_revision`. The target directory is derived from the repo name.
 
 ```sh
-patchy repo clone [--source-repo] [--clones-dir] [--base-revision]
+patchy repo clone [--source-repo] [--clones-dir] [--base-revision] [--yes]
 ```
+
+Use `--yes` to skip confirmation prompts and automatically update `patchy.json` with the new target directory.
 
 ---
 

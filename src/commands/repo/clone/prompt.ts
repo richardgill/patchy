@@ -68,11 +68,21 @@ export const promptRepoDirSave = async (
   context: LocalContext,
   config: CloneConfig,
 ): Promise<void> => {
-  if (!canPrompt(context)) return;
-
   const configFile = readConfigFile(context, config.configPath);
   if (!configFile.exists) return;
   if (configFile.json.target_repo === config.targetDirName) return;
+
+  if (config.skipConfirmation) {
+    await saveConfigUpdate(
+      context,
+      configFile.path,
+      configFile.content,
+      config.targetDirName,
+    );
+    return;
+  }
+
+  if (!canPrompt(context)) return;
 
   const message = buildPromptMessage(
     configFile.json.target_repo,
