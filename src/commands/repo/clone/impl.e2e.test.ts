@@ -322,7 +322,7 @@ describe("patchy repo clone", () => {
     });
   });
 
-  describe("target_repo prompt", () => {
+  describe("config save prompt", () => {
     it("should skip prompt in non-TTY mode (e2e tests)", async () => {
       const ctx = await scenario({
         bareRepo: true,
@@ -477,7 +477,7 @@ describe("patchy repo clone", () => {
       );
 
       expect(result).toSucceed();
-      expect(result).toHaveOutput("Updated patchy.json");
+      expect(result).toHaveOutput("Updated patchy.json: target_repo");
       const config = ctx.config();
       expect(config["target_repo"]).toBe("bare-repo");
     });
@@ -498,9 +498,145 @@ describe("patchy repo clone", () => {
       );
 
       expect(result).toSucceed();
-      expect(result).toHaveOutput("Updated patchy.json");
+      expect(result).toHaveOutput("Updated patchy.json: target_repo");
       const config = ctx.config();
       expect(config["target_repo"]).toBe("bare-repo-1");
+    });
+
+    it("should save both target_repo and base_revision with --yes when --base-revision provided", async () => {
+      const ctx = await scenario({
+        bareRepo: true,
+        rawConfig: { clones_dir: "repos" },
+      });
+
+      const bareRepoUrl = `file://${path.join(ctx.tmpDir, "bare-repo.git")}`;
+      const { result } = await ctx.runCli(
+        `patchy repo clone --source-repo ${bareRepoUrl} --base-revision main --yes`,
+      );
+
+      expect(result).toSucceed();
+      expect(result).toHaveOutput(
+        "Updated patchy.json: target_repo, base_revision",
+      );
+      const config = ctx.config();
+      expect(config["target_repo"]).toBe("bare-repo");
+      expect(config["base_revision"]).toBe("main");
+    });
+
+    it("should prompt for both fields when both would change", async () => {
+      const ctx = await scenario({
+        bareRepo: true,
+        rawConfig: { clones_dir: "repos" },
+      });
+
+      const bareRepoUrl = `file://${path.join(ctx.tmpDir, "bare-repo.git")}`;
+      const { result, prompts } = await ctx
+        .withPrompts({ confirm: /target_repo.*base_revision/, respond: true })
+        .runCli(
+          `patchy repo clone --source-repo ${bareRepoUrl} --base-revision main`,
+        );
+
+      expect(result).toSucceed();
+      expect(prompts).toHaveLength(1);
+      expect(prompts[0].message).toMatch(/target_repo.*base_revision/);
+      const config = ctx.config();
+      expect(config["target_repo"]).toBe("bare-repo");
+      expect(config["base_revision"]).toBe("main");
+    });
+
+    it("should only prompt for target_repo when --base-revision not provided", async () => {
+      const ctx = await scenario({
+        bareRepo: true,
+        rawConfig: { clones_dir: "repos" },
+      });
+
+      const bareRepoUrl = `file://${path.join(ctx.tmpDir, "bare-repo.git")}`;
+      const { result, prompts } = await ctx
+        .withPrompts({ confirm: /target_repo/, respond: true })
+        .runCli(`patchy repo clone --source-repo ${bareRepoUrl}`);
+
+      expect(result).toSucceed();
+      expect(prompts).toHaveLength(1);
+      expect(prompts[0].message).toMatch(/target_repo/);
+      expect(prompts[0].message).not.toMatch(/base_revision/);
+    });
+
+    it("should skip prompt when base_revision already matches", async () => {
+      const ctx = await scenario({
+        bareRepo: true,
+        rawConfig: { clones_dir: "repos", base_revision: "main" },
+      });
+
+      const bareRepoUrl = `file://${path.join(ctx.tmpDir, "bare-repo.git")}`;
+      const { result, prompts } = await ctx
+        .withPrompts({ confirm: /target_repo/, respond: true })
+        .runCli(
+          `patchy repo clone --source-repo ${bareRepoUrl} --base-revision main`,
+        );
+
+      expect(result).toSucceed();
+      expect(prompts).toHaveLength(1);
+      expect(prompts[0].message).not.toMatch(/base_revision/);
+      expect(result).toHaveOutput("Updated patchy.json: target_repo");
+    });
+
+    it("should skip prompt entirely when nothing would change", async () => {
+      const ctx = await scenario({
+        bareRepo: true,
+        rawConfig: {
+          clones_dir: "repos",
+          target_repo: "bare-repo",
+          base_revision: "main",
+        },
+      });
+
+      const bareRepoUrl = `file://${path.join(ctx.tmpDir, "bare-repo.git")}`;
+      const { result } = await ctx.runCli(
+        `patchy repo clone --source-repo ${bareRepoUrl} --base-revision main`,
+      );
+
+      expect(result).toSucceed();
+      expect(result).not.toHaveOutput("Updated patchy.json");
+    });
+
+    it("should only prompt for base_revision when target_repo already matches", async () => {
+      const ctx = await scenario({
+        bareRepo: true,
+        rawConfig: { clones_dir: "repos", target_repo: "bare-repo" },
+      });
+
+      const bareRepoUrl = `file://${path.join(ctx.tmpDir, "bare-repo.git")}`;
+      const { result, prompts } = await ctx
+        .withPrompts({ confirm: /base_revision/, respond: true })
+        .runCli(
+          `patchy repo clone --source-repo ${bareRepoUrl} --base-revision main`,
+        );
+
+      expect(result).toSucceed();
+      expect(prompts).toHaveLength(1);
+      expect(prompts[0].message).not.toMatch(/target_repo/);
+      expect(prompts[0].message).toMatch(/base_revision/);
+      expect(result).toHaveOutput("Updated patchy.json: base_revision");
+    });
+
+    it("should not save either field when prompt declined", async () => {
+      const ctx = await scenario({
+        bareRepo: true,
+        rawConfig: { clones_dir: "repos" },
+      });
+
+      const bareRepoUrl = `file://${path.join(ctx.tmpDir, "bare-repo.git")}`;
+      const { result, prompts } = await ctx
+        .withPrompts({ confirm: /target_repo/, respond: false })
+        .runCli(
+          `patchy repo clone --source-repo ${bareRepoUrl} --base-revision main`,
+        );
+
+      expect(result).toSucceed();
+      expect(prompts).toHaveLength(1);
+      const config = ctx.config();
+      expect(config["target_repo"]).toBeUndefined();
+      expect(config["base_revision"]).toBeUndefined();
     });
   });
 });

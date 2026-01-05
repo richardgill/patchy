@@ -26,6 +26,7 @@ export type CloneConfig = {
   targetDir: string;
   targetDirName: string;
   baseRevision: string | undefined;
+  baseRevisionFromFlag: boolean;
   dry_run: boolean;
   verbose: boolean;
   configPath: string;
@@ -91,6 +92,7 @@ export const loadAndValidateConfig = (
     targetDir: join(clonesDir, targetDirName),
     targetDirName,
     baseRevision: config.base_revision,
+    baseRevisionFromFlag: flags["base-revision"] !== undefined,
     dry_run: config.dry_run,
     verbose: config.verbose,
     configPath: config.config ?? DEFAULT_CONFIG_PATH,

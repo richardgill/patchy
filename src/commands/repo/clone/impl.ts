@@ -2,7 +2,7 @@ import type { LocalContext } from "~/context";
 import { performClone } from "./clone";
 import { loadAndValidateConfig, logVerboseInfo, reportDryRun } from "./config";
 import type { CloneFlags } from "./flags";
-import { promptRepoDirSave } from "./prompt";
+import { promptConfigSave } from "./prompt";
 
 export default async function (
   this: LocalContext,
@@ -20,5 +20,5 @@ export default async function (
   }
 
   await performClone(this, config);
-  await promptRepoDirSave(this, config);
+  await promptConfigSave(this, config);
 }
