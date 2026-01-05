@@ -1,5 +1,11 @@
 # patchy-cli
 
+## 0.0.27
+
+### Patch Changes
+
+- [#265](https://github.com/richardgill/patchy/pull/265) [`ee093b8`](https://github.com/richardgill/patchy/commit/ee093b80075d2cd76a8f4064a73f2ef97811bf82) Thanks [@richardgill](https://github.com/richardgill)! - `patchy repo clone` now saves base_revision to patchy.json when --base-revision is provided. With --yes flag, both target_repo and base_revision are auto-saved. Interactive mode shows a single combined prompt for all config updates.
+
 ## 0.0.26
 
 ### Patch Changes
