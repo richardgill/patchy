@@ -1,8 +1,11 @@
+import type { ResolvedValue } from "~/lib/cli-config";
 import type { RequirementPattern } from "./requirement-patterns";
 import type { EnrichedMergedConfig } from "./types";
 
 type WithRequired<T, K extends keyof T> = Omit<T, K> & {
-  [P in K]-?: NonNullable<T[P]>;
+  [P in K]-?: T[P] extends ResolvedValue<infer V>
+    ? ResolvedValue<NonNullable<V>>
+    : NonNullable<T[P]>;
 };
 
 type ExtractGuarantees<P> = P extends RequirementPattern<infer G> ? G : never;

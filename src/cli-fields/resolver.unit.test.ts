@@ -88,15 +88,48 @@ describe("createEnrichedMergedConfig", () => {
     expect(getStabilizedJson(result.mergedConfig)).toMatchInlineSnapshot(
       `
       "{
-        "source_repo": "https://github.com/example/flag-repo.git",
-        "target_repo": "repoDir1",
-        "clones_dir": "clonesDir1",
-        "patches_dir": "./patches/",
-        "base_revision": "main",
-        "hook_prefix": "patchy-",
-        "verbose": true,
-        "dry_run": true,
-        "config": "./patchy.json",
+        "source_repo": {
+          "value": "https://github.com/example/flag-repo.git",
+          "source": "flag"
+        },
+        "target_repo": {
+          "value": "repoDir1",
+          "source": "config"
+        },
+        "clones_dir": {
+          "value": "clonesDir1",
+          "source": "config"
+        },
+        "patches_dir": {
+          "value": "./patches/",
+          "source": "default"
+        },
+        "patch_set": {
+          "source": "default"
+        },
+        "base_revision": {
+          "value": "main",
+          "source": "config"
+        },
+        "upstream_branch": {
+          "source": "default"
+        },
+        "hook_prefix": {
+          "value": "patchy-",
+          "source": "default"
+        },
+        "verbose": {
+          "value": true,
+          "source": "config"
+        },
+        "dry_run": {
+          "value": true,
+          "source": "flag"
+        },
+        "config": {
+          "value": "./patchy.json",
+          "source": "default"
+        },
         "absoluteClonesDir": "<TEST_DIR>/clonesDir1",
         "absoluteTargetRepo": "<TEST_DIR>/clonesDir1/repoDir1",
         "absolutePatchesDir": "<TEST_DIR>/patches"
@@ -171,15 +204,48 @@ describe("createEnrichedMergedConfig", () => {
     expect(getStabilizedJson(result.mergedConfig)).toMatchInlineSnapshot(
       `
       "{
-        "source_repo": "https://github.com/example/repo.git",
-        "target_repo": "repoDir1",
-        "clones_dir": "clonesDir1",
-        "patches_dir": "./patches/",
-        "base_revision": "main",
-        "hook_prefix": "patchy-",
-        "verbose": false,
-        "dry_run": false,
-        "config": "./patchy.json",
+        "source_repo": {
+          "value": "https://github.com/example/repo.git",
+          "source": "config"
+        },
+        "target_repo": {
+          "value": "repoDir1",
+          "source": "config"
+        },
+        "clones_dir": {
+          "value": "clonesDir1",
+          "source": "config"
+        },
+        "patches_dir": {
+          "value": "./patches/",
+          "source": "default"
+        },
+        "patch_set": {
+          "source": "default"
+        },
+        "base_revision": {
+          "value": "main",
+          "source": "default"
+        },
+        "upstream_branch": {
+          "source": "default"
+        },
+        "hook_prefix": {
+          "value": "patchy-",
+          "source": "default"
+        },
+        "verbose": {
+          "value": false,
+          "source": "config"
+        },
+        "dry_run": {
+          "value": false,
+          "source": "default"
+        },
+        "config": {
+          "value": "./patchy.json",
+          "source": "default"
+        },
         "absoluteClonesDir": "<TEST_DIR>/clonesDir1",
         "absoluteTargetRepo": "<TEST_DIR>/clonesDir1/repoDir1",
         "absolutePatchesDir": "<TEST_DIR>/patches"
@@ -311,15 +377,48 @@ describe("createEnrichedMergedConfig", () => {
     expect(getStabilizedJson(result.mergedConfig)).toMatchInlineSnapshot(
       `
       "{
-        "source_repo": "https://github.com/example/flag-repo.git",
-        "target_repo": "flag-repo",
-        "clones_dir": "flag-base",
-        "patches_dir": "flag-patches",
-        "base_revision": "flag-ref",
-        "hook_prefix": "patchy-",
-        "verbose": true,
-        "dry_run": false,
-        "config": "./patchy.json",
+        "source_repo": {
+          "value": "https://github.com/example/flag-repo.git",
+          "source": "flag"
+        },
+        "target_repo": {
+          "value": "flag-repo",
+          "source": "flag"
+        },
+        "clones_dir": {
+          "value": "flag-base",
+          "source": "flag"
+        },
+        "patches_dir": {
+          "value": "flag-patches",
+          "source": "flag"
+        },
+        "patch_set": {
+          "source": "default"
+        },
+        "base_revision": {
+          "value": "flag-ref",
+          "source": "flag"
+        },
+        "upstream_branch": {
+          "source": "default"
+        },
+        "hook_prefix": {
+          "value": "patchy-",
+          "source": "default"
+        },
+        "verbose": {
+          "value": true,
+          "source": "flag"
+        },
+        "dry_run": {
+          "value": false,
+          "source": "default"
+        },
+        "config": {
+          "value": "./patchy.json",
+          "source": "default"
+        },
         "absoluteClonesDir": "<TEST_DIR>/flag-base",
         "absoluteTargetRepo": "<TEST_DIR>/flag-base/flag-repo",
         "absolutePatchesDir": "<TEST_DIR>/flag-patches"
@@ -361,15 +460,48 @@ describe("createEnrichedMergedConfig", () => {
     expect(getStabilizedJson(result.mergedConfig)).toMatchInlineSnapshot(
       `
       "{
-        "source_repo": "https://github.com/example/repo.git",
-        "target_repo": "repo",
-        "clones_dir": "base",
-        "patches_dir": "patches",
-        "base_revision": "main",
-        "hook_prefix": "patchy-",
-        "verbose": false,
-        "dry_run": false,
-        "config": "./patchy.json",
+        "source_repo": {
+          "value": "https://github.com/example/repo.git",
+          "source": "config"
+        },
+        "target_repo": {
+          "value": "repo",
+          "source": "config"
+        },
+        "clones_dir": {
+          "value": "base",
+          "source": "config"
+        },
+        "patches_dir": {
+          "value": "patches",
+          "source": "config"
+        },
+        "patch_set": {
+          "source": "default"
+        },
+        "base_revision": {
+          "value": "main",
+          "source": "default"
+        },
+        "upstream_branch": {
+          "source": "default"
+        },
+        "hook_prefix": {
+          "value": "patchy-",
+          "source": "default"
+        },
+        "verbose": {
+          "value": false,
+          "source": "config"
+        },
+        "dry_run": {
+          "value": false,
+          "source": "default"
+        },
+        "config": {
+          "value": "./patchy.json",
+          "source": "default"
+        },
         "absoluteClonesDir": "<TEST_DIR>/base",
         "absoluteTargetRepo": "<TEST_DIR>/base/repo",
         "absolutePatchesDir": "<TEST_DIR>/patches"
@@ -398,14 +530,47 @@ describe("createEnrichedMergedConfig", () => {
     expect(getStabilizedJson(result.mergedConfig)).toMatchInlineSnapshot(
       `
       "{
-        "source_repo": "https://github.com/example/repo.git",
-        "clones_dir": "./clones/",
-        "patches_dir": "./patches/",
-        "base_revision": "main",
-        "hook_prefix": "patchy-",
-        "verbose": false,
-        "dry_run": false,
-        "config": "<TEST_DIR>/empty.json",
+        "source_repo": {
+          "value": "https://github.com/example/repo.git",
+          "source": "flag"
+        },
+        "target_repo": {
+          "source": "default"
+        },
+        "clones_dir": {
+          "value": "./clones/",
+          "source": "default"
+        },
+        "patches_dir": {
+          "value": "./patches/",
+          "source": "default"
+        },
+        "patch_set": {
+          "source": "default"
+        },
+        "base_revision": {
+          "value": "main",
+          "source": "default"
+        },
+        "upstream_branch": {
+          "source": "default"
+        },
+        "hook_prefix": {
+          "value": "patchy-",
+          "source": "default"
+        },
+        "verbose": {
+          "value": false,
+          "source": "config"
+        },
+        "dry_run": {
+          "value": false,
+          "source": "default"
+        },
+        "config": {
+          "value": "<TEST_DIR>/empty.json",
+          "source": "flag"
+        },
         "absoluteClonesDir": "<TEST_DIR>/clones",
         "absolutePatchesDir": "<TEST_DIR>/patches"
       }"
@@ -504,15 +669,48 @@ describe("createEnrichedMergedConfig", () => {
     expect(getStabilizedJson(result.mergedConfig)).toMatchInlineSnapshot(
       `
       "{
-        "source_repo": "https://github.com/example/repo.git",
-        "target_repo": "repo",
-        "clones_dir": "base",
-        "patches_dir": "./patches/",
-        "base_revision": "main",
-        "hook_prefix": "patchy-",
-        "verbose": true,
-        "dry_run": true,
-        "config": "./patchy.json",
+        "source_repo": {
+          "value": "https://github.com/example/repo.git",
+          "source": "config"
+        },
+        "target_repo": {
+          "value": "repo",
+          "source": "config"
+        },
+        "clones_dir": {
+          "value": "base",
+          "source": "config"
+        },
+        "patches_dir": {
+          "value": "./patches/",
+          "source": "default"
+        },
+        "patch_set": {
+          "source": "default"
+        },
+        "base_revision": {
+          "value": "main",
+          "source": "default"
+        },
+        "upstream_branch": {
+          "source": "default"
+        },
+        "hook_prefix": {
+          "value": "patchy-",
+          "source": "default"
+        },
+        "verbose": {
+          "value": true,
+          "source": "flag"
+        },
+        "dry_run": {
+          "value": true,
+          "source": "flag"
+        },
+        "config": {
+          "value": "./patchy.json",
+          "source": "default"
+        },
         "absoluteClonesDir": "<TEST_DIR>/base",
         "absoluteTargetRepo": "<TEST_DIR>/base/repo",
         "absolutePatchesDir": "<TEST_DIR>/patches"
@@ -551,15 +749,48 @@ describe("createEnrichedMergedConfig", () => {
     expect(getStabilizedJson(result.mergedConfig)).toMatchInlineSnapshot(
       `
       "{
-        "source_repo": "https://github.com/example/repo.git",
-        "target_repo": "my-repo/nested-repo",
-        "clones_dir": "my-base/nested",
-        "patches_dir": "./patches/",
-        "base_revision": "main",
-        "hook_prefix": "patchy-",
-        "verbose": false,
-        "dry_run": false,
-        "config": "./patchy.json",
+        "source_repo": {
+          "value": "https://github.com/example/repo.git",
+          "source": "config"
+        },
+        "target_repo": {
+          "value": "my-repo/nested-repo",
+          "source": "config"
+        },
+        "clones_dir": {
+          "value": "my-base/nested",
+          "source": "config"
+        },
+        "patches_dir": {
+          "value": "./patches/",
+          "source": "default"
+        },
+        "patch_set": {
+          "source": "default"
+        },
+        "base_revision": {
+          "value": "main",
+          "source": "default"
+        },
+        "upstream_branch": {
+          "source": "default"
+        },
+        "hook_prefix": {
+          "value": "patchy-",
+          "source": "default"
+        },
+        "verbose": {
+          "value": false,
+          "source": "config"
+        },
+        "dry_run": {
+          "value": false,
+          "source": "default"
+        },
+        "config": {
+          "value": "./patchy.json",
+          "source": "default"
+        },
         "absoluteClonesDir": "<TEST_DIR>/my-base/nested",
         "absoluteTargetRepo": "<TEST_DIR>/my-base/nested/my-repo/nested-repo",
         "absolutePatchesDir": "<TEST_DIR>/patches"
@@ -604,15 +835,48 @@ describe("createEnrichedMergedConfig", () => {
     expect(getStabilizedJson(result.mergedConfig)).toMatchInlineSnapshot(
       `
       "{
-        "source_repo": "https://github.com/example/custom.git",
-        "target_repo": "repo",
-        "clones_dir": "base",
-        "patches_dir": "./patches/",
-        "base_revision": "custom-branch",
-        "hook_prefix": "patchy-",
-        "verbose": false,
-        "dry_run": false,
-        "config": "<TEST_DIR>/custom/config.json",
+        "source_repo": {
+          "value": "https://github.com/example/custom.git",
+          "source": "config"
+        },
+        "target_repo": {
+          "value": "repo",
+          "source": "config"
+        },
+        "clones_dir": {
+          "value": "base",
+          "source": "config"
+        },
+        "patches_dir": {
+          "value": "./patches/",
+          "source": "default"
+        },
+        "patch_set": {
+          "source": "default"
+        },
+        "base_revision": {
+          "value": "custom-branch",
+          "source": "config"
+        },
+        "upstream_branch": {
+          "source": "default"
+        },
+        "hook_prefix": {
+          "value": "patchy-",
+          "source": "default"
+        },
+        "verbose": {
+          "value": false,
+          "source": "config"
+        },
+        "dry_run": {
+          "value": false,
+          "source": "default"
+        },
+        "config": {
+          "value": "<TEST_DIR>/custom/config.json",
+          "source": "flag"
+        },
         "absoluteClonesDir": "<TEST_DIR>/base",
         "absoluteTargetRepo": "<TEST_DIR>/base/repo",
         "absolutePatchesDir": "<TEST_DIR>/patches"
@@ -654,15 +918,48 @@ describe("createEnrichedMergedConfig", () => {
     expect(getStabilizedJson(result.mergedConfig)).toMatchInlineSnapshot(
       `
       "{
-        "source_repo": "https://github.com/example/repo.git",
-        "target_repo": "repo",
-        "clones_dir": "base",
-        "patches_dir": "./patches/",
-        "base_revision": "main",
-        "hook_prefix": "patchy-",
-        "verbose": false,
-        "dry_run": false,
-        "config": "./patchy.json",
+        "source_repo": {
+          "value": "https://github.com/example/repo.git",
+          "source": "config"
+        },
+        "target_repo": {
+          "value": "repo",
+          "source": "config"
+        },
+        "clones_dir": {
+          "value": "base",
+          "source": "config"
+        },
+        "patches_dir": {
+          "value": "./patches/",
+          "source": "default"
+        },
+        "patch_set": {
+          "source": "default"
+        },
+        "base_revision": {
+          "value": "main",
+          "source": "default"
+        },
+        "upstream_branch": {
+          "source": "default"
+        },
+        "hook_prefix": {
+          "value": "patchy-",
+          "source": "default"
+        },
+        "verbose": {
+          "value": false,
+          "source": "config"
+        },
+        "dry_run": {
+          "value": false,
+          "source": "default"
+        },
+        "config": {
+          "value": "./patchy.json",
+          "source": "default"
+        },
         "absoluteClonesDir": "<TEST_DIR>/subdir/base",
         "absoluteTargetRepo": "<TEST_DIR>/subdir/base/repo",
         "absolutePatchesDir": "<TEST_DIR>/subdir/patches"
@@ -703,15 +1000,48 @@ describe("createEnrichedMergedConfig", () => {
     expect(getStabilizedJson(result.mergedConfig)).toMatchInlineSnapshot(
       `
       "{
-        "source_repo": "https://github.com/example/repo.git",
-        "target_repo": "repo",
-        "clones_dir": "base",
-        "patches_dir": "./patches/",
-        "base_revision": "main",
-        "hook_prefix": "patchy-",
-        "verbose": false,
-        "dry_run": false,
-        "config": "./patchy.json",
+        "source_repo": {
+          "value": "https://github.com/example/repo.git",
+          "source": "config"
+        },
+        "target_repo": {
+          "value": "repo",
+          "source": "config"
+        },
+        "clones_dir": {
+          "value": "base",
+          "source": "config"
+        },
+        "patches_dir": {
+          "value": "./patches/",
+          "source": "default"
+        },
+        "patch_set": {
+          "source": "default"
+        },
+        "base_revision": {
+          "value": "main",
+          "source": "default"
+        },
+        "upstream_branch": {
+          "source": "default"
+        },
+        "hook_prefix": {
+          "value": "patchy-",
+          "source": "default"
+        },
+        "verbose": {
+          "value": false,
+          "source": "config"
+        },
+        "dry_run": {
+          "value": false,
+          "source": "default"
+        },
+        "config": {
+          "value": "./patchy.json",
+          "source": "default"
+        },
         "absoluteClonesDir": "<TEST_DIR>/base",
         "absoluteTargetRepo": "<TEST_DIR>/base/repo",
         "absolutePatchesDir": "<TEST_DIR>/patches"
@@ -802,9 +1132,9 @@ describe("createEnrichedMergedConfig", () => {
     // Empty strings are now accepted by schema (since requiredInConfig: false)
     // Config values override defaults, so empty strings take precedence
     expectSuccessfulMerge(result);
-    expect(result.mergedConfig.source_repo).toBe("");
-    expect(result.mergedConfig.base_revision).toBe("");
-    expect(result.mergedConfig.clones_dir).toBe("");
+    expect(result.mergedConfig.source_repo.value).toBe("");
+    expect(result.mergedConfig.base_revision.value).toBe("");
+    expect(result.mergedConfig.clones_dir.value).toBe("");
   });
 
   it("should handle Zod validation error for null values", async () => {
@@ -1009,15 +1339,48 @@ describe("createEnrichedMergedConfig", () => {
     expect(getStabilizedJson(result.mergedConfig)).toMatchInlineSnapshot(
       `
       "{
-        "source_repo": "https://github.com/example/env-repo.git",
-        "target_repo": "env-repo",
-        "clones_dir": "env-base",
-        "patches_dir": "env-patches",
-        "base_revision": "env-branch",
-        "hook_prefix": "patchy-",
-        "verbose": true,
-        "dry_run": true,
-        "config": "./patchy.json",
+        "source_repo": {
+          "value": "https://github.com/example/env-repo.git",
+          "source": "env"
+        },
+        "target_repo": {
+          "value": "env-repo",
+          "source": "env"
+        },
+        "clones_dir": {
+          "value": "env-base",
+          "source": "env"
+        },
+        "patches_dir": {
+          "value": "env-patches",
+          "source": "env"
+        },
+        "patch_set": {
+          "source": "default"
+        },
+        "base_revision": {
+          "value": "env-branch",
+          "source": "env"
+        },
+        "upstream_branch": {
+          "source": "default"
+        },
+        "hook_prefix": {
+          "value": "patchy-",
+          "source": "default"
+        },
+        "verbose": {
+          "value": true,
+          "source": "env"
+        },
+        "dry_run": {
+          "value": true,
+          "source": "env"
+        },
+        "config": {
+          "value": "./patchy.json",
+          "source": "default"
+        },
         "absoluteClonesDir": "<TEST_DIR>/env-base",
         "absoluteTargetRepo": "<TEST_DIR>/env-base/env-repo",
         "absolutePatchesDir": "<TEST_DIR>/env-patches"
@@ -1072,15 +1435,48 @@ describe("createEnrichedMergedConfig", () => {
     expect(getStabilizedJson(result.mergedConfig)).toMatchInlineSnapshot(
       `
       "{
-        "source_repo": "https://github.com/example/flag-repo.git",
-        "target_repo": "flag-repo",
-        "clones_dir": "flag-base",
-        "patches_dir": "flag-patches",
-        "base_revision": "flag-ref",
-        "hook_prefix": "patchy-",
-        "verbose": true,
-        "dry_run": true,
-        "config": "./patchy.json",
+        "source_repo": {
+          "value": "https://github.com/example/flag-repo.git",
+          "source": "flag"
+        },
+        "target_repo": {
+          "value": "flag-repo",
+          "source": "flag"
+        },
+        "clones_dir": {
+          "value": "flag-base",
+          "source": "flag"
+        },
+        "patches_dir": {
+          "value": "flag-patches",
+          "source": "flag"
+        },
+        "patch_set": {
+          "source": "default"
+        },
+        "base_revision": {
+          "value": "flag-ref",
+          "source": "flag"
+        },
+        "upstream_branch": {
+          "source": "default"
+        },
+        "hook_prefix": {
+          "value": "patchy-",
+          "source": "default"
+        },
+        "verbose": {
+          "value": true,
+          "source": "flag"
+        },
+        "dry_run": {
+          "value": true,
+          "source": "flag"
+        },
+        "config": {
+          "value": "./patchy.json",
+          "source": "default"
+        },
         "absoluteClonesDir": "<TEST_DIR>/flag-base",
         "absoluteTargetRepo": "<TEST_DIR>/flag-base/flag-repo",
         "absolutePatchesDir": "<TEST_DIR>/flag-patches"
@@ -1133,15 +1529,48 @@ describe("createEnrichedMergedConfig", () => {
     expect(getStabilizedJson(result.mergedConfig)).toMatchInlineSnapshot(
       `
       "{
-        "source_repo": "https://github.com/example/env-repo.git",
-        "target_repo": "env-repo",
-        "clones_dir": "env-base",
-        "patches_dir": "env-patches",
-        "base_revision": "env-branch",
-        "hook_prefix": "patchy-",
-        "verbose": true,
-        "dry_run": false,
-        "config": "./patchy.json",
+        "source_repo": {
+          "value": "https://github.com/example/env-repo.git",
+          "source": "env"
+        },
+        "target_repo": {
+          "value": "env-repo",
+          "source": "env"
+        },
+        "clones_dir": {
+          "value": "env-base",
+          "source": "env"
+        },
+        "patches_dir": {
+          "value": "env-patches",
+          "source": "env"
+        },
+        "patch_set": {
+          "source": "default"
+        },
+        "base_revision": {
+          "value": "env-branch",
+          "source": "env"
+        },
+        "upstream_branch": {
+          "source": "default"
+        },
+        "hook_prefix": {
+          "value": "patchy-",
+          "source": "default"
+        },
+        "verbose": {
+          "value": true,
+          "source": "env"
+        },
+        "dry_run": {
+          "value": false,
+          "source": "default"
+        },
+        "config": {
+          "value": "./patchy.json",
+          "source": "default"
+        },
         "absoluteClonesDir": "<TEST_DIR>/env-base",
         "absoluteTargetRepo": "<TEST_DIR>/env-base/env-repo",
         "absolutePatchesDir": "<TEST_DIR>/env-patches"
@@ -1188,15 +1617,48 @@ describe("createEnrichedMergedConfig", () => {
     expect(getStabilizedJson(result.mergedConfig)).toMatchInlineSnapshot(
       `
       "{
-        "source_repo": "https://github.com/example/env-config.git",
-        "target_repo": "repo",
-        "clones_dir": "base",
-        "patches_dir": "./patches/",
-        "base_revision": "env-config-branch",
-        "hook_prefix": "patchy-",
-        "verbose": false,
-        "dry_run": false,
-        "config": "<TEST_DIR>/custom-env/env-config.json",
+        "source_repo": {
+          "value": "https://github.com/example/env-config.git",
+          "source": "config"
+        },
+        "target_repo": {
+          "value": "repo",
+          "source": "config"
+        },
+        "clones_dir": {
+          "value": "base",
+          "source": "config"
+        },
+        "patches_dir": {
+          "value": "./patches/",
+          "source": "default"
+        },
+        "patch_set": {
+          "source": "default"
+        },
+        "base_revision": {
+          "value": "env-config-branch",
+          "source": "config"
+        },
+        "upstream_branch": {
+          "source": "default"
+        },
+        "hook_prefix": {
+          "value": "patchy-",
+          "source": "default"
+        },
+        "verbose": {
+          "value": false,
+          "source": "config"
+        },
+        "dry_run": {
+          "value": false,
+          "source": "default"
+        },
+        "config": {
+          "value": "<TEST_DIR>/custom-env/env-config.json",
+          "source": "env"
+        },
         "absoluteClonesDir": "<TEST_DIR>/base",
         "absoluteTargetRepo": "<TEST_DIR>/base/repo",
         "absolutePatchesDir": "<TEST_DIR>/patches"
@@ -1286,8 +1748,8 @@ describe("createEnrichedMergedConfig", () => {
       });
 
       expectSuccessfulMerge(result);
-      expect(result.mergedConfig.verbose).toBe(expectedVerbose);
-      expect(result.mergedConfig.dry_run).toBe(expectedDryRun);
+      expect(result.mergedConfig.verbose.value).toBe(expectedVerbose);
+      expect(result.mergedConfig.dry_run.value).toBe(expectedDryRun);
     }
   });
 
@@ -1324,10 +1786,10 @@ describe("createEnrichedMergedConfig", () => {
     });
 
     expectSuccessfulMerge(result);
-    expect(result.mergedConfig.source_repo).toBe(
+    expect(result.mergedConfig.source_repo.value).toBe(
       "https://github.com/example/json-repo.git",
     );
-    expect(result.mergedConfig.base_revision).toBe("json-ref");
+    expect(result.mergedConfig.base_revision.value).toBe("json-ref");
   });
 
   it("should use absolute target_repo directly without clones_dir", async () => {

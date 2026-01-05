@@ -260,9 +260,10 @@ describe("loadConfigFromFile", () => {
       if (testCase.expectedSuccess && result.success) {
         if (testCase.expectedConfig) {
           for (const [key, value] of Object.entries(testCase.expectedConfig)) {
-            expect((result.mergedConfig as Record<string, unknown>)[key]).toBe(
-              value,
-            );
+            const resolved = (
+              result.mergedConfig as Record<string, { value: unknown }>
+            )[key];
+            expect(resolved.value).toBe(value);
           }
         }
       } else if (!testCase.expectedSuccess && !result.success) {

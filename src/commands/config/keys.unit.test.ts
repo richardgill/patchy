@@ -1,22 +1,23 @@
 import { describe, expect, it } from "bun:test";
 import type { EnrichedMergedConfig } from "~/cli-fields/types";
+import { rv } from "~/testing/resolved-value-helpers";
 import { type ConfigKey, getConfigValue } from "./keys";
 
 describe("getConfigValue", () => {
   const createMockConfig = (
     overrides: Partial<EnrichedMergedConfig> = {},
   ): EnrichedMergedConfig => ({
-    source_repo: "https://github.com/example/repo.git",
-    target_repo: "my-repo",
-    clones_dir: "./clones",
-    patches_dir: "./patches",
-    patch_set: "feature-set",
-    base_revision: "v1.0.0",
-    upstream_branch: "main",
-    hook_prefix: "patchy-",
-    verbose: false,
-    dry_run: false,
-    config: "./patchy.json",
+    source_repo: rv("https://github.com/example/repo.git"),
+    target_repo: rv("my-repo"),
+    clones_dir: rv("./clones"),
+    patches_dir: rv("./patches"),
+    patch_set: rv("feature-set"),
+    base_revision: rv("v1.0.0"),
+    upstream_branch: rv("main"),
+    hook_prefix: rv("patchy-"),
+    verbose: rv(false),
+    dry_run: rv(false),
+    config: rv("./patchy.json"),
     absoluteClonesDir: "/home/user/project/clones",
     absoluteTargetRepo: "/home/user/project/clones/my-repo",
     absolutePatchesDir: "/home/user/project/patches",
@@ -51,18 +52,18 @@ describe("getConfigValue", () => {
   });
 
   it("converts boolean false to 'false' string", () => {
-    const config = createMockConfig({ verbose: false });
+    const config = createMockConfig({ verbose: rv(false) });
     expect(getConfigValue(config, "verbose")).toBe("false");
   });
 
   it("converts boolean true to 'true' string", () => {
-    const config = createMockConfig({ verbose: true });
+    const config = createMockConfig({ verbose: rv(true) });
     expect(getConfigValue(config, "verbose")).toBe("true");
   });
 
   it("returns undefined for missing values", () => {
     const config = createMockConfig({
-      patch_set: undefined,
+      patch_set: rv(undefined),
       absolutePatchSetDir: undefined,
       absoluteTargetRepo: undefined,
     });

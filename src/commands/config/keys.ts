@@ -1,4 +1,5 @@
 import type { EnrichedMergedConfig } from "~/cli-fields/types";
+import { unwrapValue } from "~/lib/cli-config";
 
 export const CONFIG_KEYS = [
   // Raw (from JSON config)
@@ -35,7 +36,7 @@ export const getConfigValue = (
   if (enrichedKey) {
     return config[enrichedKey] as string | undefined;
   }
-  const rawValue = config[key as keyof EnrichedMergedConfig];
+  const rawValue = unwrapValue(config[key as keyof EnrichedMergedConfig]);
   if (rawValue === undefined) return undefined;
   if (typeof rawValue === "boolean") return String(rawValue);
   return rawValue as string;

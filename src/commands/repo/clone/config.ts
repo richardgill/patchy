@@ -76,7 +76,7 @@ export const loadAndValidateConfig = (
   }
 
   const config = result.mergedConfig;
-  const repoUrl = config.source_repo;
+  const repoUrl = config.source_repo.value;
   const clonesDir = config.absoluteClonesDir;
 
   validateGitUrl(context, repoUrl);
@@ -91,13 +91,13 @@ export const loadAndValidateConfig = (
     clonesDir,
     targetDir: join(clonesDir, targetDirName),
     targetDirName,
-    baseRevision: config.base_revision,
-    baseRevisionFromFlag: flags["base-revision"] !== undefined,
-    dry_run: config.dry_run,
-    verbose: config.verbose,
-    configPath: config.config ?? DEFAULT_CONFIG_PATH,
+    baseRevision: config.base_revision.value,
+    baseRevisionFromFlag: config.base_revision.source === "flag",
+    dry_run: config.dry_run.value,
+    verbose: config.verbose.value,
+    configPath: config.config.value ?? DEFAULT_CONFIG_PATH,
     displayTargetPath: formatPathForDisplay(
-      join(config.clones_dir, targetDirName),
+      join(config.clones_dir.value, targetDirName),
     ),
     skipConfirmation: flags.yes ?? false,
   };

@@ -52,12 +52,10 @@ const enrichConfig = (
   config: MergedConfig,
   cwd: string,
 ): EnrichedMergedConfig => {
-  const {
-    clones_dir: clonesDir,
-    target_repo: targetRepo,
-    patches_dir: patchesDir,
-    patch_set: patchSet,
-  } = config;
+  const clonesDir = config.clones_dir.value;
+  const targetRepo = config.target_repo.value;
+  const patchesDir = config.patches_dir.value;
+  const patchSet = config.patch_set.value;
 
   const absolutePatchesDir = resolvePath(cwd, patchesDir);
 

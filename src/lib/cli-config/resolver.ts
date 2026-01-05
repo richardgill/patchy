@@ -7,7 +7,7 @@ import {
   deriveRuntimeFlagKeys,
   getFlagName,
 } from "./type-derivations";
-import type { FlagMetadataMap } from "./types";
+import type { FlagMetadataMap, ResolvedValue } from "./types";
 
 export type ConfigSources<
   M extends FlagMetadataMap,
@@ -44,15 +44,25 @@ const getValueByKey = <
   metadata: M,
   key: K,
   sources: ConfigSources<M, TJsonConfig>,
-): unknown => {
+): ResolvedValue<unknown> => {
   const flagName = getFlagName(metadata, key);
   const flagValue = sources.flags[flagName as DeriveFlagName<M>];
-  if (flagValue !== undefined) return flagValue;
+  if (flagValue !== undefined) {
+    return { value: flagValue, source: "flag" };
+  }
 
   const envValue = getEnvValue(metadata, key, sources.env);
-  if (envValue !== undefined) return envValue;
+  if (envValue !== undefined) {
+    return { value: envValue, source: "env" };
+  }
 
-  return sources.json[key as keyof TJsonConfig];
+  const jsonValue = sources.json[key as keyof TJsonConfig];
+  if (jsonValue !== undefined) {
+    return { value: jsonValue, source: "config" };
+  }
+
+  const meta = metadata[key];
+  return { value: meta.defaultValue, source: "default" };
 };
 
 // Get value for a runtime-only flag from flags or env (no JSON source)
@@ -61,16 +71,20 @@ const getRuntimeFlagValue = <M extends FlagMetadataMap>(
   key: keyof M,
   flags: DeriveSharedFlags<M>,
   env: NodeJS.ProcessEnv,
-): unknown => {
-  const meta = metadata[key];
+): ResolvedValue<unknown> => {
   const flagName = getFlagName(metadata, key);
   const flagValue = flags[flagName as DeriveFlagName<M>];
-  if (flagValue !== undefined) return flagValue;
+  if (flagValue !== undefined) {
+    return { value: flagValue, source: "flag" };
+  }
 
   const envValue = getEnvValue(metadata, key, env);
-  if (envValue !== undefined) return envValue;
+  if (envValue !== undefined) {
+    return { value: envValue, source: "env" };
+  }
 
-  return meta.defaultValue;
+  const meta = metadata[key];
+  return { value: meta.defaultValue, source: "default" };
 };
 
 type CreateMergedConfigParams<
@@ -112,11 +126,7 @@ export const createMergedConfig = <
 
   // Build config from JSON config fields
   const jsonConfig = Object.fromEntries(
-    jsonConfigKeys.map((key) => {
-      const value = getValueByKey(metadata, key, sources);
-      const meta = metadata[key];
-      return [key, value ?? meta.defaultValue];
-    }),
+    jsonConfigKeys.map((key) => [key, getValueByKey(metadata, key, sources)]),
   );
 
   // Add runtime-only flags
