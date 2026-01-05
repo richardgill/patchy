@@ -30,31 +30,28 @@ const readConfigFile = (
   return { exists: true, content, path: absolutePath, json: parseResult.json };
 };
 
-const buildPromptMessage = (
-  currentTargetRepo: string | undefined,
-  newTargetDirName: string,
-): string =>
-  currentTargetRepo
-    ? `target_repo in ${chalk.cyan("patchy.json")} is ${chalk.cyan(`"${currentTargetRepo}"`)}. Update to ${chalk.cyan(`"${newTargetDirName}"`)}?`
-    : `Save target_repo: ${chalk.cyan(`"${newTargetDirName}"`)} to ${chalk.cyan("patchy.json")}?`;
-
-const saveConfigUpdate = async (
+const saveConfigUpdates = async (
   context: LocalContext,
   configPath: string,
   content: string,
-  targetDirName: string,
+  updates: Array<{ field: string; value: string }>,
 ): Promise<void> => {
-  const updateResult = updateJsoncField(content, "target_repo", targetDirName);
+  let updatedContent = content;
 
-  if (!updateResult.success) {
-    context.process.stderr.write(chalk.yellow(`${updateResult.error}\n`));
-    return;
+  for (const { field, value } of updates) {
+    const result = updateJsoncField(updatedContent, field, value);
+    if (!result.success) {
+      context.process.stderr.write(chalk.yellow(`${result.error}\n`));
+      return;
+    }
+    updatedContent = result.content;
   }
 
   try {
-    await writeFile(configPath, updateResult.content, "utf8");
+    await writeFile(configPath, updatedContent, "utf8");
+    const fieldList = updates.map((u) => u.field).join(", ");
     context.process.stdout.write(
-      chalk.green(`Updated patchy.json with target_repo: "${targetDirName}"\n`),
+      chalk.green(`Updated patchy.json: ${fieldList}\n`),
     );
   } catch (error) {
     const errorMessage = error instanceof Error ? error.message : String(error);
@@ -64,40 +61,54 @@ const saveConfigUpdate = async (
   }
 };
 
-export const promptRepoDirSave = async (
+export const promptConfigSave = async (
   context: LocalContext,
   config: CloneConfig,
 ): Promise<void> => {
   const configFile = readConfigFile(context, config.configPath);
   if (!configFile.exists) return;
-  if (configFile.json.target_repo === config.targetDirName) return;
+
+  const updates: Array<{ field: string; value: string }> = [];
+
+  if (configFile.json.target_repo !== config.targetDirName) {
+    updates.push({ field: "target_repo", value: config.targetDirName });
+  }
+  if (
+    config.baseRevisionFromFlag &&
+    config.baseRevision &&
+    configFile.json.base_revision !== config.baseRevision
+  ) {
+    updates.push({ field: "base_revision", value: config.baseRevision });
+  }
+
+  if (updates.length === 0) return;
 
   if (config.skipConfirmation) {
-    await saveConfigUpdate(
+    await saveConfigUpdates(
       context,
       configFile.path,
       configFile.content,
-      config.targetDirName,
+      updates,
     );
     return;
   }
 
   if (!canPrompt(context)) return;
 
-  const message = buildPromptMessage(
-    configFile.json.target_repo,
-    config.targetDirName,
-  );
+  const fieldList = updates
+    .map((u) => `${u.field}: ${chalk.cyan(`"${u.value}"`)}`)
+    .join(", ");
+  const message = `Save ${fieldList} to ${chalk.cyan("patchy.json")}?`;
 
   const prompts = createPrompts(context);
   const confirmed = await prompts.confirm({ message, initialValue: true });
 
   if (prompts.isCancel(confirmed) || !confirmed) return;
 
-  await saveConfigUpdate(
+  await saveConfigUpdates(
     context,
     configFile.path,
     configFile.content,
-    config.targetDirName,
+    updates,
   );
 };
