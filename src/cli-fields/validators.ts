@@ -1,16 +1,14 @@
 import { existsSync } from "node:fs";
 import chalk from "chalk";
-import type { ValidatorFn } from "~/lib/cli-config";
+import { unwrapValue, type ValidatorFn } from "~/lib/cli-config";
 import { isAbsolutePath } from "~/lib/fs";
 import { isValidGitUrl } from "~/lib/validation";
 import type { EnrichedFields } from "./enriched-fields";
 
-// Patchy validators use EnrichedFields as the config type
 type PatchyValidatorFn = ValidatorFn<
-  EnrichedFields & { [key: string]: unknown } // Allow access to other config fields (e.g., source_repo, target_repo)
+  EnrichedFields & { [key: string]: unknown }
 >;
 
-// Helper to check if a path exists
 const checkPathExists = (value: string | undefined): string | null => {
   if (value && !existsSync(value)) {
     return `does not exist: ${chalk.blue(value)}`;
@@ -19,13 +17,13 @@ const checkPathExists = (value: string | undefined): string | null => {
 };
 
 export const directoryExists: PatchyValidatorFn = (config, key) => {
-  const value = config[key];
+  const value = unwrapValue(config[key]);
   return checkPathExists(typeof value === "string" ? value : undefined);
 };
 
 export const targetRepoExists: PatchyValidatorFn = (config, _key) => {
-  // If target_repo is absolute, validate it directly
-  const targetRepo = config["target_repo"];
+  const targetRepo = unwrapValue(config["target_repo"]);
+
   if (
     targetRepo &&
     typeof targetRepo === "string" &&
@@ -41,7 +39,7 @@ export const targetRepoExists: PatchyValidatorFn = (config, _key) => {
 };
 
 export const gitUrl: PatchyValidatorFn = (config, key) => {
-  const value = config[key];
+  const value = unwrapValue(config[key]);
   if (typeof value === "string" && !isValidGitUrl(value)) {
     return `is invalid. Example: https://github.com/owner/repo, git@github.com:owner/repo.git, or /path/to/local/repo`;
   }

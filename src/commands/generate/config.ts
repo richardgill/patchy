@@ -28,5 +28,14 @@ export const loadAndValidateConfig = (
     return exit(context, { exitCode: 1, stderr: result.error });
   }
 
-  return result.mergedConfig;
+  const config = result.mergedConfig;
+  return {
+    absolutePatchesDir: config.absolutePatchesDir,
+    absoluteTargetRepo: config.absoluteTargetRepo,
+    patches_dir: config.patches_dir.value,
+    target_repo: config.target_repo.value,
+    patch_set: config.patch_set.value,
+    dry_run: config.dry_run.value,
+    hook_prefix: config.hook_prefix.value,
+  };
 };

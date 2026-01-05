@@ -1,11 +1,11 @@
 import { describe, expect, it } from "bun:test";
+import { rv } from "~/testing/resolved-value-helpers";
 import type { ConfigSources } from "./resolver";
-import type { FlagMetadataMap, ValidatorFn } from "./types";
+import { type FlagMetadataMap, unwrapValue, type ValidatorFn } from "./types";
 import { formatSourceLocation, validateConfig } from "./validation";
 
-// Test validator that fails for values starting with "invalid"
 const testValidator: ValidatorFn<Record<string, unknown>> = (config, key) => {
-  const value = config[key];
+  const value = unwrapValue(config[key]);
   if (typeof value === "string" && value.startsWith("invalid")) {
     return "is invalid";
   }
@@ -130,7 +130,11 @@ describe("validateConfig", () => {
   }[] = [
     {
       name: "succeeds when all required fields present and valid",
-      mergedConfig: { name: "valid-name", path: "./valid-path", verbose: true },
+      mergedConfig: {
+        name: rv("valid-name"),
+        path: rv("./valid-path"),
+        verbose: rv(true),
+      },
       requiredFields: ["name", "path"],
       sources: {
         flags: {},
@@ -141,7 +145,11 @@ describe("validateConfig", () => {
     },
     {
       name: "fails when required field is missing",
-      mergedConfig: { path: "./valid-path", verbose: true },
+      mergedConfig: {
+        name: rv(undefined),
+        path: rv("./valid-path"),
+        verbose: rv(true),
+      },
       requiredFields: ["name", "path"],
       sources: { flags: {}, env: {}, json: { path: "./valid-path" } },
       expectedSuccess: false,
@@ -149,7 +157,10 @@ describe("validateConfig", () => {
     },
     {
       name: "fails when validation fails",
-      mergedConfig: { name: "invalid-name", path: "./valid-path" },
+      mergedConfig: {
+        name: rv("invalid-name"),
+        path: rv("./valid-path"),
+      },
       requiredFields: ["name", "path"],
       sources: {
         flags: {},
@@ -161,7 +172,10 @@ describe("validateConfig", () => {
     },
     {
       name: "validates using mergedConfig values directly",
-      mergedConfig: { name: "invalid-enriched", path: "./original" },
+      mergedConfig: {
+        name: rv("invalid-enriched"),
+        path: rv("./original"),
+      },
       requiredFields: ["name", "path"],
       sources: {
         flags: {},
@@ -173,7 +187,10 @@ describe("validateConfig", () => {
     },
     {
       name: "includes formatInitHint in missing fields error",
-      mergedConfig: { path: "./valid-path" },
+      mergedConfig: {
+        name: rv(undefined),
+        path: rv("./valid-path"),
+      },
       requiredFields: ["name"],
       sources: { flags: {}, env: {}, json: { path: "./valid-path" } },
       formatInitHint: () => "Run: init --setup",
@@ -182,14 +199,21 @@ describe("validateConfig", () => {
     },
     {
       name: "skips fields without validators",
-      mergedConfig: { name: "valid", verbose: true },
+      mergedConfig: {
+        name: rv("valid"),
+        verbose: rv(true),
+      },
       requiredFields: ["name", "verbose"],
       sources: { flags: {}, env: {}, json: { name: "valid", verbose: true } },
       expectedSuccess: true,
     },
     {
       name: "reports multiple missing fields",
-      mergedConfig: { verbose: true },
+      mergedConfig: {
+        name: rv(undefined),
+        path: rv(undefined),
+        verbose: rv(true),
+      },
       requiredFields: ["name", "path"],
       sources: { flags: {}, env: {}, json: {} },
       expectedSuccess: false,
@@ -197,7 +221,10 @@ describe("validateConfig", () => {
     },
     {
       name: "reports multiple validation errors",
-      mergedConfig: { name: "invalid-name", path: "invalid-path" },
+      mergedConfig: {
+        name: rv("invalid-name"),
+        path: rv("invalid-path"),
+      },
       requiredFields: ["name", "path"],
       sources: {
         flags: {},
@@ -257,7 +284,7 @@ describe("validateConfig", () => {
 
     const result = validateConfig({
       metadata,
-      mergedConfig: { field_a: "/absolute/path" },
+      mergedConfig: { field_a: rv("/absolute/path") },
       requiredFields,
       configPath: "./test.json",
       sources,

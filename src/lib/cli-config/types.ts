@@ -60,3 +60,16 @@ export type ValidatorFn<TConfig = Record<string, unknown>> = (
   config: TConfig,
   key: string,
 ) => string | null;
+
+export type ConfigSource = "flag" | "env" | "config" | "default";
+
+export type ResolvedValue<T> = {
+  value: T;
+  source: ConfigSource;
+};
+
+const isResolvedValue = (x: unknown): x is ResolvedValue<unknown> =>
+  x !== null && typeof x === "object" && "value" in x && "source" in x;
+
+export const unwrapValue = (x: unknown): unknown =>
+  isResolvedValue(x) ? x.value : x;

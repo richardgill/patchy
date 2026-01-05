@@ -37,7 +37,14 @@ export const loadAndValidateConfig = (
 
   const config = result.mergedConfig;
   return {
-    ...config,
+    absolutePatchesDir: config.absolutePatchesDir,
+    absoluteTargetRepo: config.absoluteTargetRepo,
+    patches_dir: config.patches_dir.value,
+    target_repo: config.target_repo.value,
+    dry_run: config.dry_run.value,
+    verbose: config.verbose.value,
+    hook_prefix: config.hook_prefix.value,
+    base_revision: config.base_revision.value,
     fuzzFactor: flags["fuzz-factor"] ?? DEFAULT_FUZZ_FACTOR,
   };
 };

@@ -3,7 +3,7 @@ import { isNil } from "es-toolkit";
 import { formatPathForDisplay } from "~/lib/fs";
 import { type ConfigSources, getValuesByKey } from "./resolver";
 import { type DeriveJsonConfigKey, getFlagName } from "./type-derivations";
-import type { FlagMetadataMap, ValidatorFn } from "./types";
+import { type FlagMetadataMap, unwrapValue, type ValidatorFn } from "./types";
 
 // Format where a config value came from (for error messages)
 export const formatSourceLocation = <
@@ -72,10 +72,9 @@ export const validateConfig = <
       ? requiredFields(mergedConfig)
       : requiredFields;
 
-  // Check for missing required fields
-  const missingFields = resolvedRequiredFields.filter((field) => {
-    return isNil(mergedConfig[field]);
-  });
+  const missingFields = resolvedRequiredFields.filter((field) =>
+    isNil(unwrapValue(mergedConfig[field])),
+  );
 
   if (missingFields.length > 0) {
     const missingFieldLines = missingFields.map((fieldKey) => {

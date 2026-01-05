@@ -32,9 +32,9 @@ export const loadAndValidateConfig = (
   const config = result.mergedConfig;
   return {
     repoDir: config.absoluteTargetRepo,
-    baseRevision: config.base_revision,
-    dryRun: config.dry_run,
-    verbose: config.verbose,
+    baseRevision: config.base_revision.value,
+    dryRun: config.dry_run.value,
+    verbose: config.verbose.value,
     skipConfirmation: flags.yes ?? false,
   };
 };

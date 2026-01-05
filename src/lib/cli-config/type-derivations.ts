@@ -1,4 +1,4 @@
-import type { FlagMetadataMap, TypeMap } from "./types";
+import type { FlagMetadataMap, ResolvedValue, TypeMap } from "./types";
 
 // Derive JSON config keys (configField: true)
 export type DeriveJsonConfigKey<M extends FlagMetadataMap> = {
@@ -46,8 +46,8 @@ export type DeriveSharedFlags<M extends FlagMetadataMap> = {
 // MergedConfig type (all fields, with proper optionality based on defaultValue)
 export type DeriveMergedConfig<M extends FlagMetadataMap> = {
   [K in keyof M]: M[K]["defaultValue"] extends undefined
-    ? TypeMap[M[K]["type"]] | undefined
-    : TypeMap[M[K]["type"]];
+    ? ResolvedValue<TypeMap[M[K]["type"]] | undefined>
+    : ResolvedValue<TypeMap[M[K]["type"]]>;
 };
 
 // Helper to get runtime arrays from metadata
